@@ -58,7 +58,7 @@ class Field():
                 map_we1, map_we2 = raw_maps
                 opm_mean = sums['wopm'] / sums['w']
 
-                maps[0, mask_good] = (map_we1[mask_good]/mask[mask_good]) / opm_mean
+                maps[0, mask_good] = -(map_we1[mask_good]/mask[mask_good]) / opm_mean
                 maps[1, mask_good] = (map_we2[mask_good]/mask[mask_good]) / opm_mean
             self._maps = maps
 
@@ -143,7 +143,6 @@ class Cl():
 
     def _compute_coupled_noise_gc(self):
         map_ng = self._f1.get_raw_maps()[0]
-        map_dg = self._f1.get_maps()[0]
         mask = self._f1.get_mask()
         mask_good = mask > 0  # Already set to 0 all bad pixels in Field()
         npix = mask.size
