@@ -3,7 +3,7 @@ tracers:
   DESgc0:
     spin: 0
     type: 'gc'
-    path: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/map_counts_bin0_ns4096.fits'
+    path: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/map_counts_w_bin0_ns4096.fits'
     mask: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/mask_ns4096.fits'
     dndz: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/dndz_bin0.txt'
     bias: 1.41
@@ -12,7 +12,7 @@ tracers:
   DESgc1:
     spin: 0
     type: 'gc'
-    path: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/map_counts_bin1_ns4096.fits'
+    path: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/map_counts_w_bin1_ns4096.fits'
     mask: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/mask_ns4096.fits'
     dndz: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/dndz_bin1.txt'
     bias: 1.60
@@ -20,7 +20,7 @@ tracers:
 
   DESgc2:
     spin: 0
-    path: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/map_counts_bin2_ns4096.fits'
+    path: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/map_counts_w_bin2_ns4096.fits'
     type: 'gc'
     mask: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/mask_ns4096.fits'
     dndz: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/dndz_bin2.txt'
@@ -30,7 +30,7 @@ tracers:
   DESgc3:
     spin: 0
     type: 'gc'
-    path: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/map_counts_bin3_ns4096.fits'
+    path: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/map_counts_w_bin3_ns4096.fits'
     mask: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/mask_ns4096.fits'
     dndz: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/dndz_bin3.txt'
     bias: 1.91
@@ -39,7 +39,7 @@ tracers:
   DESgc4:
     spin: 0
     type: 'gc'
-    path: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/map_counts_bin4_ns4096.fits'
+    path: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/map_counts_w_bin4_ns4096.fits'
     mask: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/mask_ns4096.fits'
     dndz: '/mnt/extraspace/damonge/S8z_data/derived_products/des_clustering/dndz_bin4.txt'
     bias: 1.96
