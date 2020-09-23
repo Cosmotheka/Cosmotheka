@@ -19,8 +19,6 @@ def get_mem(data, trs, compute):
 
     mem = 0
     for tr in trs:
-        print(tr)
-        print(mem)
         s = data['tracers'][tr]['spin']
         mem += d[s]
 
