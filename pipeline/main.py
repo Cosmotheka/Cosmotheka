@@ -5,10 +5,31 @@ import time
 import common as co
 
 ##############################################################################
+def get_mem(data, trs, compute):
+    # Return memory for nside 4096
+    d = {}
+    if compute == 'cls':
+        d[0] = 11
+        d[2] = 25
+    elif compute == 'cov':
+        d[0] = 16
+        d[2] = 47
+    else:
+        raise ValueError('{} not defined'.format(compute))
+
+    mem = 0
+    for tr in trs:
+        print(tr)
+        print(mem)
+        s = data['tracers'][tr]['spin']
+        mem += d[s]
+
+    return mem
+
+
 def launch_cls(data, queue, njobs, wsp=False):
     #######
     nc = 4
-    mem = 15
     #
     cl_tracers = co.get_cl_tracers(data, wsp)
     outdir = data['output']
@@ -23,6 +44,7 @@ def launch_cls(data, queue, njobs, wsp=False):
         if os.path.isfile(fname):
             continue
 
+        mem = get_mem(data, (tr1, tr2), 'cls') / nc
         pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
         pyrun = 'cl.py {} {} {}'.format(args.INPUT, tr1, tr2)
         print(pyexec + " " + pyrun)
@@ -32,8 +54,8 @@ def launch_cls(data, queue, njobs, wsp=False):
 
 def launch_cov(data, queue, njobs, wsp=False):
     #######
-    nc = 16
-    mem = 12
+    nc = 10
+    mem = 5
     #
     cov_tracers = co.get_cov_tracers(data, wsp)
     outdir = data['output']
@@ -45,6 +67,7 @@ def launch_cov(data, queue, njobs, wsp=False):
         fname = os.path.join(outdir, 'cov', comment + '.npz')
         if os.path.isfile(fname):
             continue
+        mem = get_mem(data, trs, 'cov') / nc
         pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
         pyrun = 'cov.py {} {} {} {} {}'.format(args.INPUT, *trs)
         print(pyexec + " " + pyrun)
