@@ -12,6 +12,7 @@ class Field():
         self.data = co.read_data(data)
         self.tr = tr
         self.spin = int(self.data['tracers'][tr]['spin'])
+        self.type = self.data['tracers'][tr]['type']
         self._raw_maps = None
         self._maps = maps
         self._mask = mask
@@ -45,14 +46,14 @@ class Field():
             mask_good = mask > 0 # Already set to 0 unwnated points
             # TODO: This can be optimize for the case mask1 == mask2
             raw_maps = self.get_raw_maps()
-            if self.spin == 0:
+            if self.type == 'gc':
                 maps = np.zeros((1, mask.size))
                 raw_map = raw_maps[0]
                 mean_raw_map = raw_map[mask_good].sum() / mask[mask_good].sum()
                 map_dg = np.zeros_like(raw_map)
                 map_dg[mask_good] = raw_map[mask_good] / (mean_raw_map * mask[mask_good]) - 1
                 maps[0] = map_dg
-            else:
+            elif self.type == 'wl':
                 maps = np.zeros((2, mask.size))
                 sums = np.load(tracer['sums'])
                 map_we1, map_we2 = raw_maps
@@ -60,6 +61,10 @@ class Field():
 
                 maps[0, mask_good] = -(map_we1[mask_good]/mask[mask_good]) / opm_mean
                 maps[1, mask_good] = (map_we2[mask_good]/mask[mask_good]) / opm_mean
+            elif self.type == 'cv':
+                maps = raw_maps
+            else:
+                raise ValueError('Type {} not implemented'.format(self.type))
             self._maps = maps
 
         return self._maps
