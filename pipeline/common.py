@@ -22,8 +22,6 @@ def get_tracers_used(data, wsp=False):
 
     if wsp:
         tracers_for_cl = filter_tracers_wsp(data, tracers_for_cl)
-    else:
-        tracers_for_cl = sort_tracers_wsp_first(data, tracers_for_cl)
 
     return tracers_for_cl
 
@@ -64,10 +62,3 @@ def filter_tracers_wsp(data, tracers):
 
     return tracers_torun
 
-def sort_tracers_wsp_first(data, tracers):
-    tracers_torun = filter_tracers_wsp(data, tracers)
-    for tr in tracers:
-        if tr not in tracers:
-            tracers_torun.append(tr)
-
-    return tracers_torun

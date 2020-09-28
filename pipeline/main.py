@@ -93,13 +93,13 @@ def launch_to_sacc(data, name, nl, queue):
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="Compute Cls and cov from data.yml file. By default it computes the workspaces first")
+    parser = argparse.ArgumentParser(description="Compute Cls and cov from data.yml file")
     parser.add_argument('INPUT', type=str, help='Input YAML data file')
     parser.add_argument('compute', type=str, help='Compute: cls, cov or to_sacc.')
     parser.add_argument('--queue', type=str, default='berg', help='SLURM queue to use')
     parser.add_argument('--njobs', type=int, default=20, help='Maximum number of jobs to launch')
     parser.add_argument('--wsp', default=False, action='store_true',
-                        help='Set if you want to compute only the different workspaces')
+                        help='Set if you want to compute the different workspaces first')
     parser.add_argument('--to_sacc_name', type=str, default='cls_cov.fits', help='Sacc file name')
     parser.add_argument('--to_sacc_use_nl', default=False, action='store_true',
                         help='Set if you want to use nl and covNG (if present) instead of cls and covG ')
