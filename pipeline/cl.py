@@ -6,6 +6,7 @@ import pyccl as ccl
 import pymaster as nmt
 import os
 import yaml
+import warnings
 
 class Field():
     def __init__(self, data, tr, maps=None, mask=None):
@@ -86,6 +87,12 @@ class Cl():
     def __init__(self, data, tr1, tr2):
         self._datapath = data
         self.data = co.read_data(data)
+        self.read_symm = False
+        if ((tr1, tr2) not in co.get_cl_tracers(self.data)) and \
+           ((tr2, tr1) in co.get_cl_tracers(self.data)):
+            warnings.warn('Reading the symmetric element.')
+            self.read_symm = True
+
         self.tr1 = tr1
         self.tr2 = tr2
         self.outdir = self.get_outdir()
@@ -104,7 +111,13 @@ class Cl():
 
     def get_outdir(self):
         root = self.data['output']
-        trreq = ''.join(s for s in (self.tr1 + '_' + self.tr2) if not s.isdigit())
+        if self.read_symm:
+            tr1 = self.tr2
+            tr2 = self.tr1
+        else:
+            tr1 = self.tr1
+            tr2 = self.tr2
+        trreq = ''.join(s for s in (tr1 + '_' + tr2) if not s.isdigit())
         outdir = os.path.join(root, trreq)
         return outdir
 
@@ -134,6 +147,9 @@ class Cl():
         # Remove the extension
         mask1 = os.path.splitext(mask1)[0]
         mask2 = os.path.splitext(mask2)[0]
+        if self.read_symm:
+            mask1 = mask2
+            mask2 = mask1
         fname = os.path.join(self.outdir, 'w__{}__{}.fits'.format(mask1, mask2))
         w = nmt.NmtWorkspace()
         if not os.path.isfile(fname):
@@ -175,21 +191,31 @@ class Cl():
 
 
     def compute_coupled_noise(self):
-        tracers = self.data['tracers']
+        tracer = self.data['tracers'][self.tr1]
         s1, s2 = self.get_spins()
+        nell = 3 * self.data['healpy']['nside']
         if self.tr1 != self.tr2:
-            nell = 3 * self.data['healpy']['nside']
             ndim = s1+s2
             if ndim == 0:
                 ndim += 1
             return np.zeros((ndim, nell))
-        elif s1 == 0:
+        elif tracer['type'] == 'gc':
             return self._compute_coupled_noise_gc()
-        else:
+        elif tracer['type'] == 'wl':
             return self._compute_coupled_noise_wl()
+        elif tracer['type'] == 'cv':
+            return np.zeros((1, nell))
+        else:
+            raise ValueError('Noise for tracer type {} not implemented'.format(tracer['type']))
 
     def get_cl_file(self):
-        fname = os.path.join(self.outdir, 'cl_{}_{}.npz'.format(self.tr1, self.tr2))
+        if self.read_symm:
+            tr1 = self.tr2
+            tr2 = self.tr1
+        else:
+            tr1 = self.tr1
+            tr2 = self.tr2
+        fname = os.path.join(self.outdir, 'cl_{}_{}.npz'.format(tr1, tr2))
         ell = self.b.get_effective_ells()
         if not os.path.isfile(fname):
             f1, f2 = self.get_fields()
@@ -230,6 +256,11 @@ class Cl_fid():
     def __init__(self, data, tr1, tr2):
         self._datapath = data
         self.data = co.read_data(data)
+        self.read_symm = False
+        if ((tr1, tr2) not in co.get_cl_tracers(self.data)) and \
+           ((tr2, tr1) in co.get_cl_tracers(self.data)):
+            warnings.warn('Reading the symmetric element.')
+            self.read_symm = True
         self.tr1 = tr1
         self.tr2 = tr2
         self.outdir = self.get_outdir()
@@ -243,7 +274,13 @@ class Cl_fid():
 
     def get_outdir(self):
         root = self.data['output']
-        trreq = ''.join(s for s in (self.tr1 + '_' + self.tr2) if not s.isdigit())
+        if self.read_symm:
+            tr1 = self.tr2
+            tr2 = self.tr1
+        else:
+            tr1 = self.tr1
+            tr2 = self.tr2
+        trreq = ''.join(s for s in (tr1 + '_' + tr2) if not s.isdigit())
         outdir = os.path.join(root, 'fiducial', trreq)
         return outdir
 
@@ -306,7 +343,13 @@ class Cl_fid():
 
     def get_cl_file(self):
         nside = self.data['healpy']['nside']
-        fname = os.path.join(self.outdir, 'cl_{}_{}.npz'.format(self.tr1, self.tr2))
+        if self.read_symm:
+            tr1 = self.tr2
+            tr2 = self.tr1
+        else:
+            tr1 = self.tr1
+            tr2 = self.tr2
+        fname = os.path.join(self.outdir, 'cl_{}_{}.npz'.format(tr1, tr2))
         ell = np.arange(3 * nside)
         if not os.path.isfile(fname):
             ccl_tr1, ccl_tr2 = self.get_tracers_ccl()

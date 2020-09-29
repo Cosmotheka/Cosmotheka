@@ -36,24 +36,32 @@ class sfile():
         if self.use_nl:
             warnings.warn('Adding covariance matrix with use_nl=True is not yet implemented')
             return
-        cov_tracers = co.get_cov_tracers(self.data)
+        # Get nbpw
+        dtype = self.s.get_data_types()[0]
+        tracers = self.s.get_tracer_combinations(data_type=dtype)[0]
+        ell, _ = self.s.get_ell_cl(dtype, *tracers)
+        nbpw = ell.size
+        #
         ndim = self.s.mean.size
-        print(ndim)
+        cl_tracers = self.s.get_tracer_combinations()
 
-        i_ini = i_end = j_ini = j_end = 0
         covmat = -1 * np.ones((ndim, ndim))
-        for trs in cov_tracers:
-            print(trs)
-            if j_end >= ndim:
-                i_ini = j_ini = i_end
-            cov = Cov(self.datafile, *trs).cov
-            ni, nj = cov.shape
-            i_end = i_ini + ni
-            j_end = j_ini + nj
-            print(i_ini, i_end, j_ini, j_end)
-            covmat[i_ini : i_end, j_ini : j_end] = cov
-            covmat[j_ini : j_end, i_ini : i_end] = cov.T
-            j_ini = j_end
+        for i, trs1 in enumerate(cl_tracers):
+            dof1 = co.get_dof_tracers(self.data, trs1)
+            dtypes1 = self.get_datatypes_from_dof(dof1)
+            for trs2 in cl_tracers[i:]:
+                dof2 = co.get_dof_tracers(self.data, trs2)
+                dtypes2 = self.get_datatypes_from_dof(dof2)
+                print(trs1, trs2)
+                cov = Cov(self.datafile, *trs1, *trs2).cov.reshape((nbpw, dof1, nbpw, dof2))
+
+                for i, dt1 in enumerate(dtypes1):
+                    ix1 = self.s.indices(tracers=trs1, data_type=dt1)
+                    for j, dt2 in enumerate(dtypes2):
+                        ix2 = self.s.indices(tracers=trs2, data_type=dt2)
+                        covi = cov[:, i, :, j]
+                        covmat[np.ix_(ix1, ix2)] = covi
+                        covmat[np.ix_(ix2, ix1)] = covi.T
 
         self.s.add_covariance(covmat)
 
@@ -83,13 +91,7 @@ class sfile():
 
         wins = sacc.BandpowerWindow(ells_nobin, ws_bpw[0, :, 0, :].T)
 
-        if cl.cl.shape[0] == 1:
-            cl_types = ['cl_00']
-        elif cl.cl.shape[0] == 2:
-            cl_types = ['cl_0e', 'cl_0b']
-        else:
-            cl_types = ['cl_ee', 'cl_eb', 'cl_be', 'cl_bb']
-
+        cl_types = self.get_datatypes_from_dof(cl.cl.shape[0])
 
         for i, cl_type in enumerate(cl_types):
             if self.use_nl:
@@ -97,6 +99,18 @@ class sfile():
             else:
                 cli = cl.cl[i]
             self.s.add_ell_cl(cl_type, tr1, tr2, cl.ell, cli, window=wins)
+
+    def get_datatypes_from_dof(self, dof):
+        if dof  == 1:
+            cl_types = ['cl_00']
+        elif dof == 2:
+            cl_types = ['cl_0e', 'cl_0b']
+        elif dof == 4:
+            cl_types = ['cl_ee', 'cl_eb', 'cl_be', 'cl_bb']
+        else:
+            raise ValueError('dof does not match 1, 2, or 4.')
+
+        return cl_types
 
 if __name__ == "__main__":
     import argparse

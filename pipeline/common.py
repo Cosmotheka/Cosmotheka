@@ -62,3 +62,13 @@ def filter_tracers_wsp(data, tracers):
 
     return tracers_torun
 
+def get_dof_tracers(data, tracers):
+    tr1, tr2 = tracers
+    s1 = data['tracers'][tr1]['spin']
+    s2 = data['tracers'][tr2]['spin']
+
+    dof = s1 + s2
+    if dof == 0:
+        dof += 1
+
+    return dof

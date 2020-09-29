@@ -27,7 +27,7 @@ def get_mem(data, trs, compute):
 
 def launch_cls(data, queue, njobs, wsp=False):
     #######
-    nc = 4
+    nc = 8
     #
     cl_tracers = co.get_cl_tracers(data, wsp)
     outdir = data['output']
