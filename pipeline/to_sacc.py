@@ -57,8 +57,12 @@ class sfile():
 
                 for i, dt1 in enumerate(dtypes1):
                     ix1 = self.s.indices(tracers=trs1, data_type=dt1)
+                    if len(ix1) == 0:
+                        continue
                     for j, dt2 in enumerate(dtypes2):
                         ix2 = self.s.indices(tracers=trs2, data_type=dt2)
+                        if len(ix2) == 0:
+                            continue
                         covi = cov[:, i, :, j]
                         covmat[np.ix_(ix1, ix2)] = covi
                         covmat[np.ix_(ix2, ix1)] = covi.T
@@ -67,21 +71,26 @@ class sfile():
 
     def add_tracer(self, tr):
         tracer = self.data['tracers'][tr]
-        dndz = np.loadtxt(tracer['dndz'])
-        z=dndz[1]
-        nz=dndz[3]
 
         if tracer['type'] == 'gc':
             quantity = 'galaxy_density'
+            z, nz = np.loadtxt(tracer['dndz'], usecols=(1, 3), unpack=True)
+            self.s.add_tracer('NZ', tr, quantity=quantity, spin=tracer['spin'],
+                              z=z, nz=nz)
         elif tracer['type'] == 'wl':
             quantity = 'galaxy_shear'
+            z, nz = np.loadtxt(tracer['dndz'], usecols=(1, 3), unpack=True)
+            self.s.add_tracer('NZ', tr, quantity=quantity, spin=tracer['spin'],
+                              z=z, nz=nz)
         elif tracer['type'] == 'cv':
             quantity = 'cmb_convergence'
+            ell, nl = np.loadtxt(tracer['nl'], usecols=(0, 1), unpack=True)
+            beam = np.ones_like(ell)
+            self.s.add_tracer('Map', tr, quantity=quantity, spin=tracer['spin'],
+                              ell=ell, beam=beam, beam_extra={'nl': nl})
         else:
             raise ValueError('Tracer type {} not implemented'.format(tracer['type']))
 
-        self.s.add_tracer('NZ', tr, quantity=quantity, spin=tracer['spin'],
-                          z=z, nz=nz)
 
     def add_ell_cl(self, tr1, tr2):
         ells_nobin = np.arange(3 * self.data['healpy']['nside'])
@@ -98,6 +107,9 @@ class sfile():
                 cli = cl.nl[i]
             else:
                 cli = cl.cl[i]
+            if (cl_type == 'cl_be') and (tr1 == tr2):
+                continue
+
             self.s.add_ell_cl(cl_type, tr1, tr2, cl.ell, cli, window=wins)
 
     def get_datatypes_from_dof(self, dof):

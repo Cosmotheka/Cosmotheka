@@ -79,8 +79,8 @@ def launch_to_sacc(data, name, nl, queue):
     if os.path.isfile(fname):
         return
 
-    nc = 10
-    mem = 10
+    nc = 21
+    mem = 7.
     comment = 'to_sacc'
     pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
     pyrun = 'to_sacc.py {} {}'.format(args.INPUT, name)
