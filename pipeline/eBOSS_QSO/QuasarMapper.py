@@ -1,116 +1,78 @@
-import matplotlib.pyplot as plt
 from astropy.io import fits
 from astropy.table import Table
 
 import os
 import pandas as pd
-import collections
 import numpy as np
 import healpy as hp
 
-import pymaster as nmt
 
 
 class QuasarMapper:
-    def __init__(self): 
-        #Inputs: the four fits files from eBOSS DR14
+    def __init__(self, path_datas , path_randoms, edges = [1.5], nside = 512): 
+        #Inputs: 1) an array of paths to data fields
+        #        2) an array of paths to random fields
+        #        3) an array of bin inner boundaries  
+        #        4) resolution, defaulted to 512
         
-        data_path = '/home/zcapjru/PhD/Data/'
-        #Check for data files:
-        if os.path.exists(data_path+'eBOSS_QSO_clustering_data-NGC-vDR16.fits') :
-            print('NGC data found')
-            self.NGC_data =  fits.open(data_path + 'eBOSS_QSO_clustering_data-NGC-vDR16.fits')
-        else :
-            print('missing NGC data')
+        #make sure all data paths exist can store them in a dic
+        #Will this break if lists are asymmetrical?
+        self.cat_data = []
+        self.cat_random = []
+        for file_data, file_random in zip(path_datas, path_randoms):
+            if not os.path.isfile(file_data):
+                raise ValueError(f"File {file_data} not found")
+            with fits.open(file_data) as f:
+                self.cat_data.append(Table.read(f).to_pandas()
+            if not os.path.isfile(file_random):
+                raise ValueError(f"File {file_random} not found")
+            with fits.open(file_random) as f:
+                self.cat_random.append(Table.read(f).to_pandas()
 
-        if os.path.exists(data_path+'eBOSS_QSO_clustering_data-SGC-vDR16.fits') :
-            print('SGC data found')
-            self.SGC_data =  fits.open(data_path + 'eBOSS_QSO_clustering_data-SGC-vDR16.fits')
-        else :
-            print('missing SGC data')
-           
-        if os.path.exists(data_path+'eBOSS_QSO_clustering_random-NGC-vDR16.fits') :
-            print('NGC random data found')
-            self.NGC_r_data =  fits.open(data_path + 'eBOSS_QSO_clustering_random-NGC-vDR16.fits')
-        else :
-            print('missing NGC random data')
-           
-        if os.path.exists(data_path+'eBOSS_QSO_clustering_random-SGC-vDR16.fits') :
-            print('SGC random data found')
-            self.SGC_r_data =  fits.open(data_path + 'eBOSS_QSO_clustering_random-SGC-vDR16.fits')
-        else :
-            print('missing SGC random data')
-        
-
-        self.nside = 512
         #set resolution
+        self.nside = nside
         
+        #set l's per band, defaulted to 20
         self.bands = nmt.NmtBin.from_nside_linear(self.nside, 20)
-        #set l's per band
         
-        self.NGC = Table.read(self.NGC_data).to_pandas()
-        self.NGC_r = Table.read(self.NGC_r_data).to_pandas()
-        self.SGC = Table.read(self.SGC_data).to_pandas()
-        self.SGC_r = Table.read(self.SGC_r_data).to_pandas()
-        #from .fits to table to managable pandas frames
 
-        #Merge NGC + SGC
-        self.edges = [1.5] #inner bins edges
-        self.whole =  pd.concat([self.NGC, self.SGC])
-        self.whole_r =  pd.concat([self.NGC_r, self.SGC_r])
+        #Merge all data mappings into one single sky map 
+        self.cat_data = pd.concat(self.cat_data)
+        self.cat_random = pd.concat(self.cat_random)
         
-        self.binned   = self.bin_z(self.whole ,  self.edges)
-        self.binned_r = self.bin_z(self.whole_r ,  self.edges)
+        #Bin data                              
+        self.edges = edges #inner bins edges
+        self.binned   = self.__bin_z(self.cat_data ,  self.edges)
+        self.binned_r = self.__bin_z(self.cat_random ,  self.edges)
         #arrays containing the binned data for each field
         
+        #Store maps
         self.maps = {}
         for i in range(len(self.edges)+1):
-            self.nmean_field  =  self.get_nmean_map(self.binned[i])
-            self.nmean_random =  self.get_nmean_map(self.binned_r[i])
+            self.mask_field  =  self.get_mask(self.binned[i])
+            self.mask_random =  self.get_mask(self.binned_r[i])
             self.alpha = self.get_alpha(self.nmean_field, self.nmean_random)
-            
-            self.maps["bin_{}".format(i)+"_delta"]= self.get_delta_map(self.nmean_field, self.nmean_random, self.alpha) 
-            self.maps["bin_{}".format(i)+"_nmean"]= self.nmean_random*self.alpha
-            self.maps["bin_{}".format(i)+"_mask"] = self.nmean_random
-               
-        print('Maps computed succesfully')
-        
-        self.cls = {}
-        for i in range(len(self.edges)+1):
-            for j in range(len(self.edges)+1):
-                if j>=i:
-                    self.f_i = nmt.NmtField(self.maps["bin_{}".format(i)+"_mask"], [self.maps["bin_{}".format(i)+"_delta"]])
-                    self.f_j = nmt.NmtField(self.maps["bin_{}".format(j)+"_mask"], [self.maps["bin_{}".format(i)+"_delta"]])
-                    self.wsp = nmt.NmtWorkspace()
-                    self.wsp.compute_coupling_matrix(self.f_i, self.f_j, self.bands)
-                    self.cl = self.get_cl(self.f_i, self.f_j, self.wsp)
-                    self.cls["cl_{}".format(i)+"{}".format(j)]= self.cl
-                    
-                    if i==j:
-                        self.mask  = self.maps["bin_{}".format(i)+"_mask"]
-                        self.nmean = self.maps["bin_{}".format(i)+"_nmean"]
-                        self.nl = self.get_nl(self.mask, self.nmean, self.wsp)
-                        self.cls["nl_{}".format(i)+"{}".format(j)]   = self.cl
-                        self.cls["cl-nl_{}".format(i)+"{}".format(j)]= self.nl
-                    else:
-                        self.cls["nl_{}".format(i)+"{}".format(j)]   = np.zeros(len(self.cl))
-                        self.cls["cl-nl_{}".format(i)+"{}".format(j)]= self.cl
-                        
-        print('Cls computed succesfully')       
+            self.nmean = self.get_nmean(self.mask_random, self.alpha)
+            self.delta = self.get_delta_map(self.mask_field, self.mask_random, self.alpha)
+                                       
+            self.maps["bin_{}".format(i)+"_delta"]= self.delta
+            self.maps["bin_{}".format(i)+"_nmean"]= self.nmean
+            self.maps["bin_{}".format(i)+"_mask"] = self.mask_random
+                   
 
         
    ###############
    ###############
         
-    def bin_z(self, cat, edges):
+    def __bin_z(self, cat, edges):
         #inputs: cat --> unbinned data
         #        edges -> upper boundaries of bins
         edges_full = [0.] + list(edges) + [1E300]  #David's better version
         cat_bin = [cat[(cat['Z']>=edges_full[i]) & (cat['Z']<edges_full[i+1])]
                    for i in range(len(edges)+1)]
         return cat_bin
-    
-    def get_nmean_map(self, field):
+                                       
+     def get_mask(self, field):
         #imputs: pandas frames
         #Calculates the mean quasar count per pixel of the field
         field_ra = np.radians(field['RA'].values) #Phi
@@ -128,6 +90,9 @@ class QuasarMapper:
                                                                             #for each pixel in the resolution,                                                                 #have been assigned the such pixel
 
         return field_pixel_data
+    
+    def get_nmean_map(self, mask, alpha ):
+        return mask*alpha
     
     def get_alpha(self, nmean_field, nmean_random):
         #imputs: pandas frames
@@ -147,13 +112,7 @@ class QuasarMapper:
 
         # The maps are: delta, mask, mean_number
         return delta_map
-    
-    def get_cl(self, f_a, f_b, wsp):
-        cl_coupled = nmt.compute_coupled_cell(f_a, f_b)
-        # Decouple power spectrum into bandpowers inverting the coupling matrix
-        cl_decoupled = wsp.decouple_cell(cl_coupled) #removed bias here
-
-        return cl_decoupled
+                                       
     
     def get_nl(self, mask, nmean, wsp):
         #Assumptions:
@@ -175,17 +134,7 @@ class QuasarMapper:
         N_ell = pixel_A*np.mean(sum_items)
         
         nl_coupled = np.array([N_ell * np.ones(3*self.nside)])
-        nl_decouple = wsp.decouple_cell(nl_coupled) #removed bias here
+        #nl_decouple = wsp.decouple_cell(nl_coupled) #removed bias here
 
         #Following Carlos code
-        return nl_decouple
-
-output = QuasarMapper()
-
-f = open("cls.txt","w")
-f.write( str(output.cls) )
-f.close()
-
-f = open("maps.txt","w")
-f.write( str(output.maps) )
-f.close()
+        return nl_coupled
