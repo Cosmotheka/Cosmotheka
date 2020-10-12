@@ -9,32 +9,32 @@ import healpy as hp
 
 
 class QuasarMapper:
-    def __init__(self, path_datas , path_randoms, edges = [1.5], nside = 512): 
-        #Inputs: 1) an array of paths to data fields
-        #        2) an array of paths to random fields
-        #        3) an array of bin inner boundaries  
-        #        4) resolution, defaulted to 512
+    def __init__(self,  path_datas , path_randoms, prefix = 'quasar_', edges = [1.5], nside = 512): 
+        #Inputs: 1) a tracer label for future reference, defaulted to 'quasar'
+        #        2) an array of paths to data fields
+        #        3) an array of paths to random fields
+        #        4) an array of bin inner boundaries  
+        #        5) resolution, defaulted to 512
         
         #make sure all data paths exist can store them in a dic
         #Will this break if lists are asymmetrical?
+        self.prefix = prefix
         self.cat_data = []
         self.cat_random = []
         for file_data, file_random in zip(path_datas, path_randoms):
             if not os.path.isfile(file_data):
                 raise ValueError(f"File {file_data} not found")
             with fits.open(file_data) as f:
-                self.cat_data.append(Table.read(f).to_pandas()
+                self.cat_data.append(Table.read(f).to_pandas())
             if not os.path.isfile(file_random):
                 raise ValueError(f"File {file_random} not found")
             with fits.open(file_random) as f:
-                self.cat_random.append(Table.read(f).to_pandas()
+                self.cat_random.append(Table.read(f).to_pandas())
+
+            
 
         #set resolution
         self.nside = nside
-        
-        #set l's per band, defaulted to 20
-        self.bands = nmt.NmtBin.from_nside_linear(self.nside, 20)
-        
 
         #Merge all data mappings into one single sky map 
         self.cat_data = pd.concat(self.cat_data)
@@ -49,19 +49,31 @@ class QuasarMapper:
         #Store maps
         self.maps = {}
         for i in range(len(self.edges)+1):
-            self.mask_field  =  self.get_mask(self.binned[i])
-            self.mask_random =  self.get_mask(self.binned_r[i])
-            self.alpha = self.get_alpha(self.nmean_field, self.nmean_random)
-            self.nmean = self.get_nmean(self.mask_random, self.alpha)
-            self.delta = self.get_delta_map(self.mask_field, self.mask_random, self.alpha)
+            self.mask_field  =  self.__get_mask(self.binned[i])
+            self.mask_random =  self.__get_mask(self.binned_r[i])
+            self.alpha = self.__get_alpha(self.mask_field, self.mask_random)
+            self.nmean = self.__get_nmean(self.mask_random, self.alpha)
+            self.delta = self.__get_delta_map(self.mask_field, self.mask_random, self.alpha)
                                        
-            self.maps["bin_{}".format(i)+"_delta"]= self.delta
-            self.maps["bin_{}".format(i)+"_nmean"]= self.nmean
-            self.maps["bin_{}".format(i)+"_mask"] = self.mask_random
+            self.maps[self.prefix + "bin_{}".format(i+1)+"_delta"]= self.delta
+            self.maps[self.prefix + "bin_{}".format(i+1)+"_nmean"]= self.nmean
+            self.maps[self.prefix + "bin_{}".format(i+1)+"_mask"] = self.mask_random
                    
-
+        #Store noise power spectra
+        self.nls = {}
+        for i in range(len(self.edges)+1):
+            for j in range(len(self.edges)+1):
+                if j>=i:
+                    if i==j:
+                        self.mask  = self.maps[self.prefix+"bin_{}".format(i+1)+"_mask"]
+                        self.nmean = self.maps[self.prefix+"bin_{}".format(i+1)+"_nmean"]
+                        self.nl = self.__get_nl(self.mask, self.nmean)
+                        self.nls[self.prefix + "nl_{}".format(i+1)+"{}".format(j+1)]   = self.nl
+                    else:
+                        self.nls[self.prefix + "nl_{}".format(i+1)+"{}".format(j+1)]   = np.zeros(3*self.nside)
         
    ###############
+   #PRIVATE METHODS
    ###############
         
     def __bin_z(self, cat, edges):
@@ -72,7 +84,7 @@ class QuasarMapper:
                    for i in range(len(edges)+1)]
         return cat_bin
                                        
-     def get_mask(self, field):
+    def __get_mask(self, field):
         #imputs: pandas frames
         #Calculates the mean quasar count per pixel of the field
         field_ra = np.radians(field['RA'].values) #Phi
@@ -91,10 +103,10 @@ class QuasarMapper:
 
         return field_pixel_data
     
-    def get_nmean_map(self, mask, alpha ):
+    def __get_nmean(self, mask, alpha ):
         return mask*alpha
     
-    def get_alpha(self, nmean_field, nmean_random):
+    def __get_alpha(self, nmean_field, nmean_random):
         #imputs: pandas frames
         #Calculates the mean quasar count per pixel field to random ratio
         
@@ -102,7 +114,7 @@ class QuasarMapper:
 
         return alpha
     
-    def get_delta_map(self, nmean_field, nmean_random, alpha):
+    def __get_delta_map(self, nmean_field, nmean_random, alpha):
         #inputs
         #Calculates the quasar density map of the 
         
@@ -114,7 +126,7 @@ class QuasarMapper:
         return delta_map
                                        
     
-    def get_nl(self, mask, nmean, wsp):
+    def __get_nl(self, mask, nmean):
         #Assumptions:
         #1) noise is uncorrelated such that the two sums over
         #pixels collapse into one --> True for poisson noise
@@ -138,3 +150,25 @@ class QuasarMapper:
 
         #Following Carlos code
         return nl_coupled
+                        
+    ###############
+    #PUBLIC METHODS
+    ###############
+                                       
+    def get_delta_map(self, i):
+        #input: bin lable i as a float
+        return self.maps[self.prefix +"bin_{}".format(i)+"_delta"]
+                                       
+    def get_nmean_map(self, i):
+        #input: bin lable i as a float
+        return self.maps[self.prefix +"bin_{}".format(i)+"_nmean"]
+                                       
+    def get_mask(self, i):
+        #input: bin lable i as a float
+        return self.maps[self.prefix +"bin_{}".format(i)+"_mask"]
+                                       
+    def get_nl(self, i, j):
+        #input: bin lable i as a float
+        return self.nls[self.prefix +"nl_{}".format(i)+"{}".format(j)]
+                                       
+                                       
