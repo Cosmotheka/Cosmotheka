@@ -49,12 +49,14 @@ class QuasarMapper:
         #Store maps
         self.maps = {}
         for i in range(len(self.edges)+1):
+            self.nz          =  self.__get_nz(self.binned[i])
             self.mask_field  =  self.__get_mask(self.binned[i])
             self.mask_random =  self.__get_mask(self.binned_r[i])
             self.alpha = self.__get_alpha(self.mask_field, self.mask_random)
             self.nmean = self.__get_nmean(self.mask_random, self.alpha)
             self.delta = self.__get_delta_map(self.mask_field, self.mask_random, self.alpha)
-                                       
+             
+            self.maps[self.prefix + "bin_{}".format(i+1)+"_nz"]= self.nz 
             self.maps[self.prefix + "bin_{}".format(i+1)+"_delta"]= self.delta
             self.maps[self.prefix + "bin_{}".format(i+1)+"_nmean"]= self.nmean
             self.maps[self.prefix + "bin_{}".format(i+1)+"_mask"] = self.mask_random
@@ -83,6 +85,16 @@ class QuasarMapper:
         cat_bin = [cat[(cat['Z']>=edges_full[i]) & (cat['Z']<edges_full[i+1])]
                    for i in range(len(edges)+1)]
         return cat_bin
+
+    def __get_nz(self, cat):
+        #inputs: cat --> unbinned data
+        resolution = 200
+        bins = np.linspace(min(cat['Z']), max(cat['Z']), resolution)
+        delta= (max(cat['Z'])- min(cat['Z']))/resolution
+        bin_centres = bins[:-1]+delta
+        bin_counts = [len(cat[(cat['Z']>=bins[i]) & (cat['Z']<bins[i+1])])                                                       for i in range(len(bins)-1)]
+        return np.array([bin_centres, bin_counts])
+
                                        
     def __get_mask(self, field):
         #imputs: pandas frames
@@ -154,6 +166,10 @@ class QuasarMapper:
     ###############
     #PUBLIC METHODS
     ###############
+    
+    def get_nz(self, i):
+        #input: bin lable i as a float
+        return self.maps[self.prefix +"bin_{}".format(i)+"_nz"]
                                        
     def get_delta_map(self, i):
         #input: bin lable i as a float
