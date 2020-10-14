@@ -26,7 +26,7 @@ class Field():
         data = self.data
         mask = self.get_mask()
         maps = self.get_maps()
-        f = nmt.NmtField(mask, maps, n_iter=data['healpy']['n_iter'])
+        f = nmt.NmtField(mask, maps, n_iter=data['healpy']['n_iter_sht'])
         return f
 
     def get_mask(self):
@@ -153,7 +153,7 @@ class Cl():
         fname = os.path.join(self.outdir, 'w__{}__{}.fits'.format(mask1, mask2))
         w = nmt.NmtWorkspace()
         if not os.path.isfile(fname):
-            n_iter = self.data['healpy']['n_iter']
+            n_iter = self.data['healpy']['n_iter_mcm']
             f1, f2 = self.get_fields()
             w.compute_coupling_matrix(f1.f, f2.f, self.b,
                                       n_iter=n_iter)

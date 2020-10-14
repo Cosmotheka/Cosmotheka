@@ -46,7 +46,7 @@ class Cov():
         fname = os.path.join(self.outdir, 'cw__{}__{}__{}__{}.fits'.format(mask1, mask2, mask3, mask4))
         cw = nmt.NmtCovarianceWorkspace()
         if not os.path.isfile(fname):
-            n_iter = self.data['healpy']['n_iter']
+            n_iter = self.data['healpy']['n_iter_cmcm']
             fA1, fB1 = self.clA1B1.get_fields()
             fA2, fB2 = self.clA2B2.get_fields()
             cw.compute_coupling_coefficients(fA1.f, fA2.f, fB1.f, fB2.f,
