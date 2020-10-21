@@ -48,29 +48,31 @@ class QuasarMapper:
         
         #Store maps
         self.maps = {}
-        for i in range(len(self.edges)+1):
-            self.nz          =  self.__get_nz(self.binned[i])
-            self.mask_field  =  self.__get_mask(self.binned[i])
-            self.mask_random =  self.__get_mask(self.binned_r[i])
-            self.alpha = self.__get_alpha(self.mask_field, self.mask_random)
-            self.nmean = self.__get_nmean(self.mask_random, self.alpha)
-            self.delta = self.__get_delta_map(self.mask_field, self.mask_random, self.alpha)
-             
-            self.maps[self.prefix + "bin_{}".format(i+1)+"_nz"]= self.nz 
-            self.maps[self.prefix + "bin_{}".format(i+1)+"_delta"]= self.delta
-            self.maps[self.prefix + "bin_{}".format(i+1)+"_nmean"]= self.nmean
-            self.maps[self.prefix + "bin_{}".format(i+1)+"_mask"] = self.mask_random
-                   
         #Store noise power spectra
         self.nls = {}
         for i in range(len(self.edges)+1):
+            self.nz          =  self.__get_nz(self.binned[i])
+            self.w_field     =  self.__get_weights(self.binned[i])
+            self.w_random    =  self.__get_weights(self.binned_r[i])
+            self.N_field  =  self.__get_N(self.binned[i], self.w_field)
+            self.N_random =  self.__get_N(self.binned_r[i], self.w_random)
+            self.alpha = self.__get_alpha(self.N_field, self.N_random)
+            self.nmean = self.__get_nmean(self.N_random, self.alpha)
+            self.delta = self.__get_delta_map(self.N_field, self.N_random,self.alpha)
+                                       
+            self.maps[self.prefix + "bin_{}".format(i+1)+"_nz"]= self.nz
+            self.maps[self.prefix + "bin_{}".format(i+1)+"_delta"]= self.delta
+            self.maps[self.prefix + "bin_{}".format(i+1)+"_nmean"]= self.nmean
+            self.maps[self.prefix + "bin_{}".format(i+1)+"_mask"] = self.nmean
             for j in range(len(self.edges)+1):
                 if j>=i:
                     if i==j:
                         self.mask  = self.maps[self.prefix+"bin_{}".format(i+1)+"_mask"]
                         self.nmean = self.maps[self.prefix+"bin_{}".format(i+1)+"_nmean"]
                         self.nl = self.__get_nl(self.mask, self.nmean)
+                        self.nl_2 = self.__get_nl_2(self.w_field, self.w_random, self.alpha)
                         self.nls[self.prefix + "nl_{}".format(i+1)+"{}".format(j+1)]   = self.nl
+                        self.nls[self.prefix + "alt_nl_{}".format(i+1)+"{}".format(j+1)]   = self.nl_2
                     else:
                         self.nls[self.prefix + "nl_{}".format(i+1)+"{}".format(j+1)]   = np.zeros(3*self.nside)
         
@@ -85,44 +87,48 @@ class QuasarMapper:
         cat_bin = [cat[(cat['Z']>=edges_full[i]) & (cat['Z']<edges_full[i+1])]
                    for i in range(len(edges)+1)]
         return cat_bin
-
+    
     def __get_nz(self, cat):
         #inputs: cat --> unbinned data
         resolution = 200
         bins = np.linspace(min(cat['Z']), max(cat['Z']), resolution)
         delta= (max(cat['Z'])- min(cat['Z']))/resolution
         bin_centres = bins[:-1]+delta
-        bin_counts = [len(cat[(cat['Z']>=bins[i]) & (cat['Z']<bins[i+1])])                                                       for i in range(len(bins)-1)]
+        bin_counts = [len(cat[(cat['Z']>=bins[i]) & (cat['Z']<bins[i+1])])
+                   for i in range(len(bins)-1)]
         return np.array([bin_centres, bin_counts])
-
+    
+    def __get_weights(self, field):
+        #field_FKP = np.array(field['WEIGHT_FKP'].values) 
+        field_SYSTOT = np.array(field['WEIGHT_SYSTOT'].values) 
+        field_CP = np.array(field['WEIGHT_CP'].values) 
+        field_NOZ = np.array(field['WEIGHT_NOZ'].values)
+        weights = field_SYSTOT*field_CP*field_NOZ #FKP left out
+        
+        return weights
                                        
-    def __get_mask(self, field):
+    def __get_N(self, field, weights):
         #imputs: pandas frames
         #Calculates the mean quasar count per pixel of the field
         field_ra = np.radians(field['RA'].values) #Phi
         field_dec = np.radians(field['DEC'].values) #Pi/2 - dec = theta
 
-        field_FKP = np.array(field['WEIGHT_FKP'].values) 
-        field_SYSTOT = np.array(field['WEIGHT_SYSTOT'].values) 
-        field_CP = np.array(field['WEIGHT_CP'].values) 
-        field_NOZ = np.array(field['WEIGHT_NOZ'].values)
-        field_data = field_SYSTOT*field_CP*field_NOZ #FKP left out
-
         field_indices = hp.ang2pix(self.nside, np.pi/2 - field_dec, field_ra) #pixel_indecis
 
-        field_pixel_data = np.bincount(field_indices, field_data, hp.nside2npix(self.nside)) 
+        field_pixel_data = np.bincount(field_indices, weights, hp.nside2npix(self.nside)) 
                                                                             #for each pixel in the resolution,                                                                 #have been assigned the such pixel
 
         return field_pixel_data
     
-    def __get_nmean(self, mask, alpha ):
-        return mask*alpha
+    def __get_nmean(self, N, alpha ):
+        return N*alpha
     
-    def __get_alpha(self, nmean_field, nmean_random):
+    def __get_alpha(self, mask_field, mask_random):
         #imputs: pandas frames
         #Calculates the mean quasar count per pixel field to random ratio
         
-        alpha = sum(nmean_field)/sum(nmean_random)
+        alpha = sum(mask_field)/sum(mask_random)
+        print(alpha)
 
         return alpha
     
@@ -158,7 +164,26 @@ class QuasarMapper:
         N_ell = pixel_A*np.mean(sum_items)
         
         nl_coupled = np.array([N_ell * np.ones(3*self.nside)])
-        #nl_decouple = wsp.decouple_cell(nl_coupled) #removed bias here
+
+        #Following Carlos code
+        return nl_coupled
+    
+    def __get_nl_2(self, w_data, w_random, alpha):
+        #Assumptions:
+        #1) noise is uncorrelated such that the two sums over
+        #pixels collapse into one --> True for poisson noise
+        #2) Pixel area is a constant --> True for healpy
+
+        #Input:
+        #mask --> mask 
+        #n --> map with mean number of galaxies per pixel 
+
+        pixel_A = 4*np.pi/hp.nside2npix(self.nside)
+        #print(pixel_A)
+
+        N_ell = pixel_A**2*(np.sum(w_data**2)+ alpha**2*np.sum(w_random**2))/(4*np.pi)
+       
+        nl_coupled = np.array([N_ell * np.ones(3*self.nside)])
 
         #Following Carlos code
         return nl_coupled
@@ -166,11 +191,11 @@ class QuasarMapper:
     ###############
     #PUBLIC METHODS
     ###############
-    
+      
     def get_nz(self, i):
         #input: bin lable i as a float
         return self.maps[self.prefix +"bin_{}".format(i)+"_nz"]
-                                       
+    
     def get_delta_map(self, i):
         #input: bin lable i as a float
         return self.maps[self.prefix +"bin_{}".format(i)+"_delta"]
@@ -186,5 +211,9 @@ class QuasarMapper:
     def get_nl(self, i, j):
         #input: bin lable i as a float
         return self.nls[self.prefix +"nl_{}".format(i)+"{}".format(j)]
+    
+    def get_alt_nl(self, i, j):
+        #input: bin lable i as a float
+        return self.nls[self.prefix +"alt_nl_{}".format(i)+"{}".format(j)]
                                        
                                        
