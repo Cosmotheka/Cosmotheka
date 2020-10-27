@@ -69,10 +69,8 @@ class QuasarMapper:
                     if i==j:
                         self.mask  = self.maps[self.prefix+"bin_{}".format(i+1)+"_mask"]
                         self.nmean = self.maps[self.prefix+"bin_{}".format(i+1)+"_nmean"]
-                        self.nl = self.__get_nl(self.mask, self.nmean)
-                        self.nl_2 = self.__get_nl_2(self.w_field, self.w_random, self.alpha)
+                        self.nl = self.__get_nl(self.w_field, self.w_random, self.alpha)
                         self.nls[self.prefix + "nl_{}".format(i+1)+"{}".format(j+1)]   = self.nl
-                        self.nls[self.prefix + "alt_nl_{}".format(i+1)+"{}".format(j+1)]   = self.nl_2
                     else:
                         self.nls[self.prefix + "nl_{}".format(i+1)+"{}".format(j+1)]   = np.zeros(3*self.nside)
         
@@ -143,32 +141,7 @@ class QuasarMapper:
         # The maps are: delta, mask, mean_number
         return delta_map
                                        
-    
-    def __get_nl(self, mask, nmean):
-        #Assumptions:
-        #1) noise is uncorrelated such that the two sums over
-        #pixels collapse into one --> True for poisson noise
-        #2) Pixel area is a constant --> True for healpy
-
-        #Input:
-        #mask --> mask 
-        #n --> map with mean number of galaxies per pixel 
-
-        pixel_A = 4*np.pi/hp.nside2npix(self.nside)
-
-        sum_items = np.zeros(hp.nside2npix(self.nside))
-        goodpix = nmean > 0   #avoid dividing by 0
-        sum_items[goodpix] = (mask[goodpix]**2/nmean[goodpix])
-
-        #David's notes formula
-        N_ell = pixel_A*np.mean(sum_items)
-        
-        nl_coupled = np.array([N_ell * np.ones(3*self.nside)])
-
-        #Following Carlos code
-        return nl_coupled
-    
-    def __get_nl_2(self, w_data, w_random, alpha):
+    def __get_nl(self, w_data, w_random, alpha):
         #Assumptions:
         #1) noise is uncorrelated such that the two sums over
         #pixels collapse into one --> True for poisson noise
@@ -217,3 +190,4 @@ class QuasarMapper:
         return self.nls[self.prefix +"alt_nl_{}".format(i)+"{}".format(j)]
                                        
                                        
+
