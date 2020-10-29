@@ -35,8 +35,11 @@ class MappereBOSSQSO(MapperBase):
         self.w_random = self._get_weights(self.cat_random)
         self.alpha = np.sum(self.w_data)/np.sum(self.w_random)
 
-        self.dndz = None
-        self.delta_map = None
+        self.dndz       = None
+        self.delta_map  = None
+        self.nl_coupled = None
+        self.mask       = None
+        self.nmt_field  = None
 
     def _bin_z(self, cat):
         return cat[(cat['Z'] >= self.z_edges[0]) &
@@ -75,10 +78,18 @@ class MappereBOSSQSO(MapperBase):
         return self.delta_map
 
     def get_mask(self):
-        pass
+        if self.mask is None:
+            self.mask = self.alpha*self._get_counts_map(self.cat_random, self.w_random)
+        return self.mask
 
-    def get_nmt_field(self):
-        pass
+    def get_nmt_field(self, signal, mask):
+        if self.nmt_field is None:
+            self.nmt_field = nmt.NmtField(mask, [signal])
+        return self.nmt_field
 
     def get_nl_coupled(self):
-        pass
+        if self.nl_coupled is None:
+            pixel_A =  4*np.pi/hp.nside2npix(self.nside)
+            N_ell = pixel_A**2*(np.sum(w_data**2)+ alpha**2*np.sum(w_random**2))/(4*np.pi)
+            self.nl_coupled = np.array([N_ell * np.ones(3*self.nside)])
+        return self.nl_coupled
