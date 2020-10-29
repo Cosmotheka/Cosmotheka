@@ -1,9 +1,11 @@
-from .mapper_base import MapperBase
+from mapper_base import MapperBase
 from astropy.io import fits
 from astropy.table import Table
 import pandas as pd
 import numpy as np
-
+import healpy as hp
+import pymaster as nmt
+import os
 
 class MappereBOSSQSO(MapperBase):
     def __init__(self, config):
@@ -62,10 +64,9 @@ class MappereBOSSQSO(MapperBase):
     
     def get_nz(self, num_z=200):
         if self.dndz is None:
-            #inputs: cat --> unbinned data
             h, b = np.histogram(self.cat_data['Z'], bins=num_z,
                                 weights=self.w_data)
-            self.dndz = [h, b[:-1], b[1:]]
+            self.dndz = np.array([h, b[:-1], b[1:]])
         return self.dndz
 
     def get_signal_map(self):
@@ -90,6 +91,6 @@ class MappereBOSSQSO(MapperBase):
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             pixel_A =  4*np.pi/hp.nside2npix(self.nside)
-            N_ell = pixel_A**2*(np.sum(w_data**2)+ alpha**2*np.sum(w_random**2))/(4*np.pi)
+            N_ell = pixel_A**2*(np.sum(self.w_data**2)+ self.alpha**2*np.sum(self.w_random**2))/(4*np.pi)
             self.nl_coupled = np.array([N_ell * np.ones(3*self.nside)])
         return self.nl_coupled
