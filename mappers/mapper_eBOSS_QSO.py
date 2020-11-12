@@ -18,19 +18,15 @@ class MappereBOSSQSO(MapperBase):
             if not os.path.isfile(file_data):
                 raise ValueError(f"File {file_data} not found")
             with fits.open(file_data) as f:
-                #self.cat_data.append(Table.read(f).to_pandas())
                 self.cat_data = Table.read(f).to_pandas()
             if not os.path.isfile(file_random):
                 raise ValueError(f"File {file_random} not found")
             with fits.open(file_random) as f:
-                #self.cat_random = (Table.read(f).to_pandas())
                 self.cat_random = Table.read(f).to_pandas()
             
         self.nside = config['nside']
         self.nside_mask = config.get('nside_mask', self.nside) 
         self.npix = hp.nside2npix(self.nside)
-        #self.cat_data = pd.concat(self.cat_data)
-        #self.cat_random = pd.concat(self.cat_random)
 
         self.z_edges = config['z_edges']
 
