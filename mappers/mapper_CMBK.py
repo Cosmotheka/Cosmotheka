@@ -24,15 +24,17 @@ class MapperCMBK(MapperBase):
                 
             if not os.path.isfile(file_mask):
                 raise ValueError(f"File {file_mask} not found")
-            with fits.open(file_mask,  ignore_missing_end=True) as f:
-                self.mask= Table.read(f).to_pandas()
+            self.mask = hp.read_map(file_mask)
+            #with fits.open(file_mask,  ignore_missing_end=True) as f:
+                #self.mask= Table.read(f).to_pandas()
                 
             if not os.path.isfile(file_noise):
                 raise ValueError(f"File {file_noise} not found")
             self.noise = pd.read_table(file_noise, names=['l','Nl','Nl+Cl'], sep=" ", encoding='utf-8')
             
         self.nside = config['nside']
-        self.r = hp.rotator.Rotator(coord=['G','C'])
+        self.r = hp.Rotator(coord=['G','C'])
+        #self.r = hp.rotator.Rotator(coord=['G','C'])
         
         self.k_map      = None
         self.nl_coupled = None
@@ -44,7 +46,8 @@ class MapperCMBK(MapperBase):
     def get_signal_map(self):
         if self.k_map is None:
             self.k_map  = self.r.rotate_alm(self.klm)
-            self.k_map =  hp.sphtfunc.alm2map(self.k_map, self.nside)
+            self.k_map =  hp.alm2map(self.k_map, self.nside)
+            #self.k_map =  hp.sphtfunc.alm2map(self.k_map, self.nside)
         return self.k_map
 
     def get_mask(self):
@@ -54,7 +57,7 @@ class MapperCMBK(MapperBase):
 
     def get_nmt_field(self, signal, mask):
         if self.nmt_field is None:
-            self.nmt_field = nmt.NmtField(mask, [signal])
+            self.nmt_field = nmt.NmtField(mask, [signal], n_iter = 0)
         return self.nmt_field
 
     def get_nl_coupled(self):
