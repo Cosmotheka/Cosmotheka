@@ -26,7 +26,7 @@ class Field():
         data = self.data
         mask = self.get_mask()
         maps = self.get_maps()
-        f = nmt.NmtField(mask, maps, n_iter=data['healpy']['n_iter'])
+        f = nmt.NmtField(mask, maps, n_iter=data['healpy']['n_iter_sht'])
         return f
 
     def get_mask(self):
@@ -56,12 +56,12 @@ class Field():
                 maps[0] = map_dg
             elif self.type == 'wl':
                 maps = np.zeros((2, mask.size))
-                sums = np.load(tracer['sums'])
+                # sums = np.load(tracer['sums'])
                 map_we1, map_we2 = raw_maps
-                opm_mean = sums['wopm'] / sums['w']
+                # opm_mean = sums['wopm'] / sums['w'] # Already subtracted form map
 
-                maps[0, mask_good] = -(map_we1[mask_good]/mask[mask_good]) / opm_mean
-                maps[1, mask_good] = (map_we2[mask_good]/mask[mask_good]) / opm_mean
+                maps[0, mask_good] = -(map_we1[mask_good]/mask[mask_good]) # / opm_mean
+                maps[1, mask_good] = (map_we2[mask_good]/mask[mask_good]) # / opm_mean
             elif self.type == 'cv':
                 maps = raw_maps
             else:
@@ -69,6 +69,10 @@ class Field():
             self._maps = maps
 
         return self._maps
+
+    def get_w2_map(self):
+        tracer = self.data['tracers'][self.tr]
+        return hp.read_map(tracer['w2map'])
 
     def get_raw_maps(self):
         tracer = self.data['tracers'][self.tr]
@@ -153,7 +157,7 @@ class Cl():
         fname = os.path.join(self.outdir, 'w__{}__{}.fits'.format(mask1, mask2))
         w = nmt.NmtWorkspace()
         if not os.path.isfile(fname):
-            n_iter = self.data['healpy']['n_iter']
+            n_iter = self.data['healpy']['n_iter_mcm']
             f1, f2 = self.get_fields()
             w.compute_coupling_matrix(f1.f, f2.f, self.b,
                                       n_iter=n_iter)
@@ -162,16 +166,21 @@ class Cl():
             w.read_from(fname)
         return w
 
-    def _compute_coupled_noise_gc(self):
-        map_ng = self._f1.get_raw_maps()[0]
+    def _compute_coupled_noise_gc(self, new_noise=True):
+        map_w = self._f1.get_raw_maps()[0]
         mask = self._f1.get_mask()
         mask_good = mask > 0  # Already set to 0 all bad pixels in Field()
         npix = mask.size
         nside = hp.npix2nside(npix)
 
-        N_mean = map_ng[mask_good].sum() / mask[mask_good].sum()
+        N_mean = map_w[mask_good].sum() / mask[mask_good].sum()
         N_mean_srad = N_mean / (4 * np.pi) * npix
         N_ell = mask.sum() / npix / N_mean_srad
+        if new_noise:
+            map_w2 = self._f1.get_w2_map()
+            correction = map_w2[mask_good].sum() / map_w[mask_good].sum()
+            N_ell *= correction
+
         nl = N_ell * np.ones(3 * nside)
         return np.array([nl])
 
@@ -181,9 +190,9 @@ class Cl():
 
         fname = self.data['tracers'][self.tr1]['sums']
         sums = np.load(fname)
-        opm_mean = sums['wopm'] / sums['w']
+        # opm_mean = sums['wopm'] / sums['w'] # Already subtracted from map
 
-        N_ell = hp.nside2pixarea(nside) * sums['w2s2'] / npix / opm_mean**2.
+        N_ell = hp.nside2pixarea(nside) * sums['w2s2'] / npix # / opm_mean**2.
         nl = N_ell * np.ones(3 * nside)
         nl[:2] = 0  # Ylm = for l < spin
 
@@ -302,7 +311,8 @@ class Cl_fid():
         # Get Tracers
         if tracer['type'] == 'gc':
             # Import z, pz
-            z, pz = np.loadtxt(tracer['dndz'], usecols=(1, 3), unpack=True)
+            # z, pz = np.loadtxt(tracer['dndz'], usecols=(1, 3), unpack=True)
+            z, pz = np.loadtxt(tracer['dndz'], usecols=(0, 1), unpack=True)
             # Calculate z bias
             dz = 0
             z_dz = z - dz
@@ -319,7 +329,8 @@ class Cl_fid():
                                           dndz=(z_dz, pz), bias=bias)
         elif tracer['type'] == 'wl':
             # Import z, pz
-            z, pz = np.loadtxt(tracer['dndz'], usecols=(1, 3), unpack=True)
+            # z, pz = np.loadtxt(tracer['dndz'], usecols=(1, 3), unpack=True)
+            z, pz = np.loadtxt(tracer['dndz'], usecols=(0, 1), unpack=True)
             # Calculate z bias
             dz = 0
             z_dz = z - dz
