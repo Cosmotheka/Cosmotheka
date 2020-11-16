@@ -58,10 +58,12 @@ class MapperCMBK(MapperBase):
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
-             self.nl_coupled = self.noise['Nl'].values
-        return np.array([self.nl_coupled])
+            self.nl_coupled = self.noise['Nl'].values
+            l = self.noise['l'].values
+        return l, np.array([self.nl_coupled])
     
     def get_cl_fiducial(self):
         if self.cl_fid is None:
-             self.cl_fid = self.noise['Nl+Cl'].values - self.noise['Nl'].values
-        return self.cl_fid
+            self.cl_fid = self.noise['Nl+Cl'].values - self.noise['Nl'].values
+            l = self.noise['l'].values
+        return l, self.cl_fid
