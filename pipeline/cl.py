@@ -8,85 +8,6 @@ import os
 import yaml
 import warnings
 
-class Field():
-    def __init__(self, data, tr, maps=None, mask=None):
-        self.data = co.read_data(data)
-        self.tr = tr
-        self.spin = int(self.data['tracers'][tr]['spin'])
-        self.type = self.data['tracers'][tr]['type']
-        self._raw_maps = None
-        self._maps = maps
-        self._mask = mask
-        self.f = self.compute_field()
-
-    def get_field(self):
-        return self.f
-
-    def compute_field(self):
-        data = self.data
-        mask = self.get_mask()
-        maps = self.get_maps()
-        f = nmt.NmtField(mask, maps, n_iter=data['healpy']['n_iter_sht'])
-        return f
-
-    def get_mask(self):
-        if self._mask is None:
-            data = self.data
-            tracer = data['tracers'][self.tr]
-            mask = hp.read_map(tracer['mask'])
-            mask_good = mask > tracer['threshold']
-            mask[~mask_good] = 0.
-            self._mask = mask
-        return self._mask
-
-    def get_maps(self):
-        if self._maps is None:
-            data = self.data
-            tracer = data['tracers'][self.tr]
-            mask = self.get_mask()
-            mask_good = mask > 0 # Already set to 0 unwnated points
-            # TODO: This can be optimize for the case mask1 == mask2
-            raw_maps = self.get_raw_maps()
-            if self.type == 'gc':
-                maps = np.zeros((1, mask.size))
-                raw_map = raw_maps[0]
-                mean_raw_map = raw_map[mask_good].sum() / mask[mask_good].sum()
-                map_dg = np.zeros_like(raw_map)
-                map_dg[mask_good] = raw_map[mask_good] / (mean_raw_map * mask[mask_good]) - 1
-                maps[0] = map_dg
-            elif self.type == 'wl':
-                maps = np.zeros((2, mask.size))
-                # sums = np.load(tracer['sums'])
-                map_we1, map_we2 = raw_maps
-                # opm_mean = sums['wopm'] / sums['w'] # Already subtracted form map
-
-                maps[0, mask_good] = -(map_we1[mask_good]/mask[mask_good]) # / opm_mean
-                maps[1, mask_good] = (map_we2[mask_good]/mask[mask_good]) # / opm_mean
-            elif self.type == 'cv':
-                maps = raw_maps
-            else:
-                raise ValueError('Type {} not implemented'.format(self.type))
-            self._maps = maps
-
-        return self._maps
-
-    def get_w2_map(self):
-        tracer = self.data['tracers'][self.tr]
-        return hp.read_map(tracer['w2map'])
-
-    def get_raw_maps(self):
-        tracer = self.data['tracers'][self.tr]
-        if self._raw_maps is None:
-            if self.spin == 0:
-                raw_map = hp.read_map(tracer['path'])
-                self._raw_maps = np.array([raw_map])
-            else:
-                map_we1 = hp.read_map(tracer['path1'])
-                map_we2 = hp.read_map(tracer['path2'])
-                self._raw_maps = np.array([map_we1, map_we2])
-
-        return self._raw_maps
-
 class Cl():
     def __init__(self, data, tr1, tr2):
         self._datapath = data
@@ -102,9 +23,10 @@ class Cl():
         self.outdir = self.get_outdir()
         os.makedirs(self.outdir, exist_ok=True)
         self.b = self.get_NmtBin()
+        self.nside = self.data['healpy']['nside']
         # Not needed to load cl if already computed
-        self._f1 = None
-        self._f2 = None
+        self._mapper1 = None
+        self._mapper2 = None
         self._w = None
         ##################
         self.cl_file = self.get_cl_file()
@@ -127,18 +49,31 @@ class Cl():
 
     def get_NmtBin(self):
         bpw_edges = np.array(self.data['bpw_edges'])
-        nside = self.data['healpy']['nside']
+        nside = self.nside
         bpw_edges = bpw_edges[bpw_edges <= 3 * nside] # 3*nside == ells[-1] + 1
         if 3*nside not in bpw_edges: # Exhaust lmax --> gives same result as previous method, but adds 1 bpw (not for 4096)
             bpw_edges = np.append(bpw_edges, 3*nside)
         b = nmt.NmtBin.from_edges(bpw_edges[:-1], bpw_edges[1:])
         return b
 
-    def get_fields(self):
-        if self._f1 is None:
-            self._f1 = Field(self._datapath, self.tr1)
-            self._f2 = Field(self._datapath, self.tr2)
-        return self._f1, self._f2
+    def _get_mapper(self, name):
+        config = self.data['tracers'][name]
+        if name == 'CMBK':
+            from mappers.mapper_CMBK import MapperCMBK
+            mapper = MapperCMBK(config)
+        elif name == 'eBOSS_QSO':
+            from mappers.mapper_eBOSS_QSO import MappereBOSSQSO
+            mapper = MappereBOSSQSO(config)
+        else:
+            raise ValueError('Mapper {} not implemented.'.format(name))
+
+        return mapper
+
+    def get_mappers(self):
+        if self._mapper1 is None:
+            self._mapper1 = self._get_mapper(self.tr1)
+            self._mapper2 = self._mapper1 if self.tr1 == self.tr2 else self._get_mapper(self.tr2)
+        return self._mapper1, self._mapper2
 
     def get_workspace(self):
         if self._w is None:
@@ -158,64 +93,14 @@ class Cl():
         w = nmt.NmtWorkspace()
         if not os.path.isfile(fname):
             n_iter = self.data['healpy']['n_iter_mcm']
-            f1, f2 = self.get_fields()
-            w.compute_coupling_matrix(f1.f, f2.f, self.b,
-                                      n_iter=n_iter)
+            mapper1, mapper2 = self.get_mappers()
+            f1 = mapper1.get_nmt_field()
+            f2 = mapper1.get_nmt_field()
+            w.compute_coupling_matrix(f1, f2, self.b, n_iter=n_iter)
             w.write_to(fname)
         else:
             w.read_from(fname)
         return w
-
-    def _compute_coupled_noise_gc(self, new_noise=True):
-        map_w = self._f1.get_raw_maps()[0]
-        mask = self._f1.get_mask()
-        mask_good = mask > 0  # Already set to 0 all bad pixels in Field()
-        npix = mask.size
-        nside = hp.npix2nside(npix)
-
-        N_mean = map_w[mask_good].sum() / mask[mask_good].sum()
-        N_mean_srad = N_mean / (4 * np.pi) * npix
-        N_ell = mask.sum() / npix / N_mean_srad
-        if new_noise:
-            map_w2 = self._f1.get_w2_map()
-            correction = map_w2[mask_good].sum() / map_w[mask_good].sum()
-            N_ell *= correction
-
-        nl = N_ell * np.ones(3 * nside)
-        return np.array([nl])
-
-    def _compute_coupled_noise_wl(self):
-        nside = self.data['healpy']['nside']
-        npix = hp.nside2npix(nside)
-
-        fname = self.data['tracers'][self.tr1]['sums']
-        sums = np.load(fname)
-        # opm_mean = sums['wopm'] / sums['w'] # Already subtracted from map
-
-        N_ell = hp.nside2pixarea(nside) * sums['w2s2'] / npix # / opm_mean**2.
-        nl = N_ell * np.ones(3 * nside)
-        nl[:2] = 0  # Ylm = for l < spin
-
-        return np.array([nl, 0 * nl, 0 * nl, nl])
-
-
-    def compute_coupled_noise(self):
-        tracer = self.data['tracers'][self.tr1]
-        s1, s2 = self.get_spins()
-        nell = 3 * self.data['healpy']['nside']
-        if self.tr1 != self.tr2:
-            ndim = s1+s2
-            if ndim == 0:
-                ndim += 1
-            return np.zeros((ndim, nell))
-        elif tracer['type'] == 'gc':
-            return self._compute_coupled_noise_gc()
-        elif tracer['type'] == 'wl':
-            return self._compute_coupled_noise_wl()
-        elif tracer['type'] == 'cv':
-            return np.zeros((1, nell))
-        else:
-            raise ValueError('Noise for tracer type {} not implemented'.format(tracer['type']))
 
     def get_cl_file(self):
         if self.read_symm:
@@ -227,10 +112,15 @@ class Cl():
         fname = os.path.join(self.outdir, 'cl_{}_{}.npz'.format(tr1, tr2))
         ell = self.b.get_effective_ells()
         if not os.path.isfile(fname):
-            f1, f2 = self.get_fields()
+            mapper1, mapper2 = self.get_mappers()
+            f1 = mapper1.get_nmt_field()
+            f2 = mapper2.get_nmt_field()
             w = self.get_workspace()
-            cl = w.decouple_cell(nmt.compute_coupled_cell(f1.f, f2.f))
-            nl_cp = self.compute_coupled_noise()
+            cl = w.decouple_cell(nmt.compute_coupled_cell(f1, f2))
+            if tr1 == tr2:
+                nl_cp = mapper1.get_nl_coupled()
+            else:
+                nl_cp = np.zeros(3 * self.nside)
             nl = w.decouple_cell(nl_cp)
             np.savez(fname, ell=ell, cl=cl-nl, nl=nl, nl_cp=nl_cp)
 
@@ -250,9 +140,9 @@ class Cl():
         return self.ell, self.nl_cp
 
     def get_masks(self):
-        f1, f2 = self.get_fields()
-        m1 = f1.get_mask()
-        m2 = f2.get_mask()
+        mapper1, mapper2 = self.get_mappers()
+        m1 = mapper1.get_mask()
+        m2 = mapper2.get_mask()
         return m1, m2
 
     def get_spins(self):
