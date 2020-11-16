@@ -9,7 +9,7 @@ def get_mem(data, trs, compute):
     # Return memory for nside 4096
     d = {}
     if compute == 'cls':
-        d[0] = 11
+        d[0] = 16
         d[2] = 25
     elif compute == 'cov':
         d[0] = 16
@@ -25,12 +25,14 @@ def get_mem(data, trs, compute):
     return mem
 
 
-def launch_cls(data, queue, njobs, wsp=False):
+def launch_cls(data, queue, njobs, wsp=False, fiducial=False):
     #######
     nc = 8
     #
     cl_tracers = co.get_cl_tracers(data, wsp)
     outdir = data['output']
+    if fiducial:
+        outdir = os.path.join(outdir, 'fiducial')
     c = 0
     for tr1, tr2 in cl_tracers:
         if c >= njobs:
@@ -43,8 +45,13 @@ def launch_cls(data, queue, njobs, wsp=False):
             continue
 
         mem = get_mem(data, (tr1, tr2), 'cls') / nc
-        pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
-        pyrun = 'cl.py {} {} {}'.format(args.INPUT, tr1, tr2)
+        if not fiducial:
+            pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
+            pyrun = 'cl.py {} {} {}'.format(args.INPUT, tr1, tr2)
+        else:
+            pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, 2)
+            pyrun = 'cl.py {} {} {} --fiducial'.format(args.INPUT, tr1, tr2)
+
         print(pyexec + " " + pyrun)
         os.system(pyexec + " " + pyrun)
         c += 1
@@ -79,7 +86,7 @@ def launch_to_sacc(data, name, nl, queue):
     if os.path.isfile(fname):
         return
 
-    nc = 21
+    nc = 24
     mem = 7.
     comment = 'to_sacc'
     pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
@@ -103,6 +110,7 @@ if __name__ == "__main__":
     parser.add_argument('--to_sacc_name', type=str, default='cls_cov.fits', help='Sacc file name')
     parser.add_argument('--to_sacc_use_nl', default=False, action='store_true',
                         help='Set if you want to use nl and covNG (if present) instead of cls and covG ')
+    parser.add_argument('--cls_fiducial', default=False, action='store_true', help='Set to compute the fiducial cls')
     args = parser.parse_args()
 
     ##############################################################################
@@ -113,7 +121,7 @@ if __name__ == "__main__":
     njobs = args.njobs
 
     if args.compute == 'cls':
-        launch_cls(data, queue, njobs, args.wsp)
+        launch_cls(data, queue, njobs, args.wsp, args.cls_fiducial)
     elif args.compute == 'cov':
         launch_cov(data, queue, njobs, args.wsp)
     elif args.compute == 'to_sacc':

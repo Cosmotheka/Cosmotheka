@@ -137,4 +137,4 @@ healpy:
   n_iter_cmcm: 3
   nside: 4096
 
-output: '/mnt/extraspace/gravityls_3/S8z/Cls_2/4096'
+output: '/mnt/extraspace/gravityls_3/S8z/Cls_2/4096_asDavid'

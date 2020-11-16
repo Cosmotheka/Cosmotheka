@@ -31,6 +31,8 @@ def get_cl_tracers(data, wsp=False):
     for i, tr1 in enumerate(tr_names):
         for tr2 in tr_names[i:]:
             trreq = ''.join(s for s in (tr1 + '-' + tr2) if not s.isdigit())
+            if trreq not in data['cls']:
+                continue
             clreq =  data['cls'][trreq]
             if clreq == 'all':
                 pass
@@ -50,6 +52,31 @@ def get_cov_tracers(data, wsp=False):
             cov_tracers.append((*trs1, *trs2))
 
     return cov_tracers
+
+def get_cov_ng_cl_tracers(data):
+    cl_tracers = get_cl_tracers(data)
+    order_ng = data['cov']['ng']['order']
+    cl_ng = [[] for i in order_ng]
+    ix_reverse = []
+
+    for tr1, tr2 in cl_tracers:
+        tr1_nn = ''.join(s for s in tr1 if not s.isdigit())
+        tr2_nn = ''.join(s for s in tr2 if not s.isdigit())
+        if (tr1_nn + '-' + tr2_nn) in order_ng:
+            ix = order_ng.index(tr1_nn + '-' + tr2_nn)
+        elif (tr2_nn + '-' + tr1_nn) in order_ng:
+            ix = order_ng.index(tr2_nn + '-' + tr1_nn)
+            if ix not in ix_reverse:
+                ix_reverse.append(ix)
+        else:
+            raise ValueError('Tracers {}-{} not found in NG cov.'.format(tr1, tr2))
+        cl_ng[ix].append((tr1, tr2))
+
+    for ix in ix_reverse:
+        cl_ng[ix].sort(key=lambda x: x[1])
+
+    return [item for sublist in cl_ng for item in sublist]
+
 
 def filter_tracers_wsp(data, tracers):
     tracers_torun = []
