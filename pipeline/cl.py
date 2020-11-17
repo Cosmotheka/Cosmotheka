@@ -22,8 +22,8 @@ class Cl():
         self.tr2 = tr2
         self.outdir = self.get_outdir()
         os.makedirs(self.outdir, exist_ok=True)
-        self.b = self.get_NmtBin()
         self.nside = self.data['healpy']['nside']
+        self.b = self.get_NmtBin()
         # Not needed to load cl if already computed
         self._mapper1 = None
         self._mapper2 = None
@@ -58,10 +58,10 @@ class Cl():
 
     def _get_mapper(self, name):
         config = self.data['tracers'][name]
-        if name == 'CMBK':
+        if 'CMBK' in name:
             from mappers.mapper_CMBK import MapperCMBK
             mapper = MapperCMBK(config)
-        elif name == 'eBOSS_QSO':
+        elif 'eBOSS_QSO' in name:
             from mappers.mapper_eBOSS_QSO import MappereBOSSQSO
             mapper = MappereBOSSQSO(config)
         else:
@@ -117,10 +117,9 @@ class Cl():
             f2 = mapper2.get_nmt_field()
             w = self.get_workspace()
             cl = w.decouple_cell(nmt.compute_coupled_cell(f1, f2))
+            nl_cp = np.zeros((cl.shape[0], 3 * self.nside))
             if tr1 == tr2:
-                nl_cp = mapper1.get_nl_coupled()
-            else:
-                nl_cp = np.zeros(3 * self.nside)
+                nl_cp[0] = nl_cp[-1] = mapper1.get_nl_coupled()
             nl = w.decouple_cell(nl_cp)
             np.savez(fname, ell=ell, cl=cl-nl, nl=nl, nl_cp=nl_cp)
 
