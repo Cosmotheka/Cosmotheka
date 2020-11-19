@@ -9,7 +9,7 @@ import pymaster as nmt
 
 class Cov():
     def __init__(self, data, trA1, trA2, trB1, trB2):
-        self.data = co.read_data(data)
+        self.data = data
         self.outdir = self.get_outdir()
         os.makedirs(self.outdir, exist_ok=True)
         self.trA1 = trA1
@@ -112,4 +112,5 @@ if __name__ == "__main__":
     parser.add_argument('trB2', type=str, help='Tracer B2 name')
     args = parser.parse_args()
 
-    cov = Cov(args.INPUT, args.trA1, args.trA2, args.trB1, args.trB2)
+    data = co.read_data(args.INPUT)
+    cov = Cov(data, args.trA1, args.trA2, args.trB1, args.trB2)

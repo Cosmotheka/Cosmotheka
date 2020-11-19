@@ -10,8 +10,7 @@ import warnings
 
 class Cl():
     def __init__(self, data, tr1, tr2):
-        self._datapath = data
-        self.data = co.read_data(data)
+        self.data = data co.read_data(data)
         self.read_symm = False
         if ((tr1, tr2) not in co.get_cl_tracers(self.data)) and \
            ((tr2, tr1) in co.get_cl_tracers(self.data)):
@@ -152,8 +151,7 @@ class Cl():
 
 class Cl_fid():
     def __init__(self, data, tr1, tr2):
-        self._datapath = data
-        self.data = co.read_data(data)
+        self.data = data
         self.read_symm = False
         if ((tr1, tr2) not in co.get_cl_tracers(self.data)) and \
            ((tr2, tr1) in co.get_cl_tracers(self.data)):
@@ -292,7 +290,8 @@ if __name__ == "__main__":
     parser.add_argument('--fiducial', default=False, action='store_true', help='Compute the fiducial model Cl')
     args = parser.parse_args()
 
+    data = co.read_data(args.INPUT)
     if args.fiducial:
-        cl = Cl_fid(args.INPUT, args.tr1, args.tr2)
+        cl = Cl_fid(data, args.tr1, args.tr2)
     else:
-        cl = Cl(args.INPUT, args.tr1, args.tr2)
+        cl = Cl(data, args.tr1, args.tr2)
