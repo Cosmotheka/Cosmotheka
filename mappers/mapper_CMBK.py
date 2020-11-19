@@ -1,4 +1,5 @@
-from .mapper_base import MapperBase
+from mapper_base import MapperBase
+
 from astropy.io import fits
 from astropy.table import Table
 import pandas as pd
@@ -15,9 +16,9 @@ class MapperCMBK(MapperBase):
         self.mask = []
         self.noise = []
   
-        self.klm = hp.read_alm(self.config['data_klm'])        
-        self.mask = hp.read_map(self.config['data_mask'])  
-        self.noise = pd.read_table(self.config['data_noise'], 
+        self.klm = hp.read_alm(self.config['file_klm'])        
+        self.mask = hp.read_map(self.config['file_mask'])  
+        self.noise = pd.read_table(self.config['file_noise'], 
                                    names=['l','Nl','Nl+Cl'], sep=" ", encoding='utf-8')
             
         self.nside = config['nside']
@@ -51,11 +52,13 @@ class MapperCMBK(MapperBase):
     def get_nl(self):
         if self.nl_coupled is None:
             self.nl_coupled = self.noise['Nl'].values
-            l = self.noise['l'].values
-        return l, np.array([self.nl_coupled])
+        return np.array([self.nl_coupled])
     
     def get_cl_fiducial(self):
         if self.cl_fid is None:
             self.cl_fid = self.noise['Nl+Cl'].values - self.noise['Nl'].values
-            l = self.noise['l'].values
-        return l, self.cl_fid
+        return self.cl_fid
+    
+    def get_ells(self):   
+        return self.noise['l'].values
+

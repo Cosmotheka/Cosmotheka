@@ -1,4 +1,5 @@
 from mapper_base import MapperBase
+
 from astropy.io import fits
 from astropy.table import Table
 import pandas as pd
@@ -89,7 +90,8 @@ class MappereBOSSQSO(MapperBase):
         if self.mask is None:
             self.mask = self.alpha*self._get_counts_map(self.cat_random, self.w_random, nside=self.nside_mask)
                  #Account for different areas of pixels
-            self.mask = (self.nside_mask/self.nside)**2*hp.ud_grade(self.mask, nside_out=self.nside)
+            #self.mask = (self.nside_mask/self.nside)**2*hp.ud_grade(self.mask, nside_out=self.nside)
+            self.mask = hp.ud_grade(self.mask, nside_out=self.nside)
         return self.mask
 
     def get_nmt_field(self):
