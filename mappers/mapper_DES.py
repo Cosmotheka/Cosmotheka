@@ -44,9 +44,7 @@ class MapperDES(MapperBase):
         self.z_edges = config['z_edges']
 
         self.cat_data = self._bin_z(self.cat_data)
-        self.cat_random = self._bin_z(self.cat_random)
         self.w_data = self._get_weights(self.cat_data)
-        self.w_random = self._get_weights(self.cat_random)
         self.alpha = np.sum(self.w_data)/np.sum(self.w_random)
 
         self.dndz       = None
@@ -102,20 +100,24 @@ class MapperDES(MapperBase):
     def get_signal_map(self):
         if self.delta_map is None:
             self.delta_map = np.zeros(self.npix)
-            nmap_data = self._get_counts_map(self.cat_data, self.w_data)
-            nmap_random = self._get_counts_map(self.cat_random, self.w_random)
+            nmap_data = self._get_counts_map(self.cat_data, self.w_data)  
+            N_mean = np.sum(nmap_data)/np.sum(self.mask)
             goodpix = self.mask > 0
-            self.delta_map[goodpix] = (nmap_data[goodpix] - self.alpha * nmap_random[goodpix])/self.mask[goodpix]
-        return self.delta_map
+            self.delta_map[goodpix] = (nmap_data[goodpix])/(self.mask[goodpix]*N_mean) -1
+        return [self.delta_map]
 
-    def get_nmt_field(self, signal, mask):
+    def get_nmt_field(self):
         if self.nmt_field is None:
-            self.nmt_field = nmt.NmtField(mask, [signal], n_iter = 0)
+            signal = self.get_signal_map()
+            mask = self.get_mask()
+            self.nmt_field = nmt.NmtField(mask, signal, n_iter = 0)
         return self.nmt_field
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
-            pixel_A =  4*np.pi/hp.nside2npix(self.nside)
-            N_ell = pixel_A**2*(np.sum(self.w_data**2)+ self.alpha**2*np.sum(self.w_random**2))/(4*np.pi)
-            self.nl_coupled = np.array([N_ell * np.ones(3*self.nside)])
+            N_mean = np.sum(nmap_data)/np.sum(self.mask)
+            N_mean_srad = mean_N / (4 * np.pi) * self.npix
+            correction = np.sum(self.w_data**2) / np.sum(self.w_data)
+            N_ell = correction * np.sum(self.mask) / self.npix / N_mean_srad
+            self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
