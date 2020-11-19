@@ -10,7 +10,7 @@ import warnings
 
 class Cl():
     def __init__(self, data, tr1, tr2):
-        self.data = data co.read_data(data)
+        self.data = data
         self.read_symm = False
         if ((tr1, tr2) not in co.get_cl_tracers(self.data)) and \
            ((tr2, tr1) in co.get_cl_tracers(self.data)):
