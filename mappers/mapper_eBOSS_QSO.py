@@ -18,12 +18,15 @@ class MappereBOSSQSO(MapperBase):
             if not os.path.isfile(file_data):
                 raise ValueError(f"File {file_data} not found")
             with fits.open(file_data) as f:
-                self.cat_data = Table.read(f).to_pandas()
+                self.cat_data.append(Table.read(f).to_pandas())
             if not os.path.isfile(file_random):
                 raise ValueError(f"File {file_random} not found")
             with fits.open(file_random) as f:
-                self.cat_random = Table.read(f).to_pandas()
+                self.cat_random.append(Table.read(f).to_pandas())
             
+        self.cat_data = pd.concat(self.cat_data)
+        self.cat_random = pd.concat(self.cat_random)
+        
         self.nside = config['nside']
         self.nside_mask = config.get('nside_mask', self.nside) 
         self.npix = hp.nside2npix(self.nside)
@@ -80,7 +83,7 @@ class MappereBOSSQSO(MapperBase):
             mask = self.get_mask()
             goodpix = mask > 0
             self.delta_map[goodpix] = (nmap_data[goodpix] - self.alpha * nmap_random[goodpix])/mask[goodpix]
-        return self.delta_map
+        return [self.delta_map]
 
     def get_mask(self):
         if self.mask is None:
@@ -89,14 +92,31 @@ class MappereBOSSQSO(MapperBase):
             self.mask = (self.nside_mask/self.nside)**2*hp.ud_grade(self.mask, nside_out=self.nside)
         return self.mask
 
-    def get_nmt_field(self, signal, mask):
+    def get_nmt_field(self):
         if self.nmt_field is None:
-            self.nmt_field = nmt.NmtField(mask, [signal], n_iter = 0)
+            signal = self.get_signal_map() 
+            mask   = self.get_mask()
+            self.nmt_field = nmt.NmtField(mask, signal, n_iter = 0)
         return self.nmt_field
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             pixel_A =  4*np.pi/hp.nside2npix(self.nside)
             N_ell = pixel_A**2*(np.sum(self.w_data**2)+ self.alpha**2*np.sum(self.w_random**2))/(4*np.pi)
-            self.nl_coupled = np.array([N_ell * np.ones(3*self.nside)])
+            self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

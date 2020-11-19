@@ -2,6 +2,9 @@ from mapper_base import MapperBase
 from astropy.io import fits
 from astropy.table import Table
 
+from .mapper_base import MapperBase
+from astropy.io import fits
+from astropy.table import Table
 import pandas as pd
 import numpy as np
 import healpy as hp
@@ -30,7 +33,6 @@ class MapperDES(MapperBase):
                 raise ValueError(f"File {file_mask} not found")
             with fits.open(file_mask) as f:
                 self.mask = hp.read_map(f, verbose = False)
-                #self.mask = Table.read(f, format='fits').to_pandas()
                 
             if not os.path.isfile(file_nz):
                 raise ValueError(f"File {file_nz} not found")
@@ -38,7 +40,6 @@ class MapperDES(MapperBase):
                 self.nz = Table.read(f).to_pandas()
             
         self.nside = config['nside']
-        self.nside_mask = config.get('nside_mask', self.nside) 
         self.npix = hp.nside2npix(self.nside)
         self.z_edges = config['z_edges']
 
@@ -80,17 +81,16 @@ class MapperDES(MapperBase):
         ipix = hp.ang2pix(nside, cat['RA'], cat['DEC'],
                           lonlat=True)
         numcount = np.bincount(ipix, w, npix)
-        
         return numcount
-    
-    def get_mask(self):
-        return self.mask
     
     def _fill_mask(self):
         self.filled_mask = np.zeros(self.npix)
         goodpix = self.mask > 0
         self.filled_mask[goodpix] = self.mask[goodpix]
         return self.filled_mask
+    
+    def get_mask(self):
+        return self.mask
         
     def get_nz(self, num_z=200):
         if self.dndz is None:
