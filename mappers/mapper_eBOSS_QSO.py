@@ -84,6 +84,7 @@ class MappereBOSSQSO(MapperBase):
             mask = self.get_mask()
             goodpix = mask > 0
             self.delta_map[goodpix] = (nmap_data[goodpix] - self.alpha * nmap_random[goodpix])/mask[goodpix]
+            print(np.mean(self.delta_map[goodpix]), np.mean(nmap_data[goodpix] - self.alpha * nmap_random[goodpix]))
         return [self.delta_map]
 
     def get_mask(self):

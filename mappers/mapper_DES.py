@@ -12,14 +12,23 @@ class MapperDES(MapperBase):
     def __init__(self, config):
         
         self.config = config
+        self.bin_edges = {
+        '1':[0.15, 0.30],
+        '2':[0.30, 0.45],
+        '3':[0.45, 0.60],
+        '4':[0.60, 0.75],
+        '5':[0.75, 0.90]}
 
         self.cat_data = Table.read(self.config['data_catalogs']).to_pandas()  
         self.mask = hp.read_map(self.config['file_mask'], verbose = False)  
-        self.nz = Table.read(self.config['file_nz']).to_pandas()
+        self.nz = fits.open(self.config['file_nz'])[7].data
             
         self.nside = config['nside']
         self.npix = hp.nside2npix(self.nside)
-        self.z_edges = config['z_edges']
+        self.bin = config['bin']
+        self.z_edges = self.bin_edges['{}'.format(self.bin)]
+        
+        
 
         self.cat_data = self._bin_z(self.cat_data)
         self.w_data = self._get_weights(self.cat_data)
@@ -29,7 +38,6 @@ class MapperDES(MapperBase):
         self.delta_map  = None
         self.nl_coupled = None
         self.nmt_field  = None
-        self.mask = self._fill_mask()
 
     def _bin_z(self, cat):
         #Account for randoms using different nomenclature
@@ -59,12 +67,6 @@ class MapperDES(MapperBase):
         numcount = np.bincount(ipix, w, npix)
         return numcount
     
-    def _fill_mask(self):
-        self.filled_mask = np.zeros(self.npix)
-        goodpix = self.mask > 0
-        self.filled_mask[goodpix] = self.mask[goodpix]
-        return self.filled_mask
-    
     def get_mask(self):
         goodpix = self.mask > 0.5
         self.mask[~goodpix] = 0
@@ -72,10 +74,17 @@ class MapperDES(MapperBase):
         
     def get_nz(self, num_z=200):
         if self.dndz is None:
-            h, b = np.histogram(self.cat_data['ZREDMAGIC'], bins=num_z,
-                                weights=self.w_data)
-            self.dndz = np.array([h, b[:-1], b[1:]])
-        return self.dndz
+            #equivalent to getting columns 1 and 3 in previous code
+            z  = self.nz['Z_MID']
+            pz = self.nz['BIN%d' % (self.bin)]
+            # Calculate z bias
+            dz = 0
+            z_dz = z - dz
+            # Set to 0 points where z_dz < 0:
+            sel = z_dz >= 0
+            z_dz = z_dz[sel]
+            pz = pz[sel]
+        return np.array([z_dz, pz])
 
     def get_signal_map(self):
         if self.delta_map is None:
@@ -83,6 +92,7 @@ class MapperDES(MapperBase):
             N_mean = np.sum(self.nmap_data)/np.sum(self.mask)
             goodpix = self.mask > 0
             self.delta_map[goodpix] = (self.nmap_data[goodpix])/(self.mask[goodpix]*N_mean) -1
+            print(np.mean((self.nmap_data[goodpix])/(self.mask[goodpix]*N_mean)))
         return [self.delta_map]
 
     def get_nmt_field(self):
