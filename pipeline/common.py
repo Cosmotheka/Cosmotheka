@@ -10,7 +10,7 @@ def get_tracers_used(data, wsp=False):
     tracers = []
     for trk, trv in data['cls'].items():
         tr1, tr2 = trk.split('-')
-        if trv != 'None':
+        if trv['compute'] != 'None':
             tracers.append(tr1)
             tracers.append(tr2)
 
@@ -33,7 +33,7 @@ def get_cl_tracers(data, wsp=False):
             trreq = ''.join(s for s in (tr1 + '-' + tr2) if not s.isdigit())
             if trreq not in data['cls']:
                 continue
-            clreq =  data['cls'][trreq]
+            clreq =  data['cls'][trreq]['compute']
             if clreq == 'all':
                 pass
             elif (clreq == 'auto') and (tr1 != tr2):

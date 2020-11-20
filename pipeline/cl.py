@@ -7,6 +7,7 @@ import pymaster as nmt
 import os
 import yaml
 import warnings
+import mappers
 
 class Cl():
     def __init__(self, data, tr1, tr2):
@@ -16,9 +17,11 @@ class Cl():
            ((tr2, tr1) in co.get_cl_tracers(self.data)):
             warnings.warn('Reading the symmetric element.')
             self.read_symm = True
-
-        self.tr1 = tr1
-        self.tr2 = tr2
+            self.tr1 = tr2
+            self.tr2 = tr1
+        else:
+            self.tr1 = tr1
+            self.tr2 = tr2
         self.outdir = self.get_outdir()
         os.makedirs(self.outdir, exist_ok=True)
         self.nside = self.data['healpy']['nside']
@@ -36,18 +39,17 @@ class Cl():
 
     def get_outdir(self):
         root = self.data['output']
-        if self.read_symm:
-            tr1 = self.tr2
-            tr2 = self.tr1
-        else:
-            tr1 = self.tr1
-            tr2 = self.tr2
-        trreq = ''.join(s for s in (tr1 + '_' + tr2) if not s.isdigit())
+        trreq = ''.join(s for s in (self.tr1 + '_' + self.tr2) if not s.isdigit())
         outdir = os.path.join(root, trreq)
         return outdir
 
     def get_NmtBin(self):
-        bpw_edges = np.array(self.data['bpw_edges'])
+        trs = self.tr1 + '-' + self.tr2
+        trs = ''.join(s for s in trs if not s.isdigit())
+        if 'bpw_edges' in self.data['cls'][trs].keys():
+            bpw_edges = self.data['cls'][trs]['bpw_edges']
+        else:
+            bpw_edges = np.array(self.data['bpw_edges'])
         nside = self.nside
         bpw_edges = bpw_edges[bpw_edges <= 3 * nside] # 3*nside == ells[-1] + 1
         if 3*nside not in bpw_edges: # Exhaust lmax --> gives same result as previous method, but adds 1 bpw (not for 4096)
@@ -85,9 +87,6 @@ class Cl():
         # Remove the extension
         mask1 = os.path.splitext(mask1)[0]
         mask2 = os.path.splitext(mask2)[0]
-        if self.read_symm:
-            mask1 = mask2
-            mask2 = mask1
         fname = os.path.join(self.outdir, 'w__{}__{}.fits'.format(mask1, mask2))
         w = nmt.NmtWorkspace()
         if not os.path.isfile(fname):
@@ -102,12 +101,6 @@ class Cl():
         return w
 
     def get_cl_file(self):
-        if self.read_symm:
-            tr1 = self.tr2
-            tr2 = self.tr1
-        else:
-            tr1 = self.tr1
-            tr2 = self.tr2
         fname = os.path.join(self.outdir, 'cl_{}_{}.npz'.format(tr1, tr2))
         ell = self.b.get_effective_ells()
         if not os.path.isfile(fname):
@@ -143,11 +136,6 @@ class Cl():
         m2 = mapper2.get_mask()
         return m1, m2
 
-    def get_spins(self):
-        tracers = self.data['tracers']
-        s1 = tracers[self.tr1]['spin']
-        s2 = tracers[self.tr2]['spin']
-        return int(s1), int(s2)
 
 class Cl_fid():
     def __init__(self, data, tr1, tr2):
@@ -157,6 +145,11 @@ class Cl_fid():
            ((tr2, tr1) in co.get_cl_tracers(self.data)):
             warnings.warn('Reading the symmetric element.')
             self.read_symm = True
+            self.tr1 = tr2
+            self.tr2 = tr1
+        else:
+            self.tr1 = tr1
+            self.tr2 = tr2
         self.tr1 = tr1
         self.tr2 = tr2
         self.outdir = self.get_outdir()
@@ -170,12 +163,6 @@ class Cl_fid():
 
     def get_outdir(self):
         root = self.data['output']
-        if self.read_symm:
-            tr1 = self.tr2
-            tr2 = self.tr1
-        else:
-            tr1 = self.tr1
-            tr2 = self.tr2
         trreq = ''.join(s for s in (tr1 + '_' + tr2) if not s.isdigit())
         outdir = os.path.join(root, 'fiducial', trreq)
         return outdir
@@ -241,12 +228,6 @@ class Cl_fid():
 
     def get_cl_file(self):
         nside = self.data['healpy']['nside']
-        if self.read_symm:
-            tr1 = self.tr2
-            tr2 = self.tr1
-        else:
-            tr1 = self.tr1
-            tr2 = self.tr2
         fname = os.path.join(self.outdir, 'cl_{}_{}.npz'.format(tr1, tr2))
         ell = np.arange(3 * nside)
         if not os.path.isfile(fname):
