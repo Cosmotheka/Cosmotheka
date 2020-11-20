@@ -1,4 +1,6 @@
 #!/usr/bin/python
+from pyclbr import readmodule
+from glob import glob
 import common as co
 import numpy as np
 import healpy as hp
@@ -7,7 +9,6 @@ import pymaster as nmt
 import os
 import yaml
 import warnings
-import mappers
 
 class Cl():
     def __init__(self, data, tr1, tr2):
@@ -57,18 +58,24 @@ class Cl():
         b = nmt.NmtBin.from_edges(bpw_edges[:-1], bpw_edges[1:])
         return b
 
-    def _get_mapper(self, name):
-        config = self.data['tracers'][name]
-        if 'CMBK' in name:
-            from mappers.mapper_CMBK import MapperCMBK
-            mapper = MapperCMBK(config)
-        elif 'eBOSS_QSO' in name:
-            from mappers.mapper_eBOSS_QSO import MappereBOSSQSO
-            mapper = MappereBOSSQSO(config)
-        else:
-            raise ValueError('Mapper {} not implemented.'.format(name))
+    def _get_mapper(self, tr):
+        config = self.data['tracers'][tr]
+        mapper_class = config['mapper_class']
+        modules = glob('mappers/*.py')
+        for m in modules:
+            module_name = 'mappers.' + os.path.basename(m)
+            module_name = module_name.replace('.py', '')
+            try:
+                clsmembers = readmodule(module_name)
+            except ImportError:
+                continue
 
-        return mapper
+            if mapper_class in clsmembers:
+                exec(f'from {module_name} import {mapper_class}')
+                mapper = exec(f'{mapper_class}({config})')
+                return mapper
+
+        raise ValueError('Mapper {} not implemented.'.format(mapper_class))
 
     def get_mappers(self):
         if self._mapper1 is None:
@@ -101,7 +108,7 @@ class Cl():
         return w
 
     def get_cl_file(self):
-        fname = os.path.join(self.outdir, 'cl_{}_{}.npz'.format(tr1, tr2))
+        fname = os.path.join(self.outdir, 'cl_{}_{}.npz'.format(self.tr1, self.tr2))
         ell = self.b.get_effective_ells()
         if not os.path.isfile(fname):
             mapper1, mapper2 = self.get_mappers()
@@ -110,7 +117,7 @@ class Cl():
             w = self.get_workspace()
             cl = w.decouple_cell(nmt.compute_coupled_cell(f1, f2))
             nl_cp = np.zeros((cl.shape[0], 3 * self.nside))
-            if tr1 == tr2:
+            if self.tr1 == self.tr2:
                 nl_cp[0] = nl_cp[-1] = mapper1.get_nl_coupled()
             nl = w.decouple_cell(nl_cp)
             np.savez(fname, ell=ell, cl=cl-nl, nl=nl, nl_cp=nl_cp)
