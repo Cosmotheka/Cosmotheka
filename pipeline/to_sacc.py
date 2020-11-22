@@ -33,42 +33,31 @@ class sfile():
             self.add_ell_cl(tr1, tr2)
 
     def add_covariance_NG(self):
-        cov_ng = self.data['cov']['ng']
-        cov = np.load(cov_ng['path'])
-
         dtype = self.s.get_data_types()[0]
-        tracers = self.s.get_tracer_combinations(data_type=dtype)[0]
-        ell, _ = self.s.get_ell_cl(dtype, *tracers)
+        cl_tracers = self.s.get_tracer_combinations(data_type=dtype)
+        ell, _ = self.s.get_ell_cl(dtype, *cl_tracers[0])
         nbpw = ell.size
         #
+        cl_ng_tracers = co.get_cov_ng_cl_tracers(self.data)
+        ncls = len(cl_ng_tracers)
+        #
+        cov_ng = self.data['cov']['ng']
+        cov = np.load(cov_ng['path']).reshape((ncls, nbpw, ncls, nbpw))
+
         ndim = self.s.mean.size
-        cl_tracers = co.get_cov_ng_cl_tracers(self.data)
-
-        covmat = -1 * np.ones((ndim, ndim))
+        covmat = np.zeros((int(ndim/nbpw), nbpw, int(ndim/nbpw), nbpw))
+        print(ndim/nbpw)
+        cl_tracers = self.s.get_tracer_combinations()
         for i, trs1 in enumerate(cl_tracers):
-            dof1 = co.get_dof_tracers(self.data, trs1)
-            dtypes1 = self.get_datatypes_from_dof(dof1)
-            for trs2 in cl_tracers[i:]:
-                dof2 = co.get_dof_tracers(self.data, trs2)
-                dtypes2 = self.get_datatypes_from_dof(dof2)
-                print(trs1, trs2)
-
-                for i, dt1 in enumerate(dtypes1):
-                    ix1 = self.s.indices(tracers=trs1, data_type=dt1)
-                    if len(ix1) == 0:
-                        continue
-                    for j, dt2 in enumerate(dtypes2):
-                        ix2 = self.s.indices(tracers=trs2, data_type=dt2)
-                        if len(ix2) == 0:
-                            continue
-                        if ('b' in dt1 + dt2) and not cov_ng['has_b']:
-                            covi = np.zeros((nbpw, nbpw))
-                        else:
-                            covi = cov[i * nbpw: (i + 1) * nbpw][:, j * nbpw: (j + 1) * nbpw]
-                        covmat[np.ix_(ix1, ix2)] = covi
-                        covmat[np.ix_(ix2, ix1)] = covi.T
-
-        self.s.add_covariance(covmat)
+            ix1 = cl_ng_tracers.index(trs1)
+            cl_ix1 = int(self.s.indices(tracers=trs1)[0] / nbpw)
+            for j, trs2 in enumerate(cl_tracers[i:], i):
+                ix2 = cl_ng_tracers.index(trs2)
+                cl_ix2 = int(self.s.indices(tracers=trs2)[0] / nbpw)
+                covi = cov[ix1, :, ix2, :]
+                covmat[cl_ix1, :, cl_ix2, :] = covi
+                covmat[cl_ix2, :, cl_ix1, :] = covi.T
+        self.s.add_covariance(covmat.reshape((ndim, ndim)))
 
     def add_covariance_G(self):
         # Get nbpw
