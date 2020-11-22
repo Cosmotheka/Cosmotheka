@@ -83,6 +83,12 @@ class Cl():
             self._mapper2 = self._mapper1 if self.tr1 == self.tr2 else self._get_mapper(self.tr2)
         return self._mapper1, self._mapper2
 
+    def get_nmt_fields(self):
+        mapper1, mapper2 = self.get_mappers()
+        f1 = mapper1.get_nmt_field()
+        f2 = mapper1.get_nmt_field()
+        return f1, f2
+
     def get_workspace(self):
         if self._w is None:
             self._w = self._compute_workspace()
@@ -99,8 +105,7 @@ class Cl():
         if not os.path.isfile(fname):
             n_iter = self.data['healpy']['n_iter_mcm']
             mapper1, mapper2 = self.get_mappers()
-            f1 = mapper1.get_nmt_field()
-            f2 = mapper1.get_nmt_field()
+            f1, f2 = self.get_nmt_fields()
             w.compute_coupling_matrix(f1, f2, self.b, n_iter=n_iter)
             w.write_to(fname)
         else:
@@ -112,8 +117,7 @@ class Cl():
         ell = self.b.get_effective_ells()
         if not os.path.isfile(fname):
             mapper1, mapper2 = self.get_mappers()
-            f1 = mapper1.get_nmt_field()
-            f2 = mapper2.get_nmt_field()
+            f1, f2 = self.get_nmt_fields()
             w = self.get_workspace()
             cl = w.decouple_cell(nmt.compute_coupled_cell(f1, f2))
             nl_cp = np.zeros((cl.shape[0], 3 * self.nside))

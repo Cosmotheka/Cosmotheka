@@ -16,6 +16,29 @@ class Cov():
         self.trA2 = trA2
         self.trB1 = trB1
         self.trB2 = trB2
+        self.clA1A2 = None
+        self.clB1B2 = None
+        self.clA1B1 = None
+        self.clA1B2 = None
+        self.clA2B1 = None
+        self.clA2B2 = None
+        self.clfid_A1B1 = None
+        self.clfid_A1B2 = None
+        self.clfid_A2B1 = None
+        self.clfid_A2B2 = None
+        self.cov = self.get_covariance()
+
+    def get_outdir(self):
+        root = self.data['output']
+        outdir = os.path.join(root, 'cov')
+        return outdir
+
+    def load_cls(self):
+        data = self.data
+        trA1, trA2 = self.trA1, self.trA2
+        trB1, trB2 = self.trB1, self.trB2
+        if self.clA1A2 is not None:
+            return
         self.clA1A2 = Cl(data, trA1, trA2)
         self.clB1B2 = Cl(data, trB1, trB2)
         self.clA1B1 = Cl(data, trA1, trB1)
@@ -26,12 +49,6 @@ class Cov():
         self.clfid_A1B2 = Cl_fid(data, trA1, trB2)
         self.clfid_A2B1 = Cl_fid(data, trA2, trB1)
         self.clfid_A2B2 = Cl_fid(data, trA2, trB2)
-        self.cov = self.get_covariance()
-
-    def get_outdir(self):
-        root = self.data['output']
-        outdir = os.path.join(root, 'cov')
-        return outdir
 
     def get_covariance_workspace(self):
         mask1 = os.path.basename(self.data['tracers'][self.trA1]['mask'])
@@ -62,6 +79,8 @@ class Cov():
                                                                        self.trB1, self.trB2))
         if os.path.isfile(fname):
             return np.load(fname)['cov']
+
+        self.load_cls()
 
         wa1b1 = self.clA1B1.get_workspace()
         wa1b2 = self.clA1B2.get_workspace()
