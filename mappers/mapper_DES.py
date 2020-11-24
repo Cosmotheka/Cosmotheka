@@ -70,6 +70,7 @@ class MapperDES(MapperBase):
     def get_mask(self):
         goodpix = self.mask > 0.5
         self.mask[~goodpix] = 0
+        self.mask = hp.ud_grade(self.mask, nside_out=self.nside)
         return self.mask
         
     def get_nz(self, num_z=200):
@@ -92,7 +93,6 @@ class MapperDES(MapperBase):
             N_mean = np.sum(self.nmap_data)/np.sum(self.mask)
             goodpix = self.mask > 0
             self.delta_map[goodpix] = (self.nmap_data[goodpix])/(self.mask[goodpix]*N_mean) -1
-            print(np.mean((self.nmap_data[goodpix])/(self.mask[goodpix]*N_mean)))
         return [self.delta_map]
 
     def get_nmt_field(self):
