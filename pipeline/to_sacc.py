@@ -28,7 +28,7 @@ class sfile():
             self.add_tracer(tr)
 
     def add_ell_cls(self):
-        cl_tracers = co.get_cl_tracers(self.data)
+        cl_tracers = co.get_cl_trs_names(self.data)
         for tr1, tr2 in cl_tracers:
             self.add_ell_cl(tr1, tr2)
 

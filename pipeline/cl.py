@@ -14,8 +14,8 @@ class Cl():
     def __init__(self, data, tr1, tr2):
         self.data = data
         self.read_symm = False
-        if ((tr1, tr2) not in co.get_cl_tracers(self.data)) and \
-           ((tr2, tr1) in co.get_cl_tracers(self.data)):
+        if ((tr1, tr2) not in co.get_cl_trs_names(self.data)) and \
+           ((tr2, tr1) in co.get_cl_trs_names(self.data)):
             warnings.warn('Reading the symmetric element.')
             self.read_symm = True
             self.tr1 = tr2
@@ -169,8 +169,8 @@ class Cl_fid():
     def __init__(self, data, tr1, tr2):
         self.data = data
         self.read_symm = False
-        if ((tr1, tr2) not in co.get_cl_tracers(self.data)) and \
-           ((tr2, tr1) in co.get_cl_tracers(self.data)):
+        if ((tr1, tr2) not in co.get_cl_trs_names(self.data)) and \
+           ((tr2, tr1) in co.get_cl_trs_names(self.data)):
             warnings.warn('Reading the symmetric element.')
             self.read_symm = True
             self.tr1 = tr2
