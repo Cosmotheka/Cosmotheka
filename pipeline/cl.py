@@ -32,11 +32,10 @@ class Cl():
         self._mapper2 = None
         self._w = None
         ##################
-        self.cl_file = self.get_cl_file()
-        self.ell = self.cl_file['ell']
-        self.cl = self.cl_file['cl']
-        self.nl = self.cl_file['nl']
-        self.nl_cp = self.cl_file['nl_cp']
+        self.ell = None
+        self.cl = None
+        self.nl = None
+        self.nl_cp = None
 
     def get_outdir(self):
         root = self.data['output']
@@ -102,9 +101,9 @@ class Cl():
         mask2 = os.path.splitext(mask2)[0]
         fname = os.path.join(self.outdir, 'w__{}__{}.fits'.format(mask1, mask2))
         w = nmt.NmtWorkspace()
-        if not os.path.isfile(fname):
+        recompute = self.data['recompute']['mcm']
+        if recompute or (not os.path.isfile(fname)):
             n_iter = self.data['healpy']['n_iter_mcm']
-            mapper1, mapper2 = self.get_mappers()
             f1, f2 = self.get_nmt_fields()
             w.compute_coupling_matrix(f1, f2, self.b, n_iter=n_iter)
             w.write_to(fname)
@@ -115,7 +114,8 @@ class Cl():
     def get_cl_file(self):
         fname = os.path.join(self.outdir, 'cl_{}_{}.npz'.format(self.tr1, self.tr2))
         ell = self.b.get_effective_ells()
-        if not os.path.isfile(fname):
+        recompute = self.data['recompute']['cls'] or self.data['recompute']['mcm']
+        if recompute or (not os.path.isfile(fname)):
             mapper1, mapper2 = self.get_mappers()
             f1, f2 = self.get_nmt_fields()
             w = self.get_workspace()
@@ -130,6 +130,12 @@ class Cl():
         cl = cl_file['cl']
         if np.any(ell != cl_file['ell']):
             raise ValueError('The file {} does not have the expected bpw. Aborting!'.format(fname))
+
+        self.cl_file = cl_file
+        self.ell = cl_file['ell']
+        self.cl = cl_file['cl']
+        self.nl = cl_file['nl']
+        self.nl_cp = cl_file['nl_cp']
         return cl_file
 
     def get_ell_cl(self):
