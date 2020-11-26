@@ -14,6 +14,8 @@ class MappereBOSSQSO(MapperBase):
 
         self.cat_data = []
         self.cat_random = []
+        self.mask_name = self.config['mask_name']
+        
         for file_data, file_random in zip(self.config['data_catalogs'],
                                           self.config['random_catalogs']):
             if not os.path.isfile(file_data):
@@ -84,15 +86,14 @@ class MappereBOSSQSO(MapperBase):
             mask = self.get_mask()
             goodpix = mask > 0
             self.delta_map[goodpix] = (nmap_data[goodpix] - self.alpha * nmap_random[goodpix])/mask[goodpix]
-            print(np.mean(self.delta_map[goodpix]), np.mean(nmap_data[goodpix] - self.alpha * nmap_random[goodpix]))
         return [self.delta_map]
 
     def get_mask(self):
         if self.mask is None:
             self.mask = self.alpha*self._get_counts_map(self.cat_random, self.w_random, nside=self.nside_mask)
                  #Account for different areas of pixels
-            #self.mask = (self.nside_mask/self.nside)**2*hp.ud_grade(self.mask, nside_out=self.nside)
-            self.mask = hp.ud_grade(self.mask, nside_out=self.nside)
+            self.mask = (self.nside_mask/self.nside)**2*hp.ud_grade(self.mask, nside_out=self.nside)
+            #self.mask = hp.ud_grade(self.mask, nside_out=self.nside)
         return self.mask
 
     def get_nmt_field(self):

@@ -11,6 +11,7 @@ import os
 class MapperCMBK(MapperBase):
     def __init__(self, config):
         self.config = config
+        self.mask_name = self.config['mask_name']
 
         self.klm = []
         self.mask = []
