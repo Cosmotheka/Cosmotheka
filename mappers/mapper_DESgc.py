@@ -12,6 +12,7 @@ class MapperDES(MapperBase):
     def __init__(self, config):
         
         self.config = config
+        self.mask_name = self.config['mask_name']
         self.bin_edges = {
         '1':[0.15, 0.30],
         '2':[0.30, 0.45],
