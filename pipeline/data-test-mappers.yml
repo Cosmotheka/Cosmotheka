@@ -11,7 +11,7 @@ tracers:
         - '/mnt/extraspace/damonge/S8z_data/Planck_data/COM_Lensing_2048_R2.00/mask.fits.gz'
     data_noise:
         - '/mnt/extraspace/damonge/S8z_data/Planck_data/COM_Lensing_2048_R2.00/nlkk.dat'
-    mask: 'cmbk_mask'
+    mask_name: 'cmbk_mask'
     nside: 2048
     mapper_class: 'MapperCMBK'
 
@@ -23,7 +23,7 @@ tracers:
       - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_data-NGC-vDR16.fits'
     random_catalogs:
       - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_random-NGC-vDR16.fits'
-    mask: 'eBOSS_QSO1_mask'
+    mask_name: 'eBOSS_QSO1_mask'
     z_edges: [0, 1.5]
     nside: 2048
     nside_mask: 2048
@@ -37,7 +37,7 @@ tracers:
       - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_data-NGC-vDR16.fits'
     random_catalogs:
       - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_random-NGC-vDR16.fits'
-    mask: 'eBOSS_QSO2_mask'
+    mask_name: 'eBOSS_QSO2_mask'
     z_edges: [1.5, 3]
     nside: 2048
     nside_mask: 2048

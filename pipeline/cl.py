@@ -94,11 +94,7 @@ class Cl():
         return self._w
 
     def _compute_workspace(self):
-        mask1 = os.path.basename(self.data['tracers'][self.tr1]['mask'])
-        mask2 = os.path.basename(self.data['tracers'][self.tr2]['mask'])
-        # Remove the extension
-        mask1 = os.path.splitext(mask1)[0]
-        mask2 = os.path.splitext(mask2)[0]
+        mask1, mask2 = self.get_masks_names()
         fname = os.path.join(self.outdir, 'w__{}__{}.fits'.format(mask1, mask2))
         w = nmt.NmtWorkspace()
         recompute = self.data['recompute']['mcm']
@@ -152,6 +148,18 @@ class Cl():
         m1 = mapper1.get_mask()
         m2 = mapper2.get_mask()
         return m1, m2
+
+    def get_masks_names(self):
+        mapper1, mapper2 = self.get_mappers()
+        m1 = mapper1.mask_name
+        m2 = mapper2.mask_name
+        return m1, m2
+
+    def get_spins(self):
+        mapper1, mapper2 = self.get_mappers()
+        s1 = mapper1.get_spin()
+        s2 = mapper2.get_spin()
+        return s1, s2
 
 
 class Cl_fid():

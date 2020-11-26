@@ -16,29 +16,6 @@ class Cov():
         self.trA2 = trA2
         self.trB1 = trB1
         self.trB2 = trB2
-        self.clA1A2 = None
-        self.clB1B2 = None
-        self.clA1B1 = None
-        self.clA1B2 = None
-        self.clA2B1 = None
-        self.clA2B2 = None
-        self.clfid_A1B1 = None
-        self.clfid_A1B2 = None
-        self.clfid_A2B1 = None
-        self.clfid_A2B2 = None
-        self.cov = None
-
-    def get_outdir(self):
-        root = self.data['output']
-        outdir = os.path.join(root, 'cov')
-        return outdir
-
-    def load_cls(self):
-        data = self.data
-        trA1, trA2 = self.trA1, self.trA2
-        trB1, trB2 = self.trB1, self.trB2
-        if self.clA1A2 is not None:
-            return
         self.clA1A2 = Cl(data, trA1, trA2)
         self.clB1B2 = Cl(data, trB1, trB2)
         self.clA1B1 = Cl(data, trA1, trB1)
@@ -49,17 +26,16 @@ class Cov():
         self.clfid_A1B2 = Cl_fid(data, trA1, trB2)
         self.clfid_A2B1 = Cl_fid(data, trA2, trB1)
         self.clfid_A2B2 = Cl_fid(data, trA2, trB2)
+        self.cov = None
+
+    def get_outdir(self):
+        root = self.data['output']
+        outdir = os.path.join(root, 'cov')
+        return outdir
 
     def get_covariance_workspace(self):
-        mask1 = os.path.basename(self.data['tracers'][self.trA1]['mask'])
-        mask2 = os.path.basename(self.data['tracers'][self.trA2]['mask'])
-        mask3 = os.path.basename(self.data['tracers'][self.trB1]['mask'])
-        mask4 = os.path.basename(self.data['tracers'][self.trB2]['mask'])
-        # Remove the extension
-        mask1 = os.path.splitext(mask1)[0]
-        mask2 = os.path.splitext(mask2)[0]
-        mask3 = os.path.splitext(mask3)[0]
-        mask4 = os.path.splitext(mask4)[0]
+        mask1, mask2 = self.clA1A2.get_masks_names()
+        mask3, mask4 = self.clB1B2.get_masks_names()
         fname = os.path.join(self.outdir, 'cw__{}__{}__{}__{}.fits'.format(mask1, mask2, mask3, mask4))
         cw = nmt.NmtCovarianceWorkspace()
         recompute = self.data['recompute']['cmcm']
@@ -82,8 +58,6 @@ class Cov():
         if (not recompute) and os.path.isfile(fname):
             self.cov = np.load(fname)['cov']
             return self.cov
-
-        self.load_cls()
 
         wa1b1 = self.clA1B1.get_workspace()
         wa1b2 = self.clA1B2.get_workspace()
