@@ -27,6 +27,8 @@ class Cl():
         os.makedirs(self.outdir, exist_ok=True)
         self.nside = self.data['healpy']['nside']
         self.b = self.get_NmtBin()
+        self.recompute_cls = self.data['recompute']['cls']
+        self.recompute_mcm = self.data['recompute']['mcm']
         # Not needed to load cl if already computed
         self._mapper1 = None
         self._mapper2 = None
@@ -97,12 +99,12 @@ class Cl():
         mask1, mask2 = self.get_masks_names()
         fname = os.path.join(self.outdir, 'w__{}__{}.fits'.format(mask1, mask2))
         w = nmt.NmtWorkspace()
-        recompute = self.data['recompute']['mcm']
-        if recompute or (not os.path.isfile(fname)):
+        if self.recompute_mcm or (not os.path.isfile(fname)):
             n_iter = self.data['healpy']['n_iter_mcm']
             f1, f2 = self.get_nmt_fields()
             w.compute_coupling_matrix(f1, f2, self.b, n_iter=n_iter)
             w.write_to(fname)
+            self.recompute_mcmc = False
         else:
             w.read_from(fname)
         return w
@@ -110,7 +112,7 @@ class Cl():
     def get_cl_file(self):
         fname = os.path.join(self.outdir, 'cl_{}_{}.npz'.format(self.tr1, self.tr2))
         ell = self.b.get_effective_ells()
-        recompute = self.data['recompute']['cls'] or self.data['recompute']['mcm']
+        recompute = self.recompute_cls or self.recompute_mcm
         if recompute or (not os.path.isfile(fname)):
             mapper1, mapper2 = self.get_mappers()
             f1, f2 = self.get_nmt_fields()
@@ -121,6 +123,7 @@ class Cl():
                 nl_cp[0] = nl_cp[-1] = mapper1.get_nl_coupled()
             nl = w.decouple_cell(nl_cp)
             np.savez(fname, ell=ell, cl=cl-nl, nl=nl, nl_cp=nl_cp)
+            self.recompute_cls = False
 
         cl_file = np.load(fname)
         cl = cl_file['cl']

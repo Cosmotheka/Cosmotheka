@@ -26,6 +26,8 @@ class Cov():
         self.clfid_A1B2 = Cl_fid(data, trA1, trB2)
         self.clfid_A2B1 = Cl_fid(data, trA2, trB1)
         self.clfid_A2B2 = Cl_fid(data, trA2, trB2)
+        self.recompute_cov = self.data['recompute']['cov']
+        self.recompute_cmcm = self.data['recompute']['cmcm']
         self.cov = None
 
     def get_outdir(self):
@@ -46,6 +48,7 @@ class Cov():
             cw.compute_coupling_coefficients(fA1.f, fA2.f, fB1.f, fB2.f,
                                              n_iter=n_iter)
             cw.write_to(fname)
+            self.recompute_cmcm = False
         else:
             cw.read_from(fname)
 
@@ -54,7 +57,7 @@ class Cov():
     def get_covariance(self):
         fname = os.path.join(self.outdir, 'cov_{}_{}_{}_{}.npz'.format(self.trA1, self.trA2,
                                                                        self.trB1, self.trB2))
-        recompute = self.data['recompute']['cov'] or self.data['recompute']['cmcm']
+        recompute = self.recompute_cov or self.recompute_cmcm
         if (not recompute) and os.path.isfile(fname):
             self.cov = np.load(fname)['cov']
             return self.cov
@@ -97,6 +100,7 @@ class Cov():
 
         self.cov = cov
         np.savez_compressed(fname, cov=cov)
+        self.recompute_cov = False
         return cov
 
 if __name__ == "__main__":
