@@ -8,7 +8,7 @@ import healpy as hp
 import pymaster as nmt
 import os
 
-class MapperDES(MapperBase):
+class MapperDESgc(MapperBase):
     def __init__(self, config):
         
         self.config = config

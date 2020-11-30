@@ -17,23 +17,28 @@ class MapperKV450(MapperBase):
                              'ALPHA_J2000', 'DELTA_J2000', 'PSF_e1', 'PSF_e2',
                              'bias_corrected_e1', 'bias_corrected_e2',
                              'weight']
+        
         self.zbin_edges = {
-        '1':[0.1, 0.3],
+        '1':[0.1, 1.2],
         '2':[0.3, 0.5],
         '3':[0.5, 0.7],
         '4':[0.7, 0.9],
         '5':[0.9, 1.2]}
         
         self.cat_data = []
-        for file_data in self.config['data_catalogs']:
-            if not os.path.isfile(file_data):
-                raise ValueError(f"File {file_data} not found")
-            with fits.open(file_data) as f:
-                self.cat_data.append(Table.read(f).to_pandas())
-                #cat = pd.DataFrame()
-                #cat = Table.read(f), format='fits')
-                #cat = cat[self.column_names]
-                #self.cat_data.append(cat)
+        if os.path.isfile('DES_lite_cat_0.pkl'):
+            print('loading lite cats')
+            for i in range(len(self.config['data_catalogs'])):
+                 self.cat_data.append(pd.read_pickle('DES_lite_cat_{}.pkl'.format(i)))
+        else:
+            print('loading full cats and making lite versions')
+            for i, file_data in enumerate(self.config['data_catalogs']):
+                if not os.path.isfile(file_data):
+                    raise ValueError(f"File {file_data} not found")
+                with fits.open(file_data) as f:
+                    table = Table.read(f).to_pandas()[self.column_names] 
+                    table.to_pickle('DES_lite_cat_{}.pkl'.format(i))
+                    self.cat_data.append(table)
         
         print('Catalogs loaded')
         self.nside = config['nside']
@@ -44,6 +49,8 @@ class MapperKV450(MapperBase):
         self.cat_data = pd.concat(self.cat_data)
         print('data concatenated')
         self.cat_data = self._bin_z(self.cat_data)
+        print('Length of galaxies: ', len(self._get_galaxy_data()['ALPHA_J2000']))
+        print('Length of stars: ', len(self._get_star_data()['ALPHA_J2000']))
         print('Data binned')
         self._remove_additive_bias()
         print('Additive biased removed')
@@ -66,8 +73,8 @@ class MapperKV450(MapperBase):
 
     def _remove_additive_bias(self):
         sel_gals = self.cat_data['SG_FLAG'] == 1
-        print(np.mean(self.cat_data[sel_gals]['bias_corrected_e1']))
-        print(np.mean(self.cat_data[sel_gals]['bias_corrected_e2']))
+        #print(np.mean(self.cat_data[sel_gals]['bias_corrected_e1']))
+        #print(np.mean(self.cat_data[sel_gals]['bias_corrected_e2']))
         self.cat_data[sel_gals]['bias_corrected_e1'] -= np.mean(self.cat_data[sel_gals]['bias_corrected_e1'])
         self.cat_data[sel_gals]['bias_corrected_e2'] -= np.mean(self.cat_data[sel_gals]['bias_corrected_e2'])
 
@@ -90,16 +97,19 @@ class MapperKV450(MapperBase):
         if self.shear_map is None:
             if nside is None:
                 nside = self.nside
-            npix = hp.nside2npix(nside)    
-            phi = np.radians(self.cat_data['ALPHA_J2000'])
-            theta = np.radians(90 - self.cat_data['DELTA_J2000'])
+            npix = hp.nside2npix(nside)
+            
+            data = self._get_galaxy_data()
+            
+            phi = np.radians(data['ALPHA_J2000'])
+            theta = np.radians(90 - data['DELTA_J2000'])
             ipix = hp.ang2pix(nside, theta, phi)
 
-            we1 = np.bincount(ipix, weights=self.cat_data['weight']*self.cat_data['bias_corrected_e1'], minlength=npix)
+            we1 = np.bincount(ipix, weights=data['weight']*data['bias_corrected_e1'], minlength=npix)
 
-            we2 = np.bincount(ipix, weights=self.cat_data['weight']*self.cat_data['bias_corrected_e2'], minlength=npix)
+            we2 = np.bincount(ipix, weights=data['weight']*data['bias_corrected_e2'], minlength=npix)
 
-            w2s2 = np.bincount(ipix, weights=self.cat_data['weight']**2 * 0.5 * (self.cat_data['bias_corrected_e1']**2 + self.cat_data['bias_corrected_e2']**2), minlength=npix)
+            w2s2 = np.bincount(ipix, weights=data['weight']**2 * 0.5 * (data['bias_corrected_e1']**2 + data['bias_corrected_e2']**2), minlength=npix)
             self.shear_map = [we1, we2, w2s2]
         return self.shear_map
 
@@ -107,16 +117,19 @@ class MapperKV450(MapperBase):
         if self.psf_map is None:
             if nside is None:
                 nside = self.nside
-            npix = hp.nside2npix(nside)    
-            phi = np.radians(self.cat_data['ALPHA_J2000'])
-            theta = np.radians(90 - self.cat_data['DELTA_J2000'])
+            npix = hp.nside2npix(nside)
+            
+            data = self._get_galaxy_data()
+            
+            phi = np.radians(data['ALPHA_J2000'])
+            theta = np.radians(90 - data['DELTA_J2000'])
             ipix = hp.ang2pix(nside, theta, phi)
 
-            we1 = np.bincount(ipix, weights=self.cat_data['weight']*self.cat_data['PSF_e1'], minlength=npix)
+            we1 = np.bincount(ipix, weights=data['weight']*data['PSF_e1'], minlength=npix)
 
-            we2 = np.bincount(ipix, weights=self.cat_data['weight']*self.cat_data['PSF_e2'], minlength=npix)
+            we2 = np.bincount(ipix, weights=data['weight']*data['PSF_e2'], minlength=npix)
 
-            w2s2 = np.bincount(ipix, weights=self.cat_data['weight']**2 * 0.5 * (self.cat_data['PSF_e1']**2 + self.cat_data['PSF_e2']**2), minlength=self.npix)
+            w2s2 = np.bincount(ipix, weights=data['weight']**2 * 0.5 * (data['PSF_e1']**2 + data['PSF_e2']**2), minlength=self.npix)
             self.psf_map = [we1, we2, w2s2]
         return self.psf_map
 
@@ -124,9 +137,12 @@ class MapperKV450(MapperBase):
         if self.star_map is None:
             if nside is None:
                 nside = self.nside
-            npix = hp.nside2npix(nside)    
-            phi = np.radians(self.cat_data['ALPHA_J2000'])
-            theta = np.radians(90 - self.cat_data['DELTA_J2000'])
+            npix = hp.nside2npix(nside) 
+            
+            data = self._get_star_data()
+            
+            phi = np.radians(data['ALPHA_J2000'])
+            theta = np.radians(90 - data['DELTA_J2000'])
             ipix = hp.ang2pix(nside, theta, phi)
             
             self.star_map = np.bincount(ipix, minlength=self.npix)
@@ -136,14 +152,17 @@ class MapperKV450(MapperBase):
         if self.star_mask is None:
             if nside is None:
                 nside = self.nside
-            npix = hp.nside2npix(nside)  
-            phi = np.radians(self.cat_data['ALPHA_J2000'])
-            theta = np.radians(90 - self.cat_data['DELTA_J2000'])
+            npix = hp.nside2npix(nside) 
+            
+            data = self._get_star_data()
+            
+            phi = np.radians(data['ALPHA_J2000'])
+            theta = np.radians(90 - data['DELTA_J2000'])
             ipix = hp.ang2pix(nside, theta, phi)
             
-            self.star_mask = [np.bincount(ipix, weights=self.cat_data['weight'], minlength=npix)]
+            self.star_mask = [np.bincount(ipix, weights=data['weight'], minlength=npix)]
             if w2:
-                w2 = np.bincount(ipix, weights=self.cat_data['weight']**2, minlength=npix)
+                w2 = np.bincount(ipix, weights=data['weight']**2, minlength=npix)
                 self.star_mask.append(w2)
         return self.star_mask
 
@@ -151,12 +170,15 @@ class MapperKV450(MapperBase):
         if self.galaxy_mask is None:
             if nside is None:
                 nside = self.nside
-            npix = hp.nside2npix(nside)    
-            phi = np.radians(self.cat_data['ALPHA_J2000'])
-            theta = np.radians(90 - self.cat_data['DELTA_J2000'])
+            npix = hp.nside2npix(nside) 
+            
+            data = self._get_galaxy_data()
+            
+            phi = np.radians(data['ALPHA_J2000'])
+            theta = np.radians(90 - data['DELTA_J2000'])
             ipix = hp.ang2pix(nside, theta, phi)
             
-            self.galaxy_mask = np.bincount(ipix, weights=self.cat_data['weight'], minlength=npix)
+            self.galaxy_mask = np.bincount(ipix, weights=data['weight'], minlength=npix)
         return self.galaxy_mask
 
     def get_nmt_field(self):
