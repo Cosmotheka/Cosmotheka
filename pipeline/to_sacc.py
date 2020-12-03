@@ -28,14 +28,38 @@ class sfile():
             self.add_tracer(tr)
 
     def add_ell_cls(self):
-        cl_tracers = co.get_cl_tracers(self.data)
+        cl_tracers = co.get_cl_trs_names(self.data)
         for tr1, tr2 in cl_tracers:
             self.add_ell_cl(tr1, tr2)
 
-    def add_covariance(self):
-        if self.use_nl:
-            warnings.warn('Adding covariance matrix with use_nl=True is not yet implemented')
-            return
+    def add_covariance_NG(self):
+        dtype = self.s.get_data_types()[0]
+        cl_tracers = self.s.get_tracer_combinations(data_type=dtype)
+        ell, _ = self.s.get_ell_cl(dtype, *cl_tracers[0])
+        nbpw = ell.size
+        #
+        cl_ng_tracers = co.get_cov_ng_cl_tracers(self.data)
+        ncls = len(cl_ng_tracers)
+        #
+        cov_ng = self.data['cov']['ng']
+        cov = np.load(cov_ng['path']).reshape((ncls, nbpw, ncls, nbpw))
+
+        ndim = self.s.mean.size
+        covmat = np.zeros((int(ndim/nbpw), nbpw, int(ndim/nbpw), nbpw))
+        print(ndim/nbpw)
+        cl_tracers = self.s.get_tracer_combinations()
+        for i, trs1 in enumerate(cl_tracers):
+            ix1 = cl_ng_tracers.index(trs1)
+            cl_ix1 = int(self.s.indices(tracers=trs1)[0] / nbpw)
+            for j, trs2 in enumerate(cl_tracers[i:], i):
+                ix2 = cl_ng_tracers.index(trs2)
+                cl_ix2 = int(self.s.indices(tracers=trs2)[0] / nbpw)
+                covi = cov[ix1, :, ix2, :]
+                covmat[cl_ix1, :, cl_ix2, :] = covi
+                covmat[cl_ix2, :, cl_ix1, :] = covi.T
+        self.s.add_covariance(covmat.reshape((ndim, ndim)))
+
+    def add_covariance_G(self):
         # Get nbpw
         dtype = self.s.get_data_types()[0]
         tracers = self.s.get_tracer_combinations(data_type=dtype)[0]
@@ -69,6 +93,12 @@ class sfile():
 
         self.s.add_covariance(covmat)
 
+    def add_covariance(self):
+        if self.use_nl:
+            self.add_covariance_NG()
+        else:
+            self.add_covariance_G()
+
     def add_tracer(self, tr):
         tracer = self.data['tracers'][tr]
 
@@ -79,7 +109,8 @@ class sfile():
                               z=z, nz=nz)
         elif tracer['type'] == 'wl':
             quantity = 'galaxy_shear'
-            z, nz = np.loadtxt(tracer['dndz'], usecols=(1, 3), unpack=True)
+            # z, nz = np.loadtxt(tracer['dndz'], usecols=(1, 3), unpack=True)
+            z, nz = np.loadtxt(tracer['dndz'], usecols=(0, 1), unpack=True)
             self.s.add_tracer('NZ', tr, quantity=quantity, spin=tracer['spin'],
                               z=z, nz=nz)
         elif tracer['type'] == 'cv':
