@@ -1,78 +1,80 @@
-from mapper_base import MapperBase
+from .mapper_base import MapperBase
 
-from astropy.io import fits
 from astropy.table import Table
+import fitsio
 import pandas as pd
 import numpy as np
 import healpy as hp
 import pymaster as nmt
 import os
 
-class MapperDESwl(MapperBase):
+class MapperDESwlMETACAL(MapperBase):
     def __init__(self, config):
-        
-        self.config = config
-        self.bin_edges = {
-        '1':[0.15, 0.30],
-        '2':[0.30, 0.45],
-        '3':[0.45, 0.60],
-        '4':[0.60, 0.75],
-        '5':[0.75, 0.90]}
+        """
+        config - dict
+          {'zbin_cat': '/.../.../y1_source_redshift_binning_v1.fits',
+           'data_cat':  '/.../.../mcal-y1a1-combined-riz-unblind-v4-matched.fits',
+           'file_nz': '/.../.../y1_redshift_distributions_v1.fits'
+           'nside': Nside,
+           'bin': bin
+           }
+        """
 
-        self.cat_data = Table.read(self.config['data_catalogs']).to_pandas()  
-        self.mask = hp.read_map(self.config['file_mask'], verbose = False)  
-        self.nz = fits.open(self.config['file_nz'])[7].data
-            
+        self.config = config
+
+        self.bin = config['bin']
         self.nside = config['nside']
         self.npix = hp.nside2npix(self.nside)
-        self.bin = config['bin']
-        self.z_edges = self.bin_edges['{}'.format(self.bin)]
-        
-        
 
-        self.cat_data = self._bin_z(self.cat_data)
-        self.w_data = self._get_weights(self.cat_data)
-        self.nmap_data = self._get_counts_map(self.cat_data, self.w_data)  
+        self.bin_edges = np.array([0.3, 0.43, 0.63, 0.9, 1.3])
+        # Read catalogs
+        # Columns explained in
+        #
+        # Galaxy catalog
+        self.columns_data = ['e1', 'e2', 'psf_e1', 'psf_e2', 'ra', 'dec',
+                             'R11', 'R22', 'flags_select']
+        # z-bin catalog
+        self.columns_zbin = ['coadd_objects_id', 'zbin_mcal']
 
-        self.dndz       = None
-        self.delta_map  = None
+        # dn/dz
+        self.nz = Table.read(config['file_nz'], format='fits',
+                             hdu=1)['Z_MID', 'BIN{}'.format(self.bin + 1)]
+
+        self.cat_data = None
+        self.cat_zbin = None
+        self.weights = None
+        self.mask = None
+        self.dndz = None
+        self.sh_maps = None
         self.nl_coupled = None
-        self.nmt_field  = None
+        self.nmt_fields = None
 
-    def _bin_z(self, cat):
-        #Account for randoms using different nomenclature
-        if 'ZREDMAGIC' in cat:
-            z_key= 'ZREDMAGIC'
-        else:
-            z_key = 'Z'
-            
-        return cat[(cat[z_key] >= self.z_edges[0]) &
-                   (cat[z_key] < self.z_edges[1])]
+    def _load_catalogs(self):
+        if self.cat_data is None:
+            self.cat_data = Table.read(self.config['data_cat'], format='fits', memmep=True)
+            self.cat_data.keep_columns(self.columns_data)
 
-    
-    def _get_weights(self, cat):
-        #Account for randoms having no weights 
-        if 'weight' in cat:
-            weights = np.array(cat['weight'].values)
-        else:
-            weights = np.ones(len(cat))
-        return weights
+            self.cat_zbin = Table.read(self.config['zbin_cat'], format='fits', memmep=True)
+            self.cat_zbin.keep_columns(self.columns_zbin)
 
-    def _get_counts_map(self, cat, w, nside=None):
-        if nside is None:
-            nside = self.nside
-        npix = hp.nside2npix(nside)    
-        ipix = hp.ang2pix(nside, cat['RA'], cat['DEC'],
-                          lonlat=True)
-        numcount = np.bincount(ipix, w, npix)
+            self.weights = np.ones(len(self.cat_data))
+        return self.cat_data, self.cat_zbin, self.weights
+
+    def _get_counts_map(self):
+        nside = self.nside
+        phi = np.radians(self.cat_data['DEC'])
+        theta = np.radians(90 - self.cat_data['RA'])
+
+        ipix = hp.ang2pix(self.nside, theta, phi)
+
         return numcount
-    
+
     def get_mask(self):
         goodpix = self.mask > 0.5
         self.mask[~goodpix] = 0
         self.mask = hp.ud_grade(self.mask, nside_out=self.nside)
         return self.mask
-        
+
     def get_nz(self, num_z=200):
         if self.dndz is None:
             #equivalent to getting columns 1 and 3 in previous code
