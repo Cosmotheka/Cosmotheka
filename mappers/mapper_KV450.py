@@ -40,6 +40,8 @@ class MapperKV450(MapperBase):
                     table.to_pickle('KV450_lite_cat_{}.pkl'.format(i))
                     self.cat_data.append(table)
         
+        self.mode = config.get('mode', 'shear') 
+        print('mode:', self.mode)
         print('Catalogs loaded')
         self.nside = config['nside']
         self.npix = hp.nside2npix(self.nside)
@@ -77,8 +79,8 @@ class MapperKV450(MapperBase):
 
     def _bin_z(self, cat):
         z_key = 'Z_B'   
-        return cat[(cat[z_key] >= self.z_edges[0]) &
-                   (cat[z_key] < self.z_edges[1])]
+        return cat[(cat[z_key] > self.z_edges[0]) &
+                   (cat[z_key] <= self.z_edges[1])]
     
     def _get_counts_map(self, data, w=None, nside=None):
         if nside is None:
@@ -95,8 +97,6 @@ class MapperKV450(MapperBase):
 
     def _remove_additive_bias(self):
         sel_gals = self.cat_data['SG_FLAG'] == 1
-        #print(np.mean(self.cat_data[sel_gals]['bias_corrected_e1']))
-        #print(np.mean(self.cat_data[sel_gals]['bias_corrected_e2']))
         self.cat_data[sel_gals]['bias_corrected_e1'] -= np.mean(self.cat_data[sel_gals]['bias_corrected_e1'])
         self.cat_data[sel_gals]['bias_corrected_e2'] -= np.mean(self.cat_data[sel_gals]['bias_corrected_e2'])
 
@@ -104,8 +104,8 @@ class MapperKV450(MapperBase):
         # Values from Table 2 of 1812.06076 (KV450 cosmo paper)
         m = (-0.017, -0.008, -0.015, 0.010, 0.006)
         sel_gals = self.cat_data['SG_FLAG'] == 1
-        self.cat_data[sel_gals]['bias_corrected_e1'] /= 1 + m[self.zbin]
-        self.cat_data[sel_gals]['bias_corrected_e2'] /= 1 + m[self.zbin]
+        self.cat_data[sel_gals]['bias_corrected_e1'] /= 1 + m[self.zbin-1]
+        self.cat_data[sel_gals]['bias_corrected_e2'] /= 1 + m[self.zbin-1]
     
     def _get_galaxy_data(self):
         sel = self.cat_data['SG_FLAG'] == 1
@@ -119,16 +119,19 @@ class MapperKV450(MapperBase):
         sel = self.cat_data['SG_FLAG'] == 0
         return self.cat_data[sel]
     
-    def get_signal_map(self, map_mode = 'shear'):
-        if map_mode == 'shear':
+    def get_signal_map(self, mode = None):
+        if mode is None:
+            mode  = self.mode
+            
+        if mode == 'shear':
             print('Calculating shear spin-2 field')
             self.signal_map = self._get_shear_map()
             return self.signal_map
-        elif map_mode == 'PSF': 
+        elif mode == 'PSF': 
             print('Calculating PSF spin-2 field')
             self.signal_map = self._get_psf_map()
             return self.signal_map
-        elif map_mode == 'stars': 
+        elif mode == 'stars': 
             print('Calculating star density spin-0 field')
             self.signal_map = self._get_star_map()
             return self.signal_map
@@ -141,6 +144,12 @@ class MapperKV450(MapperBase):
             data = self._get_galaxy_data()
             we1 = self._get_counts_map(data, w=data['weight']*data['bias_corrected_e1'], nside=None)
             we2 = self._get_counts_map(data, w=data['weight']*data['bias_corrected_e2'], nside=None)
+            
+            mask = self._get_galaxy_mask()
+            goodpix  = mask > 0
+            we1[goodpix] /= self._get_galaxy_mask()[goodpix]
+            we2[goodpix] /= self._get_galaxy_mask()[goodpix]
+        
             self.shear_map = [we1, we2]
         return self.shear_map
 
@@ -149,25 +158,42 @@ class MapperKV450(MapperBase):
             data = self._get_galaxy_data()
             we1 = self._get_counts_map(data, w=data['weight']*data['PSF_e1'], nside=None)
             we2 = self._get_counts_map(data, w=data['weight']*data['PSF_e2'], nside=None)
+            
+            mask = self._get_galaxy_mask()
+            goodpix  = mask > 0
+            we1[goodpix] /= self._get_galaxy_mask()[goodpix]
+            we2[goodpix] /= self._get_galaxy_mask()[goodpix]
+            
             self.psf_map = [we1, we2]
         return self.psf_map
 
     def _get_star_map(self):
         if self.star_map is None:
             data = self._get_star_data()
-            self.star_map = [self._get_counts_map(data)]
+            we1 = self._get_counts_map(data, w=data['weight']*data['bias_corrected_e1'], nside=None)
+            we2 = self._get_counts_map(data, w=data['weight']*data['bias_corrected_e2'], nside=None)
+            
+            mask = self._get_star_mask()
+            goodpix  = mask > 0
+            we1[goodpix] /= self._get_star_mask()[goodpix]
+            we2[goodpix] /= self._get_star_mask()[goodpix]
+        
+            self.star_map = [we1, we2]
         return self.star_map
 
-    def get_mask(self, mask_mode='shear'):
-        if  mask_mode == 'shear':
+    def get_mask(self, mode= None):
+        if mode is None:
+            mode = self.mode
+            
+        if  mode == 'shear':
             print('Using galaxies mask')
             self.mask = self._get_galaxy_mask()
             return self.mask
-        elif mask_mode == 'PSF': 
+        elif mode == 'PSF': 
             print('Using galaxies mask')
             self.mask = self._get_galaxy_mask()
             return self.mask
-        elif mask_mode == 'stars': 
+        elif mode == 'stars': 
             print('Using stars mask')
             self.mask = self._get_star_mask()
             return self.mask
@@ -187,22 +213,24 @@ class MapperKV450(MapperBase):
             self.galaxy_mask = self._get_counts_map(data, w = data['weight'])
         return self.galaxy_mask
 
-    def get_nmt_field(self, mode = 'shear'):
-        signal = self.get_signal_map(map_mode = mode)
-        mask = self.get_mask(mask_mode = mode)
+    def get_nmt_field(self, mode = None):
+        if mode is None:
+            mode = self.mode
+        signal = self.get_signal_map(mode = mode)
+        mask = self.get_mask(mode = mode)
         self.nmt_field = nmt.NmtField(mask, signal, n_iter = 0)
         return self.nmt_field
 
-    def get_nl_coupled(self, nl_mode = 'shear'):
-        if  nl_mode == 'shear':
+    def get_nl_coupled(self, mode = None):
+        if  mode == 'shear':
             print('Calculating shear nl coupled')
             self.nl_coupled = self._get_shear_nl_coupled()
             return self.nl_coupled
-        elif nl_mode == 'PSF': 
+        elif mode == 'PSF': 
             print('Calculating psf nl coupled')
             self.nl_coupled = self._get_psf_nl_coupled()
             return self.nl_coupled
-        elif nl_mode == 'stars': 
+        elif mode == 'stars': 
             print('Calculating stars nl coupled')
             self.nl_coupled = self._get_star_nl_coupled()
             return self.nl_coupled
@@ -210,7 +238,7 @@ class MapperKV450(MapperBase):
             print('Unrecognized mode. Please choose between: shear, PSF or stars.')
             return
     
-    def _get_shear_nl_coupled(self, mode = 'shear'):
+    def _get_shear_nl_coupled(self):
         if self.shear_nl_coupled is None:
             data = self._get_galaxy_data()
             w2s2 = self._get_counts_map(data, w=data['weight']**2 * 0.5 * (data['bias_corrected_e1']**2 + data['bias_corrected_e2']**2), nside=None)
@@ -224,7 +252,7 @@ class MapperKV450(MapperBase):
     def _get_psf_nl_coupled(self):
         if self.psf_nl_coupled is None:
             data = self._get_galaxy_data()
-            w2s2 = self._get_counts_map(data, w = data['weight']**2 * 0.5 * (data['PSF_e1']**2 + data['PSF_e2']**2))
+            w2s2 = self._get_counts_map(data, w = data['weight']**2 * 0.5 * (data['PSF_e1']**2 + data['PSF_e2']**2), nside=None)
             N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
             nl = N_ell * np.ones(3*self.nside)
             nl[:2] = 0  # Ylm = for l < spin
@@ -235,10 +263,10 @@ class MapperKV450(MapperBase):
     def _get_stars_nl_coupled(self):
         if self.stars_nl_coupled is None:
             data = self._get_star_data()
-            N_mean = np.sum(self.star_map)/np.sum(self.star_mask)
-            N_mean_srad = N_mean / (4 * np.pi) * self.npix
-            correction = np.sum(data['weight']**2) / np.sum(data['weight'])
-            N_ell = correction * np.sum(self.star_mask) / self.npix / N_mean_srad
-            self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
+            w2s2 = self._get_counts_map(data, w=data['weight']**2 * 0.5 * (data['bias_corrected_e1']**2 + data['bias_corrected_e2']**2), nside=None)
+            N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix 
+            nl = N_ell * np.ones(3*self.nside)
+            nl[:2] = 0  # Ylm = for l < spin
+            self.star_nl_coupled = np.array([nl, 0 * nl, 0 * nl, nl])
 
         return self.stars_nl_coupled
