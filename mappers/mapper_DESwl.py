@@ -21,6 +21,7 @@ class MapperDESwlMETACAL(MapperBase):
         """
 
         self.config = config
+        self.cat_data = []
 
         self.bin = config['bin']
         self.nside = config['nside']
@@ -40,14 +41,15 @@ class MapperDESwlMETACAL(MapperBase):
         self.nz = Table.read(config['file_nz'], format='fits',
                              hdu=1)['Z_MID', 'BIN{}'.format(self.bin + 1)]
 
-        self.cat_data = None
-        self.cat_zbin = None
-        self.weights = None
-        self.mask = None
-        self.dndz = None
-        self.sh_maps = None
-        self.nl_coupled = None
-        self.nmt_fields = None
+        self.signal_map  = None
+        self.psf_map     = None
+        self.shear_map   = None
+        self.mask        = None
+        self.nmt_field   = None
+        self.nl_coupled  = None
+        self.shear_nl_coupled = None
+        self.psf_nl_coupled   = None 
+        self.stars_nl_coupled = None 
 
     def _load_catalogs(self):
         if self.cat_data is None:
@@ -60,55 +62,101 @@ class MapperDESwlMETACAL(MapperBase):
             self.weights = np.ones(len(self.cat_data))
         return self.cat_data, self.cat_zbin, self.weights
 
-    def _get_counts_map(self):
-        nside = self.nside
-        phi = np.radians(self.cat_data['DEC'])
-        theta = np.radians(90 - self.cat_data['RA'])
-
+    def _get_counts_map(self, w=None, nside=None):
+        if nside is None:
+            nside = self.nside
+            
+        phi = np.radians(self.cat_data['ra'])
+        theta = np.radians(90 - self.cat_data['dec'])
         ipix = hp.ang2pix(self.nside, theta, phi)
+        npix = hp.nside2npix(nside) 
+        
+        numcount = np.bincount(ipix,  weights=w , minlength=npix )
 
-        return numcount
+    def get_signal_map(self, mode = None):
+        if mode is None:
+            mode  = self.mode
+            
+        if mode == 'shear':
+            print('Calculating shear spin-2 field')
+            self.signal_map = self._get_shear_map()
+            return self.signal_map
+        elif mode == 'PSF': 
+            print('Calculating PSF spin-2 field')
+            self.signal_map = self._get_psf_map()
+            return self.signal_map
+        else:
+            print('Unrecognized mode. Please choose between: shear or PSF')
+            return
+              
+    def _get_shear_map(self):
+        if self.shear_map is None:
+            we1 = self._get_counts_map(w=self.cat_data['e1'], nside=None)
+            we2 = self._get_counts_map(w=self.cat_data['e2'], nside=None)
+            
+            mask = self._get_mask()
+            goodpix  = mask > 0
+            we1[goodpix] /= self._get_galaxy_mask()[goodpix]
+            we2[goodpix] /= self._get_galaxy_mask()[goodpix]
+        
+            self.shear_map = [we1, we2]
+        return self.shear_map
 
+    def _get_psf_map(self):
+        if self.psf_map is None:
+            we1 = self._get_counts_map(w=self.cat_data['psf_e1'], nside=None)
+            we2 = self._get_counts_map(w=self.cat_data['psf_e2'], nside=None)
+            
+            mask = self._get_mask()
+            goodpix  = mask > 0
+            we1[goodpix] /= self._get_galaxy_mask()[goodpix]
+            we2[goodpix] /= self._get_galaxy_mask()[goodpix]
+            
+            self.psf_map = [we1, we2]
+        return self.psf_map
+    
     def get_mask(self):
-        goodpix = self.mask > 0.5
-        self.mask[~goodpix] = 0
-        self.mask = hp.ud_grade(self.mask, nside_out=self.nside)
+        if self.mask is None:
+            self.mask = self._get_counts_map()
         return self.mask
 
-    def get_nz(self, num_z=200):
-        if self.dndz is None:
-            #equivalent to getting columns 1 and 3 in previous code
-            z  = self.nz['Z_MID']
-            pz = self.nz['BIN%d' % (self.bin)]
-            # Calculate z bias
-            dz = 0
-            z_dz = z - dz
-            # Set to 0 points where z_dz < 0:
-            sel = z_dz >= 0
-            z_dz = z_dz[sel]
-            pz = pz[sel]
-        return np.array([z_dz, pz])
-
-    def get_signal_map(self):
-        if self.delta_map is None:
-            self.delta_map = np.zeros(self.npix)
-            N_mean = np.sum(self.nmap_data)/np.sum(self.mask)
-            goodpix = self.mask > 0
-            self.delta_map[goodpix] = (self.nmap_data[goodpix])/(self.mask[goodpix]*N_mean) -1
-        return [self.delta_map]
-
-    def get_nmt_field(self):
-        if self.nmt_field is None:
-            signal = self.get_signal_map()
-            mask = self.get_mask()
-            self.nmt_field = nmt.NmtField(mask, signal, n_iter = 0)
+    def get_nmt_field(self, mode = None):
+        if mode is None:
+            mode = self.mode
+        signal = self.get_signal_map(mode = mode)
+        mask = self.get_mask()
+        self.nmt_field = nmt.NmtField(mask, signal, n_iter = 0)
         return self.nmt_field
 
-    def get_nl_coupled(self):
-        if self.nl_coupled is None:
-            N_mean = np.sum(self.nmap_data)/np.sum(self.mask)
-            N_mean_srad = N_mean / (4 * np.pi) * self.npix
-            correction = np.sum(self.w_data**2) / np.sum(self.w_data)
-            N_ell = correction * np.sum(self.mask) / self.npix / N_mean_srad
-            self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
-        return self.nl_coupled
+    def get_nl_coupled(self, mode = None):
+        if  mode == 'shear':
+            print('Calculating shear nl coupled')
+            self.nl_coupled = self._get_shear_nl_coupled()
+            return self.nl_coupled
+        elif mode == 'PSF': 
+            print('Calculating psf nl coupled')
+            self.nl_coupled = self._get_psf_nl_coupled()
+            return self.nl_coupled
+        else:
+            print('Unrecognized mode. Please choose between: shear or PSF')
+            return
+    
+    def _get_shear_nl_coupled(self):
+        if self.shear_nl_coupled is None:
+            w2s2 = self._get_counts_map( w = 0.5 * (self.cat_data['e1']**2 + self.cat_data['e2']**2), nside=None)
+            N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix 
+            nl = N_ell * np.ones(3*self.nside)
+            nl[:2] = 0  # Ylm = for l < spin
+            self.shear_nl_coupled = np.array([nl, 0 * nl, 0 * nl, nl])
+
+        return self.shear_nl_coupled
+    
+    def _get_psf_nl_coupled(self):
+        if self.psf_nl_coupled is None:
+            w2s2 = self._get_counts_map(w = 0.5 * (self.cat_data['psf_e1']**2 + self.cat_data['psf_e2']**2), nside=None)
+            N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
+            nl = N_ell * np.ones(3*self.nside)
+            nl[:2] = 0  # Ylm = for l < spin
+            self.psf_nl_coupled = np.array([nl, 0 * nl, 0 * nl, nl])
+
+        return self.psf_nl_coupled
