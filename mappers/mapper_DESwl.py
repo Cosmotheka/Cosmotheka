@@ -22,25 +22,17 @@ class MapperDESwlMETACAL(MapperBase):
         """
 
         self.config = config
-        self.cat_data = None
 
         self.bin = config['bin']
         self.nside = config['nside']
         self.npix = hp.nside2npix(self.nside)
 
         self.bin_edges = np.array([0.3, 0.43, 0.63, 0.9, 1.3])
-        # Read catalogs
-        # Columns explained in
-        #
-        # Galaxy catalog
-        self.columns_data = ['coadd_objects_id', 'e1', 'e2', 'psf_e1', 'psf_e2', 'ra', 'dec',
-                             'R11', 'R22', 'flags_select']
-        # z-bin catalog
-        self.columns_zbin = ['coadd_objects_id', 'zbin_mcal']
 
         # dn/dz
         self.nz = Table.read(config['file_nz'], format='fits',
                              hdu=1)['Z_MID', 'BIN{}'.format(self.bin + 1)]
+
 
         self.signal_map  = None
         self.psf_map     = None
@@ -49,11 +41,20 @@ class MapperDESwlMETACAL(MapperBase):
         self.nmt_field   = None
         self.nl_coupled  = None
         self.shear_nl_coupled = None
-        self.psf_nl_coupled   = None
+        self.psf_nl_coupled  = None
+        self.cat_data = self._load_catalog()
 
-    def _load_catalogs(self):
+    def _load_catalog(self):
         if self.cat_data is not None:
             return self.cat_data
+        # Read catalogs
+        # Columns explained in
+        #
+        # Galaxy catalog
+        columns_data = ['coadd_objects_id', 'e1', 'e2', 'psf_e1', 'psf_e2', 'ra', 'dec',
+                             'R11', 'R22', 'flags_select']
+        # z-bin catalog
+        columns_zbin = ['coadd_objects_id', 'zbin_mcal']
 
         fcat_lite = 'DESwlMETACAL_catalog_lite'
         fcat_bin = '{}_zbin{}.fits'.format(fcat_lite, self.bin)
@@ -64,9 +65,9 @@ class MapperDESwlMETACAL(MapperBase):
             self.cat_data = Table.read(fcat_lite, memmep=True)
         else:
             self.cat_data = Table.read(self.config['data_cat'], format='fits', memmep=True)
-            self.cat_data.keep_columns(self.columns_data)
+            self.cat_data.keep_columns(columns_data)
             cat_zbin = Table.read(self.config['zbin_cat'], format='fits', memmep=True)
-            cat_zbin.keep_columns(self.columns_zbin)
+            cat_zbin.keep_columns(columns_zbin)
             self.cat_data = astropy.table.join(self.cat_data, cat_zbin)
             col_w = Column(name='weight', data=np.ones(len(self.cat_data), dtype=int))
             self.cat_data.add_column(col_w)
@@ -78,10 +79,6 @@ class MapperDESwlMETACAL(MapperBase):
         self.cat_data.write(fcat_bin)
 
         return self.cat_data
-
-    def _bin_z(self, cat):
-        z_key = 'zbin_mcal'
-        return cat[cat[z_key] == self.bin + 1]
 
     def _get_counts_map(self, w=None, nside=None):
         if nside is None:
