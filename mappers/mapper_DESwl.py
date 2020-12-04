@@ -17,12 +17,14 @@ class MapperDESwlMETACAL(MapperBase):
            'data_cat':  '/.../.../mcal-y1a1-combined-riz-unblind-v4-matched.fits',
            'file_nz': '/.../.../y1_redshift_distributions_v1.fits'
            'nside': Nside,
-           'bin': bin
+           'bin': bin,
+           'mask_name': name
            }
         """
 
         self.config = config
-
+        self.mask_name = self.config['mask_name']
+        
         self.bin = config['bin']
         self.nside = config['nside']
         self.npix = hp.nside2npix(self.nside)
@@ -30,8 +32,10 @@ class MapperDESwlMETACAL(MapperBase):
         self.bin_edges = np.array([0.3, 0.43, 0.63, 0.9, 1.3])
 
         # dn/dz
-        self.nz = Table.read(config['file_nz'], format='fits',
-                             hdu=1)['Z_MID', 'BIN{}'.format(self.bin + 1)]
+        #self.nz = Table.read(config['file_nz'], format='fits',hdu=1)['Z_MID', 'BIN{}'.format(self.bin + 1)]
+        
+        # load cat
+        self.cat_data = self._load_catalog()
 
 
         self.signal_map  = None
@@ -42,11 +46,9 @@ class MapperDESwlMETACAL(MapperBase):
         self.nl_coupled  = None
         self.shear_nl_coupled = None
         self.psf_nl_coupled  = None
-        self.cat_data = self._load_catalog()
+        
 
     def _load_catalog(self):
-        if self.cat_data is not None:
-            return self.cat_data
         # Read catalogs
         # Columns explained in
         #
@@ -64,9 +66,9 @@ class MapperDESwlMETACAL(MapperBase):
         elif os.path.isfile(fcat_lite):
             self.cat_data = Table.read(fcat_lite, memmep=True)
         else:
-            self.cat_data = Table.read(self.config['data_cat'], format='fits', memmep=True)
+            self.cat_data = Table.read(self.config['data_cat'], format='fits', memmap=True)
             self.cat_data.keep_columns(columns_data)
-            cat_zbin = Table.read(self.config['zbin_cat'], format='fits', memmep=True)
+            cat_zbin = Table.read(self.config['zbin_cat'], format='fits', memmap=True)
             cat_zbin.keep_columns(columns_zbin)
             self.cat_data = astropy.table.join(self.cat_data, cat_zbin)
             col_w = Column(name='weight', data=np.ones(len(self.cat_data), dtype=int))
