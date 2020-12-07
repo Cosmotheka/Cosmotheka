@@ -1,8 +1,7 @@
-from .mapper_base import MapperBase
+from mapper_base import MapperBase
 
 from astropy.table import Table, Column
 import astropy.table
-import fitsio
 import pandas as pd
 import numpy as np
 import healpy as hp
@@ -90,7 +89,7 @@ class MapperDESwl(MapperBase):
 
         return 
     
-    def _bin_z(self)
+    def _bin_z(self):
         self.cat_data = pd.concat([self.cat_data, self.cat_zbin], axis=1, sort=False)
         return self.cat_data[self.cat_data.zbin_mcal != self.bin + 1]
 
