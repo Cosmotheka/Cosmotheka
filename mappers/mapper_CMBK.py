@@ -41,6 +41,7 @@ class MapperCMBK(MapperBase):
     def get_mask(self):
         if self.mask_map is None:
             self.mask_map = self.r.rotate_map_pixel(self.mask)
+            self.mask_map = hp.ud_grade(self.mask_map, nside_out=self.nside)
         return self.mask_map
 
     def get_nmt_field(self):
