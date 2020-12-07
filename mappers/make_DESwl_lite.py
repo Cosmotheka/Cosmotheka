@@ -20,7 +20,7 @@ config =  {'zbin_cat': path_data + 'y1_source_redshift_binning_v1.fits',
          'bin': bin,
          'mask_name': 'name'}
 
-mapper_DESwl.MapperDESwlMETACAL(config)
+mapper_DESwl.MapperDESwl(config)
 
 
             
