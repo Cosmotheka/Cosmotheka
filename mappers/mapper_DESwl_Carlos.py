@@ -24,7 +24,7 @@ class MapperDESwl(MapperBase):
 
         self.config = config
         self.mask_name = self.config['mask_name']
-        
+
         self.bin = config['bin']
         self.nside = config['nside']
         self.npix = hp.nside2npix(self.nside)
@@ -33,7 +33,7 @@ class MapperDESwl(MapperBase):
 
         # dn/dz
         #self.nz = Table.read(config['file_nz'], format='fits',hdu=1)['Z_MID', 'BIN{}'.format(self.bin + 1)]
-        
+
         # load cat
         self.cat_data = self._load_catalog()
 
@@ -46,7 +46,7 @@ class MapperDESwl(MapperBase):
         self.nl_coupled  = None
         self.shear_nl_coupled = None
         self.psf_nl_coupled  = None
-        
+
 
     def _load_catalog(self):
         # Read catalogs
@@ -61,7 +61,7 @@ class MapperDESwl(MapperBase):
         fcat_lite = 'DESwlMETACAL_catalog_lite'
         fcat_bin = '{}_zbin{}.fits'.format(fcat_lite, self.bin)
         fcat_lite += '.fits'
-        
+
         if os.path.isfile(fcat_bin):
             self.cat_data = Table.read(fcat_bin, memmap=True)
         elif os.path.isfile(fcat_lite):
@@ -72,10 +72,10 @@ class MapperDESwl(MapperBase):
             cat_zbin = Table.read(self.config['zbin_cat'], format='fits', memmap=True)
             cat_zbin.keep_columns(columns_zbin)
             self.cat_data = astropy.table.join(self.cat_data, cat_zbin)
-            col_w = Column(name='weight', data=np.ones(len(self.cat_data), dtype=int))
-            self.cat_data.add_column(col_w)
             # Note: By default join uses checks the values of the column named
             # the same in both tables
+            col_w = Column(name='weight', data=np.ones(len(self.cat_data), dtype=int))
+            self.cat_data.add_column(col_w)
             self.cat_data.write(fcat_lite)
 
         self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.bin + 1)
