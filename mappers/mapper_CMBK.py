@@ -10,6 +10,14 @@ import os
 
 class MapperCMBK(MapperBase):
     def __init__(self, config):
+        """
+        config - dict
+          {'file_klm':'/home/zcapjru/PhD/Data/COM_Lensing_2048_R2.00/dat_klm.fits', 
+          'file_mask':'/home/zcapjru/PhD/Data/COM_Lensing_2048_R2.00/mask.fits.gz',
+               'file_noise':'/home/zcapjru/PhD/Data/COM_Lensing_2048_R2.00/nlkk.dat',
+               'mask_name': 'mask_CMBK',
+          'nside':2048}
+        """
         self.config = config
         self.mask_name = self.config['mask_name']
 

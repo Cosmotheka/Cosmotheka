@@ -10,6 +10,20 @@ import os
 
 class MapperKV450(MapperBase):
     def __init__(self, config):
+        """
+        config - dict
+          {'data_catalogs': [path+'KV450_G12_reweight_3x4x4_v2_good.cat', 
+        path+'KV450_G23_reweight_3x4x4_v2_good.cat',
+        path+'KV450_GS_reweight_3x4x4_v2_good.cat',
+        path+'KV450_G15_reweight_3x4x4_v2_good.cat',
+        path+'KV450_G9_reweight_3x4x4_v2_good.cat'] , 
+          'file_nz':path + 'REDSHIFT_DISTRIBUTIONS/Nz_DIR/Nz_DIR_Mean/Nz_DIR_z0.1t0.3.asc',
+          'zbin':1,
+          'nside':nside, 
+          'mask_name': 'mask_KV450_1'}
+           }
+        """
+        
         
         self.config = config
         self.column_names = ['SG_FLAG', 'GAAP_Flag_ugriZYJHKs',
@@ -26,12 +40,12 @@ class MapperKV450(MapperBase):
         '5':[0.9, 1.2]}
         
         self.cat_data = []
-        if os.path.isfile('KV450_lite_cat_0.pkl'):
-            print('loading lite cats')
+        if os.path.isfile('KV450_lite_cat_0.pkl', end=' ', flush=True):
+            print('loading lite cats', end=' ', flush=True)
             for i in range(len(self.config['data_catalogs'])):
                  self.cat_data.append(pd.read_pickle('KV450_lite_cat_{}.pkl'.format(i)))
         else:
-            print('loading full cats and making lite versions')
+            print('loading full cats and making lite versions', end=' ', flush=True)
             for i, file_data in enumerate(self.config['data_catalogs']):
                 if not os.path.isfile(file_data):
                     raise ValueError(f"File {file_data} not found")
@@ -41,25 +55,21 @@ class MapperKV450(MapperBase):
                     self.cat_data.append(table)
         
         self.mode = config.get('mode', 'shear') 
-        print('mode:', self.mode)
-        print('Catalogs loaded')
+        print('mode:', self.mode, end=' ', flush=True)
+        print('Catalogs loaded', end=' ', flush=True)
         self.nside = config['nside']
         self.npix = hp.nside2npix(self.nside)
         self.zbin = config['zbin']
         self.z_edges = self.zbin_edges['{}'.format(self.zbin)]
-        print('z edges ' , self.z_edges)
         self.cat_data = pd.concat(self.cat_data)
-        print('data concatenated')
         self.cat_data = self._get_GAAP_data()
-        print('removed GAAP')
+        print('removed GAAP', end=' ', flush=True)
         self.cat_data = self._bin_z(self.cat_data)
-        print('Length of galaxies: ', len(self._get_galaxy_data()['ALPHA_J2000']))
-        print('Length of stars: ', len(self._get_star_data()['ALPHA_J2000']))
-        print('Data binned')
+        print('Data binned', end=' ', flush=True)
         self._remove_additive_bias()
-        print('Additive biased removed')
+        print('Additive biased removed', end=' ', flush=True)
         self._remove_multiplicative_bias() 
-        print('Multiplicative bias removed')
+        print('Multiplicative bias removed', end=' ', flush=True)
 
         self.dndz = np.loadtxt(self.config['file_nz'], unpack=True)
         self.signal_map  = None

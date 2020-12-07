@@ -10,6 +10,16 @@ import os
 
 class MapperDESgc(MapperBase):
     def __init__(self, config):
+        """
+        config - dict
+          {'data_catalogs':'/home/zcapjru/PhD/Data/DES_redm/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits', 
+                'file_mask':'/home/zcapjru/PhD/Data/DES_redm/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits',
+                'file_nz':'/home/zcapjru/PhD/Data/DES_redm/2pt_NG_mcal_1110.fits',
+          'bin':1,
+          'nside':nside, 
+          'mask_name': 'mask_DESgc_1'}
+        """
+        
         
         self.config = config
         self.mask_name = self.config['mask_name']
