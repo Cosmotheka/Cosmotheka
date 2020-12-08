@@ -26,6 +26,7 @@ class MapperKV450(MapperBase):
         
         
         self.config = config
+        self.mask_name = config.get('mask_name', None) 
         self.column_names = ['SG_FLAG', 'GAAP_Flag_ugriZYJHKs',
                              'Z_B', 'Z_B_MIN', 'Z_B_MAX',
                              'ALPHA_J2000', 'DELTA_J2000', 'PSF_e1', 'PSF_e2',

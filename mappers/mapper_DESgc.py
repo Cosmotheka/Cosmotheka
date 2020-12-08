@@ -22,7 +22,7 @@ class MapperDESgc(MapperBase):
         
         
         self.config = config
-        self.mask_name = self.config['mask_name']
+        self.mask_name = config.get('mask_name', None) 
         self.bin_edges = {
         '1':[0.15, 0.30],
         '2':[0.30, 0.45],

@@ -1,7 +1,8 @@
-from mapper_base import MapperBase
+from .mapper_base import MapperBase
 
 from astropy.table import Table, Column
 import astropy.table
+import fitsio
 import pandas as pd
 import numpy as np
 import healpy as hp
@@ -22,24 +23,20 @@ class MapperDESwl(MapperBase):
         """
 
         self.config = config
-        self.mask_name = self.config['mask_name']
+        self.mask_name = config.get('mask_name', None) 
         
         self.bin = config['bin']
         self.nside = config['nside']
         self.npix = hp.nside2npix(self.nside)
 
         self.bin_edges = np.array([0.3, 0.43, 0.63, 0.9, 1.3])
-        
-        # load cat
-        self._load_catalog()
-        
-        #bin data 
-        self.cat_data = self._bin_z()
-        print('Data binned:' + len(self.cat_data['ra']), end=' ', flush=True)
 
         # dn/dz
-        self.nz = Table.read(config['file_nz'], format='fits',hdu=1).to_pandas()
-        self.nz = self.nz['Z_MID', 'BIN{}'.format(self.bin + 1)]
+        self.nz = Table.read(config['file_nz'], format='fits',hdu=1)['Z_MID', 'BIN{}'.format(self.bin + 1)]
+
+        # load cat
+        self.cat_data = self._load_catalog()
+
 
         self.signal_map  = None
         self.psf_map     = None
@@ -49,7 +46,7 @@ class MapperDESwl(MapperBase):
         self.nl_coupled  = None
         self.shear_nl_coupled = None
         self.psf_nl_coupled  = None
-        
+
 
     def _load_catalog(self):
         # Read catalogs
@@ -62,36 +59,29 @@ class MapperDESwl(MapperBase):
         columns_zbin = ['coadd_objects_id', 'zbin_mcal']
 
         fcat_lite = 'DESwlMETACAL_catalog_lite'
-        fcat_bin = fcat_lite + '_zbin.pkl'
-        fcat_lite += '.pkl'
-        
+        fcat_bin = '{}_zbin{}.fits'.format(fcat_lite, self.bin)
+        fcat_lite += '.fits'
+
         if os.path.isfile(fcat_bin):
-            print('Loading lite z_bin')
-            self.cat_zbin = Table.read(fcat_bin, memmap=True)
-        else:
-            print('Lite zbins not found, loading original and turning them into lite', end=' ', flush=True)
-            self.cat_zbin = Table.read(self.config['zbin_cat'], format='fits', memmap=True).to_pandas()
-            self.cat_zbin = self.cat_zbin[columns_zbin]
-            print('Loaded zbin cats', end=' ', flush=True)
-            self.cat_zbin.to_pickle(fcat_bin)
-            print('Saved lite zbin cats', end=' ', flush=True)
-            
-        if os.path.isfile(fcat_lite):
-            print('Loading lite cat')
+            self.cat_data = Table.read(fcat_bin, memmap=True)
+        elif os.path.isfile(fcat_lite):
             self.cat_data = Table.read(fcat_lite, memmap=True)
         else:
-            print('Lite cats not found, loading original and turning them into lite', end=' ', flush=True)
-            self.cat_data = Table.read(self.config['data_cat'], format='fits', memmap=True).to_pandas()
-            self.cat_data = self.cat_data[self.column_data]
-            print('Loaded data cats', end=' ', flush=True)
-            self.cat_data.to_pickle(fcat_lite)
-            print('Saved lite data cats', end=' ', flush=True)      
+            self.cat_data = Table.read(self.config['data_cat'], format='fits', memmap=True)
+            self.cat_data.keep_columns(columns_data)
+            cat_zbin = Table.read(self.config['zbin_cat'], format='fits', memmap=True)
+            cat_zbin.keep_columns(columns_zbin)
+            self.cat_data = astropy.table.join(self.cat_data, cat_zbin)
+            # Note: By default join uses checks the values of the column named
+            # the same in both tables
+            col_w = Column(name='weight', data=np.ones(len(self.cat_data), dtype=int))
+            self.cat_data.add_column(col_w)
+            self.cat_data.write(fcat_lite)
 
-        return 
-    
-    def _bin_z(self):
-        self.cat_data = pd.concat([self.cat_data, self.cat_zbin], axis=1, sort=False)
-        return self.cat_data[self.cat_data.zbin_mcal != self.bin + 1]
+        self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.bin + 1)
+        self.cat_data.write(fcat_bin)
+
+        return self.cat_data
 
     def _get_counts_map(self, w=None, nside=None):
         if nside is None:
@@ -103,8 +93,6 @@ class MapperDESwl(MapperBase):
         npix = hp.nside2npix(nside)
 
         numcount = np.bincount(ipix,  weights=w , minlength=npix )
-        
-        return numcount
 
     def get_signal_map(self, mode = None):
         if mode is None:

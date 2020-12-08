@@ -21,7 +21,7 @@ class MappereBOSSQSO(MapperBase):
 
         self.cat_data = []
         self.cat_random = []
-        self.mask_name = self.config['mask_name']
+        self.mask_name = config.get('mask_name', None) 
         
         for file_data, file_random in zip(self.config['data_catalogs'],
                                           self.config['random_catalogs']):

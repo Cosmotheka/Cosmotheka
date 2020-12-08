@@ -19,7 +19,7 @@ class MapperCMBK(MapperBase):
           'nside':2048}
         """
         self.config = config
-        self.mask_name = self.config['mask_name']
+        self.mask_name = config.get('mask_name', None) 
 
         self.klm = []
         self.mask = []
