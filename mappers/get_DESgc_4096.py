@@ -2,7 +2,7 @@ from mapper_base import MapperBase
 from astropy.io import fits
 from astropy.table import Table
 
-import mapper_DES
+import mapper_DESgc
 import pyccl as ccl
 import numpy as np
 import pylab as plt
@@ -11,11 +11,7 @@ import os
 
 nside = 4096
 
-ells = []
-i = 11.5
-while i <= 3 * nside:
-    ells.append(round(i))
-    i = i+20*(1+i/500)
+ells = [0, 30, 60, 90, 120, 150, 180, 210, 240, 272, 309, 351, 398, 452, 513, 582, 661, 750, 852, 967, 1098, 1247, 1416, 1608, 1826, 2073, 2354, 2673, 3035, 3446, 3914, 4444, 5047, 5731, 6508, 7390, 8392, 9529, 10821, 12288]
 bands = nmt.NmtBin.from_edges(ells[:-1], ells[1:])
 ell_arr = bands.get_effective_ells()
 
@@ -50,13 +46,12 @@ config5 = {'data_catalogs':path_data + 'redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC
                 'file_nz':path_data + 'data_vector/2pt_NG_mcal_1110.fits',
           'bin':5,
           'nside':nside }
-          
 
-D0 = mapper_DES.MapperDES(config1)
-D1 = mapper_DES.MapperDES(config2)
-D2 = mapper_DES.MapperDES(config3)
-D3 = mapper_DES.MapperDES(config4)
-D4 = mapper_DES.MapperDES(config5)
+D0 = mapper_DESgc.MapperDESgc(config1)
+D1 = mapper_DESgc.MapperDESgc(config2)
+D2 = mapper_DESgc.MapperDESgc(config3)
+D3 = mapper_DESgc.MapperDESgc(config4)
+D4 = mapper_DESgc.MapperDESgc(config5)
 
 fields = {
        'D_f_0':  D0.get_nmt_field(),
@@ -81,8 +76,8 @@ for i in range(5):
         cl_decoupled = wsp.decouple_cell(cl_coupled)
         
         if i == j:
-            nl = wsp.decouple_cell(nls['nl_{}'.format(i)])
-            cl_decoupled = cl_decoupled - nl
+            nl_decoupled = wsp.decouple_cell(nls['nl_{}'.format(i)])
+            np.savetxt('DES_nl_{}{}.txt'.format(i,j), nl_decoupled)
         
         np.savetxt('DES_cl_{}{}.txt'.format(i,j), cl_decoupled)
             
