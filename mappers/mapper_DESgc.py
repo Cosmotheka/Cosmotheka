@@ -11,6 +11,8 @@ import os
 class MapperDESgc(MapperBase):
     def __init__(self, config):
         """
+        Data source:
+        https://des.ncsa.illinois.edu/releases/y1a1/key-catalogs/key-shape
         config - dict
           {'data_catalogs':'/home/zcapjru/PhD/Data/DES_redm/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits', 
                 'file_mask':'/home/zcapjru/PhD/Data/DES_redm/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits',

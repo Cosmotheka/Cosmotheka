@@ -12,36 +12,38 @@ class MapperKV450(MapperBase):
     def __init__(self, config):
         """
         config - dict
-          {'data_catalogs': [path+'KV450_G12_reweight_3x4x4_v2_good.cat', 
+          {'data_catalogs': [path+'KV450_G12_reweight_3x4x4_v2_good.cat',
         path+'KV450_G23_reweight_3x4x4_v2_good.cat',
         path+'KV450_GS_reweight_3x4x4_v2_good.cat',
         path+'KV450_G15_reweight_3x4x4_v2_good.cat',
-        path+'KV450_G9_reweight_3x4x4_v2_good.cat'] , 
+        path+'KV450_G9_reweight_3x4x4_v2_good.cat'] ,
           'file_nz':path + 'REDSHIFT_DISTRIBUTIONS/Nz_DIR/Nz_DIR_Mean/Nz_DIR_z0.1t0.3.asc',
           'zbin':1,
-          'nside':nside, 
-          'mask_name': 'mask_KV450_1'}
+          'nside':nside,
+          'mask_name': 'mask_KV450_1',
+          'lite_path': path}
            }
         """
-        
-        
+
+
         self.config = config
-        self.mask_name = config.get('mask_name', None) 
+        self.mask_name = config.get('mask_name', None)
+        self.lite_path = config.get('lite_path', None)
         self.column_names = ['SG_FLAG', 'GAAP_Flag_ugriZYJHKs',
                              'Z_B', 'Z_B_MIN', 'Z_B_MAX',
                              'ALPHA_J2000', 'DELTA_J2000', 'PSF_e1', 'PSF_e2',
                              'bias_corrected_e1', 'bias_corrected_e2',
                              'weight']
-        
+
         self.zbin_edges = {
         '1':[0.1, 0.3],
         '2':[0.3, 0.5],
         '3':[0.5, 0.7],
         '4':[0.7, 0.9],
         '5':[0.9, 1.2]}
-        
+
         self.cat_data = []
-        if os.path.isfile('KV450_lite_cat_0.pkl', end=' ', flush=True):
+        if self.lite_path is not None:
             print('loading lite cats', end=' ', flush=True)
             for i in range(len(self.config['data_catalogs'])):
                  self.cat_data.append(pd.read_pickle('KV450_lite_cat_{}.pkl'.format(i)))

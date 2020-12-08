@@ -12,13 +12,16 @@ import os
 class MapperDESwl(MapperBase):
     def __init__(self, config):
         """
+        Data source:
+        https://des.ncsa.illinois.edu/releases/y1a1/key-catalogs/key-shape
         config - dict
           {'zbin_cat': '/.../.../y1_source_redshift_binning_v1.fits',
            'data_cat':  '/.../.../mcal-y1a1-combined-riz-unblind-v4-matched.fits',
            'file_nz': '/.../.../y1_redshift_distributions_v1.fits'
            'nside': Nside,
            'bin': bin,
-           'mask_name': name
+           'mask_name': name,
+           'lite_path': path
            }
         """
 
@@ -62,10 +65,10 @@ class MapperDESwl(MapperBase):
         fcat_bin = '{}_zbin{}.fits'.format(fcat_lite, self.bin)
         fcat_lite += '.fits'
 
-        if os.path.isfile(fcat_bin):
-            self.cat_data = Table.read(fcat_bin, memmap=True)
-        elif os.path.isfile(fcat_lite):
-            self.cat_data = Table.read(fcat_lite, memmap=True)
+        if os.path.isfile(self.path_lite + fcat_bin):
+            self.cat_data = Table.read(self.path_lite + fcat_bin, memmap=True)
+        elif os.path.isfile(self.path_lite + fcat_lite):
+            self.cat_data = Table.read(self.path_lite + fcat_lite, memmap=True)
         else:
             self.cat_data = Table.read(self.config['data_cat'], format='fits', memmap=True)
             self.cat_data.keep_columns(columns_data)
