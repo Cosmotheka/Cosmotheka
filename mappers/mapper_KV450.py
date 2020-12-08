@@ -46,7 +46,7 @@ class MapperKV450(MapperBase):
         if self.lite_path is not None:
             print('loading lite cats', end=' ', flush=True)
             for i in range(len(self.config['data_catalogs'])):
-                 self.cat_data.append(pd.read_pickle('KV450_lite_cat_{}.pkl'.format(i)))
+                 self.cat_data.append(pd.read_pickle(self.lite_path + 'KV450_lite_cat_{}.pkl'.format(i)))
         else:
             print('loading full cats and making lite versions', end=' ', flush=True)
             for i, file_data in enumerate(self.config['data_catalogs']):
@@ -235,6 +235,8 @@ class MapperKV450(MapperBase):
         return self.nmt_field
 
     def get_nl_coupled(self, mode = None):
+        if mode is None:
+            mode = self.mode
         if  mode == 'shear':
             print('Calculating shear nl coupled')
             self.nl_coupled = self._get_shear_nl_coupled()
