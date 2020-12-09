@@ -163,7 +163,7 @@ class MapperKV450(MapperBase):
             we1[goodpix] /= self._get_galaxy_mask()[goodpix]
             we2[goodpix] /= self._get_galaxy_mask()[goodpix]
         
-            self.shear_map = [we1, we2]
+            self.shear_map = [-we1, we2]
         return self.shear_map
 
     def _get_psf_map(self):
@@ -177,7 +177,7 @@ class MapperKV450(MapperBase):
             we1[goodpix] /= self._get_galaxy_mask()[goodpix]
             we2[goodpix] /= self._get_galaxy_mask()[goodpix]
             
-            self.psf_map = [we1, we2]
+            self.psf_map = [-we1, we2]
         return self.psf_map
 
     def _get_star_map(self):
@@ -191,7 +191,7 @@ class MapperKV450(MapperBase):
             we1[goodpix] /= self._get_star_mask()[goodpix]
             we2[goodpix] /= self._get_star_mask()[goodpix]
         
-            self.star_map = [we1, we2]
+            self.star_map = [-we1, we2]
         return self.star_map
 
     def get_mask(self, mode= None):

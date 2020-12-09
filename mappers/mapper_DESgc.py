@@ -45,7 +45,7 @@ class MapperDESgc(MapperBase):
 
         self.cat_data = self._bin_z(self.cat_data)
         self.w_data = self._get_weights(self.cat_data)
-        self.nmap_data = self._get_counts_map(self.cat_data, self.w_data)  
+        self.nmap_data = self._get_counts_map(self.cat_data, w=self.w_data)  
 
         self.dndz       = None
         self.delta_map  = None
@@ -64,26 +64,21 @@ class MapperDESgc(MapperBase):
 
     
     def _get_weights(self, cat):
-        #Account for randoms having no weights 
-        if 'weight' in cat:
-            weights = np.array(cat['weight'].values)
-        else:
-            weights = np.ones(len(cat))
-        return weights
+        return np.array(cat['weight'].values)
 
-    def _get_counts_map(self, cat, w, nside=None):
+    def _get_counts_map(self, cat, w=None, nside=None):
         if nside is None:
             nside = self.nside
         npix = hp.nside2npix(nside)    
         ipix = hp.ang2pix(nside, cat['RA'], cat['DEC'],
                           lonlat=True)
-        numcount = np.bincount(ipix, w, npix)
+        numcount = np.bincount(ipix, w=None, npix)
         return numcount
     
     def get_mask(self):
         goodpix = self.mask > 0.5
         self.mask[~goodpix] = 0
-        self.mask = hp.ud_grade(self.mask, nside_out=self.nside)
+        #self.mask = hp.ud_grade(self.mask, nside_out=self.nside)
         return self.mask
         
     def get_nz(self, num_z=200):
