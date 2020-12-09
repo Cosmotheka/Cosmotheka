@@ -72,7 +72,7 @@ class MapperDESgc(MapperBase):
         npix = hp.nside2npix(nside)    
         ipix = hp.ang2pix(nside, cat['RA'], cat['DEC'],
                           lonlat=True)
-        numcount = np.bincount(ipix, w=None, npix)
+        numcount = np.bincount(ipix, w=None, minlength=npix)
         return numcount
     
     def get_mask(self):
