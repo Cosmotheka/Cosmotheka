@@ -5,12 +5,9 @@ tracers:
     spin: 0
     type: 'cv'
     threshold: 0
-    data_klm: 
-        - '/mnt/extraspace/damonge/S8z_data/Planck_data/COM_Lensing_2048_R2.00/dat_klm.fits'
-    data_mask: 
-        - '/mnt/extraspace/damonge/S8z_data/Planck_data/COM_Lensing_2048_R2.00/mask.fits.gz'
-    data_noise:
-        - '/mnt/extraspace/damonge/S8z_data/Planck_data/COM_Lensing_2048_R2.00/nlkk.dat'
+    file_klm: '/mnt/extraspace/damonge/S8z_data/Planck_data/COM_Lensing_2048_R2.00/dat_klm.fits'
+    file_mask: '/mnt/extraspace/damonge/S8z_data/Planck_data/COM_Lensing_2048_R2.00/mask.fits.gz'
+    file_noise: '/mnt/extraspace/damonge/S8z_data/Planck_data/COM_Lensing_2048_R2.00/nlkk.dat'
     mask_name: 'cmbk_mask'
     nside: 2048
     mapper_class: 'MapperCMBK'
@@ -84,9 +81,9 @@ healpy:
   nside: 2048
 
 recompute:
-  cls: False
-  cov: False
+  cls: True
+  cov: True
   mcm: False
-  cmcm: False 
+  cmcm: True
 
 output: '/mnt/extraspace/gravityls_3/prueba'
