@@ -12,38 +12,41 @@ class MapperKV450(MapperBase):
     def __init__(self, config):
         """
         config - dict
-          {'data_catalogs': [path+'KV450_G12_reweight_3x4x4_v2_good.cat', 
+          {'data_catalogs': [path+'KV450_G12_reweight_3x4x4_v2_good.cat',
         path+'KV450_G23_reweight_3x4x4_v2_good.cat',
         path+'KV450_GS_reweight_3x4x4_v2_good.cat',
         path+'KV450_G15_reweight_3x4x4_v2_good.cat',
-        path+'KV450_G9_reweight_3x4x4_v2_good.cat'] , 
+        path+'KV450_G9_reweight_3x4x4_v2_good.cat'] ,
           'file_nz':path + 'REDSHIFT_DISTRIBUTIONS/Nz_DIR/Nz_DIR_Mean/Nz_DIR_z0.1t0.3.asc',
           'zbin':1,
-          'nside':nside, 
-          'mask_name': 'mask_KV450_1'}
+          'nside':nside,
+          'mask_name': 'mask_KV450_1',
+          'lite_path': path}
            }
         """
-        
-        
+
+
         self.config = config
+        self.mask_name = config.get('mask_name', None)
+        self.lite_path = config.get('lite_path', None)
         self.column_names = ['SG_FLAG', 'GAAP_Flag_ugriZYJHKs',
                              'Z_B', 'Z_B_MIN', 'Z_B_MAX',
                              'ALPHA_J2000', 'DELTA_J2000', 'PSF_e1', 'PSF_e2',
                              'bias_corrected_e1', 'bias_corrected_e2',
                              'weight']
-        
+
         self.zbin_edges = {
         '1':[0.1, 0.3],
         '2':[0.3, 0.5],
         '3':[0.5, 0.7],
         '4':[0.7, 0.9],
         '5':[0.9, 1.2]}
-        
+
         self.cat_data = []
-        if os.path.isfile('KV450_lite_cat_0.pkl', end=' ', flush=True):
+        if self.lite_path is not None:
             print('loading lite cats', end=' ', flush=True)
             for i in range(len(self.config['data_catalogs'])):
-                 self.cat_data.append(pd.read_pickle('KV450_lite_cat_{}.pkl'.format(i)))
+                 self.cat_data.append(pd.read_pickle(self.lite_path + 'KV450_lite_cat_{}.pkl'.format(i)))
         else:
             print('loading full cats and making lite versions', end=' ', flush=True)
             for i, file_data in enumerate(self.config['data_catalogs']):
@@ -160,7 +163,7 @@ class MapperKV450(MapperBase):
             we1[goodpix] /= self._get_galaxy_mask()[goodpix]
             we2[goodpix] /= self._get_galaxy_mask()[goodpix]
         
-            self.shear_map = [we1, we2]
+            self.shear_map = [-we1, we2]
         return self.shear_map
 
     def _get_psf_map(self):
@@ -174,7 +177,7 @@ class MapperKV450(MapperBase):
             we1[goodpix] /= self._get_galaxy_mask()[goodpix]
             we2[goodpix] /= self._get_galaxy_mask()[goodpix]
             
-            self.psf_map = [we1, we2]
+            self.psf_map = [-we1, we2]
         return self.psf_map
 
     def _get_star_map(self):
@@ -188,7 +191,7 @@ class MapperKV450(MapperBase):
             we1[goodpix] /= self._get_star_mask()[goodpix]
             we2[goodpix] /= self._get_star_mask()[goodpix]
         
-            self.star_map = [we1, we2]
+            self.star_map = [-we1, we2]
         return self.star_map
 
     def get_mask(self, mode= None):
@@ -232,6 +235,8 @@ class MapperKV450(MapperBase):
         return self.nmt_field
 
     def get_nl_coupled(self, mode = None):
+        if mode is None:
+            mode = self.mode
         if  mode == 'shear':
             print('Calculating shear nl coupled')
             self.nl_coupled = self._get_shear_nl_coupled()
