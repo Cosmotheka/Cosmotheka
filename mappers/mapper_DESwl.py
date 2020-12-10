@@ -1,4 +1,4 @@
-from .mapper_base import MapperBase
+from mapper_base import MapperBase
 
 from astropy.table import Table, Column
 import astropy.table
@@ -21,11 +21,12 @@ class MapperDESwl(MapperBase):
            'nside': Nside,
            'bin': bin,
            'mask_name': name,
-           'lite_path': path
+           'path_lite': path
            }
         """
 
         self.config = config
+        self.path_lite = config.get('path_lite', None)
         self.mask_name = config.get('mask_name', None) 
         
         self.bin = config['bin']
@@ -65,11 +66,14 @@ class MapperDESwl(MapperBase):
         fcat_bin = '{}_zbin{}.fits'.format(fcat_lite, self.bin)
         fcat_lite += '.fits'
 
-        if os.path.isfile(self.path_lite + fcat_bin):
-            self.cat_data = Table.read(self.path_lite + fcat_bin, memmap=True)
-        elif os.path.isfile(self.path_lite + fcat_lite):
+        #if os.path.isfile(self.path_lite + fcat_bin):
+        #    print('Loading lite bin{} cat'.format(self.bin))
+        #    self.cat_data = Table.read(self.path_lite + fcat_bin, memmap=True)
+        if os.path.isfile(self.path_lite + fcat_lite):
+            print('loading full lite cat')
             self.cat_data = Table.read(self.path_lite + fcat_lite, memmap=True)
         else:
+            print('loading full cat')
             self.cat_data = Table.read(self.config['data_cat'], format='fits', memmap=True)
             self.cat_data.keep_columns(columns_data)
             cat_zbin = Table.read(self.config['zbin_cat'], format='fits', memmap=True)
@@ -80,8 +84,9 @@ class MapperDESwl(MapperBase):
             col_w = Column(name='weight', data=np.ones(len(self.cat_data), dtype=int))
             self.cat_data.add_column(col_w)
             self.cat_data.write(fcat_lite)
-
-        self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.bin + 1)
+            
+        self.cat_data['zbin_mcal'] = self.cat_data['zbin_mcal'] + 1
+        self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.bin) #bins start at -1 for some reason
         self.cat_data.write(fcat_bin)
 
         return self.cat_data

@@ -69,17 +69,18 @@ nls = {
 
 for i in range(5):
     for j in range(5):
-        wsp = nmt.NmtWorkspace()
-        wsp.compute_coupling_matrix(fields['D_f_{}'.format(i)], fields['D_f_{}'.format(j)], bands)
-        
-        cl_coupled = nmt.compute_coupled_cell(fields['D_f_{}'.format(i)], fields['D_f_{}'.format(j)])
-        cl_decoupled = wsp.decouple_cell(cl_coupled)
-        
-        if i == j:
-            nl_decoupled = wsp.decouple_cell(nls['nl_{}'.format(i)])
-            np.savetxt('DES_nl_{}{}.txt'.format(i,j), nl_decoupled)
-        
-        np.savetxt('DES_cl_{}{}.txt'.format(i,j), cl_decoupled)
+        if i<=j:
+            wsp = nmt.NmtWorkspace()
+            wsp.compute_coupling_matrix(fields['D_f_{}'.format(i)], fields['D_f_{}'.format(j)], bands)
+
+            cl_coupled = nmt.compute_coupled_cell(fields['D_f_{}'.format(i)], fields['D_f_{}'.format(j)])
+            cl_decoupled = wsp.decouple_cell(cl_coupled)
+
+            if i == j:
+                nl_decoupled = wsp.decouple_cell(nls['nl_{}'.format(i)])
+                np.savetxt('DES_nl_{}{}.txt'.format(i,j), nl_decoupled)
+
+            np.savetxt('DES_cl_{}{}.txt'.format(i,j), cl_decoupled)
             
         
         
