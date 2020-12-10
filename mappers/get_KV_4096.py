@@ -30,22 +30,22 @@ config1 = {'data_catalogs': cats ,
           'nside':nside}
 
 config2 = {'data_catalogs': cats , 
-          'file_nz':path + 'REDSHIFT_DISTRIBUTIONS/Nz_DIR/Nz_DIR_Mean/Nz_DIR_z0.1t0.3.asc',
+          'file_nz':path + 'REDSHIFT_DISTRIBUTIONS/Nz_DIR/Nz_DIR_Mean/Nz_DIR_z0.3t0.5.asc',
           'zbin':2,
           'nside':nside}
 
 config3 = {'data_catalogs': cats , 
-          'file_nz':path + 'REDSHIFT_DISTRIBUTIONS/Nz_DIR/Nz_DIR_Mean/Nz_DIR_z0.1t0.3.asc',
+          'file_nz':path + 'REDSHIFT_DISTRIBUTIONS/Nz_DIR/Nz_DIR_Mean/Nz_DIR_z0.5t0.7.asc',
           'zbin':3,
           'nside':nside}
 
 config4 = {'data_catalogs': cats , 
-          'file_nz':path + 'REDSHIFT_DISTRIBUTIONS/Nz_DIR/Nz_DIR_Mean/Nz_DIR_z0.1t0.3.asc',
+          'file_nz':path + 'REDSHIFT_DISTRIBUTIONS/Nz_DIR/Nz_DIR_Mean/Nz_DIR_z0.7t0.9.asc',
           'zbin':4,
           'nside':nside}
 
 config5 = {'data_catalogs': cats , 
-          'file_nz':path + 'REDSHIFT_DISTRIBUTIONS/Nz_DIR/Nz_DIR_Mean/Nz_DIR_z0.1t0.3.asc',
+          'file_nz':path + 'REDSHIFT_DISTRIBUTIONS/Nz_DIR/Nz_DIR_Mean/Nz_DIR_z0.9t1.2.asc',
           'zbin':5,
           'nside':nside}
 
@@ -71,17 +71,18 @@ nls = {
 
 for i in range(5):
     for j in range(5):
-        wsp = nmt.NmtWorkspace()
-        wsp.compute_coupling_matrix(fields['K_f_{}'.format(i)], fields['K_f_{}'.format(j)], bands)
-        
-        cl_coupled = nmt.compute_coupled_cell(fields['K_f_{}'.format(i)], fields['K_f_{}'.format(j)])
-        cl_decoupled = wsp.decouple_cell(cl_coupled)
-        
-        if i == j:
-            nl_decoupled = wsp.decouple_cell(nls['nl_{}'.format(i)])
-            np.savetxt('KV450_nl_{}{}.txt'.format(i,j), nl_decoupled)
-        
-        np.savetxt('KV450_cl_{}{}.txt'.format(i,j), cl_decoupled)
+        if i <= j:
+            wsp = nmt.NmtWorkspace()
+            wsp.compute_coupling_matrix(fields['K_f_{}'.format(i)], fields['K_f_{}'.format(j)], bands)
+
+            cl_coupled = nmt.compute_coupled_cell(fields['K_f_{}'.format(i)], fields['K_f_{}'.format(j)])
+            cl_decoupled = wsp.decouple_cell(cl_coupled)
+
+            if i == j:
+                nl_decoupled = wsp.decouple_cell(nls['nl_{}'.format(i)])
+                np.savetxt('KV450_nl_{}{}.txt'.format(i,j), nl_decoupled)
+
+            np.savetxt('KV450_cl_{}{}.txt'.format(i,j), cl_decoupled)
             
         
         
