@@ -12,4 +12,4 @@ def mapper_from_name(name):
     if name in mappers:
         return mappers[name]
     else:
-        return ValueError(f"Unknown mapper {name}")
+        raise ValueError(f"Unknown mapper {name}")
