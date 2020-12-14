@@ -24,6 +24,10 @@ jobs:
           with:
             python-version: ${{ matrix.py }}
 
+        - name: Install GSL, FFTW (linux)
+          run: |
+            sudo -H apt-get install libgsl-dev libfftw3-dev
+
         - name: Install python dependencies
           run: |
             python -m pip install -U pip
