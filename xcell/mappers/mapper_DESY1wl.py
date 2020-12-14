@@ -1,13 +1,11 @@
 from .mapper_base import MapperBase
-
 from astropy.table import Table, Column
 import astropy.table
-import fitsio
-import pandas as pd
 import numpy as np
 import healpy as hp
 import pymaster as nmt
 import os
+
 
 class MapperDESY1wl(MapperBase):
     def __init__(self, config):
@@ -15,8 +13,8 @@ class MapperDESY1wl(MapperBase):
         Data source:
         https://des.ncsa.illinois.edu/releases/y1a1/key-catalogs/key-shape
         config - dict
-          {'zbin_cat': '/.../.../y1_source_redshift_binning_v1.fits',
-           'data_cat':  '/.../.../mcal-y1a1-combined-riz-unblind-v4-matched.fits',
+          {'zbin_cat': 'y1_source_redshift_binning_v1.fits',
+           'data_cat':  'mcal-y1a1-combined-riz-unblind-v4-matched.fits',
            'file_nz': '/.../.../y1_redshift_distributions_v1.fits'
            'nside': Nside,
            'bin': bin,
@@ -27,38 +25,36 @@ class MapperDESY1wl(MapperBase):
 
         self.config = config
         self.path_lite = config.get('path_lite', None)
-        self.mask_name = config.get('mask_name', None) 
-        
+        self.mask_name = config.get('mask_name', None)
         self.bin = config['bin']
         self.nside = config['nside']
         self.npix = hp.nside2npix(self.nside)
-
         self.bin_edges = np.array([0.3, 0.43, 0.63, 0.9, 1.3])
 
         # dn/dz
-        self.nz = Table.read(config['file_nz'], format='fits',hdu=1)['Z_MID', 'BIN{}'.format(self.bin + 1)]
+        self.nz = Table.read(config['file_nz'], format='fits',
+                             hdu=1)['Z_MID', 'BIN{}'.format(self.bin + 1)]
 
         # load cat
         self.cat_data = self._load_catalog()
 
-
-        self.signal_map  = None
-        self.psf_map     = None
-        self.shear_map   = None
-        self.mask        = None
-        self.nmt_field   = None
-        self.nl_coupled  = None
+        self.signal_map = None
+        self.psf_map = None
+        self.shear_map = None
+        self.mask = None
+        self.nmt_field = None
+        self.nl_coupled = None
         self.shear_nl_coupled = None
-        self.psf_nl_coupled  = None
-
+        self.psf_nl_coupled = None
 
     def _load_catalog(self):
         # Read catalogs
         # Columns explained in
         #
         # Galaxy catalog
-        columns_data = ['coadd_objects_id', 'e1', 'e2', 'psf_e1', 'psf_e2', 'ra', 'dec',
-                             'R11', 'R22', 'flags_select']
+        columns_data = ['coadd_objects_id', 'e1', 'e2',
+                        'psf_e1', 'psf_e2', 'ra', 'dec',
+                        'R11', 'R22', 'flags_select']
         # z-bin catalog
         columns_zbin = ['coadd_objects_id', 'zbin_mcal']
 
@@ -66,7 +62,7 @@ class MapperDESY1wl(MapperBase):
         fcat_bin = '{}_zbin{}.fits'.format(fcat_lite, self.bin)
         fcat_lite += '.fits'
 
-        #if os.path.isfile(self.path_lite + fcat_bin):
+        # if os.path.isfile(self.path_lite + fcat_bin):
         #    print('Loading lite bin{} cat'.format(self.bin))
         #    self.cat_data = Table.read(self.path_lite + fcat_bin, memmap=True)
         if os.path.isfile(self.path_lite + fcat_lite):
@@ -74,19 +70,23 @@ class MapperDESY1wl(MapperBase):
             self.cat_data = Table.read(self.path_lite + fcat_lite, memmap=True)
         else:
             print('loading full cat')
-            self.cat_data = Table.read(self.config['data_cat'], format='fits', memmap=True)
+            self.cat_data = Table.read(self.config['data_cat'],
+                                       format='fits', memmap=True)
             self.cat_data.keep_columns(columns_data)
-            cat_zbin = Table.read(self.config['zbin_cat'], format='fits', memmap=True)
+            cat_zbin = Table.read(self.config['zbin_cat'],
+                                  format='fits', memmap=True)
             cat_zbin.keep_columns(columns_zbin)
             self.cat_data = astropy.table.join(self.cat_data, cat_zbin)
             # Note: By default join uses checks the values of the column named
             # the same in both tables
-            col_w = Column(name='weight', data=np.ones(len(self.cat_data), dtype=int))
+            col_w = Column(name='weight',
+                           data=np.ones(len(self.cat_data), dtype=int))
             self.cat_data.add_column(col_w)
             self.cat_data.write(fcat_lite)
-            
+
         self.cat_data['zbin_mcal'] = self.cat_data['zbin_mcal'] + 1
-        self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.bin) #bins start at -1 for some reason
+        # bins start at -1 for some reason
+        self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.bin)
         self.cat_data.write(fcat_bin)
 
         return self.cat_data
@@ -100,11 +100,13 @@ class MapperDESY1wl(MapperBase):
         ipix = hp.ang2pix(self.nside, theta, phi)
         npix = hp.nside2npix(nside)
 
-        numcount = np.bincount(ipix,  weights=w , minlength=npix )
+        numcount = np.bincount(ipix, weights=w,
+                               minlength=npix)
+        return numcount
 
-    def get_signal_map(self, mode = None):
+    def get_signal_map(self, mode=None):
         if mode is None:
-            mode  = self.mode
+            mode = self.mode
 
         if mode == 'shear':
             print('Calculating shear spin-2 field')
@@ -124,7 +126,7 @@ class MapperDESY1wl(MapperBase):
             we2 = self._get_counts_map(w=self.cat_data['e2'], nside=None)
 
             mask = self._get_mask()
-            goodpix  = mask > 0
+            goodpix = mask > 0
             we1[goodpix] /= self._get_galaxy_mask()[goodpix]
             we2[goodpix] /= self._get_galaxy_mask()[goodpix]
 
@@ -137,7 +139,7 @@ class MapperDESY1wl(MapperBase):
             we2 = self._get_counts_map(w=self.cat_data['psf_e2'], nside=None)
 
             mask = self._get_mask()
-            goodpix  = mask > 0
+            goodpix = mask > 0
             we1[goodpix] /= self._get_galaxy_mask()[goodpix]
             we2[goodpix] /= self._get_galaxy_mask()[goodpix]
 
@@ -149,16 +151,16 @@ class MapperDESY1wl(MapperBase):
             self.mask = self._get_counts_map()
         return self.mask
 
-    def get_nmt_field(self, mode = None):
+    def get_nmt_field(self, mode=None):
         if mode is None:
             mode = self.mode
-        signal = self.get_signal_map(mode = mode)
+        signal = self.get_signal_map(mode=mode)
         mask = self.get_mask()
-        self.nmt_field = nmt.NmtField(mask, signal, n_iter = 0)
+        self.nmt_field = nmt.NmtField(mask, signal, n_iter=0)
         return self.nmt_field
 
-    def get_nl_coupled(self, mode = None):
-        if  mode == 'shear':
+    def get_nl_coupled(self, mode=None):
+        if mode == 'shear':
             print('Calculating shear nl coupled')
             self.nl_coupled = self._get_shear_nl_coupled()
             return self.nl_coupled
@@ -172,7 +174,9 @@ class MapperDESY1wl(MapperBase):
 
     def _get_shear_nl_coupled(self):
         if self.shear_nl_coupled is None:
-            w2s2 = self._get_counts_map( w = 0.5 * (self.cat_data['e1']**2 + self.cat_data['e2']**2), nside=None)
+            w2s2 = self._get_counts_map(w=0.5*(self.cat_data['e1']**2 +
+                                               self.cat_data['e2']**2),
+                                        nside=None)
             N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
             nl = N_ell * np.ones(3*self.nside)
             nl[:2] = 0  # Ylm = for l < spin
@@ -182,7 +186,9 @@ class MapperDESY1wl(MapperBase):
 
     def _get_psf_nl_coupled(self):
         if self.psf_nl_coupled is None:
-            w2s2 = self._get_counts_map(w = 0.5 * (self.cat_data['psf_e1']**2 + self.cat_data['psf_e2']**2), nside=None)
+            w2s2 = self._get_counts_map(w=0.5*(self.cat_data['psf_e1']**2 +
+                                               self.cat_data['psf_e2']**2),
+                                        nside=None)
             N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
             nl = N_ell * np.ones(3*self.nside)
             nl[:2] = 0  # Ylm = for l < spin

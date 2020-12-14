@@ -1,3 +1,4 @@
+# flake8: noqa
 from .mapper_base import MapperBase
 from .mapper_DESY1gc import MapperDESY1gc
 from .mapper_DESY1wl import MapperDESY1wl
