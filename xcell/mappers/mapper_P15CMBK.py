@@ -23,7 +23,8 @@ class MapperP15CMBK(MapperBase):
         self.noise = []
 
         self.klm = hp.read_alm(self.config['file_klm'])
-        self.mask = hp.read_map(self.config['file_mask'])
+        self.mask = hp.read_map(self.config['file_mask'],
+                                verbose=False)
         self.noise = pd.read_table(self.config['file_noise'],
                                    names=['l', 'Nl', 'Nl+Cl'],
                                    sep=" ", encoding='utf-8')
@@ -64,7 +65,7 @@ class MapperP15CMBK(MapperBase):
         if self.cl_fid is None:
             self.cl_fid = (self.noise['Nl+Cl'].values -
                            self.noise['Nl'].values)
-        return self.cl_fid
+        return np.array([self.cl_fid])
 
     def get_ells(self):
         return self.noise['l'].values
