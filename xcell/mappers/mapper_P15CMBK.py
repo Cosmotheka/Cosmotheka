@@ -15,22 +15,21 @@ class MapperP15CMBK(MapperBase):
          'mask_name': 'mask_CMBK',
          'nside':2048}
         """
-        self.config = config
-        self.mask_name = config.get('mask_name', None)
+        self._get_defaults(config)
 
-        self.klm = []
-        self.mask = []
-        self.noise = []
-
+        # Read alms
         self.klm = hp.read_alm(self.config['file_klm'])
+        # Read mask
         self.mask = hp.read_map(self.config['file_mask'],
                                 verbose=False)
+        # Read noise file
         self.noise = pd.read_table(self.config['file_noise'],
                                    names=['l', 'Nl', 'Nl+Cl'],
                                    sep=" ", encoding='utf-8')
-
-        self.nside = config['nside']
+        # Galactic-to-celestial coordinate rotator
         self.r = hp.Rotator(coord=['G', 'C'])
+
+        # Defaults
         self.k_map = None
         self.nl_coupled = None
         self.mask_map = None
@@ -40,13 +39,15 @@ class MapperP15CMBK(MapperBase):
     def get_signal_map(self):
         if self.k_map is None:
             self.k_map = self.r.rotate_alm(self.klm)
-            self.k_map = hp.alm2map(self.k_map, self.nside)
+            self.k_map = hp.alm2map(self.k_map, self.nside,
+                                    verbose=False)
         return [self.k_map]
 
     def get_mask(self):
         if self.mask_map is None:
             self.mask_map = self.r.rotate_map_pixel(self.mask)
-            self.mask_map = hp.ud_grade(self.mask_map, nside_out=self.nside)
+            self.mask_map = hp.ud_grade(self.mask_map,
+                                        nside_out=self.nside)
         return self.mask_map
 
     def get_nmt_field(self):

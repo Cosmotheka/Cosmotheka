@@ -42,3 +42,12 @@ def test_get_nl():
     assert np.all(np.fabs(nl) < 1E-15)
     assert cl.shape == (1, 3*32)
     assert np.allclose(ll, np.arange(3*32))
+
+
+def test_get_nmt_field():
+    import pymaster as nmt
+    m = get_mapper()
+    f = m.get_nmt_field()
+    cl = nmt.compute_coupled_cell(f, f)[0]
+    assert np.fabs(cl[0]-4*np.pi) < 1E-3
+    assert np.all(np.fabs(cl[1:]) < 1E-5)
