@@ -29,7 +29,7 @@ def launch_cls(data, queue, njobs, wsp=False, fiducial=False):
     #######
     nc = 8
     #
-    cl_tracers = co.get_cl_tracers(data, wsp)
+    cl_tracers = co.get_cl_trs_names(data, wsp)
     outdir = data['output']
     if fiducial:
         outdir = os.path.join(outdir, 'fiducial')
@@ -62,7 +62,7 @@ def launch_cov(data, queue, njobs, wsp=False):
     nc = 10
     mem = 5
     #
-    cov_tracers = co.get_cov_tracers(data, wsp)
+    cov_tracers = co.get_cov_trs_names(data, wsp)
     outdir = data['output']
     c = 0
     for trs in cov_tracers:

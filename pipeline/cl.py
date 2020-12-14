@@ -1,4 +1,6 @@
 #!/usr/bin/python
+from pyclbr import readmodule
+from glob import glob
 import common as co
 import numpy as np
 import healpy as hp
@@ -8,137 +10,85 @@ import os
 import yaml
 import warnings
 
-class Field():
-    def __init__(self, data, tr, maps=None, mask=None):
-        self.data = co.read_data(data)
-        self.tr = tr
-        self.spin = int(self.data['tracers'][tr]['spin'])
-        self.type = self.data['tracers'][tr]['type']
-        self._raw_maps = None
-        self._maps = maps
-        self._mask = mask
-        self.f = self.compute_field()
-
-    def get_field(self):
-        return self.f
-
-    def compute_field(self):
-        data = self.data
-        mask = self.get_mask()
-        maps = self.get_maps()
-        f = nmt.NmtField(mask, maps, n_iter=data['healpy']['n_iter_sht'])
-        return f
-
-    def get_mask(self):
-        if self._mask is None:
-            data = self.data
-            tracer = data['tracers'][self.tr]
-            mask = hp.read_map(tracer['mask'])
-            mask_good = mask > tracer['threshold']
-            mask[~mask_good] = 0.
-            self._mask = mask
-        return self._mask
-
-    def get_maps(self):
-        if self._maps is None:
-            data = self.data
-            tracer = data['tracers'][self.tr]
-            mask = self.get_mask()
-            mask_good = mask > 0 # Already set to 0 unwnated points
-            # TODO: This can be optimize for the case mask1 == mask2
-            raw_maps = self.get_raw_maps()
-            if self.type == 'gc':
-                maps = np.zeros((1, mask.size))
-                raw_map = raw_maps[0]
-                mean_raw_map = raw_map[mask_good].sum() / mask[mask_good].sum()
-                map_dg = np.zeros_like(raw_map)
-                map_dg[mask_good] = raw_map[mask_good] / (mean_raw_map * mask[mask_good]) - 1
-                maps[0] = map_dg
-            elif self.type == 'wl':
-                maps = np.zeros((2, mask.size))
-                # sums = np.load(tracer['sums'])
-                map_we1, map_we2 = raw_maps
-                # opm_mean = sums['wopm'] / sums['w'] # Already subtracted form map
-
-                maps[0, mask_good] = -(map_we1[mask_good]/mask[mask_good]) # / opm_mean
-                maps[1, mask_good] = (map_we2[mask_good]/mask[mask_good]) # / opm_mean
-            elif self.type == 'cv':
-                maps = raw_maps
-            else:
-                raise ValueError('Type {} not implemented'.format(self.type))
-            self._maps = maps
-
-        return self._maps
-
-    def get_w2_map(self):
-        tracer = self.data['tracers'][self.tr]
-        return hp.read_map(tracer['w2map'])
-
-    def get_raw_maps(self):
-        tracer = self.data['tracers'][self.tr]
-        if self._raw_maps is None:
-            if self.spin == 0:
-                raw_map = hp.read_map(tracer['path'])
-                self._raw_maps = np.array([raw_map])
-            else:
-                map_we1 = hp.read_map(tracer['path1'])
-                map_we2 = hp.read_map(tracer['path2'])
-                self._raw_maps = np.array([map_we1, map_we2])
-
-        return self._raw_maps
-
 class Cl():
     def __init__(self, data, tr1, tr2):
-        self._datapath = data
-        self.data = co.read_data(data)
+        self.data = data
         self.read_symm = False
-        if ((tr1, tr2) not in co.get_cl_tracers(self.data)) and \
-           ((tr2, tr1) in co.get_cl_tracers(self.data)):
+        if ((tr1, tr2) not in co.get_cl_trs_names(self.data)) and \
+           ((tr2, tr1) in co.get_cl_trs_names(self.data)):
             warnings.warn('Reading the symmetric element.')
             self.read_symm = True
-
-        self.tr1 = tr1
-        self.tr2 = tr2
+            self.tr1 = tr2
+            self.tr2 = tr1
+        else:
+            self.tr1 = tr1
+            self.tr2 = tr2
         self.outdir = self.get_outdir()
         os.makedirs(self.outdir, exist_ok=True)
+        self.nside = self.data['healpy']['nside']
         self.b = self.get_NmtBin()
+        self.recompute_cls = self.data['recompute']['cls']
+        self.recompute_mcm = self.data['recompute']['mcm']
         # Not needed to load cl if already computed
-        self._f1 = None
-        self._f2 = None
+        self._mapper1 = None
+        self._mapper2 = None
         self._w = None
         ##################
-        self.cl_file = self.get_cl_file()
-        self.ell = self.cl_file['ell']
-        self.cl = self.cl_file['cl']
-        self.nl = self.cl_file['nl']
-        self.nl_cp = self.cl_file['nl_cp']
+        self.ell = None
+        self.cl = None
+        self.nl = None
+        self.nl_cp = None
 
     def get_outdir(self):
         root = self.data['output']
-        if self.read_symm:
-            tr1 = self.tr2
-            tr2 = self.tr1
-        else:
-            tr1 = self.tr1
-            tr2 = self.tr2
-        trreq = ''.join(s for s in (tr1 + '_' + tr2) if not s.isdigit())
+        trreq = ''.join(s for s in (self.tr1 + '_' + self.tr2) if not s.isdigit())
         outdir = os.path.join(root, trreq)
         return outdir
 
     def get_NmtBin(self):
-        bpw_edges = np.array(self.data['bpw_edges'])
-        nside = self.data['healpy']['nside']
+        trs = self.tr1 + '-' + self.tr2
+        trs = ''.join(s for s in trs if not s.isdigit())
+        if 'bpw_edges' in self.data['cls'][trs].keys():
+            bpw_edges = self.data['cls'][trs]['bpw_edges']
+        else:
+            bpw_edges = np.array(self.data['bpw_edges'])
+        nside = self.nside
         bpw_edges = bpw_edges[bpw_edges <= 3 * nside] # 3*nside == ells[-1] + 1
         if 3*nside not in bpw_edges: # Exhaust lmax --> gives same result as previous method, but adds 1 bpw (not for 4096)
             bpw_edges = np.append(bpw_edges, 3*nside)
         b = nmt.NmtBin.from_edges(bpw_edges[:-1], bpw_edges[1:])
         return b
 
-    def get_fields(self):
-        if self._f1 is None:
-            self._f1 = Field(self._datapath, self.tr1)
-            self._f2 = Field(self._datapath, self.tr2)
-        return self._f1, self._f2
+    def _get_mapper(self, tr):
+        config = self.data['tracers'][tr]
+        mapper_class = config['mapper_class']
+        modules = glob('mappers/*.py')
+        for m in modules:
+            module_name = 'mappers.' + os.path.basename(m)
+            module_name = module_name.replace('.py', '')
+            try:
+                clsmembers = readmodule(module_name)
+            except ImportError:
+                continue
+
+            if mapper_class in clsmembers:
+                exec(f'from {module_name} import {mapper_class}')
+                mapper = exec(f'{mapper_class}({config})')
+                return mapper
+
+        raise ValueError('Mapper {} not implemented.'.format(mapper_class))
+
+    def get_mappers(self):
+        if self._mapper1 is None:
+            self._mapper1 = self._get_mapper(self.tr1)
+            self._mapper2 = self._mapper1 if self.tr1 == self.tr2 else self._get_mapper(self.tr2)
+        return self._mapper1, self._mapper2
+
+    def get_nmt_fields(self):
+        mapper1, mapper2 = self.get_mappers()
+        f1 = mapper1.get_nmt_field()
+        f2 = mapper1.get_nmt_field()
+        return f1, f2
 
     def get_workspace(self):
         if self._w is None:
@@ -146,98 +96,45 @@ class Cl():
         return self._w
 
     def _compute_workspace(self):
-        mask1 = os.path.basename(self.data['tracers'][self.tr1]['mask'])
-        mask2 = os.path.basename(self.data['tracers'][self.tr2]['mask'])
-        # Remove the extension
-        mask1 = os.path.splitext(mask1)[0]
-        mask2 = os.path.splitext(mask2)[0]
-        if self.read_symm:
-            mask1 = mask2
-            mask2 = mask1
+        mask1, mask2 = self.get_masks_names()
         fname = os.path.join(self.outdir, 'w__{}__{}.fits'.format(mask1, mask2))
         w = nmt.NmtWorkspace()
-        if not os.path.isfile(fname):
+        if self.recompute_mcm or (not os.path.isfile(fname)):
             n_iter = self.data['healpy']['n_iter_mcm']
-            f1, f2 = self.get_fields()
-            w.compute_coupling_matrix(f1.f, f2.f, self.b,
-                                      n_iter=n_iter)
+            f1, f2 = self.get_nmt_fields()
+            w.compute_coupling_matrix(f1, f2, self.b, n_iter=n_iter)
             w.write_to(fname)
+            self.recompute_mcmc = False
         else:
             w.read_from(fname)
         return w
 
-    def _compute_coupled_noise_gc(self, new_noise=True):
-        map_w = self._f1.get_raw_maps()[0]
-        mask = self._f1.get_mask()
-        mask_good = mask > 0  # Already set to 0 all bad pixels in Field()
-        npix = mask.size
-        nside = hp.npix2nside(npix)
-
-        N_mean = map_w[mask_good].sum() / mask[mask_good].sum()
-        N_mean_srad = N_mean / (4 * np.pi) * npix
-        N_ell = mask.sum() / npix / N_mean_srad
-        if new_noise:
-            map_w2 = self._f1.get_w2_map()
-            correction = map_w2[mask_good].sum() / map_w[mask_good].sum()
-            N_ell *= correction
-
-        nl = N_ell * np.ones(3 * nside)
-        return np.array([nl])
-
-    def _compute_coupled_noise_wl(self):
-        nside = self.data['healpy']['nside']
-        npix = hp.nside2npix(nside)
-
-        fname = self.data['tracers'][self.tr1]['sums']
-        sums = np.load(fname)
-        # opm_mean = sums['wopm'] / sums['w'] # Already subtracted from map
-
-        N_ell = hp.nside2pixarea(nside) * sums['w2s2'] / npix # / opm_mean**2.
-        nl = N_ell * np.ones(3 * nside)
-        nl[:2] = 0  # Ylm = for l < spin
-
-        return np.array([nl, 0 * nl, 0 * nl, nl])
-
-
-    def compute_coupled_noise(self):
-        tracer = self.data['tracers'][self.tr1]
-        s1, s2 = self.get_spins()
-        nell = 3 * self.data['healpy']['nside']
-        if self.tr1 != self.tr2:
-            ndim = s1+s2
-            if ndim == 0:
-                ndim += 1
-            return np.zeros((ndim, nell))
-        elif tracer['type'] == 'gc':
-            return self._compute_coupled_noise_gc()
-        elif tracer['type'] == 'wl':
-            return self._compute_coupled_noise_wl()
-        elif tracer['type'] == 'cv':
-            return np.zeros((1, nell))
-        else:
-            raise ValueError('Noise for tracer type {} not implemented'.format(tracer['type']))
-
     def get_cl_file(self):
-        if self.read_symm:
-            tr1 = self.tr2
-            tr2 = self.tr1
-        else:
-            tr1 = self.tr1
-            tr2 = self.tr2
-        fname = os.path.join(self.outdir, 'cl_{}_{}.npz'.format(tr1, tr2))
+        fname = os.path.join(self.outdir, 'cl_{}_{}.npz'.format(self.tr1, self.tr2))
         ell = self.b.get_effective_ells()
-        if not os.path.isfile(fname):
-            f1, f2 = self.get_fields()
+        recompute = self.recompute_cls or self.recompute_mcm
+        if recompute or (not os.path.isfile(fname)):
+            mapper1, mapper2 = self.get_mappers()
+            f1, f2 = self.get_nmt_fields()
             w = self.get_workspace()
-            cl = w.decouple_cell(nmt.compute_coupled_cell(f1.f, f2.f))
-            nl_cp = self.compute_coupled_noise()
+            cl = w.decouple_cell(nmt.compute_coupled_cell(f1, f2))
+            nl_cp = np.zeros((cl.shape[0], 3 * self.nside))
+            if self.tr1 == self.tr2:
+                nl_cp[0] = nl_cp[-1] = mapper1.get_nl_coupled()
             nl = w.decouple_cell(nl_cp)
             np.savez(fname, ell=ell, cl=cl-nl, nl=nl, nl_cp=nl_cp)
+            self.recompute_cls = False
 
         cl_file = np.load(fname)
         cl = cl_file['cl']
         if np.any(ell != cl_file['ell']):
             raise ValueError('The file {} does not have the expected bpw. Aborting!'.format(fname))
+
+        self.cl_file = cl_file
+        self.ell = cl_file['ell']
+        self.cl = cl_file['cl']
+        self.nl = cl_file['nl']
+        self.nl_cp = cl_file['nl_cp']
         return cl_file
 
     def get_ell_cl(self):
@@ -250,26 +147,37 @@ class Cl():
         return self.ell, self.nl_cp
 
     def get_masks(self):
-        f1, f2 = self.get_fields()
-        m1 = f1.get_mask()
-        m2 = f2.get_mask()
+        mapper1, mapper2 = self.get_mappers()
+        m1 = mapper1.get_mask()
+        m2 = mapper2.get_mask()
+        return m1, m2
+
+    def get_masks_names(self):
+        mapper1, mapper2 = self.get_mappers()
+        m1 = mapper1.mask_name
+        m2 = mapper2.mask_name
         return m1, m2
 
     def get_spins(self):
-        tracers = self.data['tracers']
-        s1 = tracers[self.tr1]['spin']
-        s2 = tracers[self.tr2]['spin']
-        return int(s1), int(s2)
+        mapper1, mapper2 = self.get_mappers()
+        s1 = mapper1.get_spin()
+        s2 = mapper2.get_spin()
+        return s1, s2
+
 
 class Cl_fid():
     def __init__(self, data, tr1, tr2):
-        self._datapath = data
-        self.data = co.read_data(data)
+        self.data = data
         self.read_symm = False
-        if ((tr1, tr2) not in co.get_cl_tracers(self.data)) and \
-           ((tr2, tr1) in co.get_cl_tracers(self.data)):
+        if ((tr1, tr2) not in co.get_cl_trs_names(self.data)) and \
+           ((tr2, tr1) in co.get_cl_trs_names(self.data)):
             warnings.warn('Reading the symmetric element.')
             self.read_symm = True
+            self.tr1 = tr2
+            self.tr2 = tr1
+        else:
+            self.tr1 = tr1
+            self.tr2 = tr2
         self.tr1 = tr1
         self.tr2 = tr2
         self.outdir = self.get_outdir()
@@ -283,12 +191,6 @@ class Cl_fid():
 
     def get_outdir(self):
         root = self.data['output']
-        if self.read_symm:
-            tr1 = self.tr2
-            tr2 = self.tr1
-        else:
-            tr1 = self.tr1
-            tr2 = self.tr2
         trreq = ''.join(s for s in (tr1 + '_' + tr2) if not s.isdigit())
         outdir = os.path.join(root, 'fiducial', trreq)
         return outdir
@@ -311,8 +213,7 @@ class Cl_fid():
         # Get Tracers
         if tracer['type'] == 'gc':
             # Import z, pz
-            # z, pz = np.loadtxt(tracer['dndz'], usecols=(1, 3), unpack=True)
-            z, pz = np.loadtxt(tracer['dndz'], usecols=(0, 1), unpack=True)
+            z, pz = np.loadtxt(tracer['dndz'], usecols=tracer['dndz_cols'], unpack=True)
             # Calculate z bias
             dz = 0
             z_dz = z - dz
@@ -329,8 +230,7 @@ class Cl_fid():
                                           dndz=(z_dz, pz), bias=bias)
         elif tracer['type'] == 'wl':
             # Import z, pz
-            # z, pz = np.loadtxt(tracer['dndz'], usecols=(1, 3), unpack=True)
-            z, pz = np.loadtxt(tracer['dndz'], usecols=(0, 1), unpack=True)
+            z, pz = np.loadtxt(tracer['dndz'], usecols=tracer['dndz_cols'], unpack=True)
             # Calculate z bias
             dz = 0
             z_dz = z - dz
@@ -354,12 +254,6 @@ class Cl_fid():
 
     def get_cl_file(self):
         nside = self.data['healpy']['nside']
-        if self.read_symm:
-            tr1 = self.tr2
-            tr2 = self.tr1
-        else:
-            tr1 = self.tr1
-            tr2 = self.tr2
         fname = os.path.join(self.outdir, 'cl_{}_{}.npz'.format(tr1, tr2))
         ell = np.arange(3 * nside)
         if not os.path.isfile(fname):
@@ -403,7 +297,9 @@ if __name__ == "__main__":
     parser.add_argument('--fiducial', default=False, action='store_true', help='Compute the fiducial model Cl')
     args = parser.parse_args()
 
+    data = co.read_data(args.INPUT)
     if args.fiducial:
-        cl = Cl_fid(args.INPUT, args.tr1, args.tr2)
+        cl = Cl_fid(data, args.tr1, args.tr2)
     else:
-        cl = Cl(args.INPUT, args.tr1, args.tr2)
+        cl = Cl(data, args.tr1, args.tr2)
+    cl.get_cl_file()

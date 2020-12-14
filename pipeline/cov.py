@@ -9,7 +9,7 @@ import pymaster as nmt
 
 class Cov():
     def __init__(self, data, trA1, trA2, trB1, trB2):
-        self.data = co.read_data(data)
+        self.data = data
         self.outdir = self.get_outdir()
         os.makedirs(self.outdir, exist_ok=True)
         self.trA1 = trA1
@@ -26,7 +26,9 @@ class Cov():
         self.clfid_A1B2 = Cl_fid(data, trA1, trB2)
         self.clfid_A2B1 = Cl_fid(data, trA2, trB1)
         self.clfid_A2B2 = Cl_fid(data, trA2, trB2)
-        self.cov = self.get_covariance()
+        self.recompute_cov = self.data['recompute']['cov']
+        self.recompute_cmcm = self.data['recompute']['cmcm']
+        self.cov = None
 
     def get_outdir(self):
         root = self.data['output']
@@ -34,24 +36,19 @@ class Cov():
         return outdir
 
     def get_covariance_workspace(self):
-        mask1 = os.path.basename(self.data['tracers'][self.trA1]['mask'])
-        mask2 = os.path.basename(self.data['tracers'][self.trA2]['mask'])
-        mask3 = os.path.basename(self.data['tracers'][self.trB1]['mask'])
-        mask4 = os.path.basename(self.data['tracers'][self.trB2]['mask'])
-        # Remove the extension
-        mask1 = os.path.splitext(mask1)[0]
-        mask2 = os.path.splitext(mask2)[0]
-        mask3 = os.path.splitext(mask3)[0]
-        mask4 = os.path.splitext(mask4)[0]
+        mask1, mask2 = self.clA1A2.get_masks_names()
+        mask3, mask4 = self.clB1B2.get_masks_names()
         fname = os.path.join(self.outdir, 'cw__{}__{}__{}__{}.fits'.format(mask1, mask2, mask3, mask4))
         cw = nmt.NmtCovarianceWorkspace()
-        if not os.path.isfile(fname):
+        recompute = self.data['recompute']['cmcm']
+        if recompute or (not os.path.isfile(fname)):
             n_iter = self.data['healpy']['n_iter_cmcm']
-            fA1, fB1 = self.clA1B1.get_fields()
-            fA2, fB2 = self.clA2B2.get_fields()
+            fA1, fB1 = self.clA1B1.get_nmt_fields()
+            fA2, fB2 = self.clA2B2.get_nmt_fields()
             cw.compute_coupling_coefficients(fA1.f, fA2.f, fB1.f, fB2.f,
                                              n_iter=n_iter)
             cw.write_to(fname)
+            self.recompute_cmcm = False
         else:
             cw.read_from(fname)
 
@@ -60,8 +57,10 @@ class Cov():
     def get_covariance(self):
         fname = os.path.join(self.outdir, 'cov_{}_{}_{}_{}.npz'.format(self.trA1, self.trA2,
                                                                        self.trB1, self.trB2))
-        if os.path.isfile(fname):
-            return np.load(fname)['cov']
+        recompute = self.recompute_cov or self.recompute_cmcm
+        if (not recompute) and os.path.isfile(fname):
+            self.cov = np.load(fname)['cov']
+            return self.cov
 
         wa1b1 = self.clA1B1.get_workspace()
         wa1b2 = self.clA1B2.get_workspace()
@@ -99,7 +98,9 @@ class Cov():
                                       cla1b1, cla1b2, cla2b1, cla2b2,
                                       wa, wb)
 
+        self.cov = cov
         np.savez_compressed(fname, cov=cov)
+        self.recompute_cov = False
         return cov
 
 if __name__ == "__main__":
@@ -112,4 +113,5 @@ if __name__ == "__main__":
     parser.add_argument('trB2', type=str, help='Tracer B2 name')
     args = parser.parse_args()
 
-    cov = Cov(args.INPUT, args.trA1, args.trA2, args.trB1, args.trB2)
+    data = co.read_data(args.INPUT)
+    cov = Cov(data, args.trA1, args.trA2, args.trB1, args.trB2)
