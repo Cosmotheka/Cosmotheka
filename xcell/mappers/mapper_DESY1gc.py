@@ -1,4 +1,4 @@
-from mapper_base import MapperBase
+from .mapper_base import MapperBase
 
 from astropy.io import fits
 from astropy.table import Table
@@ -8,7 +8,7 @@ import healpy as hp
 import pymaster as nmt
 import os
 
-class MapperDESgc(MapperBase):
+class MapperDESY1gc(MapperBase):
     def __init__(self, config):
         """
         Data source:

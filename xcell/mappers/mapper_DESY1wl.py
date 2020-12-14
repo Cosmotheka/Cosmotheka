@@ -1,4 +1,4 @@
-from mapper_base import MapperBase
+from .mapper_base import MapperBase
 
 from astropy.table import Table, Column
 import astropy.table
@@ -9,7 +9,7 @@ import healpy as hp
 import pymaster as nmt
 import os
 
-class MapperDESwl(MapperBase):
+class MapperDESY1wl(MapperBase):
     def __init__(self, config):
         """
         Data source:
