@@ -45,11 +45,7 @@ class MapperDESY1gc(MapperBase):
         self.nl_coupled = None
 
     def _bin_z(self, cat):
-        if 'ZREDMAGIC' in cat:
-            z_key = 'ZREDMAGIC'
-        else:
-            z_key = 'Z'
-
+        z_key = 'ZREDMAGIC'
         return cat[(cat[z_key] >= self.z_edges[0]) &
                    (cat[z_key] < self.z_edges[1])]
 
