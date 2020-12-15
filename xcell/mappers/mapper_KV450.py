@@ -1,4 +1,5 @@
 from .mapper_base import MapperBase
+from .utils import get_map_from_points
 from astropy.io import fits
 from astropy.table import Table
 import pandas as pd
@@ -18,15 +19,14 @@ class MapperKV450(MapperBase):
                              'KV450_G15_reweight_3x4x4_v2_good.cat',
                              'KV450_G9_reweight_3x4x4_v2_good.cat'] ,
           'file_nz': Nz_DIR_z0.1t0.3.asc,
-          'zbin':1,
+          'bin':1,
           'nside':nside,
           'mask_name': 'mask_KV450_1',
           'lite_path': path}
            }
         """
 
-        self.config = config
-        self.mask_name = config.get('mask_name', None)
+        self._get_defaults(config)
         self.lite_path = config.get('lite_path', None)
         self.column_names = ['SG_FLAG', 'GAAP_Flag_ugriZYJHKs',
                              'Z_B', 'Z_B_MIN', 'Z_B_MAX',
@@ -34,6 +34,7 @@ class MapperKV450(MapperBase):
                              'bias_corrected_e1', 'bias_corrected_e2',
                              'weight']
 
+        self.mode = config.get('mode', 'shear')
         self.zbin_edges = {
             '1': [0.1, 0.3],
             '2': [0.3, 0.5],
@@ -42,31 +43,23 @@ class MapperKV450(MapperBase):
             '5': [0.9, 1.2]}
 
         self.cat_data = []
-        if self.lite_path is not None:
-            print('loading lite cats', end=' ', flush=True)
-            for i in range(len(self.config['data_catalogs'])):
-                fname = self.lite_path + f'KV450_lite_cat_{i}.pkl'
-                self.cat_data.append(pd.read_pickle(fname))
-        else:
-            print('loading full cats and making lite versions',
-                  end=' ', flush=True)
-            for i, file_data in enumerate(self.config['data_catalogs']):
-                if not os.path.isfile(file_data):
-                    raise ValueError(f"File {file_data} not found")
+        for i, file_data in enumerate(self.config['data_catalogs']):
+            read_lite, fname_lite = self.check_pickle_exists(i)
+            if read_lite:
+                self.cat_data.append(pd.read_pickle(fname_lite))
+            else:
                 with fits.open(file_data) as f:
                     table = Table.read(f).to_pandas()[self.column_names]
-                    table.to_pickle('KV450_lite_cat_{}.pkl'.format(i))
+                    if fname_lite is not None:
+                        table.to_pickle(fname_lite)
                     self.cat_data.append(table)
-
-        self.mode = config.get('mode', 'shear')
-        print('mode:', self.mode, end=' ', flush=True)
         print('Catalogs loaded', end=' ', flush=True)
-        self.nside = config['nside']
         self.npix = hp.nside2npix(self.nside)
-        self.zbin = config['zbin']
+        self.zbin = int(config['bin'])
         self.z_edges = self.zbin_edges['{}'.format(self.zbin)]
         self.cat_data = pd.concat(self.cat_data)
-        self.cat_data = self._get_GAAP_data()
+        goodgaap = self.cat_data['GAAP_Flag_ugriZYJHKs'] == 0
+        self.cat_data = self.cat_data[goodgaap]
         print('removed GAAP', end=' ', flush=True)
         self.cat_data = self._bin_z(self.cat_data)
         print('Data binned', end=' ', flush=True)
@@ -85,28 +78,22 @@ class MapperKV450(MapperBase):
         self.star_mask = None
         self.galaxy_mask = None
 
-        self.nmt_field = None
         self.nl_coupled = None
         self.shear_nl_coupled = None
         self.psf_nl_coupled = None
         self.stars_nl_coupled = None
 
+    def check_pickle_exists(self, i):
+        if self.lite_path is None:
+            return False, None
+        else:
+            fname_pickle = self.lite_path + f'KV450_lite_cat_{i}.pkl'
+            return os.path.isfile(fname_pickle), fname_pickle
+
     def _bin_z(self, cat):
         z_key = 'Z_B'
         return cat[(cat[z_key] > self.z_edges[0]) &
                    (cat[z_key] <= self.z_edges[1])]
-
-    def _get_counts_map(self, data, w=None, nside=None):
-        if nside is None:
-            nside = self.nside
-
-        phi = np.radians(data['ALPHA_J2000'])
-        theta = np.radians(90 - data['DELTA_J2000'])
-        ipix = hp.ang2pix(self.nside, theta, phi)
-        npix = hp.nside2npix(nside)
-
-        numcount = np.bincount(ipix, weights=w, minlength=npix)
-        return numcount
 
     def _remove_additive_bias(self):
         sel_gals = self.cat_data['SG_FLAG'] == 1
@@ -124,10 +111,6 @@ class MapperKV450(MapperBase):
 
     def _get_galaxy_data(self):
         sel = self.cat_data['SG_FLAG'] == 1
-        return self.cat_data[sel]
-
-    def _get_GAAP_data(self):
-        sel = self.cat_data['GAAP_Flag_ugriZYJHKs'] == 0
         return self.cat_data[sel]
 
     def _get_star_data(self):
@@ -158,10 +141,14 @@ class MapperKV450(MapperBase):
     def _get_shear_map(self):
         if self.shear_map is None:
             data = self._get_galaxy_data()
-            wcol = data['weight']*data['bias_corrected_e1'],
-            we1 = self._get_counts_map(data, w=wcol, nside=None)
+            wcol = data['weight']*data['bias_corrected_e1']
+            we1 = get_map_from_points(data, self.nside, w=wcol,
+                                      ra_name='ALPHA_J2000',
+                                      dec_name='DELTA_J2000')
             wcol = data['weight']*data['bias_corrected_e2']
-            we2 = self._get_counts_map(data, w=wcol, nside=None)
+            we2 = get_map_from_points(data, self.nside, w=wcol,
+                                      ra_name='ALPHA_J2000',
+                                      dec_name='DELTA_J2000')
             mask = self._get_galaxy_mask()
             goodpix = mask > 0
             we1[goodpix] /= self._get_galaxy_mask()[goodpix]
@@ -173,12 +160,14 @@ class MapperKV450(MapperBase):
     def _get_psf_map(self):
         if self.psf_map is None:
             data = self._get_galaxy_data()
-            we1 = self._get_counts_map(data,
-                                       w=data['weight']*data['PSF_e1'],
-                                       nside=None)
-            we2 = self._get_counts_map(data,
-                                       w=data['weight']*data['PSF_e2'],
-                                       nside=None)
+            we1 = get_map_from_points(data, self.nside,
+                                      w=data['weight']*data['PSF_e1'],
+                                      ra_name='ALPHA_J2000',
+                                      dec_name='DELTA_J2000')
+            we2 = get_map_from_points(data, self.nside,
+                                      w=data['weight']*data['PSF_e2'],
+                                      ra_name='ALPHA_J2000',
+                                      dec_name='DELTA_J2000')
 
             mask = self._get_galaxy_mask()
             goodpix = mask > 0
@@ -191,9 +180,13 @@ class MapperKV450(MapperBase):
         if self.star_map is None:
             data = self._get_star_data()
             wcol = data['weight']*data['bias_corrected_e1'],
-            we1 = self._get_counts_map(data, w=wcol, nside=None)
+            we1 = get_map_from_points(data, self.nside, w=wcol,
+                                      ra_name='ALPHA_J2000',
+                                      dec_name='DELTA_J2000')
             wcol = data['weight']*data['bias_corrected_e2']
-            we2 = self._get_counts_map(data, w=wcol, nside=None)
+            we2 = get_map_from_points(data, self.nside, w=wcol,
+                                      ra_name='ALPHA_J2000',
+                                      dec_name='DELTA_J2000')
             mask = self._get_star_mask()
             goodpix = mask > 0
             we1[goodpix] /= self._get_star_mask()[goodpix]
@@ -226,13 +219,19 @@ class MapperKV450(MapperBase):
     def _get_star_mask(self):
         if self.star_mask is None:
             data = self._get_star_data()
-            self.star_mask = self._get_counts_map(data, w=data['weight'])
+            self.star_mask = get_map_from_points(data, self.nside,
+                                                 w=data['weight'],
+                                                 ra_name='ALPHA_J2000',
+                                                 dec_name='DELTA_J2000')
         return self.star_mask
 
     def _get_galaxy_mask(self):
         if self.galaxy_mask is None:
             data = self._get_galaxy_data()
-            self.galaxy_mask = self._get_counts_map(data, w=data['weight'])
+            self.galaxy_mask = get_map_from_points(data, self.nside,
+                                                   w=data['weight'],
+                                                   ra_name='ALPHA_J2000',
+                                                   dec_name='DELTA_J2000')
         return self.galaxy_mask
 
     def get_nmt_field(self, mode=None):
@@ -268,7 +267,9 @@ class MapperKV450(MapperBase):
             data = self._get_galaxy_data()
             s2col = data['weight']**2*0.5*(data['bias_corrected_e1']**2 +
                                            data['bias_corrected_e2']**2)
-            w2s2 = self._get_counts_map(data, w=s2col, nside=None)
+            w2s2 = get_map_from_points(data, self.nside, w=s2col,
+                                       ra_name='ALPHA_J2000',
+                                       dec_name='DELTA_J2000')
             N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
             nl = N_ell * np.ones(3*self.nside)
             nl[:2] = 0  # Ylm = for l < spin
@@ -280,7 +281,9 @@ class MapperKV450(MapperBase):
         if self.psf_nl_coupled is None:
             data = self._get_galaxy_data()
             s2col = data['weight']**2*0.5*(data['PSF_e1']**2+data['PSF_e2']**2)
-            w2s2 = self._get_counts_map(data, w=s2col, nside=None)
+            w2s2 = get_map_from_points(data, self.nside, w=s2col,
+                                       ra_name='ALPHA_J2000',
+                                       dec_name='DELTA_J2000')
             N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
             nl = N_ell * np.ones(3*self.nside)
             nl[:2] = 0  # Ylm = for l < spin
@@ -293,8 +296,9 @@ class MapperKV450(MapperBase):
             data = self._get_star_data()
             s2col = data['weight']**2*0.5*(data['bias_corrected_e1']**2 +
                                            data['bias_corrected_e2']**2)
-
-            w2s2 = self._get_counts_map(data, w=s2col, nside=None)
+            w2s2 = get_map_from_points(data, self.nside, w=s2col,
+                                       ra_name='ALPHA_J2000',
+                                       dec_name='DELTA_J2000')
             N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
             nl = N_ell * np.ones(3*self.nside)
             nl[:2] = 0  # Ylm = for l < spin

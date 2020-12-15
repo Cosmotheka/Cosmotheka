@@ -47,7 +47,12 @@ cols = fits.ColDefs([fits.Column(name='RA', format='D', array=ra),
                      fits.Column(name='WEIGHT_CP', format='D', array=2*on),
                      fits.Column(name='WEIGHT_NOZ', format='D', array=2*on),
                      fits.Column(name='ZREDMAGIC', format='D', array=0.59*on),
-                     fits.Column(name='Z', format='D', array=0.59*on)])
+                     fits.Column(name='Z', format='D', array=0.59*on),
+                     fits.Column(name='Z_B', format='D', array=0.2*on),
+                     fits.Column(name='Z_B_MIN', format='D', array=0*on),
+                     fits.Column(name='Z_B_MAX', format='D', array=3*on),
+                     fits.Column(name='GAAP_Flag_ugriZYJHKs', format='K',
+                                 array=0*on)])
 hdu = fits.BinTableHDU.from_columns(cols)
 hdu.writeto("catalog.fits", overwrite=True)
 
