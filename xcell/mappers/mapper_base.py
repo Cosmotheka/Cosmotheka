@@ -23,9 +23,9 @@ class MapperBase(object):
     def get_nl_covariance(self):
         raise NotImplementedError("Do not use base class")
 
-    def get_nmt_field(self):
+    def get_nmt_field(self, **kwargs):
         if self.nmt_field is None:
-            signal = self.get_signal_map()
-            mask = self.get_mask()
+            signal = self.get_signal_map(**kwargs)
+            mask = self.get_mask(**kwargs)
             self.nmt_field = nmt.NmtField(mask, signal, n_iter=0)
         return self.nmt_field

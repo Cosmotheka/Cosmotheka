@@ -29,7 +29,7 @@ class MapperDESY1gc(MapperBase):
             '4': [0.60, 0.75],
             '5': [0.75, 0.90]}
 
-        self.cat_data = Table.read(self.config['data_catalogs']).to_pandas()
+        self.cat_data = Table.read(self.config['data_catalogs'])
         self.nz = fits.open(self.config['file_nz'])[7].data
         self.npix = hp.nside2npix(self.nside)
         self.bin = config['bin']
@@ -45,16 +45,12 @@ class MapperDESY1gc(MapperBase):
         self.nl_coupled = None
 
     def _bin_z(self, cat):
-        if 'ZREDMAGIC' in cat:
-            z_key = 'ZREDMAGIC'
-        else:
-            z_key = 'Z'
-
+        z_key = 'ZREDMAGIC'
         return cat[(cat[z_key] >= self.z_edges[0]) &
                    (cat[z_key] < self.z_edges[1])]
 
     def _get_weights(self, cat):
-        return np.array(cat['weight'].values)
+        return np.array(cat['weight'])
 
     def get_mask(self):
         if self.mask is None:
