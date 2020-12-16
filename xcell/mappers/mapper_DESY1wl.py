@@ -26,6 +26,7 @@ class MapperDESY1wl(MapperBase):
 
         self.config = config
         self.path_lite = config.get('path_lite', None)
+        self.mode = config.get('mode', 'shear')
         self.mask_name = config.get('mask_name', None)
         self.bin = config['bin']
         self.nside = config['nside']
@@ -62,11 +63,14 @@ class MapperDESY1wl(MapperBase):
         fcat_lite = 'DESwlMETACAL_catalog_lite'
         fcat_bin = '{}_zbin{}.fits'.format(fcat_lite, self.bin)
         fcat_lite += '.fits'
-
-        # if os.path.isfile(self.path_lite + fcat_bin):
-        #    print('Loading lite bin{} cat'.format(self.bin))
-        #    self.cat_data = Table.read(self.path_lite + fcat_bin, memmap=True)
-        if os.path.isfile(self.path_lite + fcat_lite):
+        
+        #Try with david cats
+        fcat_bin = 'catalog_metacal_bin{}_zbin_mcal.fits'.format(self.bin)
+        
+        if os.path.isfile(self.path_lite + fcat_bin):
+            print('Loading lite bin{} cat'.format(self.bin))
+            self.cat_data = Table.read(self.path_lite + fcat_bin, memmap=True)
+        elif os.path.isfile(self.path_lite + fcat_lite):
             print('loading full lite cat')
             self.cat_data = Table.read(self.path_lite + fcat_lite, memmap=True)
         else:
@@ -85,10 +89,9 @@ class MapperDESY1wl(MapperBase):
             self.cat_data.add_column(col_w)
             self.cat_data.write(fcat_lite)
 
-        self.cat_data['zbin_mcal'] = self.cat_data['zbin_mcal'] + 1
-        # bins start at -1 for some reason
-        self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.bin)
-        self.cat_data.write(fcat_bin)
+            # bins start at -1 for some reason
+            self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.bin)
+            self.cat_data.write(fcat_bin)
 
         return self.cat_data
 
@@ -113,33 +116,38 @@ class MapperDESY1wl(MapperBase):
             e1  = self.cat_data['e1'] - np.mean(self.cat_data['e1'])
             e2  = self.cat_data['e2'] - np.mean(self.cat_data['e2'])
             
-            we1 = get_map_from_points(self.cat_data, w=e1, nside=None)
-            we2 = get_map_from_points(self.cat_data, w=e2, nside=None)
+            we1 = get_map_from_points(self.cat_data, self.nside, w=e1,
+                                      ra_name='ra', dec_name='dec')
+            we2 = get_map_from_points(self.cat_data, self.nside, w=e2,
+                                      ra_name='ra', dec_name='dec')
 
-            mask = self._get_mask()
+            mask = self.get_mask()
             goodpix = mask > 0
-            we1[goodpix] /= self._get_galaxy_mask()[goodpix]
-            we2[goodpix] /= self._get_galaxy_mask()[goodpix]
+            we1[goodpix] /= self.get_mask()[goodpix]
+            we2[goodpix] /= self.get_mask()[goodpix]
 
             self.shear_map = [-we1, we2]
         return self.shear_map
 
     def _get_psf_map(self):
         if self.psf_map is None:
-            we1 = get_map_from_points(self.cat_data, w=self.cat_data['psf_e1'], nside=None)
-            we2 = get_map_from_points(self.cat_data, w=self.cat_data['psf_e2'], nside=None)
+            we1 = get_map_from_points(self.cat_data, self.nside, w=self.cat_data['psf_e1'],
+                                      ra_name='ra', dec_name='dec')
+            we2 = get_map_from_points(self.cat_data, self.nside, w=self.cat_data['psf_e2'],
+                                      ra_name='ra', dec_name='dec')
 
-            mask = self._get_mask()
+            mask = self.get_mask()
             goodpix = mask > 0
-            we1[goodpix] /= self._get_galaxy_mask()[goodpix]
-            we2[goodpix] /= self._get_galaxy_mask()[goodpix]
+            we1[goodpix] /= self.get_mask()[goodpix]
+            we2[goodpix] /= self.get_mask()[goodpix]
 
             self.psf_map = [-we1, we2]
         return self.psf_map
 
     def get_mask(self):
         if self.mask is None:
-            self.mask = self._get_counts_map()
+            self.mask = get_map_from_points(self.cat_data, self.nside,
+                                           ra_name='ra', dec_name='dec')
         return self.mask
 
     def get_nmt_field(self, mode=None):

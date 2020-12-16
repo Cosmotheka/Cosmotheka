@@ -78,8 +78,8 @@ class MappereBOSSQSO(MapperBase):
     def get_signal_map(self):
         if self.delta_map is None:
             self.delta_map = np.zeros(self.npix)
-            nmap_data = get_map_from_points(self.cat_data, self.w_data)
-            nmap_random = get_map_from_points(self.cat_random, self.w_random)
+            nmap_data = get_map_from_points(self.cat_data, self.nside, w=self.w_data)
+            nmap_random = get_map_from_points(self.cat_random, self.nside, w=self.w_random)
             mask = self.get_mask()
             goodpix = mask > 0
             self.delta_map = (nmap_data - self.alpha * nmap_random)
@@ -89,8 +89,7 @@ class MappereBOSSQSO(MapperBase):
     def get_mask(self):
         if self.mask is None:
             self.mask = self.alpha*get_map_from_points(self.cat_random,
-                                                        self.w_random,
-                                                        nside=self.nside_mask)
+                                                        self.nside_mask, w=self.w_random)
             # Account for different pixel areas
             area_ratio = (self.nside_mask/self.nside)**2
             self.mask = area_ratio * hp.ud_grade(self.mask,
