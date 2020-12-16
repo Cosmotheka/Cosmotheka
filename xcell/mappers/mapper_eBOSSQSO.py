@@ -1,6 +1,7 @@
 from .mapper_base import MapperBase
 from astropy.io import fits
 from astropy.table import Table
+from .utils import get_map_from_points
 import pandas as pd
 import numpy as np
 import healpy as hp
@@ -67,15 +68,6 @@ class MappereBOSSQSO(MapperBase):
         weights = cat_SYSTOT*cat_CP*cat_NOZ  # FKP left out
         return weights
 
-    def _get_counts_map(self, cat, w, nside=None):
-        if nside is None:
-            nside = self.nside
-        npix = hp.nside2npix(nside)
-        ipix = hp.ang2pix(nside, cat['RA'], cat['DEC'],
-                          lonlat=True)
-        numcount = np.bincount(ipix, w, npix)
-        return numcount
-
     def get_nz(self, num_z=50):
         if self.dndz is None:
             h, b = np.histogram(self.cat_data['Z'], bins=num_z,
@@ -86,8 +78,8 @@ class MappereBOSSQSO(MapperBase):
     def get_signal_map(self):
         if self.delta_map is None:
             self.delta_map = np.zeros(self.npix)
-            nmap_data = self._get_counts_map(self.cat_data, self.w_data)
-            nmap_random = self._get_counts_map(self.cat_random, self.w_random)
+            nmap_data = get_map_from_points(self.cat_data, self.w_data)
+            nmap_random = get_map_from_points(self.cat_random, self.w_random)
             mask = self.get_mask()
             goodpix = mask > 0
             self.delta_map = (nmap_data - self.alpha * nmap_random)
@@ -96,7 +88,7 @@ class MappereBOSSQSO(MapperBase):
 
     def get_mask(self):
         if self.mask is None:
-            self.mask = self.alpha*self._get_counts_map(self.cat_random,
+            self.mask = self.alpha*get_map_from_points(self.cat_random,
                                                         self.w_random,
                                                         nside=self.nside_mask)
             # Account for different pixel areas

@@ -1,5 +1,6 @@
 from .mapper_base import MapperBase
 from astropy.table import Table, Column
+from .utils import get_map_from_points
 import astropy.table
 import numpy as np
 import healpy as hp
@@ -91,19 +92,6 @@ class MapperDESY1wl(MapperBase):
 
         return self.cat_data
 
-    def _get_counts_map(self, w=None, nside=None):
-        if nside is None:
-            nside = self.nside
-
-        phi = np.radians(self.cat_data['ra'])
-        theta = np.radians(90 - self.cat_data['dec'])
-        ipix = hp.ang2pix(self.nside, theta, phi)
-        npix = hp.nside2npix(nside)
-
-        numcount = np.bincount(ipix, weights=w,
-                               minlength=npix)
-        return numcount
-
     def get_signal_map(self, mode=None):
         if mode is None:
             mode = self.mode
@@ -122,28 +110,31 @@ class MapperDESY1wl(MapperBase):
 
     def _get_shear_map(self):
         if self.shear_map is None:
-            we1 = self._get_counts_map(w=self.cat_data['e1'], nside=None)
-            we2 = self._get_counts_map(w=self.cat_data['e2'], nside=None)
+            e1  = self.cat_data['e1'] - np.mean(self.cat_data['e1'])
+            e2  = self.cat_data['e2'] - np.mean(self.cat_data['e2'])
+            
+            we1 = get_map_from_points(self.cat_data, w=e1, nside=None)
+            we2 = get_map_from_points(self.cat_data, w=e2, nside=None)
 
             mask = self._get_mask()
             goodpix = mask > 0
             we1[goodpix] /= self._get_galaxy_mask()[goodpix]
             we2[goodpix] /= self._get_galaxy_mask()[goodpix]
 
-            self.shear_map = [we1, we2]
+            self.shear_map = [-we1, we2]
         return self.shear_map
 
     def _get_psf_map(self):
         if self.psf_map is None:
-            we1 = self._get_counts_map(w=self.cat_data['psf_e1'], nside=None)
-            we2 = self._get_counts_map(w=self.cat_data['psf_e2'], nside=None)
+            we1 = get_map_from_points(self.cat_data, w=self.cat_data['psf_e1'], nside=None)
+            we2 = get_map_from_points(self.cat_data, w=self.cat_data['psf_e2'], nside=None)
 
             mask = self._get_mask()
             goodpix = mask > 0
             we1[goodpix] /= self._get_galaxy_mask()[goodpix]
             we2[goodpix] /= self._get_galaxy_mask()[goodpix]
 
-            self.psf_map = [we1, we2]
+            self.psf_map = [-we1, we2]
         return self.psf_map
 
     def get_mask(self):
