@@ -65,7 +65,7 @@ class MapperDESY1wl(MapperBase):
         fcat_lite += '.fits'
         
         #Try with david cats
-        fcat_bin = 'catalog_metacal_bin{}_zbin_mcal.fits'.format(self.bin)
+        #fcat_bin = 'catalog_metacal_bin{}_zbin_mcal.fits'.format(self.bin)
         
         if os.path.isfile(self.path_lite + fcat_bin):
             print('Loading lite bin{} cat'.format(self.bin))
