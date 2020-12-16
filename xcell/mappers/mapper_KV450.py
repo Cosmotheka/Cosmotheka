@@ -5,7 +5,6 @@ from astropy.table import Table
 import pandas as pd
 import numpy as np
 import healpy as hp
-import pymaster as nmt
 import os
 
 
@@ -44,7 +43,7 @@ class MapperKV450(MapperBase):
 
         self.cat_data = []
         for i, file_data in enumerate(self.config['data_catalogs']):
-            read_lite, fname_lite = self.check_pickle_exists(i)
+            read_lite, fname_lite = self._check_pickle_exists(i)
             if read_lite:
                 self.cat_data.append(pd.read_pickle(fname_lite))
             else:
@@ -57,33 +56,53 @@ class MapperKV450(MapperBase):
         self.npix = hp.nside2npix(self.nside)
         self.zbin = int(config['bin'])
         self.z_edges = self.zbin_edges['{}'.format(self.zbin)]
+        for i, cat in enumerate(self.cat_data):
+            # Remove GAAP
+            goodgaap = cat['GAAP_Flag_ugriZYJHKs'] == 0
+            cat = cat[goodgaap]
+            # Bin
+            goodbin = self._bin_z(cat)
+            cat = cat[goodbin]
+            # Subtract additive bias
+            self._remove_additive_bias(cat)
+            self.cat_data[i] = cat
+
         self.cat_data = pd.concat(self.cat_data)
-        goodgaap = self.cat_data['GAAP_Flag_ugriZYJHKs'] == 0
-        self.cat_data = self.cat_data[goodgaap]
-        print('removed GAAP', end=' ', flush=True)
-        self.cat_data = self._bin_z(self.cat_data)
-        print('Data binned', end=' ', flush=True)
-        self._remove_additive_bias()
-        print('Additive biased removed', end=' ', flush=True)
         self._remove_multiplicative_bias()
-        print('Multiplicative bias removed', end=' ', flush=True)
 
         self.dndz = np.loadtxt(self.config['file_nz'], unpack=True)
+        self.sel = {'galaxy': 1, 'star': 0}
+
         self.signal_map = None
-        self.psf_map = None
-        self.shear_map = None
-        self.star_map = None
+        self.maps = {'PSF': None, 'shear': None, 'star': None}
 
         self.mask = None
-        self.star_mask = None
-        self.galaxy_mask = None
+        self.masks = {'star': None, 'galaxy': None}
 
         self.nl_coupled = None
-        self.shear_nl_coupled = None
-        self.psf_nl_coupled = None
-        self.stars_nl_coupled = None
+        self.nls = {'PSF': None, 'shear': None, 'star': None}
 
-    def check_pickle_exists(self, i):
+    def _set_mode(self, mode=None):
+        if mode is None:
+            mode = self.mode
+
+        if mode == 'shear':
+            kind = 'galaxy'
+            e1_flag = 'bias_corrected_e1'
+            e2_flag = 'bias_corrected_e2'
+        elif mode == 'PSF':
+            kind = 'galaxy'
+            e1_flag = 'PSF_e1'
+            e2_flag = 'PSF_e2'
+        elif mode == 'stars':
+            kind = 'star'
+            e1_flag = 'bias_corrected_e1'
+            e2_flag = 'bias_corrected_e2'
+        else:
+            raise ValueError(f"Unknown mode {mode}")
+        return kind, e1_flag, e2_flag, mode
+
+    def _check_pickle_exists(self, i):
         if self.lite_path is None:
             return False, None
         else:
@@ -92,15 +111,15 @@ class MapperKV450(MapperBase):
 
     def _bin_z(self, cat):
         z_key = 'Z_B'
-        return cat[(cat[z_key] > self.z_edges[0]) &
-                   (cat[z_key] <= self.z_edges[1])]
+        return ((cat[z_key] > self.z_edges[0]) &
+                (cat[z_key] <= self.z_edges[1]))
 
-    def _remove_additive_bias(self):
-        sel_gals = self.cat_data['SG_FLAG'] == 1
-        e1mean = np.mean(self.cat_data[sel_gals]['bias_corrected_e1'])
-        e2mean = np.mean(self.cat_data[sel_gals]['bias_corrected_e2'])
-        self.cat_data[sel_gals]['bias_corrected_e1'] -= e1mean
-        self.cat_data[sel_gals]['bias_corrected_e2'] -= e2mean
+    def _remove_additive_bias(self, cat):
+        sel_gals = cat['SG_FLAG'] == 1
+        e1mean = np.mean(cat[sel_gals]['bias_corrected_e1'])
+        e2mean = np.mean(cat[sel_gals]['bias_corrected_e2'])
+        cat[sel_gals]['bias_corrected_e1'] -= e1mean
+        cat[sel_gals]['bias_corrected_e2'] -= e2mean
 
     def _remove_multiplicative_bias(self):
         # Values from Table 2 of 1812.06076 (KV450 cosmo paper)
@@ -109,199 +128,53 @@ class MapperKV450(MapperBase):
         self.cat_data[sel_gals]['bias_corrected_e1'] /= 1 + m[self.zbin-1]
         self.cat_data[sel_gals]['bias_corrected_e2'] /= 1 + m[self.zbin-1]
 
-    def _get_galaxy_data(self):
-        sel = self.cat_data['SG_FLAG'] == 1
-        return self.cat_data[sel]
-
-    def _get_star_data(self):
-        sel = self.cat_data['SG_FLAG'] == 0
+    def _get_gals_or_stars(self, kind='galaxy'):
+        sel = self.cat_data['SG_FLAG'] == self.sel[kind]
         return self.cat_data[sel]
 
     def get_signal_map(self, mode=None):
-        if mode is None:
-            mode = self.mode
-
-        if mode == 'shear':
-            print('Calculating shear spin-2 field')
-            self.signal_map = self._get_shear_map()
-            return self.signal_map
-        elif mode == 'PSF':
-            print('Calculating PSF spin-2 field')
-            self.signal_map = self._get_psf_map()
-            return self.signal_map
-        elif mode == 'stars':
-            print('Calculating star density spin-0 field')
-            self.signal_map = self._get_star_map()
-            return self.signal_map
-        else:
-            raise ValueError("Unrecognized mode. "
-                             "Please choose between: "
-                             "shear, PSF or stars.")
-
-    def _get_shear_map(self):
-        if self.shear_map is None:
-            data = self._get_galaxy_data()
-            wcol = data['weight']*data['bias_corrected_e1']
+        kind, e1f, e2f, mod = self._set_mode(mode)
+        if self.maps[mod] is None:
+            data = self._get_gals_or_stars(kind)
+            wcol = data['weight']*data[e1f]
             we1 = get_map_from_points(data, self.nside, w=wcol,
                                       ra_name='ALPHA_J2000',
                                       dec_name='DELTA_J2000')
-            wcol = data['weight']*data['bias_corrected_e2']
+            wcol = data['weight']*data[e2f]
             we2 = get_map_from_points(data, self.nside, w=wcol,
                                       ra_name='ALPHA_J2000',
                                       dec_name='DELTA_J2000')
-            mask = self._get_galaxy_mask()
+            mask = self.get_mask(mod)
             goodpix = mask > 0
-            we1[goodpix] /= self._get_galaxy_mask()[goodpix]
-            we2[goodpix] /= self._get_galaxy_mask()[goodpix]
+            we1[goodpix] /= mask[goodpix]
+            we2[goodpix] /= mask[goodpix]
+            self.maps[mod] = [-we1, we2]
 
-            self.shear_map = [-we1, we2]
-        return self.shear_map
-
-    def _get_psf_map(self):
-        if self.psf_map is None:
-            data = self._get_galaxy_data()
-            we1 = get_map_from_points(data, self.nside,
-                                      w=data['weight']*data['PSF_e1'],
-                                      ra_name='ALPHA_J2000',
-                                      dec_name='DELTA_J2000')
-            we2 = get_map_from_points(data, self.nside,
-                                      w=data['weight']*data['PSF_e2'],
-                                      ra_name='ALPHA_J2000',
-                                      dec_name='DELTA_J2000')
-
-            mask = self._get_galaxy_mask()
-            goodpix = mask > 0
-            we1[goodpix] /= self._get_galaxy_mask()[goodpix]
-            we2[goodpix] /= self._get_galaxy_mask()[goodpix]
-            self.psf_map = [-we1, we2]
-        return self.psf_map
-
-    def _get_star_map(self):
-        if self.star_map is None:
-            data = self._get_star_data()
-            wcol = data['weight']*data['bias_corrected_e1'],
-            we1 = get_map_from_points(data, self.nside, w=wcol,
-                                      ra_name='ALPHA_J2000',
-                                      dec_name='DELTA_J2000')
-            wcol = data['weight']*data['bias_corrected_e2']
-            we2 = get_map_from_points(data, self.nside, w=wcol,
-                                      ra_name='ALPHA_J2000',
-                                      dec_name='DELTA_J2000')
-            mask = self._get_star_mask()
-            goodpix = mask > 0
-            we1[goodpix] /= self._get_star_mask()[goodpix]
-            we2[goodpix] /= self._get_star_mask()[goodpix]
-
-            self.star_map = [-we1, we2]
-        return self.star_map
+        self.signal_map = self.maps[mod]
+        return self.signal_map
 
     def get_mask(self, mode=None):
-        if mode is None:
-            mode = self.mode
-
-        if mode == 'shear':
-            print('Using galaxies mask')
-            self.mask = self._get_galaxy_mask()
-            return self.mask
-        elif mode == 'PSF':
-            print('Using galaxies mask')
-            self.mask = self._get_galaxy_mask()
-            return self.mask
-        elif mode == 'stars':
-            print('Using stars mask')
-            self.mask = self._get_star_mask()
-            return self.mask
-        else:
-            raise ValueError("Unrecognized mode. "
-                             "Please choose between: "
-                             "shear, PSF or stars.")
-
-    def _get_star_mask(self):
-        if self.star_mask is None:
-            data = self._get_star_data()
-            self.star_mask = get_map_from_points(data, self.nside,
-                                                 w=data['weight'],
-                                                 ra_name='ALPHA_J2000',
-                                                 dec_name='DELTA_J2000')
-        return self.star_mask
-
-    def _get_galaxy_mask(self):
-        if self.galaxy_mask is None:
-            data = self._get_galaxy_data()
-            self.galaxy_mask = get_map_from_points(data, self.nside,
+        kind, e1f, e2f, mod = self._set_mode(mode)
+        if self.masks[kind] is None:
+            data = self._get_gals_or_stars(kind)
+            self.masks[kind] = get_map_from_points(data, self.nside,
                                                    w=data['weight'],
                                                    ra_name='ALPHA_J2000',
                                                    dec_name='DELTA_J2000')
-        return self.galaxy_mask
-
-    def get_nmt_field(self, mode=None):
-        if mode is None:
-            mode = self.mode
-        signal = self.get_signal_map(mode=mode)
-        mask = self.get_mask(mode=mode)
-        self.nmt_field = nmt.NmtField(mask, signal, n_iter=0)
-        return self.nmt_field
+        self.mask = self.masks[kind]
+        return self.mask
 
     def get_nl_coupled(self, mode=None):
-        if mode is None:
-            mode = self.mode
-        if mode == 'shear':
-            print('Calculating shear nl coupled')
-            self.nl_coupled = self._get_shear_nl_coupled()
-            return self.nl_coupled
-        elif mode == 'PSF':
-            print('Calculating psf nl coupled')
-            self.nl_coupled = self._get_psf_nl_coupled()
-            return self.nl_coupled
-        elif mode == 'stars':
-            print('Calculating stars nl coupled')
-            self.nl_coupled = self._get_star_nl_coupled()
-            return self.nl_coupled
-        else:
-            raise ValueError("Unrecognized mode. "
-                             "Please choose between: "
-                             "shear, PSF or stars.")
-
-    def _get_shear_nl_coupled(self):
-        if self.shear_nl_coupled is None:
-            data = self._get_galaxy_data()
-            s2col = data['weight']**2*0.5*(data['bias_corrected_e1']**2 +
-                                           data['bias_corrected_e2']**2)
-            w2s2 = get_map_from_points(data, self.nside, w=s2col,
+        kind, e1f, e2f, mod = self._set_mode(mode)
+        if self.nls[mod] is None:
+            data = self._get_gals_or_stars(kind)
+            wcol = data['weight']**2*0.5*(data[e1f]**2+data[e2f]**2)
+            w2s2 = get_map_from_points(data, self.nside, w=wcol,
                                        ra_name='ALPHA_J2000',
                                        dec_name='DELTA_J2000')
-            N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
+            N_ell = hp.nside2pixarea(self.nside) * np.mean(w2s2)
             nl = N_ell * np.ones(3*self.nside)
-            nl[:2] = 0  # Ylm = for l < spin
-            self.shear_nl_coupled = np.array([nl, 0 * nl, 0 * nl, nl])
-
-        return self.shear_nl_coupled
-
-    def _get_psf_nl_coupled(self):
-        if self.psf_nl_coupled is None:
-            data = self._get_galaxy_data()
-            s2col = data['weight']**2*0.5*(data['PSF_e1']**2+data['PSF_e2']**2)
-            w2s2 = get_map_from_points(data, self.nside, w=s2col,
-                                       ra_name='ALPHA_J2000',
-                                       dec_name='DELTA_J2000')
-            N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
-            nl = N_ell * np.ones(3*self.nside)
-            nl[:2] = 0  # Ylm = for l < spin
-            self.psf_nl_coupled = np.array([nl, 0 * nl, 0 * nl, nl])
-
-        return self.psf_nl_coupled
-
-    def _get_stars_nl_coupled(self):
-        if self.stars_nl_coupled is None:
-            data = self._get_star_data()
-            s2col = data['weight']**2*0.5*(data['bias_corrected_e1']**2 +
-                                           data['bias_corrected_e2']**2)
-            w2s2 = get_map_from_points(data, self.nside, w=s2col,
-                                       ra_name='ALPHA_J2000',
-                                       dec_name='DELTA_J2000')
-            N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
-            nl = N_ell * np.ones(3*self.nside)
-            nl[:2] = 0  # Ylm = for l < spin
-            self.star_nl_coupled = np.array([nl, 0 * nl, 0 * nl, nl])
-
-        return self.stars_nl_coupled
+            nl[:2] = 0  # ylm = 0 for l < spin
+            self.nls[mod] = np.array([nl, 0*nl, 0*nl, nl])
+        self.nl_coupled = self.nls[mod]
+        return self.nl_coupled
