@@ -1,6 +1,6 @@
-from .mapper_base import MapperBase
+from mapper_base import MapperBase
 from astropy.table import Table, Column
-from .utils import get_map_from_points
+from utils import get_map_from_points
 import astropy.table
 import numpy as np
 import healpy as hp

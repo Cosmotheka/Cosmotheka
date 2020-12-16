@@ -1,5 +1,5 @@
-from .mapper_base import MapperBase
-from .utils import get_map_from_points
+from mapper_base import MapperBase
+from utils import get_map_from_points
 from astropy.io import fits
 from astropy.table import Table
 import numpy as np

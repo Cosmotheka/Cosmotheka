@@ -1,4 +1,4 @@
-from .mapper_base import MapperBase
+from mapper_base import MapperBase
 from astropy.io import fits
 from astropy.table import Table
 import pandas as pd
