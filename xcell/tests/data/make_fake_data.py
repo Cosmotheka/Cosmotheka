@@ -1,6 +1,7 @@
 import numpy as np
 import healpy as hp
 from astropy.io import fits
+from astropy.table import Table
 import wget
 
 
@@ -24,6 +25,8 @@ np.savetxt("nl.txt",
 ra, dec = hp.pix2ang(nside, np.arange(npix),
                      lonlat=True)
 on = np.ones(npix)
+ottf = np.repeat(np.array([np.arange(4)]), npix//4,
+                 axis=0).flatten()
 cols = fits.ColDefs([fits.Column(name='RA', format='D', array=ra),
                      fits.Column(name='ra', format='D', array=ra),
                      fits.Column(name='ALPHA_J2000', format='D', array=ra),
@@ -34,13 +37,13 @@ cols = fits.ColDefs([fits.Column(name='RA', format='D', array=ra),
                      fits.Column(name='e1', format='D', array=on),
                      fits.Column(name='e2', format='D', array=-on),
                      fits.Column(name='bias_corrected_e1', format='D',
-                                 array=on),
+                                 array=ottf),
                      fits.Column(name='bias_corrected_e2', format='D',
-                                 array=-on),
-                     fits.Column(name='psf_e1', format='D', array=on),
-                     fits.Column(name='psf_e2', format='D', array=-on),
-                     fits.Column(name='PSF_e1', format='D', array=on),
-                     fits.Column(name='PSF_e2', format='D', array=-on),
+                                 array=-ottf),
+                     fits.Column(name='psf_e1', format='D', array=ottf),
+                     fits.Column(name='psf_e2', format='D', array=-ottf),
+                     fits.Column(name='PSF_e1', format='D', array=ottf),
+                     fits.Column(name='PSF_e2', format='D', array=-ottf),
                      fits.Column(name='zbin_mcal', format='D', array=-on),
                      fits.Column(name='weight', format='D', array=2*on),
                      fits.Column(name='WEIGHT_SYSTOT', format='D', array=2*on),
@@ -55,5 +58,10 @@ cols = fits.ColDefs([fits.Column(name='RA', format='D', array=ra),
                                  array=0*on)])
 hdu = fits.BinTableHDU.from_columns(cols)
 hdu.writeto("catalog.fits", overwrite=True)
+
+with fits.open("catalog.fits") as f:
+    t = Table.read(f)
+    t['SG_FLAG'][:] = 0
+    t.write('catalog_stars.fits')
 
 wget.download("http://desdr-server.ncsa.illinois.edu/despublic/y1a1_files/chains/2pt_NG_mcal_1110.fits")  # noqa
