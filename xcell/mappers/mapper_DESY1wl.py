@@ -88,9 +88,15 @@ class MapperDESY1wl(MapperBase):
                            data=np.ones(len(self.cat_data), dtype=int))
             self.cat_data.add_column(col_w)
             self.cat_data.write(fcat_lite)
-
-            # bins start at -1 for some reason
+            
+            #remove bins which are not the one of interest
             self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.bin)
+            #filter for -90<dec<-35
+            self.cat_data.remove_rows(self.cat_data['dec'] < -90)
+            self.cat_data.remove_rows(self.cat_data['dec'] > -35)
+            #remove flagged galaxies
+            self.cat_data.remove_rows(self.cat_data['flags_select'] != 0)
+            
             self.cat_data.write(fcat_bin)
 
         return self.cat_data
@@ -159,6 +165,8 @@ class MapperDESY1wl(MapperBase):
         return self.nmt_field
 
     def get_nl_coupled(self, mode=None):
+        if mode is None:
+            mode = self.mode
         if mode == 'shear':
             print('Calculating shear nl coupled')
             self.nl_coupled = self._get_shear_nl_coupled()
@@ -173,9 +181,9 @@ class MapperDESY1wl(MapperBase):
 
     def _get_shear_nl_coupled(self):
         if self.shear_nl_coupled is None:
-            w2s2 = self._get_counts_map(w=0.5*(self.cat_data['e1']**2 +
+            w2s2 = get_map_from_points(self.cat_data, self.nside, w=0.5*(self.cat_data['e1']**2 +
                                                self.cat_data['e2']**2),
-                                        nside=None)
+                                       ra_name='ra', dec_name='dec')
             N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
             nl = N_ell * np.ones(3*self.nside)
             nl[:2] = 0  # Ylm = for l < spin
@@ -185,9 +193,9 @@ class MapperDESY1wl(MapperBase):
 
     def _get_psf_nl_coupled(self):
         if self.psf_nl_coupled is None:
-            w2s2 = self._get_counts_map(w=0.5*(self.cat_data['psf_e1']**2 +
-                                               self.cat_data['psf_e2']**2),
-                                        nside=None)
+            w2s2 = get_map_from_points(self.cat_data, self.nside, w=0.5*(self.cat_data['psf_e1']**2 +
+                                               self.cat_data['psf_e2']**2), 
+                                       ra_name='ra', dec_name='dec')
             N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
             nl = N_ell * np.ones(3*self.nside)
             nl[:2] = 0  # Ylm = for l < spin
