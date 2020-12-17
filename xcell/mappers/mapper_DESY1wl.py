@@ -5,6 +5,7 @@ import astropy.table
 import numpy as np
 import healpy as hp
 import pymaster as nmt
+import pandas as pd
 import os
 
 
@@ -39,15 +40,17 @@ class MapperDESY1wl(MapperBase):
 
         # load cat
         self.cat_data = self._load_catalog()
+        self._remove_additive_bias()
 
         self.signal_map = None
-        self.psf_map = None
-        self.shear_map = None
+        self.maps = {'PSF': None, 'shear': None}
+
         self.mask = None
-        self.nmt_field = None
+
         self.nl_coupled = None
-        self.shear_nl_coupled = None
-        self.psf_nl_coupled = None
+        self.nls = {'PSF': None, 'shear': None}
+        
+        self.nmt_field = None
 
     def _load_catalog(self):
         # Read catalogs
@@ -100,55 +103,45 @@ class MapperDESY1wl(MapperBase):
             self.cat_data.write(fcat_bin)
 
         return self.cat_data
-
-    def get_signal_map(self, mode=None):
+    
+    def _set_mode(self, mode=None):
         if mode is None:
             mode = self.mode
 
         if mode == 'shear':
-            print('Calculating shear spin-2 field')
-            self.signal_map = self._get_shear_map()
-            return self.signal_map
+            e1_flag = 'e1'
+            e2_flag = 'e2'
         elif mode == 'PSF':
-            print('Calculating PSF spin-2 field')
-            self.signal_map = self._get_psf_map()
-            return self.signal_map
+            e1_flag = 'psf_e1'
+            e2_flag = 'psf_e2'
         else:
-            print('Unrecognized mode. Please choose between: shear or PSF')
-            return
+            raise ValueError(f"Unknown mode {mode}")
+        return e1_flag, e2_flag, mode
+    
+    def _remove_additive_bias(self):
+        self.cat_data['e1']  = self.cat_data['e1'] - np.mean(self.cat_data['e1'])
+        self.cat_data['e2']  = self.cat_data['e2'] - np.mean(self.cat_data['e2'])
+        return
 
-    def _get_shear_map(self):
-        if self.shear_map is None:
-            e1  = self.cat_data['e1'] - np.mean(self.cat_data['e1'])
-            e2  = self.cat_data['e2'] - np.mean(self.cat_data['e2'])
-            
-            we1 = get_map_from_points(self.cat_data, self.nside, w=e1,
-                                      ra_name='ra', dec_name='dec')
-            we2 = get_map_from_points(self.cat_data, self.nside, w=e2,
-                                      ra_name='ra', dec_name='dec')
-
+    def get_signal_map(self, mode=None):
+        e1f, e2f, mod = self._set_mode(mode)
+        if self.maps[mod] is None:
+            we1 = get_map_from_points(self.cat_data, self.nside, 
+                                      w=self.cat_data[e1f],
+                                      ra_name='ra',
+                                      dec_name='dec')
+            we2 = get_map_from_points(self.cat_data, self.nside, 
+                                      w=self.cat_data[e1f],
+                                      ra_name='ra',
+                                      dec_name='dec')
             mask = self.get_mask()
             goodpix = mask > 0
-            we1[goodpix] /= self.get_mask()[goodpix]
-            we2[goodpix] /= self.get_mask()[goodpix]
+            we1[goodpix] /= mask[goodpix]
+            we2[goodpix] /= mask[goodpix]
+            self.maps[mod] = [-we1, we2]
 
-            self.shear_map = [-we1, we2]
-        return self.shear_map
-
-    def _get_psf_map(self):
-        if self.psf_map is None:
-            we1 = get_map_from_points(self.cat_data, self.nside, w=self.cat_data['psf_e1'],
-                                      ra_name='ra', dec_name='dec')
-            we2 = get_map_from_points(self.cat_data, self.nside, w=self.cat_data['psf_e2'],
-                                      ra_name='ra', dec_name='dec')
-
-            mask = self.get_mask()
-            goodpix = mask > 0
-            we1[goodpix] /= self.get_mask()[goodpix]
-            we2[goodpix] /= self.get_mask()[goodpix]
-
-            self.psf_map = [-we1, we2]
-        return self.psf_map
+        self.signal_map = self.maps[mod]
+        return self.signal_map
 
     def get_mask(self):
         if self.mask is None:
@@ -156,49 +149,16 @@ class MapperDESY1wl(MapperBase):
                                            ra_name='ra', dec_name='dec')
         return self.mask
 
-    def get_nmt_field(self, mode=None):
-        if mode is None:
-            mode = self.mode
-        signal = self.get_signal_map(mode=mode)
-        mask = self.get_mask()
-        self.nmt_field = nmt.NmtField(mask, signal, n_iter=0)
-        return self.nmt_field
-
     def get_nl_coupled(self, mode=None):
-        if mode is None:
-            mode = self.mode
-        if mode == 'shear':
-            print('Calculating shear nl coupled')
-            self.nl_coupled = self._get_shear_nl_coupled()
-            return self.nl_coupled
-        elif mode == 'PSF':
-            print('Calculating psf nl coupled')
-            self.nl_coupled = self._get_psf_nl_coupled()
-            return self.nl_coupled
-        else:
-            print('Unrecognized mode. Please choose between: shear or PSF')
-            return
-
-    def _get_shear_nl_coupled(self):
-        if self.shear_nl_coupled is None:
-            w2s2 = get_map_from_points(self.cat_data, self.nside, w=0.5*(self.cat_data['e1']**2 +
-                                               self.cat_data['e2']**2),
+        e1f, e2f, mod = self._set_mode(mode)
+        if self.nls[mod] is None:
+            w2s2 = get_map_from_points(self.cat_data, self.nside, 
+                                       w=0.5*(self.cat_data[e1f]**2 +
+                                               self.cat_data[e2f]**2),
                                        ra_name='ra', dec_name='dec')
             N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
             nl = N_ell * np.ones(3*self.nside)
             nl[:2] = 0  # Ylm = for l < spin
-            self.shear_nl_coupled = np.array([nl, 0 * nl, 0 * nl, nl])
-
-        return self.shear_nl_coupled
-
-    def _get_psf_nl_coupled(self):
-        if self.psf_nl_coupled is None:
-            w2s2 = get_map_from_points(self.cat_data, self.nside, w=0.5*(self.cat_data['psf_e1']**2 +
-                                               self.cat_data['psf_e2']**2), 
-                                       ra_name='ra', dec_name='dec')
-            N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
-            nl = N_ell * np.ones(3*self.nside)
-            nl[:2] = 0  # Ylm = for l < spin
-            self.psf_nl_coupled = np.array([nl, 0 * nl, 0 * nl, nl])
-
-        return self.psf_nl_coupled
+            self.nls[mod] = np.array([nl, 0*nl, 0*nl, nl])
+        self.nl_coupled = self.nls[mod]
+        return self.nl_coupled
