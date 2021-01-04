@@ -4,7 +4,6 @@ from astropy.io import fits
 from astropy.table import Table, vstack
 import numpy as np
 import healpy as hp
-import pandas as pd
 import os
 
 
@@ -48,40 +47,31 @@ class MapperKV450(MapperBase):
         self.m = (-0.017, -0.008, -0.015, 0.010, 0.006)
 
         self.cat_data = []
-        if self.lite_path is not None:
-            print('loading lite cats', end=' ', flush=True)
-            for i in range(len(self.config['data_catalogs'])):
-                 self.cat_data.append(pd.read_pickle(self.lite_path + 'KV450_lite_cat_{}.pkl'.format(i)))
-            self.cat_data = pd.concat(self.cat_data)
+        for i, file_data in enumerate(self.config['data_catalogs']):
+            read_lite, fname_lite = self._check_lite_exists(i)
+            if read_lite:
+                print('loading lite cat {}'.format(i), end=' ', flush=True)
+                with fits.open(fname_lite) as f:
+                    cat = Table.read(f)
+            else:
+                print('loading full cat {}'.format(i), end=' ', flush=True)
+                with fits.open(file_data) as f:
+                    cat = Table.read(f)[self.column_names]
+                    # GAAP cut
+                    goodgaap = cat['GAAP_Flag_ugriZYJHKs'] == 0
+                    cat = cat[goodgaap]
+                    # Binning
+                    goodbin = self._bin_z(cat)
+                    cat = cat[goodbin]
+                    # Additive bias on galaxies
+                    self._remove_additive_bias(cat)
+                    if fname_lite is not None:
+                        cat.write(fname_lite)
+        
+            self.cat_data.append(cat) 
             
-        else:
-            print('loading full cats', end=' ', flush=True)
-            for i, file_data in enumerate(self.config['data_catalogs']):
-                read_lite, fname_lite = self._check_lite_exists(i)
-                if read_lite:
-                    with fits.open(fname_lite) as f:
-                        cat = Table.read(f)
-                else:
-                    with fits.open(file_data) as f:
-                        cat = Table.read(f)[self.column_names]
-                        if fname_lite is not None:
-                            cat.write(fname_lite)
-                # GAAP cut
-                goodgaap = cat['GAAP_Flag_ugriZYJHKs'] == 0
-                cat = cat[goodgaap]
-                # Binning
-                goodbin = self._bin_z(cat)
-                cat = cat[goodbin]
-                # Additive bias on galaxies
-                self._remove_additive_bias(cat)
-                self.cat_data.append(cat)
-                
-            self.cat_data = vstack(self.cat_data)
-            self._remove_multiplicative_bias()
-            #Save the file to directory
-            if not os.path.isdir('KV450_lite_cat_{}.pkl'.format(i)):
-                print('Saving lite cats', end=' ', flush=True)
-                self.cat_data.to_pandas().to_pickle('KV450_lite_cat_{}.pkl'.format(i))
+        self.cat_data = vstack(self.cat_data)
+        self._remove_multiplicative_bias()
                 
         print('Catalogs loaded', end=' ', flush=True)
         self.dndz = np.loadtxt(self.config['file_nz'], unpack=True)
@@ -119,11 +109,11 @@ class MapperKV450(MapperBase):
         return kind, e1_flag, e2_flag, mode
 
     def _check_lite_exists(self, i):
-        if self.lite_path is None:
-            return False, None
+        fname_lite = self.lite_path + f'KV450_lite_cat_{i}.fits'
+        if os.path.isfile(fname_lite):
+             return os.path.isfile(fname_lite), fname_lite
         else:
-            fname_lite = self.lite_path + f'KV450_lite_cat_{i}.fits'
-            return os.path.isfile(fname_lite), fname_lite
+            return False, fname_lite
 
     def _bin_z(self, cat):
         z_key = 'Z_B'

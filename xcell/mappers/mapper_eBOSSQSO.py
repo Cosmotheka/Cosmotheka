@@ -1,8 +1,7 @@
 from mapper_base import MapperBase
 from astropy.io import fits
-from astropy.table import Table
+from astropy.table import Table, vstack
 from utils import get_map_from_points
-import pandas as pd
 import numpy as np
 import healpy as hp
 import pymaster as nmt
@@ -25,20 +24,21 @@ class MappereBOSSQSO(MapperBase):
         self.cat_data = []
         self.cat_random = []
         self.mask_name = config.get('mask_name', None)
+        self.z_arr_dim = config.get('z_arr_dim', 50)
 
         for file_data, file_random in zip(self.config['data_catalogs'],
                                           self.config['random_catalogs']):
             if not os.path.isfile(file_data):
                 raise ValueError(f"File {file_data} not found")
             with fits.open(file_data) as f:
-                self.cat_data.append(Table.read(f).to_pandas())
+                self.cat_data.append(Table.read(f))
             if not os.path.isfile(file_random):
                 raise ValueError(f"File {file_random} not found")
             with fits.open(file_random) as f:
-                self.cat_random.append(Table.read(f).to_pandas())
+                self.cat_random.append(Table.read(f))
 
-        self.cat_data = pd.concat(self.cat_data)
-        self.cat_random = pd.concat(self.cat_random)
+        self.cat_data = vstack(self.cat_data)
+        self.cat_random = vstack(self.cat_random)
         self.nside = config['nside']
         self.nside_mask = config.get('nside_mask', self.nside)
         self.npix = hp.nside2npix(self.nside)
@@ -62,15 +62,16 @@ class MappereBOSSQSO(MapperBase):
                    (cat['Z'] < self.z_edges[1])]
 
     def _get_weights(self, cat):
-        cat_SYSTOT = np.array(cat['WEIGHT_SYSTOT'].values)
-        cat_CP = np.array(cat['WEIGHT_CP'].values)
-        cat_NOZ = np.array(cat['WEIGHT_NOZ'].values)
+        cat_SYSTOT = np.array(cat['WEIGHT_SYSTOT'])
+        cat_CP = np.array(cat['WEIGHT_CP'])
+        cat_NOZ = np.array(cat['WEIGHT_NOZ'])
         weights = cat_SYSTOT*cat_CP*cat_NOZ  # FKP left out
         return weights
 
-    def get_nz(self, num_z=50):
+    def get_nz(self):
         if self.dndz is None:
-            h, b = np.histogram(self.cat_data['Z'], bins=num_z,
+            
+            h, b = np.histogram(self.cat_data['Z'], bins=self.z_arr_dim,
                                 weights=self.w_data)
             self.dndz = np.array([h, b[:-1], b[1:]])
         return self.dndz

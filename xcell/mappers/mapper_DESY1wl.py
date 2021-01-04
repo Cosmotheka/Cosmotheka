@@ -5,7 +5,6 @@ import astropy.table
 import numpy as np
 import healpy as hp
 import pymaster as nmt
-import pandas as pd
 import os
 
 
