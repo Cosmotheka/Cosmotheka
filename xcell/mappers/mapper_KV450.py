@@ -1,5 +1,5 @@
-from mapper_base import MapperBase
-from utils import get_map_from_points
+from .mapper_base import MapperBase
+from .utils import get_map_from_points
 from astropy.io import fits
 from astropy.table import Table, vstack
 import numpy as np
@@ -60,14 +60,13 @@ class MapperKV450(MapperBase):
                     # GAAP cut
                     goodgaap = cat['GAAP_Flag_ugriZYJHKs'] == 0
                     cat = cat[goodgaap]
-                    # Binning
-                    goodbin = self._bin_z(cat)
-                    cat = cat[goodbin]
-                    # Additive bias on galaxies
-                    self._remove_additive_bias(cat)
                     if fname_lite is not None:
                         cat.write(fname_lite)
-        
+            # Binning
+            goodbin = self._bin_z(cat)
+            cat = cat[goodbin]
+            # Additive bias on galaxies
+            self._remove_additive_bias(cat)
             self.cat_data.append(cat) 
             
         self.cat_data = vstack(self.cat_data)

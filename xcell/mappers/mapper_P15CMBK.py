@@ -1,4 +1,4 @@
-from mapper_base import MapperBase
+from .mapper_base import MapperBase
 import pandas as pd
 import numpy as np
 import healpy as hp

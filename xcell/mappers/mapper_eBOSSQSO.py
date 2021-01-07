@@ -1,7 +1,7 @@
-from mapper_base import MapperBase
+from .mapper_base import MapperBase
+from .utils import get_map_from_points
 from astropy.io import fits
 from astropy.table import Table, vstack
-from utils import get_map_from_points
 import numpy as np
 import healpy as hp
 import pymaster as nmt
