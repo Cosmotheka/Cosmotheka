@@ -50,13 +50,6 @@ class MapperP15CMBK(MapperBase):
                                         nside_out=self.nside)
         return self.mask_map
 
-    def get_nmt_field(self):
-        if self.nmt_field is None:
-            mask = self.get_mask()
-            signal = self.get_signal_map()
-            self.nmt_field = nmt.NmtField(mask, signal, n_iter=0)
-        return self.nmt_field
-
     def get_nl(self):
         if self.nl_coupled is None:
             self.nl_coupled = self.noise['Nl'].values

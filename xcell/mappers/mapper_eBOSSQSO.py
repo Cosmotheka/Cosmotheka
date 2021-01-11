@@ -97,13 +97,6 @@ class MappereBOSSQSO(MapperBase):
                                                  nside_out=self.nside)
         return self.mask
 
-    def get_nmt_field(self):
-        if self.nmt_field is None:
-            signal = self.get_signal_map()
-            mask = self.get_mask()
-            self.nmt_field = nmt.NmtField(mask, signal, n_iter=0)
-        return self.nmt_field
-
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             pixel_A = 4*np.pi/hp.nside2npix(self.nside)
