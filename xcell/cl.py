@@ -1,6 +1,4 @@
 #!/usr/bin/python
-from pyclbr import readmodule
-from glob import glob
 from mappers import mapper_from_name
 import common as co
 import numpy as np
@@ -11,19 +9,67 @@ import os
 import yaml
 import warnings
 
-class Cl():
+class Cl_Base():
     def __init__(self, data, tr1, tr2):
         self.data = data
-        self.read_symm = False
         if ((tr1, tr2) not in co.get_cl_trs_names(self.data)) and \
            ((tr2, tr1) in co.get_cl_trs_names(self.data)):
             warnings.warn('Reading the symmetric element.')
-            self.read_symm = True
             self.tr1 = tr2
             self.tr2 = tr1
         else:
             self.tr1 = tr1
             self.tr2 = tr2
+        self.tr1 = tr1
+        self.tr2 = tr2
+        self._mapper1 = None
+        self._mapper2 = None
+        #
+        self.cl_file = None
+        self.ell = None
+        self.cl = None
+
+    def get_outdir(self, subdir=''):
+        root = self.data['output']
+        trreq = ''.join(s for s in (self.tr1 + '_' + self.tr2) if not s.isdigit())
+        outdir = os.path.join(root, subdir, trreq)
+        return outdir
+
+    def _get_mapper(self, tr):
+        config = self.data['tracers'][tr]
+        mapper_class = config['mapper_class']
+        return mapper_from_name(mapper_class)(config)
+
+    def get_mappers(self):
+        if self._mapper1 is None:
+            self._mapper1 = self._get_mapper(self.tr1)
+            self._mapper2 = self._mapper1 if self.tr1 == self.tr2 else self._get_mapper(self.tr2)
+        return self._mapper1, self._mapper2
+
+    def get_cl_file(self):
+        raise ValueError('Cl_Base class is not to be used directly!')
+
+    def get_ell_cl(self):
+        if self.ell is None:
+            self.get_cl_file()
+        return self.ell, self.cl
+
+    def get_spins(self):
+        mapper1, mapper2 = self.get_mappers()
+        s1 = mapper1.get_spin()
+        s2 = mapper2.get_spin()
+        return s1, s2
+
+    def get_dtypes(self):
+        mapper1, mapper2 = self.get_mappers()
+        d1 = mapper1.get_dtype()
+        d2 = mapper2.get_dtype()
+        return d1, d2
+
+
+class Cl(Cl_Base):
+    def __init__(self, data, tr1, tr2):
+        super().__init__(data, tr1, tr2)
         self.outdir = self.get_outdir()
         os.makedirs(self.outdir, exist_ok=True)
         self.nside = self.data['healpy']['nside']
@@ -31,20 +77,10 @@ class Cl():
         self.recompute_cls = self.data['recompute']['cls']
         self.recompute_mcm = self.data['recompute']['mcm']
         # Not needed to load cl if already computed
-        self._mapper1 = None
-        self._mapper2 = None
         self._w = None
         ##################
-        self.ell = None
-        self.cl = None
         self.nl = None
         self.nl_cp = None
-
-    def get_outdir(self):
-        root = self.data['output']
-        trreq = ''.join(s for s in (self.tr1 + '_' + self.tr2) if not s.isdigit())
-        outdir = os.path.join(root, trreq)
-        return outdir
 
     def get_NmtBin(self):
         trs = self.tr1 + '-' + self.tr2
@@ -60,21 +96,10 @@ class Cl():
         b = nmt.NmtBin.from_edges(bpw_edges[:-1], bpw_edges[1:])
         return b
 
-    def _get_mapper(self, tr):
-        config = self.data['tracers'][tr]
-        mapper_class = config['mapper_class']
-        return mapper_from_name(mapper_class)(config)
-
-    def get_mappers(self):
-        if self._mapper1 is None:
-            self._mapper1 = self._get_mapper(self.tr1)
-            self._mapper2 = self._mapper1 if self.tr1 == self.tr2 else self._get_mapper(self.tr2)
-        return self._mapper1, self._mapper2
-
     def get_nmt_fields(self):
         mapper1, mapper2 = self.get_mappers()
         f1 = mapper1.get_nmt_field()
-        f2 = mapper1.get_nmt_field()
+        f2 = mapper2.get_nmt_field()
         return f1, f2
 
     def get_workspace(self):
@@ -107,9 +132,10 @@ class Cl():
             f1, f2 = self.get_nmt_fields()
             w = self.get_workspace()
             cl = w.decouple_cell(nmt.compute_coupled_cell(f1, f2))
-            nl_cp = np.zeros((cl.shape[0], 3 * self.nside))
             if self.tr1 == self.tr2:
-                nl_cp[0] = nl_cp[-1] = mapper1.get_nl_coupled()
+                nl_cp = mapper1.get_nl_coupled()
+            else:
+                nl_cp = np.zeros((cl.shape[0], 3 * self.nside))
             nl = w.decouple_cell(nl_cp)
             np.savez(fname, ell=ell, cl=cl-nl, nl=nl, nl_cp=nl_cp)
             self.recompute_cls = False
@@ -126,13 +152,14 @@ class Cl():
         self.nl_cp = cl_file['nl_cp']
         return cl_file
 
-    def get_ell_cl(self):
-        return self.ell, self.cl
-
     def get_ell_nl(self):
+        if self.ell is None:
+            self.get_cl_file()
         return self.ell, self.nl
 
     def get_ell_nl_cp(self):
+        if self.ell is None:
+            self.get_cl_file()
         return self.ell, self.nl_cp
 
     def get_masks(self):
@@ -147,42 +174,15 @@ class Cl():
         m2 = mapper2.mask_name
         return m1, m2
 
-    def get_spins(self):
-        mapper1, mapper2 = self.get_mappers()
-        s1 = mapper1.get_spin()
-        s2 = mapper2.get_spin()
-        return s1, s2
 
-class Cl_fid():
+class Cl_fid(Cl_Base):
     def __init__(self, data, tr1, tr2):
-        self.data = data
-        self.read_symm = False
-        if ((tr1, tr2) not in co.get_cl_trs_names(self.data)) and \
-           ((tr2, tr1) in co.get_cl_trs_names(self.data)):
-            warnings.warn('Reading the symmetric element.')
-            self.read_symm = True
-            self.tr1 = tr2
-            self.tr2 = tr1
-        else:
-            self.tr1 = tr1
-            self.tr2 = tr2
-        self.tr1 = tr1
-        self.tr2 = tr2
-        self.outdir = self.get_outdir()
+        super().__init__(data, tr1, tr2)
+        self.outdir = self.get_outdir('fiducial')
         os.makedirs(self.outdir, exist_ok=True)
         self.cosmo = self.get_cosmo_ccl()
         self._ccl_tr1 = None
         self._ccl_tr2 = None
-        self.cl_file = self.get_cl_file()
-        self.ell = self.cl_file['ell']
-        self.cl = self.cl_file['cl']
-
-    def get_outdir(self):
-        root = self.data['output']
-        trreq = ''.join(s for s in (tr1 + '_' + tr2) if not s.isdigit())
-        outdir = os.path.join(root, 'fiducial', trreq)
-        return outdir
-
 
     def get_cosmo_ccl(self):
         fiducial = self.data['cov']['fiducial']
@@ -191,41 +191,28 @@ class Cl_fid():
 
     def get_tracers_ccl(self):
         if self._ccl_tr1 is None:
-            self._ccl_tr1 = self.compute_tracer_ccl(self.tr1)
-            self._ccl_tr2 = self.compute_tracer_ccl(self.tr2)
+            mapper1, mapper2 = self.get_mappers()
+            self._ccl_tr1 = self.compute_tracer_ccl(self.tr1, mapper1)
+            self._ccl_tr2 = self.compute_tracer_ccl(self.tr2, mapper2)
         return self._ccl_tr1, self._ccl_tr2
 
-    def compute_tracer_ccl(self, tr):
+    def compute_tracer_ccl(self, tr, mapper):
+        dtype = mapper.get_dtype()
         tracer = self.data['tracers'][tr]
         fiducial = self.data['cov']['fiducial']
         # Get Tracers
-        if tracer['type'] == 'gc':
+        if dtype == 'gc':
             # Import z, pz
-            z, pz = np.loadtxt(tracer['dndz'], usecols=tracer['dndz_cols'], unpack=True)
-            # Calculate z bias
-            dz = 0
-            z_dz = z - dz
-            # Set to 0 points where z_dz < 0:
-            sel = z_dz >= 0
-            z_dz = z_dz[sel]
-            pz = pz[sel]
-            # Calculate bias
+            z, pz = mapper.get_nz(dz=0)
             bias = None
             if fiducial['gc_bias'] is True:
                 bias = (z, tracer['bias'] * np.ones_like(z))
             # Get tracer
             return ccl.NumberCountsTracer(self.cosmo, has_rsd=False,
-                                          dndz=(z_dz, pz), bias=bias)
-        elif tracer['type'] == 'wl':
+                                          dndz=(z, pz), bias=bias)
+        elif dtype == 'wl':
             # Import z, pz
-            z, pz = np.loadtxt(tracer['dndz'], usecols=tracer['dndz_cols'], unpack=True)
-            # Calculate z bias
-            dz = 0
-            z_dz = z - dz
-            # Set to 0 points where z_dz < 0:
-            sel = z_dz >= 0
-            z_dz = z_dz[sel]
-            pz = pz[sel]
+            z, pz = mapper.get_nz(dz=0)
             # # Calculate bias IA
             ia_bias = None
             if fiducial['wl_ia']:
@@ -233,26 +220,28 @@ class Cl_fid():
                 bz = A*((1.+z)/(1.+z0))**eta*0.0139/0.013872474  # pyccl2 -> has already the factor inside. Only needed bz
                 ia_bias = (z, bz)
             # Get tracer
-            return ccl.WeakLensingTracer(self.cosmo, dndz=(z_dz, pz),
+            return ccl.WeakLensingTracer(self.cosmo, dndz=(z, pz),
                                          ia_bias=ia_bias)
-        elif tracer['type'] == 'cv':
+        elif dtype == 'cv':
             return ccl.CMBLensingTracer(self.cosmo, z_source=1100) #TODO: correct z_source
         else:
             raise ValueError('Type of tracer not recognized. It can be gc, wl or cv!')
 
     def get_cl_file(self):
         nside = self.data['healpy']['nside']
-        fname = os.path.join(self.outdir, 'cl_{}_{}.npz'.format(tr1, tr2))
+        fname = os.path.join(self.outdir, 'cl_{}_{}.npz'.format(self.tr1, self.tr2))
         ell = np.arange(3 * nside)
         if not os.path.isfile(fname):
             ccl_tr1, ccl_tr2 = self.get_tracers_ccl()
             cl = ccl.angular_cl(self.cosmo, ccl_tr1, ccl_tr2, ell)
             tracers = self.data['tracers']
             fiducial = self.data['cov']['fiducial']
-            for tr in [self.tr1, self.tr2]:
-                if (tracers[tr]['type'] == 'wl') and fiducial['wl_m']:
+            d1, d2 = self.get_dtypes()
+            for dtype, tr in zip([self.tr1, self.tr2], [d1, d2]):
+                if (dtype == 'wl') and fiducial['wl_m']:
                     cl = (1 + tracers[tr]['m']) * cl
 
+            # This is only valid for LCDM and spins 0 and 2.
             s1, s2 = self.get_spins()
             size = s1 + s2
             if size == 0:
@@ -267,14 +256,6 @@ class Cl_fid():
             raise ValueError('The ell in {} does not match the ell from nside={}'.format(fname, nside))
         return cl_file
 
-    def get_ell_cl(self):
-        return self.ell, self.cl
-
-    def get_spins(self):
-        tracers = self.data['tracers']
-        s1 = tracers[self.tr1]['spin']
-        s2 = tracers[self.tr2]['spin']
-        return int(s1), int(s2)
 
 if __name__ == "__main__":
     import argparse
