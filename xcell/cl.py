@@ -254,6 +254,9 @@ class Cl_fid(Cl_Base):
         cl_file = np.load(fname)
         if np.any(cl_file['ell'] != ell):
             raise ValueError('The ell in {} does not match the ell from nside={}'.format(fname, nside))
+
+        self.ell = cl_file['ell']
+        self.cl = cl_file['cl']
         return cl_file
 
 
