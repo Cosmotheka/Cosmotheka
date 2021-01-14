@@ -29,7 +29,8 @@ class Data():
 
         tracers_for_cl = []
         for tr in self.data['tracers'].keys():
-            tr_nn = ''.join(s for s in tr if not s.isdigit())
+            # Remove tracer number
+            tr_nn = self.get_tracer_bare_name(tr)
             if tr_nn in tracers:
                 tracers_for_cl.append(tr)
 
@@ -38,15 +39,26 @@ class Data():
 
         return tracers_for_cl
 
+    def get_tracer_bare_name(self, tr):
+        if '__' in tr:
+            tr = ''.join(tr.split('__')[:-1])
+        return tr
+
+    def get_tracers_bare_name_pair(self, tr1, tr2, connector='-'):
+        tr1_nn = self.get_tracer_bare_name(tr1)
+        tr2_nn = self.get_tracer_bare_name(tr2)
+        trreq = connector.join([tr1_nn, tr2_nn])
+        return trreq
+
     def get_cl_trs_names(self, wsp=False):
         cl_tracers = []
         tr_names = self.get_tracers_used(wsp)  # [trn for trn in data['tracers']]
         for i, tr1 in enumerate(tr_names):
             for tr2 in tr_names[i:]:
-                trreq = ''.join(s for s in (tr1 + '-' + tr2) if not s.isdigit())
+                trreq = self.get_tracers_bare_name_pair(tr1, tr2)
                 if trreq not in self.data['cls']:
                     continue
-                clreq =  self.data['cls'][trreq]['compute']
+                clreq = self.data['cls'][trreq]['compute']
                 if clreq == 'all':
                     pass
                 elif (clreq == 'auto') and (tr1 != tr2):
@@ -73,8 +85,8 @@ class Data():
         ix_reverse = []
 
         for tr1, tr2 in cl_tracers:
-            tr1_nn = ''.join(s for s in tr1 if not s.isdigit())
-            tr2_nn = ''.join(s for s in tr2 if not s.isdigit())
+            tr1_nn = self.get_tracer_bare_name(tr1)
+            tr2_nn = self.get_tracer_bare_name(tr2)
             if (tr1_nn + '-' + tr2_nn) in order_ng:
                 ix = order_ng.index(tr1_nn + '-' + tr2_nn)
             elif (tr2_nn + '-' + tr1_nn) in order_ng:

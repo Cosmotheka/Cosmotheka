@@ -29,7 +29,7 @@ class Cl_Base():
 
     def get_outdir(self, subdir=''):
         root = self.data.data['output']
-        trreq = ''.join(s for s in (self.tr1 + '_' + self.tr2) if not s.isdigit())
+        trreq = self.data.get_tracers_bare_name_pair(self.tr1, self.tr2, '_')
         outdir = os.path.join(root, subdir, trreq)
         return outdir
 
@@ -81,8 +81,7 @@ class Cl(Cl_Base):
         self.nl_cp = None
 
     def get_NmtBin(self):
-        trs = self.tr1 + '-' + self.tr2
-        trs = ''.join(s for s in trs if not s.isdigit())
+        trs = self.data.get_tracers_bare_name_pair(self.tr1, self.tr2)
         if 'bpw_edges' in self.data.data['cls'][trs].keys():
             bpw_edges = np.array(self.data.data['cls'][trs]['bpw_edges'])
         else:
