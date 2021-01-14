@@ -200,7 +200,7 @@ class Cl_fid(Cl_Base):
         tracer = self.data['tracers'][tr]
         fiducial = self.data['cov']['fiducial']
         # Get Tracers
-        if dtype == 'gc':
+        if dtype == 'galaxy_density':
             # Import z, pz
             z, pz = mapper.get_nz(dz=0)
             bias = None
@@ -209,7 +209,7 @@ class Cl_fid(Cl_Base):
             # Get tracer
             return ccl.NumberCountsTracer(self.cosmo, has_rsd=False,
                                           dndz=(z, pz), bias=bias)
-        elif dtype == 'wl':
+        elif dtype == 'galaxy_shear':
             # Import z, pz
             z, pz = mapper.get_nz(dz=0)
             # # Calculate bias IA
@@ -221,7 +221,7 @@ class Cl_fid(Cl_Base):
             # Get tracer
             return ccl.WeakLensingTracer(self.cosmo, dndz=(z, pz),
                                          ia_bias=ia_bias)
-        elif dtype == 'cv':
+        elif dtype == 'cmb_convergence':
             return ccl.CMBLensingTracer(self.cosmo, z_source=1100) #TODO: correct z_source
         else:
             raise ValueError('Type of tracer not recognized. It can be gc, wl or cv!')
