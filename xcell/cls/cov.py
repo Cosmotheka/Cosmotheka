@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from cl import Cl, Cl_fid
+from cl import Cl, ClFid
 from common import Data
 import os
 import yaml
@@ -22,10 +22,10 @@ class Cov():
         self.clA1B2 = Cl(data, trA1, trB2)
         self.clA2B1 = Cl(data, trA2, trB1)
         self.clA2B2 = Cl(data, trA2, trB2)
-        self.clfid_A1B1 = Cl_fid(data, trA1, trB1)
-        self.clfid_A1B2 = Cl_fid(data, trA1, trB2)
-        self.clfid_A2B1 = Cl_fid(data, trA2, trB1)
-        self.clfid_A2B2 = Cl_fid(data, trA2, trB2)
+        self.clfid_A1B1 = ClFid(data, trA1, trB1)
+        self.clfid_A1B2 = ClFid(data, trA1, trB2)
+        self.clfid_A2B1 = ClFid(data, trA2, trB1)
+        self.clfid_A2B2 = ClFid(data, trA2, trB2)
         self.recompute_cov = self.data.data['recompute']['cov']
         self.recompute_cmcm = self.data.data['recompute']['cmcm']
         self.cov = None

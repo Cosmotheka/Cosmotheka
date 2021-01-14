@@ -9,7 +9,7 @@ import os
 import yaml
 import warnings
 
-class Cl_Base():
+class ClBase():
     def __init__(self, data, tr1, tr2):
         self.data = Data(data=data)
         if ((tr1, tr2) not in self.data.get_cl_trs_names()) and \
@@ -65,7 +65,7 @@ class Cl_Base():
         return d1, d2
 
 
-class Cl(Cl_Base):
+class Cl(ClBase):
     def __init__(self, data, tr1, tr2):
         super().__init__(data, tr1, tr2)
         self.outdir = self.get_outdir()
@@ -173,7 +173,7 @@ class Cl(Cl_Base):
         return m1, m2
 
 
-class Cl_fid(Cl_Base):
+class ClFid(ClBase):
     def __init__(self, data, tr1, tr2):
         super().__init__(data, tr1, tr2)
         self.outdir = self.get_outdir('fiducial')
