@@ -20,8 +20,6 @@ class Cl_Base():
         else:
             self.tr1 = tr1
             self.tr2 = tr2
-        self.tr1 = tr1
-        self.tr2 = tr2
         self._mapper1 = None
         self._mapper2 = None
         #
@@ -134,9 +132,10 @@ class Cl(Cl_Base):
             cl = w.decouple_cell(nmt.compute_coupled_cell(f1, f2))
             if self.tr1 == self.tr2:
                 nl_cp = mapper1.get_nl_coupled()
+                nl = w.decouple_cell(nl_cp)
             else:
                 nl_cp = np.zeros((cl.shape[0], 3 * self.nside))
-            nl = w.decouple_cell(nl_cp)
+                nl = np.zeros_like(cl)
             np.savez(fname, ell=ell, cl=cl-nl, nl=nl, nl_cp=nl_cp)
             self.recompute_cls = False
 
