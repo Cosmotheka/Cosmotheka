@@ -39,6 +39,8 @@ class MapperDESY1gc(MapperBase):
         self.w_data = self._get_weights(self.cat_data)
         self.nmap_data = get_map_from_points(self.cat_data, self.nside,
                                              w=self.w_data)
+        self.nmap_w2 = get_map_from_points(self.cat_data, self.nside,
+                                             w=self.w_data**2)
         self.mask = None
         self.dndz = None
         self.delta_map = None
@@ -87,9 +89,16 @@ class MapperDESY1gc(MapperBase):
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             self.mask = self.get_mask()
+            goodpix = self.mask > self.mask_threshold
             N_mean = np.sum(self.nmap_data)/np.sum(self.mask)
             N_mean_srad = N_mean / (4 * np.pi) * self.npix
-            correction = np.sum(self.w_data**2) / np.sum(self.w_data)
+            correction = self.nmap_w2[good_pix].sum()/self.nmap_w2[good_pix].sum()
             N_ell = correction * np.mean(self.mask) / N_mean_srad
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
+    
+    def get_dtype(self):
+        return 'galaxy_density'
+    
+    def get_spin(self):
+        return '0'

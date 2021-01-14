@@ -179,3 +179,9 @@ class MapperKV450(MapperBase):
             self.nls[mod] = np.array([nl, 0*nl, 0*nl, nl])
         self.nl_coupled = self.nls[mod]
         return self.nl_coupled
+    
+    def get_dtype(self):
+        return 'galaxy_shear'
+    
+    def get_spin(self):
+        return '2'

@@ -70,3 +70,9 @@ class MapperP15CMBK(MapperBase):
 
     def get_ells(self):
         return self.noise['l'].values
+    
+    def get_dtype(self):
+        return 'cmb_convergence'
+    
+    def get_spin(self):
+        return '0'

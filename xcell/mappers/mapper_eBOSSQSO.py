@@ -103,3 +103,9 @@ class MappereBOSSQSO(MapperBase):
             N_ell *= pixel_A**2/(4*np.pi)
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
+
+    def get_dtype(self):
+        return 'galaxy_density'
+    
+    def get_spin(self):
+        return '0'

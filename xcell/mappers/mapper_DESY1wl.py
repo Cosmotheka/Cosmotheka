@@ -195,3 +195,9 @@ class MapperDESY1wl(MapperBase):
             self.psf_nl_coupled = np.array([nl, 0 * nl, 0 * nl, nl])
 
         return self.psf_nl_coupled
+    
+    def get_dtype(self):
+        return 'galaxy_shear'
+    
+    def get_spin(self):
+        return '2'
