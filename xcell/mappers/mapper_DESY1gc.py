@@ -37,7 +37,7 @@ class MapperDESY1gc(MapperBase):
 
         self.cat_data = self._bin_z(self.cat_data)
         self.w_data = self._get_weights(self.cat_data)
-        self.nmap_data = get_map_from_points(self.cat_data, self.nside,
+        self.nmap_w = get_map_from_points(self.cat_data, self.nside,
                                              w=self.w_data)
         self.nmap_w2 = get_map_from_points(self.cat_data, self.nside,
                                              w=self.w_data**2)
@@ -80,19 +80,19 @@ class MapperDESY1gc(MapperBase):
         if self.delta_map is None:
             self.mask = self.get_mask()
             self.delta_map = np.zeros(self.npix)
-            N_mean = np.sum(self.nmap_data)/np.sum(self.mask)
+            N_mean = np.sum(self.nmap_w)/np.sum(self.mask)
             goodpix = self.mask > 0
             nm = self.mask*N_mean
-            self.delta_map[goodpix] = (self.nmap_data[goodpix])/(nm[goodpix])-1
+            self.delta_map[goodpix] = (self.nmap_w[goodpix])/(nm[goodpix])-1
         return [self.delta_map]
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             self.mask = self.get_mask()
             goodpix = self.mask > self.mask_threshold
-            N_mean = np.sum(self.nmap_data)/np.sum(self.mask)
+            N_mean = np.sum(self.nmap_w)/np.sum(self.mask)
             N_mean_srad = N_mean / (4 * np.pi) * self.npix
-            correction = self.nmap_w2[good_pix].sum()/self.nmap_w2[good_pix].sum()
+            correction = self.nmap_w2[good_pix].sum()/self.nmap_w[good_pix].sum()
             N_ell = correction * np.mean(self.mask) / N_mean_srad
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled

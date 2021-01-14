@@ -93,7 +93,7 @@ class MappereBOSSQSO(MapperBase):
             self.mask = get_map_from_points(self.cat_random,
                                             self.nside_mask,
                                             w=self.w_random)
-            #self.mask *= self.alpha
+            self.mask *= self.alpha
             # Account for different pixel areas
             area_ratio = (self.nside_mask/self.nside)**2
             self.mask = area_ratio * hp.ud_grade(self.mask,
