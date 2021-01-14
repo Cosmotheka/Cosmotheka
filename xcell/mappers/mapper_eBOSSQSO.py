@@ -4,7 +4,6 @@ from astropy.io import fits
 from astropy.table import Table, vstack
 import numpy as np
 import healpy as hp
-import pymaster as nmt
 import os
 
 
@@ -19,12 +18,13 @@ class MappereBOSSQSO(MapperBase):
            'nside_mask': nside_mask,
            'mask_name': 'mask_QSO_NGC_1'}
         """
-        self.config = config
+        self._get_defaults(config)
 
         self.cat_data = []
         self.cat_random = []
         self.mask_name = config.get('mask_name', None)
         self.z_arr_dim = config.get('z_arr_dim', 50)
+
 
         for file_data, file_random in zip(self.config['data_catalogs'],
                                           self.config['random_catalogs']):
@@ -55,7 +55,6 @@ class MappereBOSSQSO(MapperBase):
         self.delta_map = None
         self.nl_coupled = None
         self.mask = None
-        self.nmt_field = None
 
     def _bin_z(self, cat):
         return cat[(cat['Z'] >= self.z_edges[0]) &
@@ -68,12 +67,13 @@ class MappereBOSSQSO(MapperBase):
         weights = cat_SYSTOT*cat_CP*cat_NOZ  # FKP left out
         return weights
 
+
     def get_nz(self):
         if self.dndz is None:
             
             h, b = np.histogram(self.cat_data['Z'], bins=self.z_arr_dim,
                                 weights=self.w_data)
-            self.dndz = np.array([h, b[:-1], b[1:]])
+            self.dndz = np.array([b[:-1], b[1:], h])
         return self.dndz
 
     def get_signal_map(self):
@@ -81,6 +81,7 @@ class MappereBOSSQSO(MapperBase):
             self.delta_map = np.zeros(self.npix)
             nmap_data = get_map_from_points(self.cat_data, self.nside, w=self.w_data)
             nmap_random = get_map_from_points(self.cat_random, self.nside, w=self.w_random)
+
             mask = self.get_mask()
             goodpix = mask > 0
             self.delta_map = (nmap_data - self.alpha * nmap_random)
@@ -89,8 +90,10 @@ class MappereBOSSQSO(MapperBase):
 
     def get_mask(self):
         if self.mask is None:
-            self.mask = self.alpha*get_map_from_points(self.cat_random,
-                                                        self.nside_mask, w=self.w_random)
+            self.mask = get_map_from_points(self.cat_random,
+                                            self.nside_mask,
+                                            w=self.w_random)
+            #self.mask *= self.alpha
             # Account for different pixel areas
             area_ratio = (self.nside_mask/self.nside)**2
             self.mask = area_ratio * hp.ud_grade(self.mask,
@@ -105,3 +108,9 @@ class MappereBOSSQSO(MapperBase):
             N_ell *= pixel_A**2/(4*np.pi)
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
+
+    def get_dtype(self):
+        return 'galaxy_density'
+    
+    def get_spin(self):
+        return '0'

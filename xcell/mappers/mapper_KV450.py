@@ -73,6 +73,7 @@ class MapperKV450(MapperBase):
         self._remove_multiplicative_bias()
                 
         print('Catalogs loaded', end=' ', flush=True)
+
         self.dndz = np.loadtxt(self.config['file_nz'], unpack=True)
         self.sel = {'galaxies': 1, 'stars': 0}
 
@@ -84,7 +85,6 @@ class MapperKV450(MapperBase):
 
         self.nl_coupled = None
         self.nls = {'PSF': None, 'shear': None, 'stars': None}
-        
         self.nmt_field = None
 
     def _set_mode(self, mode=None):
@@ -184,3 +184,9 @@ class MapperKV450(MapperBase):
             self.nls[mod] = np.array([nl, 0*nl, 0*nl, nl])
         self.nl_coupled = self.nls[mod]
         return self.nl_coupled
+    
+    def get_dtype(self):
+        return 'galaxy_shear'
+    
+    def get_spin(self):
+        return '2'

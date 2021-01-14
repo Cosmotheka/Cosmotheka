@@ -29,7 +29,7 @@ class MapperDESY1gc(MapperBase):
             '4': [0.60, 0.75],
             '5': [0.75, 0.90]}
 
-        self.cat_data = Table.read(self.config['data_catalogs']).to_pandas()
+        self.cat_data = Table.read(self.config['data_catalogs'])
         self.nz = fits.open(self.config['file_nz'])[7].data
         self.npix = hp.nside2npix(self.nside)
         self.bin = config['bin']
@@ -39,22 +39,20 @@ class MapperDESY1gc(MapperBase):
         self.w_data = self._get_weights(self.cat_data)
         self.nmap_data = get_map_from_points(self.cat_data, self.nside,
                                              w=self.w_data)
+        self.nmap_w2 = get_map_from_points(self.cat_data, self.nside,
+                                             w=self.w_data**2)
         self.mask = None
         self.dndz = None
         self.delta_map = None
         self.nl_coupled = None
 
     def _bin_z(self, cat):
-        if 'ZREDMAGIC' in cat:
-            z_key = 'ZREDMAGIC'
-        else:
-            z_key = 'Z'
-
+        z_key = 'ZREDMAGIC'
         return cat[(cat[z_key] >= self.z_edges[0]) &
                    (cat[z_key] < self.z_edges[1])]
 
     def _get_weights(self, cat):
-        return np.array(cat['weight'].values)
+        return np.array(cat['weight'])
 
     def get_mask(self):
         if self.mask is None:
@@ -91,9 +89,16 @@ class MapperDESY1gc(MapperBase):
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             self.mask = self.get_mask()
+            goodpix = self.mask > self.mask_threshold
             N_mean = np.sum(self.nmap_data)/np.sum(self.mask)
             N_mean_srad = N_mean / (4 * np.pi) * self.npix
-            correction = np.sum(self.w_data**2) / np.sum(self.w_data)
+            correction = self.nmap_w2[good_pix].sum()/self.nmap_w2[good_pix].sum()
             N_ell = correction * np.mean(self.mask) / N_mean_srad
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
+    
+    def get_dtype(self):
+        return 'galaxy_density'
+    
+    def get_spin(self):
+        return '0'
