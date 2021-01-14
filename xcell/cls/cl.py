@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from mappers import mapper_from_name
+from ..mappers import mapper_from_name
 from common import Data
 import numpy as np
 import healpy as hp
