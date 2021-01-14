@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from mappers import mapper_from_name
-import common as co
+from common import Data
 import numpy as np
 import healpy as hp
 import pyccl as ccl
@@ -11,9 +11,9 @@ import warnings
 
 class Cl_Base():
     def __init__(self, data, tr1, tr2):
-        self.data = data
-        if ((tr1, tr2) not in co.get_cl_trs_names(self.data)) and \
-           ((tr2, tr1) in co.get_cl_trs_names(self.data)):
+        self.data = Data(data=data)
+        if ((tr1, tr2) not in self.data.get_cl_trs_names()) and \
+           ((tr2, tr1) in self.data.get_cl_trs_names()):
             warnings.warn('Reading the symmetric element.')
             self.tr1 = tr2
             self.tr2 = tr1
@@ -28,13 +28,13 @@ class Cl_Base():
         self.cl = None
 
     def get_outdir(self, subdir=''):
-        root = self.data['output']
+        root = self.data.data['output']
         trreq = ''.join(s for s in (self.tr1 + '_' + self.tr2) if not s.isdigit())
         outdir = os.path.join(root, subdir, trreq)
         return outdir
 
     def _get_mapper(self, tr):
-        config = self.data['tracers'][tr]
+        config = self.data.data['tracers'][tr]
         mapper_class = config['mapper_class']
         return mapper_from_name(mapper_class)(config)
 
@@ -70,10 +70,10 @@ class Cl(Cl_Base):
         super().__init__(data, tr1, tr2)
         self.outdir = self.get_outdir()
         os.makedirs(self.outdir, exist_ok=True)
-        self.nside = self.data['healpy']['nside']
+        self.nside = self.data.data['healpy']['nside']
         self.b = self.get_NmtBin()
-        self.recompute_cls = self.data['recompute']['cls']
-        self.recompute_mcm = self.data['recompute']['mcm']
+        self.recompute_cls = self.data.data['recompute']['cls']
+        self.recompute_mcm = self.data.data['recompute']['mcm']
         # Not needed to load cl if already computed
         self._w = None
         ##################
@@ -83,10 +83,10 @@ class Cl(Cl_Base):
     def get_NmtBin(self):
         trs = self.tr1 + '-' + self.tr2
         trs = ''.join(s for s in trs if not s.isdigit())
-        if 'bpw_edges' in self.data['cls'][trs].keys():
-            bpw_edges = np.array(self.data['cls'][trs]['bpw_edges'])
+        if 'bpw_edges' in self.data.data['cls'][trs].keys():
+            bpw_edges = np.array(self.data.data['cls'][trs]['bpw_edges'])
         else:
-            bpw_edges = np.array(self.data['bpw_edges'])
+            bpw_edges = np.array(self.data.data['bpw_edges'])
         nside = self.nside
         bpw_edges = bpw_edges[bpw_edges <= 3 * nside] # 3*nside == ells[-1] + 1
         if 3*nside not in bpw_edges: # Exhaust lmax --> gives same result as previous method, but adds 1 bpw (not for 4096)
@@ -110,8 +110,8 @@ class Cl(Cl_Base):
         fname = os.path.join(self.outdir, 'w__{}__{}.fits'.format(mask1, mask2))
         w = nmt.NmtWorkspace()
         if self.recompute_mcm or (not os.path.isfile(fname)):
-            n_iter = self.data['healpy']['n_iter_mcm']
-            l_toeplitz, l_exact, dl_band = co.check_toeplitz(self.data, 'cls')
+            n_iter = self.data.data['healpy']['n_iter_mcm']
+            l_toeplitz, l_exact, dl_band = self.data.check_toeplitz('cls')
             f1, f2 = self.get_nmt_fields()
             w.compute_coupling_matrix(f1, f2, self.b, n_iter=n_iter,
                                       l_toeplitz=l_toeplitz, l_exact=l_exact, dl_band=dl_band)
@@ -184,7 +184,7 @@ class Cl_fid(Cl_Base):
         self._ccl_tr2 = None
 
     def get_cosmo_ccl(self):
-        fiducial = self.data['cov']['fiducial']
+        fiducial = self.data.data['cov']['fiducial']
         cosmo = ccl.Cosmology(**fiducial['cosmo'])
         return cosmo
 
@@ -197,8 +197,8 @@ class Cl_fid(Cl_Base):
 
     def compute_tracer_ccl(self, tr, mapper):
         dtype = mapper.get_dtype()
-        tracer = self.data['tracers'][tr]
-        fiducial = self.data['cov']['fiducial']
+        tracer = self.data.data['tracers'][tr]
+        fiducial = self.data.data['cov']['fiducial']
         # Get Tracers
         if dtype == 'galaxy_density':
             # Import z, pz
@@ -224,17 +224,17 @@ class Cl_fid(Cl_Base):
         elif dtype == 'cmb_convergence':
             return ccl.CMBLensingTracer(self.cosmo, z_source=1100) #TODO: correct z_source
         else:
-            raise ValueError('Type of tracer not recognized. It can be gc, wl or cv!')
+            raise ValueError('Type of tracer not recognized. It can be galaxy_density, galaxy_shear or cmb_convergence!')
 
     def get_cl_file(self):
-        nside = self.data['healpy']['nside']
+        nside = self.data.data['healpy']['nside']
         fname = os.path.join(self.outdir, 'cl_{}_{}.npz'.format(self.tr1, self.tr2))
         ell = np.arange(3 * nside)
         if not os.path.isfile(fname):
             ccl_tr1, ccl_tr2 = self.get_tracers_ccl()
             cl = ccl.angular_cl(self.cosmo, ccl_tr1, ccl_tr2, ell)
-            tracers = self.data['tracers']
-            fiducial = self.data['cov']['fiducial']
+            tracers = self.data.data['tracers']
+            fiducial = self.data.data['cov']['fiducial']
             d1, d2 = self.get_dtypes()
             for dtype, tr in zip([self.tr1, self.tr2], [d1, d2]):
                 if (dtype == 'wl') and fiducial['wl_m']:
@@ -268,7 +268,7 @@ if __name__ == "__main__":
     parser.add_argument('--fiducial', default=False, action='store_true', help='Compute the fiducial model Cl')
     args = parser.parse_args()
 
-    data = co.read_data(args.INPUT)
+    data = Data(data_path=args.INPUT).data
     if args.fiducial:
         cl = Cl_fid(data, args.tr1, args.tr2)
     else:

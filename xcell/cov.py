@@ -1,15 +1,15 @@
 #!/usr/bin/python
 from cl import Cl, Cl_fid
+from common import Data
 import os
 import yaml
-import common as co
 import numpy as np
 import healpy as hp
 import pymaster as nmt
 
 class Cov():
     def __init__(self, data, trA1, trA2, trB1, trB2):
-        self.data = data
+        self.data = Data(data=data)
         self.outdir = self.get_outdir()
         os.makedirs(self.outdir, exist_ok=True)
         self.trA1 = trA1
@@ -26,12 +26,12 @@ class Cov():
         self.clfid_A1B2 = Cl_fid(data, trA1, trB2)
         self.clfid_A2B1 = Cl_fid(data, trA2, trB1)
         self.clfid_A2B2 = Cl_fid(data, trA2, trB2)
-        self.recompute_cov = self.data['recompute']['cov']
-        self.recompute_cmcm = self.data['recompute']['cmcm']
+        self.recompute_cov = self.data.data['recompute']['cov']
+        self.recompute_cmcm = self.data.data['recompute']['cmcm']
         self.cov = None
 
     def get_outdir(self):
-        root = self.data['output']
+        root = self.data.data['output']
         outdir = os.path.join(root, 'cov')
         return outdir
 
@@ -40,10 +40,10 @@ class Cov():
         mask3, mask4 = self.clB1B2.get_masks_names()
         fname = os.path.join(self.outdir, 'cw__{}__{}__{}__{}.fits'.format(mask1, mask2, mask3, mask4))
         cw = nmt.NmtCovarianceWorkspace()
-        recompute = self.data['recompute']['cmcm']
+        recompute = self.data.data['recompute']['cmcm']
         if recompute or (not os.path.isfile(fname)):
-            n_iter = self.data['healpy']['n_iter_cmcm']
-            l_toeplitz, l_exact, dl_band = co.check_toeplitz(self.data, 'cov')
+            n_iter = self.data.data['healpy']['n_iter_cmcm']
+            l_toeplitz, l_exact, dl_band = self.data.check_toeplitz('cov')
             fA1, fB1 = self.clA1B1.get_nmt_fields()
             fA2, fB2 = self.clA2B2.get_nmt_fields()
             cw.compute_coupling_coefficients(fA1, fA2, fB1, fB2,
@@ -115,6 +115,6 @@ if __name__ == "__main__":
     parser.add_argument('trB2', type=str, help='Tracer B2 name')
     args = parser.parse_args()
 
-    data = co.read_data(args.INPUT)
+    data = Data(data_path=args.INPUT).data
     cov = Cov(data, args.trA1, args.trA2, args.trB1, args.trB2)
     cov.get_covariance()
