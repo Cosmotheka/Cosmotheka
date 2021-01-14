@@ -92,7 +92,7 @@ class MapperDESY1gc(MapperBase):
             goodpix = self.mask > self.mask_threshold
             N_mean = np.sum(self.nmap_w)/np.sum(self.mask)
             N_mean_srad = N_mean / (4 * np.pi) * self.npix
-            correction = self.nmap_w2[good_pix].sum()/self.nmap_w[good_pix].sum()
+            correction = self.nmap_w2[goodpix].sum()/self.nmap_w[goodpix].sum()
             N_ell = correction * np.mean(self.mask) / N_mean_srad
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled

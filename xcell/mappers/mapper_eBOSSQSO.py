@@ -23,6 +23,7 @@ class MappereBOSSQSO(MapperBase):
         self.cat_data = []
         self.cat_random = []
         self.mask_name = config.get('mask_name', None)
+        self.path_cl = config.get('path_cl', None)
         self.z_arr_dim = config.get('z_arr_dim', 50)
 
 
@@ -99,15 +100,23 @@ class MappereBOSSQSO(MapperBase):
             self.mask = area_ratio * hp.ud_grade(self.mask,
                                                  nside_out=self.nside)
         return self.mask
-
+    
     def get_nl_coupled(self):
         if self.nl_coupled is None:
-            pixel_A = 4*np.pi/hp.nside2npix(self.nside)
-            N_ell = (np.sum(self.w_data**2) +
-                     self.alpha**2*np.sum(self.w_random**2))
-            N_ell *= pixel_A**2/(4*np.pi)
-            self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
+            if self.path_cl is None:
+                pixel_A = 4*np.pi/hp.nside2npix(self.nside)
+                N_ell = (np.sum(self.w_data**2) +
+                         self.alpha**2*np.sum(self.w_random**2))
+                N_ell *= pixel_A**2/(4*np.pi)
+                self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
+            else:
+                cl = np.load(self.path_cl)['cl'][0]
+                sel= 2000 < np.load(self.path_cl)['ell'] && np.load(self.path_cl)['ell'] < 8000
+                cl = cl[sel]
+                N_ell = np.mean(cl)
+                self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
+    
 
     def get_dtype(self):
         return 'galaxy_density'
