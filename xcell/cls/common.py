@@ -114,17 +114,6 @@ class Data():
 
         return tracers_torun
 
-    def get_dof_tracers(self, tracers):
-        tr1, tr2 = tracers
-        s1 = self.data['tracers'][tr1]['spin']
-        s2 = self.data['tracers'][tr2]['spin']
-
-        dof = s1 + s2
-        if dof == 0:
-            dof += 1
-
-        return dof
-
     def check_toeplitz(self, dtype):
         if ('toeplitz' in self.data) and \
             (dtype in self.data['toeplitz']):
