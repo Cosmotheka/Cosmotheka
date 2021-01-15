@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from mappers import mapper_from_name
 import yaml
 
 class Data():
@@ -126,4 +127,9 @@ class Data():
             l_toeplitz = l_exact = dl_band = -1
 
         return l_toeplitz, l_exact, dl_band
+
+    def get_mapper(self, tr):
+        config = self.data['tracers'][tr]
+        mapper_class = config['mapper_class']
+        return mapper_from_name(mapper_class)(config)
 

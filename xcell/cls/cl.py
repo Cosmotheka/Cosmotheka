@@ -1,7 +1,6 @@
 #!/usr/bin/python
 import sys
 sys.path.append('../')
-from mappers import mapper_from_name
 from common import Data
 import numpy as np
 import healpy as hp
@@ -35,15 +34,10 @@ class ClBase():
         outdir = os.path.join(root, subdir, trreq)
         return outdir
 
-    def _get_mapper(self, tr):
-        config = self.data.data['tracers'][tr]
-        mapper_class = config['mapper_class']
-        return mapper_from_name(mapper_class)(config)
-
     def get_mappers(self):
         if self._mapper1 is None:
-            self._mapper1 = self._get_mapper(self.tr1)
-            self._mapper2 = self._mapper1 if self.tr1 == self.tr2 else self._get_mapper(self.tr2)
+            self._mapper1 = self.data.get_mapper(self.tr1)
+            self._mapper2 = self._mapper1 if self.tr1 == self.tr2 else self.data.get_mapper(self.tr2)
         return self._mapper1, self._mapper2
 
     def get_cl_file(self):
