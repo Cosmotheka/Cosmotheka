@@ -1,6 +1,12 @@
 #!/usr/bin/python
+import sys
+sys.path.append('../')
+from glob import glob
 from mappers import mapper_from_name
+from warnings import warn
 import yaml
+import os
+import shutil
 
 class Data():
     def __init__(self, data_path='', data={}):
@@ -14,6 +20,26 @@ class Data():
             self.data = data
         else:
             raise ValueError('One of data_path or data must be set. None set.')
+
+        os.makedirs(self.data['output'], exist_ok=True)
+        self._check_yml_in_outdir()
+
+    def _check_yml_in_outdir(self):
+        outdir = self.data['output']
+        fname = os.path.join(outdir, '*.yml')
+        files = glob(fname)
+        if len(files) == 1:
+            warn(f'A YML file was found in outdir: {outdir}. Using it instead of input config.')
+            self.data_path = files[0]
+            self.data = self.read_data(files[0])
+        elif len(files) > 1:
+            raise ValueError(f'More than 1 YML file in outdir: {outdir}.')
+        elif (not len(files)) and self.data_path:
+            shutil.copy(self.data_path, outdir)
+        else:
+            fname = os.path.join(outdir, 'data.yml')
+            with open(fname, 'w') as f:
+                yaml.dump(self.data, f)
 
     def read_data(self, data_path):
         with open(data_path) as f:
@@ -132,4 +158,3 @@ class Data():
         config = self.data['tracers'][tr]
         mapper_class = config['mapper_class']
         return mapper_from_name(mapper_class)(config)
-
