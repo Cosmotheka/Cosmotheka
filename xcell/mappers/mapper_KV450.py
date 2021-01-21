@@ -66,11 +66,11 @@ class MapperKV450(MapperBase):
             cat = cat[goodbin]
             # Additive bias on galaxies
             self._remove_additive_bias(cat)
-            self.cat_data.append(cat) 
-            
+            self.cat_data.append(cat)
+
         self.cat_data = vstack(self.cat_data)
         self._remove_multiplicative_bias()
-                
+
         print('Catalogs loaded', end=' ', flush=True)
 
         self.dndz = np.loadtxt(self.config['file_nz'], unpack=True)
@@ -104,7 +104,6 @@ class MapperKV450(MapperBase):
         else:
             raise ValueError(f"Unknown mode {mode}")
         return kind, e1_flag, e2_flag, mode
-
 
     def _check_lite_exists(self, i):
         if self.lite_path is None:
@@ -183,9 +182,9 @@ class MapperKV450(MapperBase):
             self.nls[mod] = np.array([nl, 0*nl, 0*nl, nl])
         self.nl_coupled = self.nls[mod]
         return self.nl_coupled
-    
+
     def get_dtype(self):
         return 'galaxy_shear'
-    
+
     def get_spin(self):
         return 2

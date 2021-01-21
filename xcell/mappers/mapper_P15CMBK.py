@@ -2,7 +2,6 @@ from .mapper_base import MapperBase
 import pandas as pd
 import numpy as np
 import healpy as hp
-import pymaster as nmt
 
 
 class MapperP15CMBK(MapperBase):
@@ -62,9 +61,9 @@ class MapperP15CMBK(MapperBase):
 
     def get_ells(self):
         return self.noise['l'].values
-    
+
     def get_dtype(self):
         return 'cmb_convergence'
-    
+
     def get_spin(self):
         return 0

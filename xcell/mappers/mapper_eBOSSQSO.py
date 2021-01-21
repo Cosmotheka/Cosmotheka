@@ -25,7 +25,6 @@ class MappereBOSSQSO(MapperBase):
         self.cat_random = []
         self.z_arr_dim = config.get('z_arr_dim', 50)
 
-
         for file_data, file_random in zip(self.config['data_catalogs'],
                                           self.config['random_catalogs']):
             if not os.path.isfile(file_data):
@@ -66,10 +65,8 @@ class MappereBOSSQSO(MapperBase):
         weights = cat_SYSTOT*cat_CP*cat_NOZ  # FKP left out
         return weights
 
-
     def get_nz(self):
         if self.dndz is None:
-            
             h, b = np.histogram(self.cat_data['Z'], bins=self.z_arr_dim,
                                 weights=self.w_data)
             self.dndz = np.array([b[:-1], b[1:], h])
@@ -100,7 +97,7 @@ class MappereBOSSQSO(MapperBase):
             self.mask = area_ratio * hp.ud_grade(self.mask,
                                                  nside_out=self.nside)
         return self.mask
-    
+
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             if self.nside < 4096:
@@ -112,7 +109,7 @@ class MappereBOSSQSO(MapperBase):
                 w2_random = get_map_from_points(self.cat_random, self.nside,
                                                 w=self.w_random**2)
                 goodpix = mask > 0
-                N_ell = (w2_data[goodpix].sum()+
+                N_ell = (w2_data[goodpix].sum() +
                          self.alpha**2*w2_random[goodpix].sum())
                 N_ell *= pixel_A**2/(4*np.pi)
                 self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
@@ -126,6 +123,6 @@ class MappereBOSSQSO(MapperBase):
 
     def get_dtype(self):
         return 'galaxy_density'
-    
+
     def get_spin(self):
         return 0

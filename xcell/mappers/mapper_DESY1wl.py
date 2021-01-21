@@ -4,7 +4,6 @@ from astropy.table import Table, Column
 import astropy.table
 import numpy as np
 import healpy as hp
-import pymaster as nmt
 import os
 
 
@@ -46,7 +45,7 @@ class MapperDESY1wl(MapperBase):
 
         self.nl_coupled = None
         self.nls = {'PSF': None, 'shear': None}
-        
+
     def _load_catalog(self):
         # Read catalogs
         # Columns explained in
@@ -61,10 +60,10 @@ class MapperDESY1wl(MapperBase):
         fcat_lite = 'DESwlMETACAL_catalog_lite'
         fcat_bin = '{}_zbin{}.fits'.format(fcat_lite, self.zbin)
         fcat_lite += '.fits'
-        
-        #Try with david cats
-        #fcat_bin = 'catalog_metacal_bin{}_zbin_mcal.fits'.format(self.zbin)
-        
+
+        # Try with david cats
+        # fcat_bin = 'catalog_metacal_bin{}_zbin_mcal.fits'.format(self.zbin)
+
         if os.path.isfile(self.path_lite + fcat_bin):
             print('Loading lite bin{} cat'.format(self.zbin))
             self.cat_data = Table.read(self.path_lite + fcat_bin, memmap=True)
@@ -86,19 +85,19 @@ class MapperDESY1wl(MapperBase):
                            data=np.ones(len(self.cat_data), dtype=int))
             self.cat_data.add_column(col_w)
             self.cat_data.write(fcat_lite)
-            
-            #remove bins which are not the one of interest
+
+            # remove bins which are not the one of interest
             self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.zbin)
-            #filter for -90<dec<-35
+            # filter for -90<dec<-35
             self.cat_data.remove_rows(self.cat_data['dec'] < -90)
             self.cat_data.remove_rows(self.cat_data['dec'] > -35)
-            #remove flagged galaxies
+            # remove flagged galaxies
             self.cat_data.remove_rows(self.cat_data['flags_select'] != 0)
-            
+
             self.cat_data.write(fcat_bin)
 
         return self.cat_data
-    
+
     def _set_mode(self, mode=None):
         if mode is None:
             mode = self.mode
@@ -112,20 +111,20 @@ class MapperDESY1wl(MapperBase):
         else:
             raise ValueError(f"Unknown mode {mode}")
         return e1_flag, e2_flag, mode
-    
+
     def _remove_additive_bias(self):
-        self.cat_data['e1']  = self.cat_data['e1'] - np.mean(self.cat_data['e1'])
-        self.cat_data['e2']  = self.cat_data['e2'] - np.mean(self.cat_data['e2'])
+        self.cat_data['e1'] -= np.mean(self.cat_data['e1'])
+        self.cat_data['e2'] -= np.mean(self.cat_data['e2'])
         return
 
     def get_signal_map(self, mode=None):
         e1f, e2f, mod = self._set_mode(mode)
         if self.maps[mod] is None:
-            we1 = get_map_from_points(self.cat_data, self.nside, 
+            we1 = get_map_from_points(self.cat_data, self.nside,
                                       w=self.cat_data[e1f],
                                       ra_name='ra',
                                       dec_name='dec')
-            we2 = get_map_from_points(self.cat_data, self.nside, 
+            we2 = get_map_from_points(self.cat_data, self.nside,
                                       w=self.cat_data[e1f],
                                       ra_name='ra',
                                       dec_name='dec')
@@ -141,15 +140,15 @@ class MapperDESY1wl(MapperBase):
     def get_mask(self):
         if self.mask is None:
             self.mask = get_map_from_points(self.cat_data, self.nside,
-                                           ra_name='ra', dec_name='dec')
+                                            ra_name='ra', dec_name='dec')
         return self.mask
 
     def get_nl_coupled(self, mode=None):
         e1f, e2f, mod = self._set_mode(mode)
         if self.nls[mod] is None:
-            w2s2 = get_map_from_points(self.cat_data, self.nside, 
+            w2s2 = get_map_from_points(self.cat_data, self.nside,
                                        w=0.5*(self.cat_data[e1f]**2 +
-                                               self.cat_data[e2f]**2),
+                                              self.cat_data[e2f]**2),
                                        ra_name='ra', dec_name='dec')
             N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
             nl = N_ell * np.ones(3*self.nside)
@@ -160,6 +159,6 @@ class MapperDESY1wl(MapperBase):
 
     def get_dtype(self):
         return 'galaxy_shear'
-    
+
     def get_spin(self):
         return 2

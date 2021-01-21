@@ -1,10 +1,7 @@
 from .mapper_base import MapperBase
-from .utils import get_map_from_points
-from astropy.io import fits
-from astropy.table import Table, vstack
 import numpy as np
 import healpy as hp
-import os
+
 
 class MapperDummy(MapperBase):
     def __init__(self, config):
@@ -30,13 +27,12 @@ class MapperDummy(MapperBase):
 
     def get_signal_map(self, seed=None):
         np.random.seed(seed)
-
         if self.signal_map is None:
             ls = np.arange(3*self.nside)
             cl = self.get_cl(ls)
-            if spin == 0:
+            if self.spin == 0:
                 self.signal_map = [hp.synfast(cl, self.nside)]
-            elif spin == 2:
+            elif self.spin == 2:
                 _, mq, mu = hp.synfast([0*cl, cl, 0*cl, 0*cl],
                                        self.nside)
                 self.signal_map = [mq, mu]
@@ -47,23 +43,26 @@ class MapperDummy(MapperBase):
             if fsk >= 1:
                 self.mask = np.ones(self.npix)
             else:
-                #This generates a correctly-apodized mask
-                v0=np.array([np.sin(np.radians(90-dec0))*np.cos(np.radians(ra0)),
-                             np.sin(np.radians(90-dec0))*np.sin(np.radians(ra0)),
-                             np.cos(np.radians(90-dec0))])
-                vv=np.array(hp.pix2vec(self.nside,np.arange(hp.nside2npix(self.nside))))
-                cth=np.sum(v0[:,None]*vv,axis=0)
-                th=np.arccos(cth)
-                th0=np.arccos(1-2*fsk)
-                th_apo=np.radians(aps)
-                id0=np.where(th>=th0)[0]
-                id1=np.where(th<=th0-th_apo)[0]
-                idb=np.where((th>th0-th_apo) & (th<th0))[0]
-                x=np.sqrt((1-np.cos(th[idb]-th0))/(1-np.cos(th_apo)))
-                mask_apo=np.zeros(hp.nside2npix(self.nside))
-                mask_apo[id0]=0.
-                mask_apo[id1]=1.
-                mask_apo[idb]=x-np.sin(2*np.pi*x)/(2*np.pi)
+                # This generates a correctly-apodized mask
+                v0 = np.array([np.sin(np.radians(90-dec0)) *
+                               np.cos(np.radians(ra0)),
+                               np.sin(np.radians(90-dec0)) *
+                               np.sin(np.radians(ra0)),
+                               np.cos(np.radians(90-dec0))])
+                vv = np.array(hp.pix2vec(self.nside,
+                                         np.arange(hp.nside2npix(self.nside))))
+                cth = np.sum(v0[:, None]*vv, axis=0)
+                th = np.arccos(cth)
+                th0 = np.arccos(1-2*fsk)
+                th_apo = np.radians(aps)
+                id0 = np.where(th >= th0)[0]
+                id1 = np.where(th <= th0-th_apo)[0]
+                idb = np.where((th > th0-th_apo) & (th < th0))[0]
+                x = np.sqrt((1 - np.cos(th[idb] - th0)) / (1 - np.cos(th_apo)))
+                mask_apo = np.zeros(hp.nside2npix(self.nside))
+                mask_apo[id0] = 0.
+                mask_apo[id1] = 1.
+                mask_apo[idb] = x-np.sin(2 * np.pi * x) / (2 * np.pi)
                 self.mask = mask_apo
         return self.mask
 

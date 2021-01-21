@@ -27,19 +27,17 @@ class MapperDESY1gc(MapperBase):
                      [0.45, 0.60],
                      [0.60, 0.75],
                      [0.75, 0.90]]
-
         self.cat_data = Table.read(self.config['data_catalogs'])
         self.nz = fits.open(self.config['file_nz'])[7].data
         self.npix = hp.nside2npix(self.nside)
         self.zbin = config['bin']
         self.z_edges = bin_edges[self.zbin]
-
         self.cat_data = self._bin_z(self.cat_data)
         self.w_data = self._get_weights(self.cat_data)
         self.nmap_w = get_map_from_points(self.cat_data, self.nside,
-                                             w=self.w_data)
+                                          w=self.w_data)
         self.nmap_w2 = get_map_from_points(self.cat_data, self.nside,
-                                             w=self.w_data**2)
+                                           w=self.w_data**2)
         self.mask = None
         self.dndz = None
         self.delta_map = None
@@ -98,6 +96,6 @@ class MapperDESY1gc(MapperBase):
 
     def get_dtype(self):
         return 'galaxy_density'
-    
+
     def get_spin(self):
         return 0
