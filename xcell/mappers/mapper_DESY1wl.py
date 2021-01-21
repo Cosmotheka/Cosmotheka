@@ -24,18 +24,16 @@ class MapperDESY1wl(MapperBase):
            }
         """
 
+        self._get_defaults(config)
         self.config = config
         self.path_lite = config.get('path_lite', None)
         self.mode = config.get('mode', 'shear')
-        self.mask_name = config.get('mask_name', None)
-        self.bin = config['bin']
-        self.nside = config['nside']
+        self.zbin = config['bin']
         self.npix = hp.nside2npix(self.nside)
-        self.bin_edges = np.array([0.3, 0.43, 0.63, 0.9, 1.3])
 
         # dn/dz
         self.nz = Table.read(config['file_nz'], format='fits',
-                             hdu=1)['Z_MID', 'BIN{}'.format(self.bin + 1)]
+                             hdu=1)['Z_MID', 'BIN{}'.format(self.zbin + 1)]
 
         # load cat
         self.cat_data = self._load_catalog()
@@ -49,8 +47,6 @@ class MapperDESY1wl(MapperBase):
         self.nl_coupled = None
         self.nls = {'PSF': None, 'shear': None}
         
-        self.nmt_field = None
-
     def _load_catalog(self):
         # Read catalogs
         # Columns explained in
@@ -63,14 +59,14 @@ class MapperDESY1wl(MapperBase):
         columns_zbin = ['coadd_objects_id', 'zbin_mcal']
 
         fcat_lite = 'DESwlMETACAL_catalog_lite'
-        fcat_bin = '{}_zbin{}.fits'.format(fcat_lite, self.bin)
+        fcat_bin = '{}_zbin{}.fits'.format(fcat_lite, self.zbin)
         fcat_lite += '.fits'
         
         #Try with david cats
-        #fcat_bin = 'catalog_metacal_bin{}_zbin_mcal.fits'.format(self.bin)
+        #fcat_bin = 'catalog_metacal_bin{}_zbin_mcal.fits'.format(self.zbin)
         
         if os.path.isfile(self.path_lite + fcat_bin):
-            print('Loading lite bin{} cat'.format(self.bin))
+            print('Loading lite bin{} cat'.format(self.zbin))
             self.cat_data = Table.read(self.path_lite + fcat_bin, memmap=True)
         elif os.path.isfile(self.path_lite + fcat_lite):
             print('loading full lite cat')
@@ -92,7 +88,7 @@ class MapperDESY1wl(MapperBase):
             self.cat_data.write(fcat_lite)
             
             #remove bins which are not the one of interest
-            self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.bin)
+            self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.zbin)
             #filter for -90<dec<-35
             self.cat_data.remove_rows(self.cat_data['dec'] < -90)
             self.cat_data.remove_rows(self.cat_data['dec'] > -35)
@@ -166,4 +162,4 @@ class MapperDESY1wl(MapperBase):
         return 'galaxy_shear'
     
     def get_spin(self):
-        return '2'
+        return 2

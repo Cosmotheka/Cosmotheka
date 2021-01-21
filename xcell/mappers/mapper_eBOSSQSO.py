@@ -23,7 +23,6 @@ class MappereBOSSQSO(MapperBase):
 
         self.cat_data = []
         self.cat_random = []
-        self.mask_name = config.get('mask_name', None)
         self.z_arr_dim = config.get('z_arr_dim', 50)
 
 
@@ -40,7 +39,6 @@ class MappereBOSSQSO(MapperBase):
 
         self.cat_data = vstack(self.cat_data)
         self.cat_random = vstack(self.cat_random)
-        self.nside = config['nside']
         self.nside_mask = config.get('nside_mask', self.nside)
         self.npix = hp.nside2npix(self.nside)
 
@@ -80,8 +78,10 @@ class MappereBOSSQSO(MapperBase):
     def get_signal_map(self):
         if self.delta_map is None:
             self.delta_map = np.zeros(self.npix)
-            nmap_data = get_map_from_points(self.cat_data, self.nside, w=self.w_data)
-            nmap_random = get_map_from_points(self.cat_random, self.nside, w=self.w_random)
+            nmap_data = get_map_from_points(self.cat_data, self.nside,
+                                            w=self.w_data)
+            nmap_random = get_map_from_points(self.cat_random, self.nside,
+                                              w=self.w_random)
 
             mask = self.get_mask()
             goodpix = mask > 0
@@ -103,11 +103,17 @@ class MappereBOSSQSO(MapperBase):
     
     def get_nl_coupled(self):
         if self.nl_coupled is None:
-            if 3 * self.nside < 8000:
+            if self.nside < 4096:
                 print('calculing nl from weights')
                 pixel_A = 4*np.pi/hp.nside2npix(self.nside)
-                N_ell = (np.sum(self.w_data**2) +
-                         self.alpha**2*np.sum(self.w_random**2))
+                mask = self.get_mask()
+                w2_data = get_map_from_points(self.cat_data, self.nside,
+                                              w=self.w_data**2)
+                w2_random = get_map_from_points(self.cat_random, self.nside,
+                                                w=self.w_random**2)
+                goodpix = mask > 0
+                N_ell = (w2_data[goodpix].sum()+
+                         self.alpha**2*w2_random[goodpix].sum())
                 N_ell *= pixel_A**2/(4*np.pi)
                 self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
             else:
@@ -117,10 +123,9 @@ class MappereBOSSQSO(MapperBase):
                 N_ell = np.mean(cl[2000:2*self.nside])
                 self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
-    
 
     def get_dtype(self):
         return 'galaxy_density'
     
     def get_spin(self):
-        return '0'
+        return 0

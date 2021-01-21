@@ -27,5 +27,6 @@ class MapperBase(object):
         if self.nmt_field is None:
             signal = self.get_signal_map(**kwargs)
             mask = self.get_mask(**kwargs)
-            self.nmt_field = nmt.NmtField(mask, signal, n_iter=0)
+            n_iter = kwargs.get('n_iter', 0)
+            self.nmt_field = nmt.NmtField(mask, signal, n_iter=n_iter)
         return self.nmt_field

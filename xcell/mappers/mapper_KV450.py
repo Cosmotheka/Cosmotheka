@@ -33,15 +33,14 @@ class MapperKV450(MapperBase):
                              'weight']
 
         self.mode = config.get('mode', 'shear')
-        self.zbin_edges = {
-            '1': [0.1, 0.3],
-            '2': [0.3, 0.5],
-            '3': [0.5, 0.7],
-            '4': [0.7, 0.9],
-            '5': [0.9, 1.2]}
+        zbin_edges = [[0.1, 0.3],
+                      [0.3, 0.5],
+                      [0.5, 0.7],
+                      [0.7, 0.9],
+                      [0.9, 1.2]]
         self.npix = hp.nside2npix(self.nside)
         self.zbin = int(config['bin'])
-        self.z_edges = self.zbin_edges['{}'.format(self.zbin)]
+        self.z_edges = zbin_edges[self.zbin]
         # Multiplicative bias
         # Values from Table 2 of 1812.06076 (KV450 cosmo paper)
         self.m = (-0.017, -0.008, -0.015, 0.010, 0.006)
@@ -85,7 +84,6 @@ class MapperKV450(MapperBase):
 
         self.nl_coupled = None
         self.nls = {'PSF': None, 'shear': None, 'stars': None}
-        self.nmt_field = None
 
     def _set_mode(self, mode=None):
         if mode is None:
@@ -107,12 +105,13 @@ class MapperKV450(MapperBase):
             raise ValueError(f"Unknown mode {mode}")
         return kind, e1_flag, e2_flag, mode
 
+
     def _check_lite_exists(self, i):
-        fname_lite = self.lite_path + f'KV450_lite_cat_{i}.fits'
-        if os.path.isfile(fname_lite):
-             return os.path.isfile(fname_lite), fname_lite
+        if self.lite_path is None:
+            return False, None
         else:
-            return False, fname_lite
+            fname_lite = self.lite_path + f'KV450_lite_cat_{i}.fits'
+            return os.path.isfile(fname_lite), fname_lite
 
     def _bin_z(self, cat):
         z_key = 'Z_B'
@@ -189,4 +188,4 @@ class MapperKV450(MapperBase):
         return 'galaxy_shear'
     
     def get_spin(self):
-        return '2'
+        return 2

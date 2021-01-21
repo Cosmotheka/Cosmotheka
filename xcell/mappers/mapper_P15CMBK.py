@@ -33,7 +33,6 @@ class MapperP15CMBK(MapperBase):
         self.k_map = None
         self.nl_coupled = None
         self.mask_map = None
-        self.nmt_field = None
         self.cl_fid = None
 
     def get_signal_map(self):
@@ -68,4 +67,4 @@ class MapperP15CMBK(MapperBase):
         return 'cmb_convergence'
     
     def get_spin(self):
-        return '0'
+        return 0

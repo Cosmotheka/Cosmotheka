@@ -7,7 +7,7 @@ import healpy as hp
 import os
 
 class MapperDummy(MapperBase):
-    def __init__(self):
+    def __init__(self, config):
         """
         config - dict
           {'data_catalogs': ***,
@@ -17,72 +17,64 @@ class MapperDummy(MapperBase):
            'nside_mask': ***,
            'mask_name': ***}
         """
-        self.n_points_data = 40000
-        self.n_points_random = 50*self.n_points_data
-        self.nside =64
-        
-        self.nmap_d = self._get_random_map(self.n_points_data)
-        self.nmap_r = self._get_random_map(self.n_points_random)
-        # R/D ratio
-        self.alpha = np.sum(self.nmap_d)/np.sum(self.nmap_r)
-            
-        self.delta_map = None
-        self.nl_coupled = None
-        self.mask = None
-        self.nmt_field = None
+        self._get_defaults(config)
+        self.spin = self.config.get('spin', 0)
+        self.l0 = self.config.get('l0', 20.)
+        self.alpha = self.config.get('alpha', -1.)
+        self.npix = hp.nside2npix(self.nside)
 
-    def get_signal_map(self):
-        if self.delta_map is None:
-            # Non-empty pixels
-            goodpix = self.nmap_r > 0
-            # Overdensity
-            self.delta_map = np.zeros_like(self.nmap_d)
-            self.delta_map[goodpix] = self.nmap_d[goodpix]/(self.alpha*self.nmap_r[goodpix]) - 1
-        return [self.delta_map]  
-    
-    def get_mask(self):
+        self.signal_map = None
+
+    def get_cl(self, ls):
+        return 1./(ls+self.l0)**self.alpha
+
+    def get_signal_map(self, seed=None):
+        np.random.seed(seed)
+
+        if self.signal_map is None:
+            ls = np.arange(3*self.nside)
+            cl = self.get_cl(ls)
+            if spin == 0:
+                self.signal_map = [hp.synfast(cl, self.nside)]
+            elif spin == 2:
+                _, mq, mu = hp.synfast([0*cl, cl, 0*cl, 0*cl],
+                                       self.nside)
+                self.signal_map = [mq, mu]
+        return self.signal_map
+
+    def get_mask(self, ns, aps=1., fsk=0.2, dec0=0., ra0=0.):
         if self.mask is None:
-            self.mask = self.alpha*self.nmap_r
-        return self.mask 
+            if fsk >= 1:
+                self.mask = np.ones(self.npix)
+            else:
+                #This generates a correctly-apodized mask
+                v0=np.array([np.sin(np.radians(90-dec0))*np.cos(np.radians(ra0)),
+                             np.sin(np.radians(90-dec0))*np.sin(np.radians(ra0)),
+                             np.cos(np.radians(90-dec0))])
+                vv=np.array(hp.pix2vec(self.nside,np.arange(hp.nside2npix(self.nside))))
+                cth=np.sum(v0[:,None]*vv,axis=0)
+                th=np.arccos(cth)
+                th0=np.arccos(1-2*fsk)
+                th_apo=np.radians(aps)
+                id0=np.where(th>=th0)[0]
+                id1=np.where(th<=th0-th_apo)[0]
+                idb=np.where((th>th0-th_apo) & (th<th0))[0]
+                x=np.sqrt((1-np.cos(th[idb]-th0))/(1-np.cos(th_apo)))
+                mask_apo=np.zeros(hp.nside2npix(self.nside))
+                mask_apo[id0]=0.
+                mask_apo[id1]=1.
+                mask_apo[idb]=x-np.sin(2*np.pi*x)/(2*np.pi)
+                self.mask = mask_apo
+        return self.mask
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             # Coupled analytical noise bias
-            a_pix = 4*np.pi/len(self.nmap_d)
-            N_ell = (np.sum(self.nmap_d) + self.alpha**2*np.sum(self.nmap_r))
-            N_ell *= a_pix**2/(4*np.pi)
-            self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
+            self.nl_coupled = np.zeros(3*self.nside)
         return self.nl_coupled
-    
-    def _get_random_map(self, n):
-        
-        """ Generates and returns a map of resolution `nside`
-        with `n` randomly positioned points between declinations
-        `dec_min` and `dec_max` and right ascensions `ra_min`
-        and `ra_max`. Each pixel in the returned map contains
-        the number of points falling inside it.
-        """
-        dec_min=10.
-        dec_max=70.
-        ra_min=0.
-        ra_max=360.
-            
-        # Generate cos(theta) and phi
-        npix = hp.nside2npix(self.nside)
-        cthmin = np.cos(np.radians(90-dec_min))
-        cthmax = np.cos(np.radians(90-dec_max))
-        cth = cthmin + (cthmax-cthmin)*np.random.rand(n)
-        th = np.arccos(cth)
-        ph = np.radians(ra_min + (ra_max-ra_min)*np.random.rand(n))
-        
-        # HEALPix pixel indices
-        ipix = hp.ang2pix(self.nside, th, ph)
-        # Number counts map
-        nmap = np.bincount(ipix, minlength=npix)
-        return nmap.astype(float)
 
     def get_dtype(self):
-        return 'galaxy_density'
-    
+        return 'generic'
+
     def get_spin(self):
-        return '0'
+        return self.spin

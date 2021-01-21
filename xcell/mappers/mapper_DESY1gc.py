@@ -22,18 +22,17 @@ class MapperDESY1gc(MapperBase):
 
         self._get_defaults(config)
         self.mask_threshold = config.get('mask_threshold', 0.5)
-        self.bin_edges = {
-            '1': [0.15, 0.30],
-            '2': [0.30, 0.45],
-            '3': [0.45, 0.60],
-            '4': [0.60, 0.75],
-            '5': [0.75, 0.90]}
+        bin_edges = [[0.15, 0.30],
+                     [0.30, 0.45],
+                     [0.45, 0.60],
+                     [0.60, 0.75],
+                     [0.75, 0.90]]
 
         self.cat_data = Table.read(self.config['data_catalogs'])
         self.nz = fits.open(self.config['file_nz'])[7].data
         self.npix = hp.nside2npix(self.nside)
-        self.bin = config['bin']
-        self.z_edges = self.bin_edges['{}'.format(self.bin)]
+        self.zbin = config['bin']
+        self.z_edges = bin_edges[self.zbin]
 
         self.cat_data = self._bin_z(self.cat_data)
         self.w_data = self._get_weights(self.cat_data)
@@ -67,7 +66,7 @@ class MapperDESY1gc(MapperBase):
         if self.dndz is None:
             # Equivalent to getting columns 1 and 3 in previous code
             z = self.nz['Z_MID']
-            pz = self.nz['BIN%s' % (self.bin)]
+            pz = self.nz['BIN%d' % (self.zbin+1)]
             # Calculate z bias
             z_dz = z - dz
             # Set to 0 points where z_dz < 0:
@@ -89,16 +88,16 @@ class MapperDESY1gc(MapperBase):
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             self.mask = self.get_mask()
-            goodpix = self.mask > self.mask_threshold
-            N_mean = np.sum(self.nmap_w)/np.sum(self.mask)
+            goodpix = self.mask > 0  # Already capped at mask_threshold
+            N_mean = np.sum(self.nmap_w[goodpix])/np.sum(self.mask[goodpix])
             N_mean_srad = N_mean / (4 * np.pi) * self.npix
             correction = self.nmap_w2[goodpix].sum()/self.nmap_w[goodpix].sum()
             N_ell = correction * np.mean(self.mask) / N_mean_srad
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
-    
+
     def get_dtype(self):
         return 'galaxy_density'
     
     def get_spin(self):
-        return '0'
+        return 0
