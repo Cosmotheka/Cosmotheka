@@ -17,7 +17,7 @@ class MapperKV450(MapperBase):
                              'KV450_G15_reweight_3x4x4_v2_good.cat',
                              'KV450_G9_reweight_3x4x4_v2_good.cat'] ,
           'file_nz': Nz_DIR_z0.1t0.3.asc,
-          'bin':1,
+          'zbin':1,
           'nside':nside,
           'mask_name': 'mask_KV450_1',
           'lite_path': path}
@@ -39,7 +39,7 @@ class MapperKV450(MapperBase):
                       [0.7, 0.9],
                       [0.9, 1.2]]
         self.npix = hp.nside2npix(self.nside)
-        self.zbin = int(config['bin'])
+        self.zbin = int(config['zbin'])
         self.z_edges = zbin_edges[self.zbin]
         # Multiplicative bias
         # Values from Table 2 of 1812.06076 (KV450 cosmo paper)
@@ -129,8 +129,8 @@ class MapperKV450(MapperBase):
 
     def _remove_multiplicative_bias(self):
         sel_gals = self.cat_data['SG_FLAG'] == 1
-        self.cat_data['bias_corrected_e1'][sel_gals] /= 1 + self.m[self.zbin-1]
-        self.cat_data['bias_corrected_e2'][sel_gals] /= 1 + self.m[self.zbin-1]
+        self.cat_data['bias_corrected_e1'][sel_gals] /= 1 + self.m[self.zbin]
+        self.cat_data['bias_corrected_e2'][sel_gals] /= 1 + self.m[self.zbin]
 
     def _get_gals_or_stars(self, kind='galaxies'):
         sel = self.cat_data['SG_FLAG'] == self.sel[kind]

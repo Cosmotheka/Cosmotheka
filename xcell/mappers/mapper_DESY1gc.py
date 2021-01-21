@@ -15,7 +15,7 @@ class MapperDESY1gc(MapperBase):
           {'data_catalogs':'/home/zcapjru/PhD/Data/DES_redm/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits',
            'file_mask':'/home/zcapjru/PhD/Data/DES_redm/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits',
            'file_nz':'/home/zcapjru/PhD/Data/DES_redm/2pt_NG_mcal_1110.fits',
-           'bin':1,
+           'zbin':1,
            'nside':nside,
            'mask_name': 'mask_DESgc_1'}
         """
@@ -30,7 +30,7 @@ class MapperDESY1gc(MapperBase):
         self.cat_data = Table.read(self.config['data_catalogs'])
         self.nz = fits.open(self.config['file_nz'])[7].data
         self.npix = hp.nside2npix(self.nside)
-        self.zbin = config['bin']
+        self.zbin = config['zbin']
         self.z_edges = bin_edges[self.zbin]
         self.cat_data = self._bin_z(self.cat_data)
         self.w_data = self._get_weights(self.cat_data)
