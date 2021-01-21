@@ -7,7 +7,7 @@ def get_config():
     return {'data_catalogs': 'xcell/tests/data/catalog.fits',
             'file_mask': 'xcell/tests/data/map.fits',
             'file_nz': 'xcell/tests/data/2pt_NG_mcal_1110.fits',
-            'bin': '3', 'nside': 32, 'mask_name': 'mask'}
+            'zbin': 2, 'nside': 32, 'mask_name': 'mask'}
 
 
 def get_mapper():
@@ -22,19 +22,19 @@ def test_get_binning():
     config = get_config()
 
     # No galaxies
-    for b in ['1', '5']:
-        config['bin'] = b
+    for b in [0, 4]:
+        config['zbin'] = b
         m = xc.mappers.MapperDESY1gc(config)
         assert len(m.cat_data) == 0
-        assert np.sum(np.fabs(m.nmap_data)) < 1E-1
+        assert np.sum(np.fabs(m.w_data)) < 1E-1
 
     # All galaxies
     ngal = hp.nside2npix(config['nside'])
-    config['bin'] = '3'
+    config['zbin'] = 2
     m = xc.mappers.MapperDESY1gc(config)
     assert len(m.cat_data) == ngal
     # Weight = 2
-    assert np.sum(np.fabs(m.nmap_data))-2*ngal < 1E-5
+    assert np.sum(np.fabs(m.w_data))-2*ngal < 1E-5
 
 
 def test_get_mask():

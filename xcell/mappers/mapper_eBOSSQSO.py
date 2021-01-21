@@ -4,6 +4,7 @@ from astropy.io import fits
 from astropy.table import Table, vstack
 import numpy as np
 import healpy as hp
+import pymaster as nmt
 import os
 
 
@@ -22,6 +23,7 @@ class MappereBOSSQSO(MapperBase):
 
         self.cat_data = []
         self.cat_random = []
+        self.z_arr_dim = config.get('z_arr_dim', 50)
 
         for file_data, file_random in zip(self.config['data_catalogs'],
                                           self.config['random_catalogs']):
@@ -63,9 +65,9 @@ class MappereBOSSQSO(MapperBase):
         weights = cat_SYSTOT*cat_CP*cat_NOZ  # FKP left out
         return weights
 
-    def get_nz(self, num_z=50):
+    def get_nz(self):
         if self.dndz is None:
-            h, b = np.histogram(self.cat_data['Z'], bins=num_z,
+            h, b = np.histogram(self.cat_data['Z'], bins=self.z_arr_dim,
                                 weights=self.w_data)
             self.dndz = np.array([b[:-1], b[1:], h])
         return self.dndz
@@ -77,6 +79,7 @@ class MappereBOSSQSO(MapperBase):
                                             w=self.w_data)
             nmap_random = get_map_from_points(self.cat_random, self.nside,
                                               w=self.w_random)
+
             mask = self.get_mask()
             goodpix = mask > 0
             self.delta_map = (nmap_data - self.alpha * nmap_random)
@@ -97,9 +100,29 @@ class MappereBOSSQSO(MapperBase):
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
-            pixel_A = 4*np.pi/hp.nside2npix(self.nside)
-            N_ell = (np.sum(self.w_data**2) +
-                     self.alpha**2*np.sum(self.w_random**2))
-            N_ell *= pixel_A**2/(4*np.pi)
-            self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
+            if self.nside < 4096:
+                print('calculing nl from weights')
+                pixel_A = 4*np.pi/hp.nside2npix(self.nside)
+                mask = self.get_mask()
+                w2_data = get_map_from_points(self.cat_data, self.nside,
+                                              w=self.w_data**2)
+                w2_random = get_map_from_points(self.cat_random, self.nside,
+                                                w=self.w_random**2)
+                goodpix = mask > 0
+                N_ell = (w2_data[goodpix].sum() +
+                         self.alpha**2*w2_random[goodpix].sum())
+                N_ell *= pixel_A**2/(4*np.pi)
+                self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
+            else:
+                print('calculating nl from mean cl values')
+                f = self.get_nmt_field()
+                cl = nmt.compute_coupled_cell(f, f)[0]
+                N_ell = np.mean(cl[2000:2*self.nside])
+                self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
+
+    def get_dtype(self):
+        return 'galaxy_density'
+
+    def get_spin(self):
+        return 0
