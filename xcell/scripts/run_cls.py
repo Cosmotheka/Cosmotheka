@@ -42,7 +42,7 @@ def launch_cls(data, queue, njobs, wsp=False, fiducial=False):
             break
         comment = 'cl_{}_{}'.format(tr1, tr2)
         # TODO: don't hard-code it!
-        trreq = ''.join(s for s in (tr1 + '_' + tr2) if not s.isdigit())
+        trreq = self.data.get_tracers_bare_name_pair(tr1, tr2, '_')
         fname = os.path.join(outdir, trreq, comment + '.npz')
         if os.path.isfile(fname):
             continue
