@@ -20,12 +20,12 @@ class MapperKV450(MapperBase):
           'zbin':1,
           'nside':nside,
           'mask_name': 'mask_KV450_1',
-          'lite_path': path}
+          'path_lite': path}
            }
         """
 
         self._get_defaults(config)
-        self.lite_path = config.get('lite_path', None)
+        self.path_lite = config.get('path_lite', None)
         self.column_names = ['SG_FLAG', 'GAAP_Flag_ugriZYJHKs',
                              'Z_B', 'Z_B_MIN', 'Z_B_MAX',
                              'ALPHA_J2000', 'DELTA_J2000', 'PSF_e1', 'PSF_e2',
@@ -106,10 +106,10 @@ class MapperKV450(MapperBase):
         return kind, e1_flag, e2_flag, mode
 
     def _check_lite_exists(self, i):
-        if self.lite_path is None:
+        if self.path_lite is None:
             return False, None
         else:
-            fname_lite = self.lite_path + f'KV450_lite_cat_{i}.fits'
+            fname_lite = self.path_lite + f'KV450_lite_cat_{i}.fits'
             return os.path.isfile(fname_lite), fname_lite
 
     def _bin_z(self, cat):

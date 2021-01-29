@@ -7,27 +7,23 @@ import os
 def get_config():
     return {'data_catalogs': ['xcell/tests/data/catalog.fits',
                               'xcell/tests/data/catalog_stars.fits'],
-            'file_nz': 'xcell/tests/data/Nz_DIR_z0.1t0.3.asc',
+            'file_nz': 'xcell/tests/data/Nz_DIR_z0.1t0.3.asc', 
             'zbin': 0, 'nside': 32, 'mask_name': 'mask'}
-
 
 def get_mapper():
     return xc.mappers.MapperKV450(get_config())
 
-
 def test_smoke():
     get_mapper()
-
 
 def get_es():
     npix = hp.nside2npix(32)
     return np.repeat(np.array([np.arange(4)]), npix//4,
                      axis=0).flatten()
 
-
 def test_lite():
     config = get_config()
-    config['lite_path'] = 'xcell/tests/data/'
+    config['path_lite'] = 'xcell/tests/data/'
     ifile = 0
     while os.path.isfile(f'xcell/tests/data/KV450_lite_cat_{ifile}.fits'):
         os.remove(f'xcell/tests/data/KV450_lite_cat_{ifile}.fits')
@@ -38,7 +34,6 @@ def test_lite():
     # Non-exsisting fits files - read from lite
     config['data_catalogs'] = ['whatever', 'whatever']
     xc.mappers.MapperKV450(config)
-
 
 def test_get_signal_map():
     m = get_mapper()
@@ -53,7 +48,6 @@ def test_get_signal_map():
     assert np.all(np.fabs(psf+es) < 1E-5)
     assert np.all(np.fabs(star+es) < 1E-5)
 
-
 def test_get_mask():
     m = get_mapper()
     sh = m.get_mask('shear')
@@ -63,7 +57,6 @@ def test_get_mask():
     assert np.all(np.fabs(sh-2) < 1E-5)
     assert np.all(np.fabs(psf-2) < 1E-5)
     assert np.all(np.fabs(star-2) < 1E-5)
-
 
 def test_get_nl_coupled():
     m = get_mapper()

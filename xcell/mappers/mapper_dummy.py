@@ -19,15 +19,18 @@ class MapperDummy(MapperBase):
         self.l0 = self.config.get('l0', 20.)
         self.alpha = self.config.get('alpha', -1.)
         self.npix = hp.nside2npix(self.nside)
+        self.seed = None 
 
         self.signal_map = None
+        self.nl_coupled = None
+        self.mask = None
 
     def get_cl(self, ls):
-        return 1./(ls+self.l0)**self.alpha
+        return np.array(1./(ls+self.l0))**self.alpha
 
-    def get_signal_map(self, seed=None):
-        np.random.seed(seed)
+    def get_signal_map(self):
         if self.signal_map is None:
+            np.random.seed(self.seed)
             ls = np.arange(3*self.nside)
             cl = self.get_cl(ls)
             if self.spin == 0:

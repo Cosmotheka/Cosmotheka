@@ -17,7 +17,7 @@ class MapperDESY1wl(MapperBase):
            'data_cat':  'mcal-y1a1-combined-riz-unblind-v4-matched.fits',
            'file_nz': '/.../.../y1_redshift_distributions_v1.fits'
            'nside': Nside,
-           'bin': bin,
+           'zbin': zbin,
            'mask_name': name,
            'path_lite': path
            }
@@ -27,13 +27,12 @@ class MapperDESY1wl(MapperBase):
         self.config = config
         self.path_lite = config.get('path_lite', None)
         self.mode = config.get('mode', 'shear')
-        self.zbin = config['bin']
+        self.zbin = config['zbin']
         self.npix = hp.nside2npix(self.nside)
 
         # dn/dz
-        self.nz = Table.read(config['file_nz'], format='fits',
-                             hdu=1)['Z_MID', 'BIN{}'.format(self.zbin + 1)]
-
+        self.nz = None 
+        
         # load cat
         self.cat_data = self._load_catalog()
         self._remove_additive_bias()
@@ -57,19 +56,11 @@ class MapperDESY1wl(MapperBase):
         # z-bin catalog
         columns_zbin = ['coadd_objects_id', 'zbin_mcal']
 
-        fcat_lite = 'DESwlMETACAL_catalog_lite'
-        fcat_bin = '{}_zbin{}.fits'.format(fcat_lite, self.zbin)
-        fcat_lite += '.fits'
-
-        # Try with david cats
-        # fcat_bin = 'catalog_metacal_bin{}_zbin_mcal.fits'.format(self.zbin)
-
-        if os.path.isfile(self.path_lite + fcat_bin):
+        read_lite, fname_lite = self._check_lite_exists(self.zbin)
+        
+        if read_lite:
             print('Loading lite bin{} cat'.format(self.zbin))
-            self.cat_data = Table.read(self.path_lite + fcat_bin, memmap=True)
-        elif os.path.isfile(self.path_lite + fcat_lite):
-            print('loading full lite cat')
-            self.cat_data = Table.read(self.path_lite + fcat_lite, memmap=True)
+            self.cat_data = Table.read(fname_lite, memmap=True)
         else:
             print('loading full cat')
             self.cat_data = Table.read(self.config['data_cat'],
@@ -84,19 +75,28 @@ class MapperDESY1wl(MapperBase):
             col_w = Column(name='weight',
                            data=np.ones(len(self.cat_data), dtype=int))
             self.cat_data.add_column(col_w)
-            self.cat_data.write(fcat_lite)
 
             # remove bins which are not the one of interest
+            print(len(self.cat_data))
             self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.zbin)
             # filter for -90<dec<-35
             self.cat_data.remove_rows(self.cat_data['dec'] < -90)
             self.cat_data.remove_rows(self.cat_data['dec'] > -35)
+            print(len(self.cat_data))
             # remove flagged galaxies
             self.cat_data.remove_rows(self.cat_data['flags_select'] != 0)
-
-            self.cat_data.write(fcat_bin)
-
+            print(len(self.cat_data))
+            if fname_lite is not None:
+                self.cat_data.write(fname_lite)
+                
         return self.cat_data
+    
+    def _check_lite_exists(self, i):
+        if self.path_lite is None:
+            return False, None
+        else:
+            fname_lite = self.path_lite + f'DESwlMETACAL_catalog_lite_zbin{i}.fits'
+            return os.path.isfile(fname_lite), fname_lite
 
     def _set_mode(self, mode=None):
         if mode is None:
@@ -129,13 +129,21 @@ class MapperDESY1wl(MapperBase):
                                       ra_name='ra',
                                       dec_name='dec')
             mask = self.get_mask()
+            print(mask)
             goodpix = mask > 0
+            print(goodpix)
             we1[goodpix] /= mask[goodpix]
             we2[goodpix] /= mask[goodpix]
             self.maps[mod] = [-we1, we2]
 
         self.signal_map = self.maps[mod]
         return self.signal_map
+
+    def get_nz(self):
+        if self.nz is None:
+            self.nz = Table.read(self.config['file_nz'], format='fits',
+                                 hdu=1)['Z_MID', 'BIN{}'.format(self.zbin + 1)]
+        return self.nz
 
     def get_mask(self):
         if self.mask is None:

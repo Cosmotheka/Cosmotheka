@@ -45,6 +45,10 @@ cols = fits.ColDefs([fits.Column(name='RA', format='D', array=ra),
                      fits.Column(name='PSF_e1', format='D', array=ottf),
                      fits.Column(name='PSF_e2', format='D', array=-ottf),
                      fits.Column(name='zbin_mcal', format='D', array=-on),
+                     fits.Column(name='coadd_objects_id', format='D', array=on), #New 
+                     fits.Column(name='R11', format='D', array=on), #New 
+                     fits.Column(name='R22', format='D', array=on), #New 
+                     fits.Column(name='flags_select', format='D', array=on-1), #New 
                      fits.Column(name='weight', format='D', array=2*on),
                      fits.Column(name='WEIGHT_SYSTOT', format='D', array=2*on),
                      fits.Column(name='WEIGHT_CP', format='D', array=2*on),
@@ -56,6 +60,7 @@ cols = fits.ColDefs([fits.Column(name='RA', format='D', array=ra),
                      fits.Column(name='Z_B_MAX', format='D', array=3*on),
                      fits.Column(name='GAAP_Flag_ugriZYJHKs', format='K',
                                  array=0*on)])
+
 hdu = fits.BinTableHDU.from_columns(cols)
 hdu.writeto("catalog.fits", overwrite=True)
 
