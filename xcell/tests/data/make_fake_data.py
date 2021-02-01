@@ -27,6 +27,7 @@ ra, dec = hp.pix2ang(nside, np.arange(npix),
 on = np.ones(npix)
 ottf = np.repeat(np.array([np.arange(4)]), npix//4,
                  axis=0).flatten()
+
 cols = fits.ColDefs([fits.Column(name='RA', format='D', array=ra),
                      fits.Column(name='ra', format='D', array=ra),
                      fits.Column(name='ALPHA_J2000', format='D', array=ra),
@@ -44,11 +45,10 @@ cols = fits.ColDefs([fits.Column(name='RA', format='D', array=ra),
                      fits.Column(name='psf_e2', format='D', array=-ottf),
                      fits.Column(name='PSF_e1', format='D', array=ottf),
                      fits.Column(name='PSF_e2', format='D', array=-ottf),
-                     fits.Column(name='zbin_mcal', format='D', array=-on),
-                     fits.Column(name='coadd_objects_id', format='D', array=on), #New 
-                     fits.Column(name='R11', format='D', array=on), #New 
-                     fits.Column(name='R22', format='D', array=on), #New 
-                     fits.Column(name='flags_select', format='D', array=on-1), #New 
+                     fits.Column(name='coadd_objects_id', format='D', array=on),
+                     fits.Column(name='R11', format='D', array=on),
+                     fits.Column(name='R22', format='D', array=on), 
+                     fits.Column(name='flags_select', format='D', array=on-1), 
                      fits.Column(name='weight', format='D', array=2*on),
                      fits.Column(name='WEIGHT_SYSTOT', format='D', array=2*on),
                      fits.Column(name='WEIGHT_CP', format='D', array=2*on),
@@ -63,6 +63,12 @@ cols = fits.ColDefs([fits.Column(name='RA', format='D', array=ra),
 
 hdu = fits.BinTableHDU.from_columns(cols)
 hdu.writeto("catalog.fits", overwrite=True)
+
+cols = fits.ColDefs([fits.Column(name='zbin_mcal', format='D', array=[1]),
+                     fits.Column(name='coadd_objects_id', format='D', array=[1])])
+
+hdu = fits.BinTableHDU.from_columns(cols)
+hdu.writeto("cat_zbin.fits", overwrite=True)
 
 with fits.open("catalog.fits") as f:
     t = Table.read(f)

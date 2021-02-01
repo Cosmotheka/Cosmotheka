@@ -62,7 +62,7 @@ class MapperDESY1wl(MapperBase):
             print('Loading lite bin{} cat'.format(self.zbin))
             self.cat_data = Table.read(fname_lite, memmap=True)
         else:
-            print('loading full cat')
+            print('Loading full cat')
             self.cat_data = Table.read(self.config['data_cat'],
                                        format='fits', memmap=True)
             self.cat_data.keep_columns(columns_data)
@@ -77,15 +77,12 @@ class MapperDESY1wl(MapperBase):
             self.cat_data.add_column(col_w)
 
             # remove bins which are not the one of interest
-            print(len(self.cat_data))
             self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.zbin)
             # filter for -90<dec<-35
             self.cat_data.remove_rows(self.cat_data['dec'] < -90)
             self.cat_data.remove_rows(self.cat_data['dec'] > -35)
-            print(len(self.cat_data))
             # remove flagged galaxies
             self.cat_data.remove_rows(self.cat_data['flags_select'] != 0)
-            print(len(self.cat_data))
             if fname_lite is not None:
                 self.cat_data.write(fname_lite)
                 
@@ -129,9 +126,7 @@ class MapperDESY1wl(MapperBase):
                                       ra_name='ra',
                                       dec_name='dec')
             mask = self.get_mask()
-            print(mask)
             goodpix = mask > 0
-            print(goodpix)
             we1[goodpix] /= mask[goodpix]
             we2[goodpix] /= mask[goodpix]
             self.maps[mod] = [-we1, we2]
