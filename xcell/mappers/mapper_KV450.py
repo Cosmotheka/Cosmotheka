@@ -183,6 +183,19 @@ class MapperKV450(MapperBase):
         self.nl_coupled = self.nls[mod]
         return self.nl_coupled
 
+    def get_nz(self, dz=0):
+        if not dz:
+            return self.dndz
+
+        z, pz = self.dndz
+        # Calculate z bias
+        z_dz = z - dz
+        # Set to 0 points where z_dz < 0:
+        sel = z_dz >= 0
+        z_dz = z_dz[sel]
+        pz = pz[sel]
+        return np.array([z_dz, pz])
+
     def get_dtype(self):
         return 'galaxy_shear'
 
