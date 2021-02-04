@@ -132,7 +132,7 @@ class Data():
         tracers_torun = []
         masks = []
         for tr in tracers:
-            mtr = self.data['tracers'][tr]['mask']
+            mtr = self.data['tracers'][tr]['mask_name']
             if  mtr not in masks:
                 tracers_torun.append(tr)
                 masks.append(mtr)
