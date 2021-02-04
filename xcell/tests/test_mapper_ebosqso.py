@@ -22,10 +22,10 @@ def test_smoke():
 
 def test_get_nz():
     m = get_mapper()
-    z0, z1, nz = m.get_nz(num_z=49)
-    assert len(z0) == 49
-    assert len(z1) == 49
-    assert len(nz) == 49
+    z0, z1, nz = m.get_nz()
+    assert len(z0) == 50
+    assert len(z1) == 50
+    assert len(nz) == 50
     assert np.sum(nz) == 16*hp.nside2npix(32)
 
 

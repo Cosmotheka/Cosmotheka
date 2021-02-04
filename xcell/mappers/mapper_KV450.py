@@ -17,7 +17,7 @@ class MapperKV450(MapperBase):
                              'KV450_G15_reweight_3x4x4_v2_good.cat',
                              'KV450_G9_reweight_3x4x4_v2_good.cat'] ,
           'file_nz': Nz_DIR_z0.1t0.3.asc,
-          'bin':1,
+          'zbin':1,
           'nside':nside,
           'mask_name': 'mask_KV450_1',
           'lite_path': path}
@@ -33,15 +33,14 @@ class MapperKV450(MapperBase):
                              'weight']
 
         self.mode = config.get('mode', 'shear')
-        self.zbin_edges = {
-            '1': [0.1, 0.3],
-            '2': [0.3, 0.5],
-            '3': [0.5, 0.7],
-            '4': [0.7, 0.9],
-            '5': [0.9, 1.2]}
+        zbin_edges = [[0.1, 0.3],
+                      [0.3, 0.5],
+                      [0.5, 0.7],
+                      [0.7, 0.9],
+                      [0.9, 1.2]]
         self.npix = hp.nside2npix(self.nside)
-        self.zbin = int(config['bin'])
-        self.z_edges = self.zbin_edges['{}'.format(self.zbin)]
+        self.zbin = int(config['zbin'])
+        self.z_edges = zbin_edges[self.zbin]
         # Multiplicative bias
         # Values from Table 2 of 1812.06076 (KV450 cosmo paper)
         self.m = (-0.017, -0.008, -0.015, 0.010, 0.006)
@@ -50,24 +49,28 @@ class MapperKV450(MapperBase):
         for i, file_data in enumerate(self.config['data_catalogs']):
             read_lite, fname_lite = self._check_lite_exists(i)
             if read_lite:
+                print('loading lite cat {}'.format(i), end=' ', flush=True)
                 with fits.open(fname_lite) as f:
                     cat = Table.read(f)
             else:
+                print('loading full cat {}'.format(i), end=' ', flush=True)
                 with fits.open(file_data) as f:
                     cat = Table.read(f)[self.column_names]
+                    # GAAP cut
+                    goodgaap = cat['GAAP_Flag_ugriZYJHKs'] == 0
+                    cat = cat[goodgaap]
                     if fname_lite is not None:
                         cat.write(fname_lite)
-            # GAAP cut
-            goodgaap = cat['GAAP_Flag_ugriZYJHKs'] == 0
-            cat = cat[goodgaap]
             # Binning
             goodbin = self._bin_z(cat)
             cat = cat[goodbin]
             # Additive bias on galaxies
             self._remove_additive_bias(cat)
             self.cat_data.append(cat)
+
         self.cat_data = vstack(self.cat_data)
         self._remove_multiplicative_bias()
+
         print('Catalogs loaded', end=' ', flush=True)
 
         self.dndz = np.loadtxt(self.config['file_nz'], unpack=True)
@@ -126,8 +129,8 @@ class MapperKV450(MapperBase):
 
     def _remove_multiplicative_bias(self):
         sel_gals = self.cat_data['SG_FLAG'] == 1
-        self.cat_data['bias_corrected_e1'][sel_gals] /= 1 + self.m[self.zbin-1]
-        self.cat_data['bias_corrected_e2'][sel_gals] /= 1 + self.m[self.zbin-1]
+        self.cat_data['bias_corrected_e1'][sel_gals] /= 1 + self.m[self.zbin]
+        self.cat_data['bias_corrected_e2'][sel_gals] /= 1 + self.m[self.zbin]
 
     def _get_gals_or_stars(self, kind='galaxies'):
         sel = self.cat_data['SG_FLAG'] == self.sel[kind]
@@ -179,3 +182,9 @@ class MapperKV450(MapperBase):
             self.nls[mod] = np.array([nl, 0*nl, 0*nl, nl])
         self.nl_coupled = self.nls[mod]
         return self.nl_coupled
+
+    def get_dtype(self):
+        return 'galaxy_shear'
+
+    def get_spin(self):
+        return 2

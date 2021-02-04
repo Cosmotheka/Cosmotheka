@@ -2,7 +2,6 @@ from .mapper_base import MapperBase
 import pandas as pd
 import numpy as np
 import healpy as hp
-import pymaster as nmt
 
 
 class MapperP15CMBK(MapperBase):
@@ -17,11 +16,6 @@ class MapperP15CMBK(MapperBase):
         """
         self._get_defaults(config)
 
-        # Read alms
-        self.klm = hp.read_alm(self.config['file_klm'])
-        # Read mask
-        self.mask = hp.read_map(self.config['file_mask'],
-                                verbose=False)
         # Read noise file
         self.noise = pd.read_table(self.config['file_noise'],
                                    names=['l', 'Nl', 'Nl+Cl'],
@@ -30,32 +24,28 @@ class MapperP15CMBK(MapperBase):
         self.r = hp.Rotator(coord=['G', 'C'])
 
         # Defaults
-        self.k_map = None
+        self.signal_map = None
         self.nl_coupled = None
-        self.mask_map = None
-        self.nmt_field = None
+        self.mask = None
         self.cl_fid = None
 
     def get_signal_map(self):
-        if self.k_map is None:
-            self.k_map = self.r.rotate_alm(self.klm)
-            self.k_map = hp.alm2map(self.k_map, self.nside,
-                                    verbose=False)
-        return [self.k_map]
+        if self.signal_map is None:
+            # Read alms
+            self.klm = hp.read_alm(self.config['file_klm'])
+            self.klm = self.r.rotate_alm(self.klm)
+            self.signal_map = hp.alm2map(self.klm, self.nside,
+                                         verbose=False)
+        return [self.signal_map]
 
     def get_mask(self):
-        if self.mask_map is None:
-            self.mask_map = self.r.rotate_map_pixel(self.mask)
-            self.mask_map = hp.ud_grade(self.mask_map,
-                                        nside_out=self.nside)
-        return self.mask_map
-
-    def get_nmt_field(self):
-        if self.nmt_field is None:
-            mask = self.get_mask()
-            signal = self.get_signal_map()
-            self.nmt_field = nmt.NmtField(mask, signal, n_iter=0)
-        return self.nmt_field
+        if self.mask is None:
+            self.mask = hp.read_map(self.config['file_mask'],
+                                    verbose=False)
+            self.mask = self.r.rotate_map_pixel(self.mask)
+            self.mask = hp.ud_grade(self.mask,
+                                    nside_out=self.nside)
+        return self.mask
 
     def get_nl(self):
         if self.nl_coupled is None:
@@ -70,3 +60,9 @@ class MapperP15CMBK(MapperBase):
 
     def get_ells(self):
         return self.noise['l'].values
+
+    def get_dtype(self):
+        return 'cmb_convergence'
+
+    def get_spin(self):
+        return 0

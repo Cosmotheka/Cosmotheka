@@ -14,6 +14,9 @@ class MapperBase(object):
     def get_signal_map(self):
         raise NotImplementedError("Do not use base class")
 
+    def get_contaminants(self):
+        return None
+
     def get_mask(self):
         raise NotImplementedError("Do not use base class")
 
@@ -27,5 +30,8 @@ class MapperBase(object):
         if self.nmt_field is None:
             signal = self.get_signal_map(**kwargs)
             mask = self.get_mask(**kwargs)
-            self.nmt_field = nmt.NmtField(mask, signal, n_iter=0)
+            cont = self.get_contaminants(**kwargs)
+            n_iter = kwargs.get('n_iter', 0)
+            self.nmt_field = nmt.NmtField(mask, signal,
+                                          templates=cont, n_iter=n_iter)
         return self.nmt_field
