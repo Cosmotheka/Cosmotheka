@@ -1,7 +1,5 @@
 #!/usr/bin/python
-import sys
-sys.path.append('../')
-from common import Data
+from .common import Data
 import numpy as np
 import healpy as hp
 import pyccl as ccl

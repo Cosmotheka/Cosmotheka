@@ -1,6 +1,6 @@
 #!/usr/bin/python
-from cl import Cl, ClFid
-from common import Data
+from .cl import Cl, ClFid
+from .common import Data
 import os
 import yaml
 import numpy as np

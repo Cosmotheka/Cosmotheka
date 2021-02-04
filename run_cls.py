@@ -1,8 +1,5 @@
 #!/usr/bin/python
-import sys
-sys.path.append('./')
-
-from cls.common import Data
+from xcell.cls.common import Data
 import os
 import time
 
@@ -42,7 +39,7 @@ def launch_cls(data, queue, njobs, wsp=False, fiducial=False):
             break
         comment = 'cl_{}_{}'.format(tr1, tr2)
         # TODO: don't hard-code it!
-        trreq = self.data.get_tracers_bare_name_pair(tr1, tr2, '_')
+        trreq = data.get_tracers_bare_name_pair(tr1, tr2, '_')
         fname = os.path.join(outdir, trreq, comment + '.npz')
         if os.path.isfile(fname):
             continue
@@ -52,10 +49,10 @@ def launch_cls(data, queue, njobs, wsp=False, fiducial=False):
         mem = 8 # for cmb queue
         if not fiducial:
             pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
-            pyrun = 'cls/cl.py {} {} {}'.format(args.INPUT, tr1, tr2)
+            pyrun = '-m xcell.cls.cl {} {} {}'.format(args.INPUT, tr1, tr2)
         else:
             pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, 2)
-            pyrun = 'cls/cl.py {} {} {} --fiducial'.format(args.INPUT, tr1, tr2)
+            pyrun = '-m xcell.cls.cl {} {} {} --fiducial'.format(args.INPUT, tr1, tr2)
 
         print(pyexec + " " + pyrun)
         os.system(pyexec + " " + pyrun)
@@ -66,7 +63,7 @@ def launch_cov(data, queue, njobs, wsp=False):
     #######
     nc = 24 # 28 # 10
     #
-    cov_tracers = data.get_cov_tracers(wsp)
+    cov_tracers = data.get_cov_trs_names(wsp)
     outdir = data.data['output']
     c = 0
     for trs in cov_tracers:
@@ -80,7 +77,7 @@ def launch_cov(data, queue, njobs, wsp=False):
         queue = 'cmb'
         mem = 8 # for cmb queue
         pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
-        pyrun = 'cls/cov.py {} {} {} {} {}'.format(args.INPUT, *trs)
+        pyrun = '-m xcell.cls.cov {} {} {} {} {}'.format(args.INPUT, *trs)
         print(pyexec + " " + pyrun)
         os.system(pyexec + " " + pyrun)
         c += 1
@@ -96,7 +93,7 @@ def launch_to_sacc(data, name, nl, queue):
     mem = 7.
     comment = 'to_sacc'
     pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
-    pyrun = 'cls/to_sacc.py {} {}'.format(args.INPUT, name)
+    pyrun = '-m xcell.cls.to_sacc {} {}'.format(args.INPUT, name)
     if nl:
         pyrun += ' --use_nl'
     print(pyexec + " " + pyrun)

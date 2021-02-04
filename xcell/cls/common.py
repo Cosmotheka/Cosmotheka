@@ -1,8 +1,6 @@
 #!/usr/bin/python
-import sys
-sys.path.append('../')
 from glob import glob
-from mappers import mapper_from_name
+from ..mappers import mapper_from_name
 from warnings import warn
 import yaml
 import os

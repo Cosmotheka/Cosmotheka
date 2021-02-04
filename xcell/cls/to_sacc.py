@@ -1,8 +1,8 @@
 #!/usr/bin/python
-from cl import Cl
-from cov import Cov
-from common import Data
-from mappers import mapper_from_name
+from .cl import Cl
+from .cov import Cov
+from .common import Data
+from ..mappers import mapper_from_name
 import numpy as np
 import sacc
 import os
