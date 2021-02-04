@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from .cl import Cl
+from .cl import Cl, ClFid
 from .cov import Cov
 from .common import Data
 from ..mappers import mapper_from_name
@@ -11,10 +11,19 @@ import warnings
 # TODO: move this to data.ylm?
 
 class sfile():
-    def __init__(self, datafile, output, use_nl=False):
+    def __init__(self, datafile, output, use='cls'):
         self.data = Data(data_path=datafile)
         self.outdir = self.data.data['output']
-        self.use_nl = use_nl
+        self.use_nl = False
+        self.use_fiducial = False
+        if use == 'cls':
+            pass
+        elif use == 'nl':
+            self.use_nl = True
+        elif use == 'fiducial':
+            self.use_fiducial = True
+        else:
+            raise ValueError('Use must be one of cls, nl or fiducial')
         self.s = sacc.Sacc()
         self.add_tracers()
         self.add_ell_cls()
@@ -123,7 +132,7 @@ class sfile():
         self.s.add_covariance(covmat)
 
     def add_covariance(self):
-        if self.use_nl:
+        if self.use_nl and ('ng' in self.data.data['cov']):
             self.add_covariance_NG()
         else:
             self.add_covariance_G()
@@ -158,10 +167,19 @@ class sfile():
     def add_ell_cl(self, tr1, tr2):
         ells_nobin = np.arange(3 * self.data.data['healpy']['nside'])
         cl = Cl(self.data.data, tr1, tr2)
-        cl.get_cl_file()
-        if not self.use_nl:
+        ells_eff = cl.b.get_effective_ells()
+
+        if self.use_fiducial:
+            # bpw = np.array(self.data.data['bpw_edges'])
+            # ells_eff = bpw[:-1] + np.diff(bpw)/2.
+            cl = ClFid(self.data.data, tr1, tr2)
+            ws_bpw = np.zeros((ells_eff.size, ells_nobin.size))
+            ws_bpw[np.arange(ells_eff.size), ells_eff.astype(int)] = 1
+        elif not self.use_nl:
             w = cl.get_workspace()
             ws_bpw = w.get_bandpower_windows()
+
+        cl.get_cl_file()
 
         cl_types = self.get_datatypes_from_dof(cl.cl.shape[0])
 
@@ -171,6 +189,9 @@ class sfile():
             elif self.use_nl:
                 cli = cl.nl[i]
                 wins = None
+            elif self.use_fiducial:
+                cli = ws_bpw.dot(cl.cl[i])
+                wins = sacc.BandpowerWindow(ells_nobin, ws_bpw.T)
             else:
                 # b1 = int(tr1[-1])
                 # b2 = int(tr2[-1])
@@ -184,8 +205,7 @@ class sfile():
                 # cli = cload['cls'][i] - cload['nls'][i]
                 # ls = cload['ls']
 
-            self.s.add_ell_cl(cl_type, tr1, tr2, cl.ell, cli, window=wins)
-            # self.s.add_ell_cl(cl_type, tr1, tr2, ls, cli, window=wins)
+            self.s.add_ell_cl(cl_type, tr1, tr2, ells_eff, cli, window=wins)
 
     def get_dof_tracers(self, tracers):
         tr1, tr2 = tracers
@@ -215,6 +235,17 @@ if __name__ == "__main__":
     parser.add_argument('INPUT', type=str, help='Input YAML data file')
     parser.add_argument('name', type=str, help="Name of the generated sacc file. Stored in yml['output']")
     parser.add_argument('--use_nl', action='store_true', default=False, help="Set if you want to use nl and covNG (if present) instead of cls and covG")
+    parser.add_argument('--use_fiducial', action='store_true', default=False, help="Set if you want to use the fiducial Cl and covG instead of data cls")
     args = parser.parse_args()
 
-    sfile = sfile(args.INPUT, args.name, args.use_nl)
+    if args.use_nl and args.use_fiducial:
+        raise ValueError('Only one of --use_nl or --use_fiducial can be set')
+    elif args.use_nl:
+        use = 'nl'
+    elif args.use_fiducial:
+        use = 'fiducial'
+    else:
+        use = 'cls'
+
+
+    sfile = sfile(args.INPUT, args.name, use)

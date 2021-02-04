@@ -83,7 +83,7 @@ def launch_cov(data, queue, njobs, wsp=False):
         c += 1
         time.sleep(1)
 
-def launch_to_sacc(data, name, nl, queue):
+def launch_to_sacc(data, name, use, queue):
     outdir = data.data['output']
     fname = os.path.join(outdir, name)
     if os.path.isfile(fname):
@@ -94,8 +94,10 @@ def launch_to_sacc(data, name, nl, queue):
     comment = 'to_sacc'
     pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
     pyrun = '-m xcell.cls.to_sacc {} {}'.format(args.INPUT, name)
-    if nl:
+    if use == 'nl':
         pyrun += ' --use_nl'
+    elif use == 'fiducial':
+        pyrun += ' --use_fiducial'
     print(pyexec + " " + pyrun)
     os.system(pyexec + " " + pyrun)
 
@@ -113,6 +115,8 @@ if __name__ == "__main__":
     parser.add_argument('--to_sacc_name', type=str, default='cls_cov.fits', help='Sacc file name')
     parser.add_argument('--to_sacc_use_nl', default=False, action='store_true',
                         help='Set if you want to use nl and covNG (if present) instead of cls and covG ')
+    parser.add_argument('--to_sacc_use_fiducial', default=False, action='store_true',
+                        help="Set if you want to use the fiducial Cl and covG instead of data cls")
     parser.add_argument('--cls_fiducial', default=False, action='store_true', help='Set to compute the fiducial cls')
     args = parser.parse_args()
 
@@ -128,6 +132,14 @@ if __name__ == "__main__":
     elif args.compute == 'cov':
         launch_cov(data, queue, njobs, args.wsp)
     elif args.compute == 'to_sacc':
-        launch_to_sacc(data, args.to_sacc_name, args.to_sacc_use_nl, queue)
+        if args.to_sacc_use_nl and args.to_sacc_use_fiducial:
+            raise ValueError('Only one of --to_sacc_use_nl or --to_sacc_use_fiducial can be set' )
+        elif args.to_sacc_use_nl:
+            use = 'nl'
+        elif args.to_sacc_use_fiducial:
+            use = 'fiducial'
+        else:
+            use = 'cls'
+        launch_to_sacc(data, args.to_sacc_name, use, queue)
     else:
         raise ValueError("Compute value '{}' not understood".format(args.compute))
