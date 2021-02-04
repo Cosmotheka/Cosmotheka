@@ -263,7 +263,7 @@ if __name__ == "__main__":
 
     data = Data(data_path=args.INPUT).data
     if args.fiducial:
-        cl = Cl_fid(data, args.tr1, args.tr2)
+        cl = ClFid(data, args.tr1, args.tr2)
     else:
         cl = Cl(data, args.tr1, args.tr2)
     cl.get_cl_file()
