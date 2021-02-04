@@ -5,6 +5,7 @@ import os
 import numpy as np
 import pymaster as nmt
 
+
 class Cov():
     def __init__(self, data, trA1, trA2, trB1, trB2):
         self.data = Data(data=data)
@@ -36,7 +37,8 @@ class Cov():
     def get_covariance_workspace(self):
         mask1, mask2 = self.clA1A2.get_masks_names()
         mask3, mask4 = self.clB1B2.get_masks_names()
-        fname = os.path.join(self.outdir, 'cw__{}__{}__{}__{}.fits'.format(mask1, mask2, mask3, mask4))
+        fname = os.path.join(self.outdir,
+                             f'cw__{mask1}__{mask2}__{mask3}__{mask4}.fits')
         cw = nmt.NmtCovarianceWorkspace()
         recompute = self.data.data['recompute']['cmcm']
         if recompute or (not os.path.isfile(fname)):
@@ -46,7 +48,9 @@ class Cov():
             fA2, fB2 = self.clA2B2.get_nmt_fields()
             cw.compute_coupling_coefficients(fA1, fA2, fB1, fB2,
                                              n_iter=n_iter,
-                                      l_toeplitz=l_toeplitz, l_exact=l_exact, dl_band=dl_band)
+                                             l_toeplitz=l_toeplitz,
+                                             l_exact=l_exact,
+                                             dl_band=dl_band)
             cw.write_to(fname)
             self.recompute_cmcm = False
         else:
@@ -55,8 +59,11 @@ class Cov():
         return cw
 
     def get_covariance(self):
-        fname = os.path.join(self.outdir, 'cov_{}_{}_{}_{}.npz'.format(self.trA1, self.trA2,
-                                                                       self.trB1, self.trB2))
+        fname = os.path.join(self.outdir,
+                             'cov_{}_{}_{}_{}.npz'.format(self.trA1,
+                                                          self.trA2,
+                                                          self.trB1,
+                                                          self.trB2))
         recompute = self.recompute_cov or self.recompute_cmcm
         if (not recompute) and os.path.isfile(fname):
             self.cov = np.load(fname)['cov']
@@ -81,7 +88,7 @@ class Cov():
         m_a1, m_b1 = self.clA1B1.get_masks()
         m_a2, m_b2 = self.clA2B2.get_masks()
 
-        ##### Weight the Cls
+        # Weight the Cls
         cla1b1 = (cla1b1 + nla1b1) / np.mean(m_a1 * m_b1)
         cla1b2 = (cla1b2 + nla1b2) / np.mean(m_a1 * m_b2)
         cla2b1 = (cla2b1 + nla2b1) / np.mean(m_a2 * m_b1)
@@ -103,9 +110,11 @@ class Cov():
         self.recompute_cov = False
         return cov
 
+
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="Compute Cls and cov from data.yml file")
+    parser = argparse.ArgumentParser(description="Compute Cls and cov from \
+                                     data.yml file")
     parser.add_argument('INPUT', type=str, help='Input YAML data file')
     parser.add_argument('trA1', type=str, help='Tracer A1 name')
     parser.add_argument('trA2', type=str, help='Tracer A2 name')

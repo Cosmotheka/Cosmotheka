@@ -7,7 +7,6 @@ import numpy as np
 import sacc
 import os
 
-# TODO: move this to data.ylm?
 
 class sfile():
     def __init__(self, datafile, output, use='cls'):
@@ -83,17 +82,6 @@ class sfile():
         cl_tracers = self.s.get_tracer_combinations()
 
         covmat = -1 * np.ones((ndim, ndim))
-        # def dic(tr):
-        #     ibin = int(tr[-1])
-        #     if 'gc' in tr:
-        #         s = 0
-        #     elif 'wl' in tr:
-        #         s = 2
-        #         # ibin += 5
-        #     elif 'cv' in tr:
-        #         s = 0
-        #         ibin = 9
-        #     return ibin, s
 
         for i, trs1 in enumerate(cl_tracers):
             dof1 = self.get_dof_tracers(trs1)
@@ -103,17 +91,8 @@ class sfile():
                 dtypes2 = self.get_datatypes_from_dof(dof2)
                 print(trs1, trs2)
 
-                # tr1, tr2 = trs1
-                # tr3, tr4 = trs2
-                # b1, s1 = dic(tr1)
-                # b2, s2 = dic(tr2)
-                # b3, s3 = dic(tr3)
-                # b4, s4 = dic(tr4)
-
-                cov = Cov(self.data.data, *trs1, *trs2).get_covariance().reshape((nbpw, dof1, nbpw, dof2))
-                # cname = f'cov_s{s1}{s2}{s3}{s4}_b{b1}{b2}{b3}{b4}.npz'
-                # cov = np.load('/mnt/extraspace/gravityls_3/S8z/Cls/all_together/new_fiducial_cov/' + cname)['arr_0'].reshape((nbpw, dof1, nbpw, dof2))
-                # cov = np.load(f'/mnt/extraspace/damonge/S8z_data/outputs/cls_metacal_covar_bins_new_nka_full_noise_{b1}{b2}_{b3}{b4}_ns4096.npz')['cov']
+                cov = Cov(self.data.data, *trs1, *trs2).get_covariance()
+                cov = cov.reshape((nbpw, dof1, nbpw, dof2))
 
                 for i, dt1 in enumerate(dtypes1):
                     ix1 = self.s.indices(tracers=trs1, data_type=dt1)
@@ -151,8 +130,6 @@ class sfile():
             self.s.add_tracer('NZ', tr, quantity=quantity, spin=spin,
                               z=z, nz=nz)
         elif quantity == 'cmb_convergence':
-            # TODO: Check
-            # ell, nl = np.loadtxt(tracer['nl'], usecols=tracer['nl_cols'], unpack=True)
             ell = mapper.get_ells()
             nl = mapper.get_nl_coupled()
 
@@ -160,8 +137,7 @@ class sfile():
             self.s.add_tracer('Map', tr, quantity=quantity, spin=spin,
                               ell=ell, beam=beam, beam_extra={'nl': nl})
         else:
-            raise ValueError('Tracer type {} not implemented'.format(quantity))
-
+            raise ValueError(f'Tracer type {quantity} not implemented')
 
     def add_ell_cl(self, tr1, tr2):
         ells_nobin = np.arange(3 * self.data.data['healpy']['nside'])
@@ -192,17 +168,8 @@ class sfile():
                 cli = ws_bpw.dot(cl.cl[i])
                 wins = sacc.BandpowerWindow(ells_nobin, ws_bpw.T)
             else:
-                # b1 = int(tr1[-1])
-                # b2 = int(tr2[-1])
-                # predir = '/mnt/extraspace/damonge/S8z_data/outputs/'
-                # fname_win = predir + f'cls_metacal_win_bins_{b1}{b2}_ns4096.npz'
-                # ws_bpw = np.load(fname_win)['win']
                 wins = sacc.BandpowerWindow(ells_nobin, ws_bpw[i, :, i, :].T)
                 cli = cl.cl[i]
-                # fname_cl = predir + f'cls_metacal_cls_bins_{b1}{b2}_ns4096.npz'
-                # cload = np.load(fname_cl)
-                # cli = cload['cls'][i] - cload['nls'][i]
-                # ls = cload['ls']
 
             self.s.add_ell_cl(cl_type, tr1, tr2, ells_eff, cli, window=wins)
 
@@ -228,13 +195,20 @@ class sfile():
 
         return cl_types
 
+
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="Compute Cls and cov from data.yml file")
+    parser = argparse.ArgumentParser(description="Compute Cls and cov from \
+                                     data.yml file")
     parser.add_argument('INPUT', type=str, help='Input YAML data file')
-    parser.add_argument('name', type=str, help="Name of the generated sacc file. Stored in yml['output']")
-    parser.add_argument('--use_nl', action='store_true', default=False, help="Set if you want to use nl and covNG (if present) instead of cls and covG")
-    parser.add_argument('--use_fiducial', action='store_true', default=False, help="Set if you want to use the fiducial Cl and covG instead of data cls")
+    parser.add_argument('name', type=str, help="Name of the generated sacc \
+                        file. Stored in yml['output']")
+    parser.add_argument('--use_nl', action='store_true', default=False,
+                        help="Set if you want to use nl and covNG \
+                        (if present) instead of cls and covG")
+    parser.add_argument('--use_fiducial', action='store_true', default=False,
+                        help="Set if you want to use the fiducial Cl and \
+                        covG instead of data cls")
     args = parser.parse_args()
 
     if args.use_nl and args.use_fiducial:
@@ -245,6 +219,5 @@ if __name__ == "__main__":
         use = 'fiducial'
     else:
         use = 'cls'
-
 
     sfile = sfile(args.INPUT, args.name, use)

@@ -6,6 +6,7 @@ import pymaster as nmt
 import os
 import warnings
 
+
 class ClBase():
     def __init__(self, data, tr1, tr2):
         self.data = Data(data=data)
@@ -33,7 +34,8 @@ class ClBase():
     def get_mappers(self):
         if self._mapper1 is None:
             self._mapper1 = self.data.get_mapper(self.tr1)
-            self._mapper2 = self._mapper1 if self.tr1 == self.tr2 else self.data.get_mapper(self.tr2)
+            self._mapper2 = self._mapper1 if self.tr1 == self.tr2 else \
+                self.data.get_mapper(self.tr2)
         return self._mapper1, self._mapper2
 
     def get_cl_file(self):
@@ -79,8 +81,11 @@ class Cl(ClBase):
         else:
             bpw_edges = np.array(self.data.data['bpw_edges'])
         nside = self.nside
-        bpw_edges = bpw_edges[bpw_edges <= 3 * nside] # 3*nside == ells[-1] + 1
-        if 3*nside not in bpw_edges: # Exhaust lmax --> gives same result as previous method, but adds 1 bpw (not for 4096)
+        # 3*nside == ells[-1] + 1
+        bpw_edges = bpw_edges[bpw_edges <= 3 * nside]
+        # Exhaust lmax --> gives same result as previous method,
+        # but adds 1 bpw (not for 4096)
+        if 3*nside not in bpw_edges:
             bpw_edges = np.append(bpw_edges, 3*nside)
         b = nmt.NmtBin.from_edges(bpw_edges[:-1], bpw_edges[1:])
         return b
@@ -98,14 +103,15 @@ class Cl(ClBase):
 
     def _compute_workspace(self):
         mask1, mask2 = self.get_masks_names()
-        fname = os.path.join(self.outdir, 'w__{}__{}.fits'.format(mask1, mask2))
+        fname = os.path.join(self.outdir, f'w__{mask1}__{mask2}.fits')
         w = nmt.NmtWorkspace()
         if self.recompute_mcm or (not os.path.isfile(fname)):
             n_iter = self.data.data['healpy']['n_iter_mcm']
             l_toeplitz, l_exact, dl_band = self.data.check_toeplitz('cls')
             f1, f2 = self.get_nmt_fields()
             w.compute_coupling_matrix(f1, f2, self.b, n_iter=n_iter,
-                                      l_toeplitz=l_toeplitz, l_exact=l_exact, dl_band=dl_band)
+                                      l_toeplitz=l_toeplitz, l_exact=l_exact,
+                                      dl_band=dl_band)
             w.write_to(fname)
             self.recompute_mcmc = False
         else:
@@ -113,7 +119,7 @@ class Cl(ClBase):
         return w
 
     def get_cl_file(self):
-        fname = os.path.join(self.outdir, 'cl_{}_{}.npz'.format(self.tr1, self.tr2))
+        fname = os.path.join(self.outdir, f'cl_{self.tr1}_{self.tr2}.npz')
         ell = self.b.get_effective_ells()
         recompute = self.recompute_cls or self.recompute_mcm
         if recompute or (not os.path.isfile(fname)):
@@ -133,7 +139,8 @@ class Cl(ClBase):
         cl_file = np.load(fname)
         cl = cl_file['cl']
         if np.any(ell != cl_file['ell']):
-            raise ValueError('The file {} does not have the expected bpw. Aborting!'.format(fname))
+            raise ValueError('The file {} does not have the expected bpw. \
+                             Aborting!'.format(fname))
 
         self.cl_file = cl_file
         self.ell = cl_file['ell']
@@ -206,20 +213,25 @@ class ClFid(ClBase):
             # # Calculate bias IA
             ia_bias = None
             if fiducial['wl_ia']:
-                A, eta, z0 = fiducial['wl_ia']  # TODO: Improve this in yml file
-                bz = A*((1.+z)/(1.+z0))**eta*0.0139/0.013872474  # pyccl2 -> has already the factor inside. Only needed bz
+                # TODO: Improve this in yml file
+                A, eta, z0 = fiducial['wl_ia']
+                # pyccl2 -> has already the factor inside. Only needed bz
+                bz = A*((1.+z)/(1.+z0))**eta*0.0139/0.013872474
                 ia_bias = (z, bz)
             # Get tracer
             return ccl.WeakLensingTracer(self.cosmo, dndz=(z, pz),
                                          ia_bias=ia_bias)
         elif dtype == 'cmb_convergence':
-            return ccl.CMBLensingTracer(self.cosmo, z_source=1100) #TODO: correct z_source
+            # TODO: correct z_source
+            return ccl.CMBLensingTracer(self.cosmo, z_source=1100)
         else:
-            raise ValueError('Type of tracer not recognized. It can be galaxy_density, galaxy_shear or cmb_convergence!')
+            raise ValueError('Type of tracer not recognized. It can be \
+                             galaxy_density, galaxy_shear or \
+                             cmb_convergence!')
 
     def get_cl_file(self):
         nside = self.data.data['healpy']['nside']
-        fname = os.path.join(self.outdir, 'cl_{}_{}.npz'.format(self.tr1, self.tr2))
+        fname = os.path.join(self.outdir, f'cl_{self.tr1}_{self.tr2}.npz')
         ell = np.arange(3 * nside)
         if not os.path.isfile(fname):
             ccl_tr1, ccl_tr2 = self.get_tracers_ccl()
@@ -243,7 +255,8 @@ class ClFid(ClBase):
 
         cl_file = np.load(fname)
         if np.any(cl_file['ell'] != ell):
-            raise ValueError('The ell in {} does not match the ell from nside={}'.format(fname, nside))
+            raise ValueError(f'The ell in {fname} does not match the ell \
+                               from nside={nside}')
 
         self.ell = cl_file['ell']
         self.cl = cl_file['cl']
@@ -252,11 +265,13 @@ class ClFid(ClBase):
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="Compute Cls and cov from data.yml file")
+    parser = argparse.ArgumentParser(description="Compute Cls and cov from \
+                                     data.yml file")
     parser.add_argument('INPUT', type=str, help='Input YAML data file')
     parser.add_argument('tr1', type=str, help='Tracer 1 name')
     parser.add_argument('tr2', type=str, help='Tracer 2 name')
-    parser.add_argument('--fiducial', default=False, action='store_true', help='Compute the fiducial model Cl')
+    parser.add_argument('--fiducial', default=False, action='store_true',
+                        help='Compute the fiducial model Cl')
     args = parser.parse_args()
 
     data = Data(data_path=args.INPUT).data

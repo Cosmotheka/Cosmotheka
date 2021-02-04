@@ -6,10 +6,12 @@ import yaml
 import os
 import shutil
 
+
 class Data():
     def __init__(self, data_path='', data={}):
         if (data_path) and (data):
-            raise ValueError('Only one of data_path or data must be given. Both set.')
+            raise ValueError('Only one of data_path or data must be given. \
+                             Both set.')
         elif data_path:
             self.data_path = data_path
             self.data = self.read_data(data_path)
@@ -17,7 +19,8 @@ class Data():
             self.data_path = None
             self.data = data
         else:
-            raise ValueError('One of data_path or data must be set. None set.')
+            raise ValueError('One of data_path or data must be set. \
+                             None set.')
 
         os.makedirs(self.data['output'], exist_ok=True)
         self._check_yml_in_outdir()
@@ -27,7 +30,8 @@ class Data():
         fname = os.path.join(outdir, '*.yml')
         files = glob(fname)
         if len(files) == 1:
-            warn(f'A YML file was found in outdir: {outdir}. Using it instead of input config.')
+            warn(f'A YML file was found in outdir: {outdir}. Using it \
+                 instead of input config.')
             self.data_path = files[0]
             self.data = self.read_data(files[0])
         elif len(files) > 1:
@@ -77,7 +81,7 @@ class Data():
 
     def get_cl_trs_names(self, wsp=False):
         cl_tracers = []
-        tr_names = self.get_tracers_used(wsp)  # [trn for trn in data['tracers']]
+        tr_names = self.get_tracers_used(wsp)
         for i, tr1 in enumerate(tr_names):
             for tr2 in tr_names[i:]:
                 trreq = self.get_tracers_bare_name_pair(tr1, tr2)
@@ -119,7 +123,7 @@ class Data():
                 if ix not in ix_reverse:
                     ix_reverse.append(ix)
             else:
-                raise ValueError('Tracers {}-{} not found in NG cov.'.format(tr1, tr2))
+                raise ValueError(f'Tracers {tr1}-{tr2} not found in NG cov.')
             cl_ng[ix].append((tr1, tr2))
 
         for ix in ix_reverse:
@@ -127,21 +131,19 @@ class Data():
 
         return [item for sublist in cl_ng for item in sublist]
 
-
     def filter_tracers_wsp(self, tracers):
         tracers_torun = []
         masks = []
         for tr in tracers:
             mtr = self.data['tracers'][tr]['mask_name']
-            if  mtr not in masks:
+            if mtr not in masks:
                 tracers_torun.append(tr)
                 masks.append(mtr)
 
         return tracers_torun
 
     def check_toeplitz(self, dtype):
-        if ('toeplitz' in self.data) and \
-            (dtype in self.data['toeplitz']):
+        if ('toeplitz' in self.data) and (dtype in self.data['toeplitz']):
             toeplitz = self.data['toeplitz'][dtype]
 
             l_toeplitz = toeplitz['l_toeplitz']
