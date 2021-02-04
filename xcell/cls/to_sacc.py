@@ -6,7 +6,6 @@ from ..mappers import mapper_from_name
 import numpy as np
 import sacc
 import os
-import warnings
 
 # TODO: move this to data.ylm?
 

@@ -1,11 +1,9 @@
 #!/usr/bin/python
 from .common import Data
 import numpy as np
-import healpy as hp
 import pyccl as ccl
 import pymaster as nmt
 import os
-import yaml
 import warnings
 
 class ClBase():

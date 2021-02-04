@@ -2,9 +2,7 @@
 from .cl import Cl, ClFid
 from .common import Data
 import os
-import yaml
 import numpy as np
-import healpy as hp
 import pymaster as nmt
 
 class Cov():
