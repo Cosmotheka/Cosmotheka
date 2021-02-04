@@ -5,93 +5,28 @@ tracers:
     data_catalogs: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits'
     file_mask: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits'
     file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/data_vector/2pt_NG_mcal_1110.fits'
-    bin: 1
+    zbin: 0
     nside: 512
     mask_name: 'mask_DESgc'
     mapper_class: 'MapperDESY1gc'
     bias: 1.41
 
 
-    #  DESgc__1:
-    #    data_catalogs: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits'
-    #    file_mask: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits'
-    #    file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/data_vector/2pt_NG_mcal_1110.fits'
-    #    bin: 2
-    #    nside: 512
-    #    mask_name: 'mask_DESgc'
-    #    mapper_class: 'MapperDESY1gc'
-    #    bias: 1.60
-    #
-    #  DESgc__2:
-    #    data_catalogs: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits'
-    #    file_mask: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits'
-    #    file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/data_vector/2pt_NG_mcal_1110.fits'
-    #    bin: 3
-    #    nside: 512
-    #    mask_name: 'mask_DESgc'
-    #    mapper_class: 'MapperDESY1gc'
-    #    bias: 1.60
-    #
-    #  DESgc__3:
-    #    data_catalogs: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits'
-    #    file_mask: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits'
-    #    file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/data_vector/2pt_NG_mcal_1110.fits'
-    #    bin: 4
-    #    nside: 512
-    #    mask_name: 'mask_DESgc'
-    #    mapper_class: 'MapperDESY1gc'
-    #    bias: 1.91
-    #
-    #  DESgc__4:
-    #    data_catalogs: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits'
-    #    file_mask: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits'
-    #    file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/data_vector/2pt_NG_mcal_1110.fits'
-    #    bin: 5
-    #    nside: 512
-    #    mask_name: 'mask_DESgc'
-    #    mapper_class: 'MapperDESY1gc'
-    #    bias: 1.96
-    #
-    #  eBOSS_QSO__1:
-    #    spin: 0
-    #    type: 'gc'
-    #    threshold: 0
-    #    data_catalogs:
-    #      - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_data-NGC-vDR16.fits'
-    #    random_catalogs:
-    #      - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_random-NGC-vDR16.fits'
-    #    mask_name: 'eBOSS_QSO1_mask'
-    #    z_edges: [0, 1.5]
-    #    nside: 512
-    #    nside_mask: 512
-    #    mapper_class: 'MappereBOSSQSO'
-    #
-    #  eBOSS_QSO__2:
-    #    spin: 0
-    #    type: 'gc'
-    #    threshold: 0
-    #    data_catalogs:
-    #      - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_data-NGC-vDR16.fits'
-    #    random_catalogs:
-    #      - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_random-NGC-vDR16.fits'
-    #    mask_name: 'eBOSS_QSO2_mask'
-    #    z_edges: [1.5, 3]
-    #    nside: 512
-    #    nside_mask: 512
-    #    mapper_class: 'MappereBOSSQSO'
-    #
+  DESgc__1:
+    data_catalogs: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits'
+    file_mask: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/data_vector/2pt_NG_mcal_1110.fits'
+    zbin: 1
+    nside: 512
+    mask_name: 'mask_DESgc'
+    mapper_class: 'MapperDESY1gc'
+    bias: 1.60
+
 cls:
   # Options: all, cross, None
   DESgc-DESgc:
     compute: 'all'
-    # eBOSS_QSO-eBOSS_QSO: 
-    # compute: 'all'
     # bpw_edges: [0, 60, 120, 180, 240, 309, 351, 398, 452, 513, 582, 661, 750, 852, 967, 1098, 1247, 1416, 1608, 1826, 2073, 2354, 2673, 3035, 3446, 3914, 4444, 5047, 5731, 6508, 7390, 8392, 9529, 10821, 12288]
-    # CMBK-eBOSS_QSO: 
-    # compute: 'all'
-    # CMBK-CMBK: 
-    # compute: 'None'
-    
 
 bpw_edges: [0, 30, 60, 90, 120, 150, 180, 210, 240, 272, 309, 351, 398, 452, 513, 582, 661, 750, 852, 967, 1098, 1247, 1416, 1608, 1826, 2073, 2354, 2673, 3035, 3446, 3914, 4444, 5047, 5731, 6508, 7390, 8392, 9529, 10821, 12288]
 
