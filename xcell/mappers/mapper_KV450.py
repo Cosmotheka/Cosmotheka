@@ -17,9 +17,9 @@ class MapperKV450(MapperBase):
                              'KV450_G15_reweight_3x4x4_v2_good.cat',
                              'KV450_G9_reweight_3x4x4_v2_good.cat'] ,
           'file_nz': Nz_DIR_z0.1t0.3.asc,
-          'zbin':1,
+          'zbin':0,
           'nside':nside,
-          'mask_name': 'mask_KV450_1',
+          'mask_name': 'mask_KV450_0',
           'lite_path': path}
            }
         """
