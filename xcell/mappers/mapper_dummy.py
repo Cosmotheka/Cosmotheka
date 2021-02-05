@@ -17,7 +17,7 @@ class MapperDummy(MapperBase):
         self._get_defaults(config)
         self.spin = self.config.get('spin', 0)
         self.l0 = self.config.get('l0', 20.)
-        self.alpha = self.config.get('alpha', -1.)
+        self.alpha = self.config.get('alpha', 1.)
         self.npix = hp.nside2npix(self.nside)
 
         self.signal_map = None

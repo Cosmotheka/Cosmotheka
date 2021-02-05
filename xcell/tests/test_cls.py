@@ -11,9 +11,8 @@ tmpdir = './xcell/tests/cls/dummy'
 if os.path.isdir(tmpdir):
     shutil.rmtree(tmpdir)
 
-
 def get_config():
-    nside = 32
+    nside = 256
     dummy0 = get_config_dummy(nside=nside)
     dummy0.update({'mask_name': 'mask_dummy0',
                    'mapper_class': 'MapperDummy'})
@@ -33,7 +32,7 @@ def get_config():
             'output': tmpdir}
 
 
-def get_config_dummy(l0=20., alpha=-1., spin=0, nside=32):
+def get_config_dummy(l0=20., alpha=1., spin=0, nside=32):
     return {'nside': nside,
             'spin': spin,
             'l0': l0,
