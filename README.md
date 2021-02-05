@@ -2,11 +2,11 @@
 Repository with the Cls of galaxy clustering and weak lensing for the public DESY1 dataset.
 
 # Usage
-In order to run the code use:
-`python3 pipeline/main.py pipeline/data.yml cls`
-You can choose between `cls`, `cov` or `to_sacc` to compute the cls or covs of the defined tracers in `pipeline/data.yml` or to create a sacc file with the already computed cls/covs.
+In order to run the code use `python3 run_cls.py input/kv450_1024.yml cls`.
+You can see the different options with `python3 run_cls.py -h`.
 
-Note that `pipeline/cl.py`, `pipeline/cov.py` and `pipeline/to_sacc.py` can be used as scripts. For instance, you can use `python3 pipeline/cl.py pipeline/data.yml DESgc0 DESgc0` to produe the auto Cl of DESgc0.
+You can run directly `xcell/cls/cl.py`, `cov.py`, `to_sacc.py` with `python3 -m` as `python3 -m xcell.cls.cl input/kv450_1024.yml KV450__0 KV450__0`.
+
 
 --- 
 More info about the sacc files in https://github.com/LSSTDESC/sacc
