@@ -21,13 +21,15 @@ class MapperDummy(MapperBase):
         self.npix = hp.nside2npix(self.nside)
 
         self.signal_map = None
+        self.nl_coupled = None
+        self.mask = None
 
     def get_cl(self, ls):
         return 1./(ls+self.l0)**self.alpha
 
-    def get_signal_map(self, seed=None):
-        np.random.seed(seed)
+    def get_signal_map(self, seed=1000):
         if self.signal_map is None:
+            np.random.seed(seed)
             ls = np.arange(3*self.nside)
             cl = self.get_cl(ls)
             if self.spin == 0:
@@ -38,7 +40,7 @@ class MapperDummy(MapperBase):
                 self.signal_map = [mq, mu]
         return self.signal_map
 
-    def get_mask(self, ns, aps=1., fsk=0.2, dec0=0., ra0=0.):
+    def get_mask(self, aps=1., fsk=0.2, dec0=0., ra0=0.):
         if self.mask is None:
             if fsk >= 1:
                 self.mask = np.ones(self.npix)
@@ -69,7 +71,7 @@ class MapperDummy(MapperBase):
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             # Coupled analytical noise bias
-            self.nl_coupled = np.zeros(3*self.nside)
+            self.nl_coupled = np.zeros((1, 3*self.nside))
         return self.nl_coupled
 
     def get_dtype(self):
