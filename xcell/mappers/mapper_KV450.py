@@ -17,11 +17,10 @@ class MapperKV450(MapperBase):
                              'KV450_G15_reweight_3x4x4_v2_good.cat',
                              'KV450_G9_reweight_3x4x4_v2_good.cat'] ,
           'file_nz': Nz_DIR_z0.1t0.3.asc,
-          'zbin':1,
+          'zbin':0,
           'nside':nside,
-          'mask_name': 'mask_KV450_1',
-          'path_lite': path}
-           }
+          'mask_name': 'mask_KV450_0',
+          'lite_path': path}
         """
 
         self._get_defaults(config)
@@ -182,6 +181,19 @@ class MapperKV450(MapperBase):
             self.nls[mod] = np.array([nl, 0*nl, 0*nl, nl])
         self.nl_coupled = self.nls[mod]
         return self.nl_coupled
+
+    def get_nz(self, dz=0):
+        if not dz:
+            return self.dndz
+
+        z, pz = self.dndz
+        # Calculate z bias
+        z_dz = z - dz
+        # Set to 0 points where z_dz < 0:
+        sel = z_dz >= 0
+        z_dz = z_dz[sel]
+        pz = pz[sel]
+        return np.array([z_dz, pz])
 
     def get_dtype(self):
         return 'galaxy_shear'
