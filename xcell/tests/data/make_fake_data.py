@@ -45,10 +45,11 @@ cols = fits.ColDefs([fits.Column(name='RA', format='D', array=ra),
                      fits.Column(name='psf_e2', format='D', array=-ottf),
                      fits.Column(name='PSF_e1', format='D', array=ottf),
                      fits.Column(name='PSF_e2', format='D', array=-ottf),
-                     fits.Column(name='coadd_objects_id', format='D', array=on),
+                     fits.Column(name='coadd_objects_id', format='D',
+                                 array=on),
                      fits.Column(name='R11', format='D', array=on),
-                     fits.Column(name='R22', format='D', array=on), 
-                     fits.Column(name='flags_select', format='D', array=on-1), 
+                     fits.Column(name='R22', format='D', array=on),
+                     fits.Column(name='flags_select', format='D', array=on-1),
                      fits.Column(name='weight', format='D', array=2*on),
                      fits.Column(name='WEIGHT_SYSTOT', format='D', array=2*on),
                      fits.Column(name='WEIGHT_CP', format='D', array=2*on),
@@ -64,8 +65,10 @@ cols = fits.ColDefs([fits.Column(name='RA', format='D', array=ra),
 hdu = fits.BinTableHDU.from_columns(cols)
 hdu.writeto("catalog.fits", overwrite=True)
 
-cols = fits.ColDefs([fits.Column(name='zbin_mcal', format='D', array=[1]),
-                     fits.Column(name='coadd_objects_id', format='D', array=[1])])
+cols = fits.ColDefs([
+                     fits.Column(name='zbin_mcal', format='D', array=[1]),
+                     fits.Column(name='coadd_objects_id',
+                                 format='D', array=[1])])
 
 hdu = fits.BinTableHDU.from_columns(cols)
 hdu.writeto("cat_zbin.fits", overwrite=True)

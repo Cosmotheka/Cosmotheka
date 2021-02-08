@@ -29,10 +29,8 @@ class MapperDESY1wl(MapperBase):
         self.mode = config.get('mode', 'shear')
         self.zbin = config['zbin']
         self.npix = hp.nside2npix(self.nside)
-
         # dn/dz
-        self.nz = None 
-        
+        self.nz = None
         # load cat
         self.cat_data = self._load_catalog()
         self._remove_additive_bias()
@@ -57,7 +55,7 @@ class MapperDESY1wl(MapperBase):
         columns_zbin = ['coadd_objects_id', 'zbin_mcal']
 
         read_lite, fname_lite = self._check_lite_exists(self.zbin)
-        
+
         if read_lite:
             print('Loading lite bin{} cat'.format(self.zbin))
             self.cat_data = Table.read(fname_lite, memmap=True)
@@ -85,14 +83,15 @@ class MapperDESY1wl(MapperBase):
             self.cat_data.remove_rows(self.cat_data['flags_select'] != 0)
             if fname_lite is not None:
                 self.cat_data.write(fname_lite)
-                
+
         return self.cat_data
-    
+
     def _check_lite_exists(self, i):
         if self.path_lite is None:
             return False, None
         else:
-            fname_lite = self.path_lite + f'DESwlMETACAL_catalog_lite_zbin{i}.fits'
+            file_name = f'DESwlMETACAL_catalog_lite_zbin{i}.fits'
+            fname_lite = os.path.join(self.path_lite, file_name)
             return os.path.isfile(fname_lite), fname_lite
 
     def _set_mode(self, mode=None):
