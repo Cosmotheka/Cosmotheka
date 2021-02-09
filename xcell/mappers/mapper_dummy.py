@@ -19,7 +19,7 @@ class MapperDummy(MapperBase):
                 'sigma8': 0.8111,
                 'w0': -1,
                 'wa': 0,
-                'transfer_function': 'boltzmann_class',
+                'transfer_function': 'boltzmann_camb',
                 'baryons_power_spectrum': 'nobaryons'
                 }
             'zbin': 0,
@@ -38,7 +38,7 @@ class MapperDummy(MapperBase):
             'sigma8': 0.8111,
             'w0': -1,
             'wa': 0,
-            'transfer_function': 'boltzmann_class',
+            'transfer_function': 'boltzmann_camb',
             'baryons_power_spectrum': 'nobaryons',
         }
         self.cosmo_pars = self.config.get('cosmo', cosmo)
