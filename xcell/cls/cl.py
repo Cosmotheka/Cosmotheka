@@ -240,7 +240,7 @@ class ClFid(ClBase):
             fiducial = self.data.data['cov']['fiducial']
             d1, d2 = self.get_dtypes()
             for dtype, tr in zip([self.tr1, self.tr2], [d1, d2]):
-                if (dtype == 'wl') and fiducial['wl_m']:
+                if (dtype == 'galaxy_shear') and fiducial['wl_m']:
                     cl = (1 + tracers[tr]['m']) * cl
 
             # This is only valid for LCDM and spins 0 and 2.
