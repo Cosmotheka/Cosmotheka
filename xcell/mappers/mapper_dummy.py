@@ -74,6 +74,8 @@ class MapperDummy(MapperBase):
             elif self.dtype == 'galaxy_shear':
                 z, nz = np.loadtxt('xcell/tests/data/Nz_DIR_z0.1t0.3.asc',
                                    usecols=(0, 1), unpack=True)
+            elif self.dtype == 'cmb_convergence':
+                return None
 
             self.dndz = np.array([z, nz])
 
@@ -84,15 +86,16 @@ class MapperDummy(MapperBase):
         return np.array([z_dz[sel], nz[sel]])
 
     def get_cl(self):
-        ls = np.arange(3 * self.nside)
         if self.cl is None:
-            z, nz = self.get_nz()
+            ls = np.arange(3 * self.nside)
             dtype = self.get_dtype()
             if dtype == 'galaxy_density':
+                z, nz = self.get_nz()
                 b = np.ones_like(z)
                 tracer = ccl.NumberCountsTracer(self.cosmo, has_rsd=False,
                                                 dndz=(z, nz), bias=(z, b))
             elif dtype == 'galaxy_shear':
+                z, nz = self.get_nz()
                 tracer = ccl.WeakLensingTracer(self.cosmo, dndz=(z, nz))
             elif dtype == 'cmb_convergence':
                 tracer = ccl.CMBLensingTracer(self.cosmo, z_source=1100)
@@ -109,7 +112,7 @@ class MapperDummy(MapperBase):
                 self.signal_map = [hp.synfast(cl, self.nside)]
             elif self.spin == 2:
                 _, mq, mu = hp.synfast([0*cl, cl, 0*cl, 0*cl],
-                                       self.nside)
+                                       self.nside, new=True)
                 self.signal_map = [mq, mu]
         return self.signal_map
 
