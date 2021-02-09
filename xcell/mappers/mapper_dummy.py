@@ -78,9 +78,10 @@ class MapperDummy(MapperBase):
             self.dndz = np.array([z, nz])
 
         z, nz = self.dndz
-        sel = z >= dz
+        z_dz = z + dz
+        sel = z_dz >= 0
 
-        return np.array([z[sel]-dz, nz[sel]])
+        return np.array([z_dz[sel], nz[sel]])
 
     def get_cl(self):
         ls = np.arange(3 * self.nside)
