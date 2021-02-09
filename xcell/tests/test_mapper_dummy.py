@@ -13,7 +13,7 @@ def get_config(dtype='galaxy_density'):
       'sigma8': 0.78,
       'w0': -1,
       'wa': 0,
-      'transfer_function': 'boltzmann_class',
+      'transfer_function': 'boltzmann_camb',
       'baryons_power_spectrum': 'nobaryons'}
     return {'seed': 0, 'nside': 32, 'cosmo': cosmo, 'dtype': dtype}
 

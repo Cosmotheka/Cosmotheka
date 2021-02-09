@@ -24,7 +24,7 @@ def get_config():
         'sigma8': 0.8111,
         'w0': -1,
         'wa': 0,
-        'transfer_function': 'boltzmann_class',
+        'transfer_function': 'boltzmann_camb',
         'baryons_power_spectrum': 'nobaryons',
     }
     dummy0 = {'mask_name': 'mask_dummy0', 'mapper_class': 'MapperDummy',
