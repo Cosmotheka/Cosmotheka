@@ -27,7 +27,7 @@ def get_es():
 
 def test_lite():
     config = get_config()
-    config['lite_path'] = 'xcell/tests/data/'
+    config['path_lite'] = 'xcell/tests/data/'
     ifile = 0
     while os.path.isfile(f'xcell/tests/data/KV450_lite_cat_{ifile}.fits'):
         os.remove(f'xcell/tests/data/KV450_lite_cat_{ifile}.fits')

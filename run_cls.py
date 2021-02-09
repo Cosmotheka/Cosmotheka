@@ -3,6 +3,7 @@ from xcell.cls.common import Data
 import os
 import time
 
+
 ##############################################################################
 def get_mem(data, trs, compute):
     # Return memory for nside 4096
@@ -27,7 +28,7 @@ def get_mem(data, trs, compute):
 
 def launch_cls(data, queue, njobs, wsp=False, fiducial=False):
     #######
-    nc = 24 # 8
+    nc = 24  # 8
     #
     cl_tracers = data.get_cl_trs_names(wsp)
     outdir = data.data['output']
@@ -46,7 +47,7 @@ def launch_cls(data, queue, njobs, wsp=False, fiducial=False):
 
         # mem = get_mem(data, (tr1, tr2), 'cls') / nc
         queue = 'cmb'
-        mem = 8 # for cmb queue
+        mem = 8  # for cmb queue
         if not fiducial:
             pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
             pyrun = '-m xcell.cls.cl {} {} {}'.format(args.INPUT, tr1, tr2)
@@ -59,9 +60,10 @@ def launch_cls(data, queue, njobs, wsp=False, fiducial=False):
         c += 1
         time.sleep(1)
 
+
 def launch_cov(data, queue, njobs, wsp=False):
     #######
-    nc = 24 # 28 # 10
+    nc = 24  # 28 # 10
     #
     cov_tracers = data.get_cov_trs_names(wsp)
     outdir = data.data['output']
@@ -75,13 +77,14 @@ def launch_cov(data, queue, njobs, wsp=False):
             continue
         # mem = get_mem(data, trs, 'cov') / nc
         queue = 'cmb'
-        mem = 8 # for cmb queue
+        mem = 8  # for cmb queue
         pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
         pyrun = '-m xcell.cls.cov {} {} {} {} {}'.format(args.INPUT, *trs)
         print(pyexec + " " + pyrun)
         os.system(pyexec + " " + pyrun)
         c += 1
         time.sleep(1)
+
 
 def launch_to_sacc(data, name, use, queue):
     outdir = data.data['output']
@@ -102,6 +105,7 @@ def launch_to_sacc(data, name, use, queue):
     os.system(pyexec + " " + pyrun)
 
 ##############################################################################
+
 
 if __name__ == "__main__":
     import argparse
@@ -133,7 +137,8 @@ if __name__ == "__main__":
         launch_cov(data, queue, njobs, args.wsp)
     elif args.compute == 'to_sacc':
         if args.to_sacc_use_nl and args.to_sacc_use_fiducial:
-            raise ValueError('Only one of --to_sacc_use_nl or --to_sacc_use_fiducial can be set' )
+            raise ValueError(
+                    'Only one of --to_sacc_use_nl or --to_sacc_use_fiducial can be set')
         elif args.to_sacc_use_nl:
             use = 'nl'
         elif args.to_sacc_use_fiducial:
@@ -142,4 +147,5 @@ if __name__ == "__main__":
             use = 'cls'
         launch_to_sacc(data, args.to_sacc_name, use, queue)
     else:
-        raise ValueError("Compute value '{}' not understood".format(args.compute))
+        raise ValueError(
+                "Compute value '{}' not understood".format(args.compute))
