@@ -1,15 +1,15 @@
-import numpy as np
-import xcell as xc
-from xcell.cls.cl import Cl
-import healpy as hp
 import shutil
 import os
+import pymaster as nmt
+import numpy as np
+from xcell.cls.cl import Cl
 
 
 # Remove previous test results
 tmpdir = './xcell/tests/cls/dummy'
 if os.path.isdir(tmpdir):
     shutil.rmtree(tmpdir)
+
 
 def get_config():
     nside = 256
@@ -25,10 +25,10 @@ def get_config():
                        'n_iter_mcm': 3,
                        'n_iter_cmcm': 3,
                        'nside': nside},
-            'recompute': {'cls' : True,
-                          'cov' : True,
-                          'mcm' : True,
-                          'cmcm' : True},
+            'recompute': {'cls': True,
+                          'cov': True,
+                          'mcm': True,
+                          'cmcm': True},
             'output': tmpdir}
 
 
@@ -50,20 +50,29 @@ def test_smoke():
 
 
 def test_get_ell_cl():
+    # Get cl from map
     cl_class = get_cl_class()
     ell, cl = cl_class.get_ell_cl()
 
+    # Get cl from mapper (the true one)
     m1, m2 = cl_class.get_mappers()
     w = cl_class.get_workspace()
     cl_m1 = m1.get_cl(np.arange(3 * m1.nside))
-    cl_m1 = w.decouple_cell(w.couple_cell([cl_m1]))
+    cl_m1_cp = w.couple_cell([cl_m1])
+    cl_m1 = w.decouple_cell(cl_m1_cp)
 
-    from matplotlib import pyplot as plt
-    plt.plot(ell, cl[0])
-    plt.plot(ell, cl_m1[0])
-    plt.savefig('prueba.png')
-    plt.close()
+    # Compute covariance
+    mask1, mask2 = cl_class.get_masks()
+    cl_m1_cw = cl_m1_cp / np.mean(mask1 * mask2)
+    cwsp = nmt.NmtCovarianceWorkspace()
+    cwsp.compute_coupling_coefficients(*cl_class.get_nmt_fields())
+    cov = nmt.covariance.gaussian_covariance(cwsp, 0, 0, 0, 0, cl_m1_cw,
+                                             cl_m1_cw, cl_m1_cw, cl_m1_cw, w)
 
-    rdev = np.mean(cl/cl_m1 - 1)
+    # Check that true Cl is within 5sigma of data Cl
+    sigma = np.sqrt(np.diag(cov))
+    cl_p = cl + 5 * sigma
+    cl_m = cl - 5 * sigma
+    check = np.all((cl_m1[0] > cl_m[0]) * (cl_m1[0] < cl_p[0]))
 
-    assert(np.max(np.abs(rdev)) < 0.05)
+    assert(check)
