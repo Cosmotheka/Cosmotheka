@@ -69,7 +69,7 @@ def test_get_ell_cl():
     # Get cl from mapper (the true one)
     m1, m2 = cl_class.get_mappers()
     w = cl_class.get_workspace()
-    cl_m1 = m1.get_cl(np.arange(3 * m1.nside))
+    cl_m1 = m1.get_cl()
     cl_m1_cp = w.couple_cell([cl_m1])
     cl_m1 = w.decouple_cell(cl_m1_cp)
 

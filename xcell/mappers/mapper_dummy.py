@@ -52,6 +52,7 @@ class MapperDummy(MapperBase):
         self.nl_coupled = None
         self.mask = None
         self.dndz = None
+        self.cl = None
 
     def _check_dtype(self):
         dtypes = ['galaxy_density', 'galaxy_shear', 'cmb_convergence']
@@ -75,26 +76,34 @@ class MapperDummy(MapperBase):
                                    usecols=(0, 1), unpack=True)
 
             self.dndz = np.array([z, nz])
-        return self.dndz
 
-    def get_cl(self, ls):
-        z, nz = self.get_nz()
-        dtype = self.get_dtype()
-        if dtype == 'galaxy_density':
-            tracer = ccl.NumberCountsTracer(self.cosmo, has_rsd=False,
-                                            dndz=(z, nz), bias=(z, z/z))
-        elif dtype == 'galaxy_shear':
-            tracer = ccl.WeakLensingTracer(self.cosmo, dndz=(z, nz))
-        elif dtype == 'cmb_convergence':
-            tracer = ccl.CMBLensingTracer(self.cosmo, z_source=1100)
+        z, nz = self.dndz
+        sel = z >= dz
 
-        return ccl.angular_cl(self.cosmo, tracer, tracer, ls)
+        return np.array([z[sel]-dz, nz[sel]])
+
+    def get_cl(self):
+        ls = np.arange(3 * self.nside)
+        if self.cl is None:
+            z, nz = self.get_nz()
+            dtype = self.get_dtype()
+            if dtype == 'galaxy_density':
+                b = np.ones_like(z)
+                tracer = ccl.NumberCountsTracer(self.cosmo, has_rsd=False,
+                                                dndz=(z, nz), bias=(z, b))
+            elif dtype == 'galaxy_shear':
+                tracer = ccl.WeakLensingTracer(self.cosmo, dndz=(z, nz))
+            elif dtype == 'cmb_convergence':
+                tracer = ccl.CMBLensingTracer(self.cosmo, z_source=1100)
+
+            self.cl = ccl.angular_cl(self.cosmo, tracer, tracer, ls)
+
+        return self.cl
 
     def get_signal_map(self):
         if self.signal_map is None:
             np.random.seed(self.seed)
-            ls = np.arange(3*self.nside)
-            cl = self.get_cl(ls)
+            cl = self.get_cl()
             if self.spin == 0:
                 self.signal_map = [hp.synfast(cl, self.nside)]
             elif self.spin == 2:
