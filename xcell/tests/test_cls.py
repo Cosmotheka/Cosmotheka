@@ -79,8 +79,5 @@ def test_get_ell_cl():
 
     # Check that true Cl is within 5sigma of data Cl
     sigma = np.sqrt(np.diag(cov))
-    cl_p = cl + 5 * sigma
-    cl_m = cl - 5 * sigma
-    check = np.all((cl_m1[0] > cl_m[0]) * (cl_m1[0] < cl_p[0]))
 
-    assert check
+    assert np.all(np.fabs(cl_m1 - cl) < 5 * sigma)
