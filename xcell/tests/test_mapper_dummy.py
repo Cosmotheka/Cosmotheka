@@ -34,7 +34,8 @@ def test_get_cl():
     c = get_config()
     ls = 120
     cl = 1. / (ls+c['l0'])**c['alpha']
-    assert(np.fabs(cl - m.get_cl(ls)) < 1E-5)
+    rdev = np.fabs(cl / m.get_cl(ls) - 1)
+    assert np.max(rdev) < 1E-5
 
 
 def test_get_signal_map():
@@ -48,9 +49,11 @@ def test_get_signal_map():
     assert len(d0) == 1
     d = d[0]
     d0 = d0[0]
-    assert np.all(np.fabs(d-d0) < 1E-5)
+    rdev = np.fabs(d / d0 - 1)
+    assert np.max(rdev) < 1E-5
 
 
+# Commented out because nl_copuled = 0 atm in MapperDummy
 # def test_get_nl_coupled():
     # m = get_mapper()
     # Redicted value
