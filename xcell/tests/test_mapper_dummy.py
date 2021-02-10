@@ -4,7 +4,7 @@ import healpy as hp
 import pyccl as ccl
 
 
-def get_config(dtype='galaxy_density'):
+def get_config(dtype='galaxy_density', fsky=0.2):
     cosmo = {
       'Omega_c': 0.24,
       'Omega_b': 0.0493,
@@ -15,11 +15,12 @@ def get_config(dtype='galaxy_density'):
       'wa': 0,
       'transfer_function': 'boltzmann_camb',
       'baryons_power_spectrum': 'nobaryons'}
-    return {'seed': 0, 'nside': 32, 'cosmo': cosmo, 'dtype': dtype}
+    return {'seed': 0, 'nside': 32, 'fsky': fsky, 'cosmo': cosmo,
+            'dtype': dtype}
 
 
-def get_mapper(dtype='galaxy_density'):
-    return xc.mappers.MapperDummy(get_config(dtype))
+def get_mapper(dtype='galaxy_density', fsky=0.2):
+    return xc.mappers.MapperDummy(get_config(dtype, fsky))
 
 
 def get_cl(dtype):
@@ -49,11 +50,11 @@ def test_smoke():
 
 
 def test_get_mask():
-    m = get_mapper()
-    ns = m.nside
-    d = m.get_mask(ns, fsk=1)
+    m = get_mapper(fsky=1)
+    d = m.get_mask()
     assert np.all(d == 1)
-    d = m.get_mask(fsk=100)
+    m = get_mapper(fsky=100)
+    d = m.get_mask()
     assert np.all(d == 1)
     # TODO: Implement apodized mask
     # d = m.get_mask(fsky=0.5)
