@@ -119,8 +119,9 @@ def test_get_covariance():
 
     assert chi2/chi2_m - 1 < 1e-5
 
+
 def test_cls_vs_namaster():
-    ##### cls #####
+    # cls
     # Get cl from randomnly generated map ("data")
     cl_class = get_cl_class(fsky=1)
     ell, cl_data = cl_class.get_ell_cl()
@@ -130,8 +131,7 @@ def test_cls_vs_namaster():
     cov_class = get_cov_class()
     cov = cov_class.get_covariance()
 
-
-    ##### NaMaster #####
+    # NaMaster
     config = get_config()
     m = MapperDummy(config['tracers']['Dummy__0'])
 
@@ -170,6 +170,3 @@ def test_cls_vs_namaster():
     chi2_m = dCl.dot(icov_nmt).dot(dCl)
 
     assert chi2/chi2_m - 1 < 1e-5
-
-
-
