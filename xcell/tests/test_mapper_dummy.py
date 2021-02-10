@@ -76,15 +76,15 @@ def test_get_signal_map():
 
     # galaxy_density
     assert len(d) == 1
-    assert np.std(d[0] - d0[0]) / np.std(d[0]) < 1e-10
+    assert np.std(d[0] - d0[0]) / np.std(d[0]) < 1e-3
     # galaxy_shear
     m = get_mapper('galaxy_shear')
     d = m.get_signal_map()
     assert len(d) == 2
     d0 = [hp.read_map('xcell/tests/data/dummy_signal_s2_0.fits'),
           hp.read_map('xcell/tests/data/dummy_signal_s2_1.fits')]
-    assert np.std(d[0] - d0[0]) / np.std(d[0]) < 1e-10
-    assert np.std(d[1] - d0[1]) / np.std(d[1]) < 1e-10
+    assert np.std(d[0] - d0[0]) / np.std(d[0]) < 1e-3
+    assert np.std(d[1] - d0[1]) / np.std(d[1]) < 1e-3
 
 
 # Commented out because nl_copuled = 0 atm in MapperDummy
