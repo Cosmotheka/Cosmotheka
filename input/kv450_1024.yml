@@ -13,7 +13,7 @@ tracers:
     nside: 1024
     mask_name: 'mask_KV450_0'
     mapper_class: 'MapperKV450'
-    lite_path: '/mnt/extraspace/gravityls_3/S8z/data/KV450/'
+    path_lite: '/mnt/extraspace/gravityls_3/S8z/data/KV450/'
 
   KV450__1:
     data_catalogs:
@@ -27,7 +27,7 @@ tracers:
     nside: 1024
     mask_name: 'mask_KV450_1'
     mapper_class: 'MapperKV450'
-    lite_path: '/mnt/extraspace/gravityls_3/S8z/data/KV450/'
+    path_lite: '/mnt/extraspace/gravityls_3/S8z/data/KV450/'
 
   KV450__2:
     data_catalogs:
@@ -41,7 +41,7 @@ tracers:
     nside: 1024
     mask_name: 'mask_KV450_2'
     mapper_class: 'MapperKV450'
-    lite_path: '/mnt/extraspace/gravityls_3/S8z/data/KV450/'
+    path_lite: '/mnt/extraspace/gravityls_3/S8z/data/KV450/'
 
   KV450__3:
     data_catalogs:
@@ -55,7 +55,7 @@ tracers:
     nside: 1024
     mask_name: 'mask_KV450_3'
     mapper_class: 'MapperKV450'
-    lite_path: '/mnt/extraspace/gravityls_3/S8z/data/KV450/'
+    path_lite: '/mnt/extraspace/gravityls_3/S8z/data/KV450/'
 
   KV450__4:
     data_catalogs:
@@ -69,7 +69,7 @@ tracers:
     nside: 1024
     mask_name: 'mask_KV450_4'
     mapper_class: 'MapperKV450'
-    lite_path: '/mnt/extraspace/gravityls_3/S8z/data/KV450/'
+    path_lite: '/mnt/extraspace/gravityls_3/S8z/data/KV450/'
 
 cls:
   # Options: all, cross, None

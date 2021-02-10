@@ -20,7 +20,7 @@ class MapperKV450(MapperBase):
           'zbin':0,
           'nside':nside,
           'mask_name': 'mask_KV450_0',
-          'lite_path': path}
+          'path_lite': path}
         """
 
         self._get_defaults(config)
@@ -53,13 +53,12 @@ class MapperKV450(MapperBase):
                     cat = Table.read(f)
             else:
                 print('loading full cat {}'.format(i), end=' ', flush=True)
-                with fits.open(file_data) as f:
-                    cat = Table.read(f)[self.column_names]
-                    # GAAP cut
-                    goodgaap = cat['GAAP_Flag_ugriZYJHKs'] == 0
-                    cat = cat[goodgaap]
-                    if fname_lite is not None:
-                        cat.write(fname_lite)
+                cat = Table.read(file_data, format='fits')[self.column_names]
+                # GAAP cut
+                goodgaap = cat['GAAP_Flag_ugriZYJHKs'] == 0
+                cat = cat[goodgaap]
+                if fname_lite is not None:
+                    cat.write(fname_lite)
             # Binning
             goodbin = self._bin_z(cat)
             cat = cat[goodbin]
