@@ -201,9 +201,10 @@ class ClFid(ClBase):
         if dtype == 'galaxy_density':
             # Import z, pz
             z, pz = mapper.get_nz(dz=0)
-            bias = None
             if fiducial['gc_bias'] is True:
                 bias = (z, tracer['bias'] * np.ones_like(z))
+            else:
+                bias = (z, np.ones_like(z))
             # Get tracer
             return ccl.NumberCountsTracer(self.cosmo, has_rsd=False,
                                           dndz=(z, pz), bias=bias)

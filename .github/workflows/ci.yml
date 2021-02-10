@@ -39,6 +39,8 @@ jobs:
             pip install -U healpy
             pip install -U pandas
             pip install -U pymaster
+            pip install -U pyccl
+            pip install -U camb
 
         - name: Flake
           run: |
