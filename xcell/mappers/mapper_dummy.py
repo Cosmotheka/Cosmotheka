@@ -11,6 +11,7 @@ class MapperDummy(MapperBase):
           {'dtype': 'galaxy_density',
            'seed': None,
            'nside': ***,
+           'fsky': 0.2,
            'cosmo': {
                 'Omega_c': 0.2640,
                 'Omega_b': 0.0493,
@@ -28,6 +29,7 @@ class MapperDummy(MapperBase):
         """
         self._get_defaults(config)
         self.seed = self.config.get('seed', None)
+        self.fsky = self.config.get('fsky', 0.2)
         cosmo = {
             # Planck 2018: Table 2 of 1807.06209
             # Omega_m: 0.3133
@@ -116,9 +118,9 @@ class MapperDummy(MapperBase):
                 self.signal_map = [mq, mu]
         return self.signal_map
 
-    def get_mask(self, aps=1., fsk=0.2, dec0=0., ra0=0.):
+    def get_mask(self, aps=1., dec0=0., ra0=0.):
         if self.mask is None:
-            if fsk >= 1:
+            if self.fsky >= 1:
                 self.mask = np.ones(hp.nside2npix(self.nside))
             else:
                 # This generates a correctly-apodized mask
@@ -131,7 +133,7 @@ class MapperDummy(MapperBase):
                                          np.arange(hp.nside2npix(self.nside))))
                 cth = np.sum(v0[:, None]*vv, axis=0)
                 th = np.arccos(cth)
-                th0 = np.arccos(1-2*fsk)
+                th0 = np.arccos(1-2*self.fsky)
                 th_apo = np.radians(aps)
                 id0 = np.where(th >= th0)[0]
                 id1 = np.where(th <= th0-th_apo)[0]

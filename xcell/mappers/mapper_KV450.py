@@ -1,6 +1,5 @@
 from .mapper_base import MapperBase
 from .utils import get_map_from_points
-from astropy.io import fits
 from astropy.table import Table, vstack
 import numpy as np
 import healpy as hp
@@ -47,8 +46,7 @@ class MapperKV450(MapperBase):
         read_lite, fname_lite = self._check_lite_exists(self.zbin)
         if read_lite:
             print(f'loading lite cat {self.zbin}', flush=True)
-            with fits.open(fname_lite) as f:
-                self.cat = Table.read(f)
+            self.cat = Table.read(fname_lite, format='fits')
         else:
             print(f'loading full cat {self.zbin}', flush=True)
             self.cat = self._create_catalog()
