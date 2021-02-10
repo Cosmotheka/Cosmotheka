@@ -1,6 +1,5 @@
 from .mapper_base import MapperBase
 from .utils import get_map_from_points
-from astropy.io import fits
 from astropy.table import Table, vstack
 import numpy as np
 import healpy as hp
