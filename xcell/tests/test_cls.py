@@ -3,6 +3,8 @@ import os
 import numpy as np
 from xcell.cls.cl import Cl
 from xcell.cls.cov import Cov
+import pymaster as nmt
+from xcell.mappers import MapperDummy
 
 
 # Remove previous test results
@@ -28,7 +30,7 @@ def get_config(fsky=0.2):
         'baryons_power_spectrum': 'nobaryons',
     }
     dummy0 = {'mask_name': 'mask_dummy0', 'mapper_class': 'MapperDummy',
-              'cosmo': cosmo, 'nside': nside, 'fsky': fsky}
+              'cosmo': cosmo, 'nside': nside, 'fsky': fsky, 'seed': 0}
     bpw_edges = list(range(0, 3 * nside, 4))
 
     return {'tracers': {'Dummy__0': dummy0},
@@ -107,7 +109,6 @@ def test_get_covariance():
     cov_m = np.zeros_like(cov)
     diag = (2 * cl_m1 ** 2) / (2 * ell + 1)
     np.fill_diagonal(cov_m, diag)
-    #
 
     icov = np.linalg.inv(cov)
     icov_m = np.linalg.inv(cov_m)
@@ -117,3 +118,58 @@ def test_get_covariance():
     chi2_m = dCl.dot(icov_m).dot(dCl)
 
     assert chi2/chi2_m - 1 < 1e-5
+
+def test_cls_vs_namaster():
+    ##### cls #####
+    # Get cl from randomnly generated map ("data")
+    cl_class = get_cl_class(fsky=1)
+    ell, cl_data = cl_class.get_ell_cl()
+    b = cl_class.get_NmtBin()
+
+    # Compute covariance
+    cov_class = get_cov_class()
+    cov = cov_class.get_covariance()
+
+
+    ##### NaMaster #####
+    config = get_config()
+    m = MapperDummy(config['tracers']['Dummy__0'])
+
+    # True cl
+    cl_m = m.get_cl()
+    spin = m.get_spin()
+    mask = m.get_mask()
+    signal_map = m.get_signal_map()
+    n_iter_sht = config['healpy']['n_iter_sht']
+    n_iter_mcm = config['healpy']['n_iter_mcm']
+    n_iter_cmcm = config['healpy']['n_iter_cmcm']
+    # Compute Cl from map
+    f = nmt.NmtField(mask, signal_map, spin=spin, n_iter=n_iter_sht)
+    wsp = nmt.NmtWorkspace()
+    wsp.compute_coupling_matrix(f, f, bins=b, n_iter=n_iter_mcm)
+    cl_data_nmt_cp = nmt.compute_coupled_cell(f, f)
+    cl_data_nmt = wsp.decouple_cell(cl_data_nmt_cp)
+    rdev = cl_data / cl_data_nmt - 1
+    assert np.max(np.abs(rdev)) < 1e-5
+    # Couple true Cl
+    cl_m_cp = wsp.couple_cell([cl_m])
+    cl_m = wsp.decouple_cell(cl_m_cp)
+
+    # Compute cov with NaMaster
+    cwsp = nmt.NmtCovarianceWorkspace()
+    cwsp.compute_coupling_coefficients(f, f, n_iter=n_iter_cmcm)
+    cl_cov = cl_m_cp / np.mean(mask * mask)
+    cov_nmt = nmt.gaussian_covariance(cwsp, spin, spin, spin, spin, cl_cov,
+                                      cl_cov, cl_cov, cl_cov, wsp)
+
+    icov = np.linalg.inv(cov)
+    icov_nmt = np.linalg.inv(cov_nmt)
+    dCl = (cl_data - cl_m)[0]
+
+    chi2 = dCl.dot(icov).dot(dCl)
+    chi2_m = dCl.dot(icov_nmt).dot(dCl)
+
+    assert chi2/chi2_m - 1 < 1e-5
+
+
+
