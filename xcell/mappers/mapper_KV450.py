@@ -49,8 +49,7 @@ class MapperKV450(MapperBase):
             read_lite, fname_lite = self._check_lite_exists(i)
             if read_lite:
                 print('loading lite cat {}'.format(i), end=' ', flush=True)
-                with fits.open(fname_lite) as f:
-                    cat = Table.read(f)
+                cat = Table.read(fname_lite, format='fits')
             else:
                 print('loading full cat {}'.format(i), end=' ', flush=True)
                 cat = Table.read(file_data, format='fits')[self.column_names]
