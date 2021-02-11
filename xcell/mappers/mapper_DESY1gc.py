@@ -28,7 +28,6 @@ class MapperDESY1gc(MapperBase):
                      [0.60, 0.75],
                      [0.75, 0.90]]
         self.cat_data = Table.read(self.config['data_catalogs'])
-        self.nz = fits.open(self.config['file_nz'])[7].data
         self.npix = hp.nside2npix(self.nside)
         self.zbin = config['zbin']
         self.z_edges = bin_edges[self.zbin]
@@ -61,9 +60,13 @@ class MapperDESY1gc(MapperBase):
         return self.mask
 
     def get_nz(self, dz=0):
-        z = self.nz['Z_MID']
-        nz = self.nz['BIN%d' % (self.zbin+1)]
+        if self.dndz is None:
+            f = fits.open(self.config['file_nz'])[7].data
+            z = f['Z_MID']
+            nz = f['BIN%d' % (self.zbin+1)]
+            self.dndz = np.array([z, nz])
         # Shift distribution by dz and remove z + dz < 0
+        z, nz = self.dndz
         z_dz = z + dz
         sel = z_dz >= 0
         return np.array([z_dz[sel], nz[sel]])
