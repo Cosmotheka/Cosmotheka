@@ -1,7 +1,6 @@
 from .mapper_base import MapperBase
 from .utils import get_map_from_points
-from astropy.table import Table, Column
-import astropy.table
+from astropy.table import Table, hstack
 import numpy as np
 import healpy as hp
 import os
@@ -34,7 +33,7 @@ class MapperDESY1wl(MapperBase):
         # load cat
         self.cat_data = self._load_catalog()
         # get items for calibration
-        self._get_Rs()
+        self.Rs = self._get_Rs()
         # clean data
         self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.zbin)
         # calibrate
@@ -56,7 +55,7 @@ class MapperDESY1wl(MapperBase):
         # Galaxy catalog
         columns_data = ['coadd_objects_id', 'e1', 'e2',
                         'psf_e1', 'psf_e2', 'ra', 'dec',
-                        'R11','R12', 'R21', 'R22',
+                        'R11', 'R12', 'R21', 'R22',
                         'flags_select']
         # z-bin catalog
         columns_zbin = ['zbin_mcal', 'zbin_mcal_1p',
@@ -75,16 +74,16 @@ class MapperDESY1wl(MapperBase):
             cat_zbin = Table.read(self.config['zbin_cat'],
                                   format='fits', memmap=True)
             cat_zbin.keep_columns(columns_zbin)
-            self.cat_data = np.hstack((self.cat_data, cat_zbin()
+            self.cat_data = hstack([self.cat_data, cat_zbin])
 
             # remove bins which are not the one of interest
             # Logic: If item in one of zbins --> sel = False
             # Thus it is not removed by next line
-            sel = self.cat_data['zbin_mcal'] != self.zbin and \ 
-                  self.cat_data['zbin_mcal_1p'] != self.zbin and \ 
-                  self.cat_data['zbin_mcal_1m'] != self.zbin and \
-                  self.cat_data['zbin_mcal_2p'] != self.zbin and \
-                  self.cat_data['zbin_mcal_2m'] != self.zbin
+            sel = self.cat_data['zbin_mcal'].any() != self.zbin * \
+                self.cat_data['zbin_mcal_1p'].any() != self.zbin * \
+                self.cat_data['zbin_mcal_1m'].any() != self.zbin * \
+                self.cat_data['zbin_mcal_2p'].any() != self.zbin * \
+                self.cat_data['zbin_mcal_2m'].any() != self.zbin
             self.cat_data.remove_rows(sel)
             # filter for -90<dec<-35
             self.cat_data.remove_rows(self.cat_data['dec'] < -90)
@@ -117,7 +116,7 @@ class MapperDESY1wl(MapperBase):
             raise ValueError(f"Unknown mode {mode}")
         return e1_flag, e2_flag, mode
 
-    def _get_Rs():
+    def _get_Rs(self):
         data_1p = self.cat_data[self.cat_data['zbin_mcal_1p'] == self.zbin]
         data_1m = self.cat_data[self.cat_data['zbin_mcal_1m'] == self.zbin]
         data_2p = self.cat_data[self.cat_data['zbin_mcal_2p'] == self.zbin]
@@ -129,21 +128,21 @@ class MapperDESY1wl(MapperBase):
         mean_e2_1m = np.mean(data_1m['e2'])
         mean_e1_2p = np.mean(data_2p['e1'])
         mean_e2_2p = np.mean(data_2p['e2'])
-        mean_e1_2m = np.mean(data_2m['e1']) 
-        mean_e2_2m = np.mean(data_2m['e1'])
+        mean_e1_2m = np.mean(data_2m['e1'])
+        mean_e2_2m = np.mean(data_2m['e2'])
 
-        self.Rs = np.array([[(mean_e1_1p-mean_e1_1m)/0.02,
-                             (mean_e1_2p-mean_e2_2m)/0.02],
-                            [(mean_e2_1p-mean_e2_1m)/0.02,
-                             (mean_e2_2p-mean_e2_2m)/0.02]])
-        return 
+        return np.array([[(mean_e1_1p-mean_e1_1m)/0.02,
+                          (mean_e1_2p-mean_e1_2m)/0.02],
+                         [(mean_e2_1p-mean_e2_1m)/0.02,
+                          (mean_e2_2p-mean_e2_2m)/0.02]])
+
     def _remove_additive_bias(self):
         self.cat_data['e1'] -= np.mean(self.cat_data['e1'])
         self.cat_data['e2'] -= np.mean(self.cat_data['e2'])
         return
-    
-    def _remove_multiplicative_bias(bias):
-        #Should be done only with galaxies truly in zbin
+
+    def _remove_multiplicative_bias(self):
+        # Should be done only with galaxies truly in zbin
         Rg = np.array([[np.mean(self.cat_data['R11']),
                         np.mean(self.cat_data['R12'])],
                        [np.mean(self.cat_data['R21']),
