@@ -183,10 +183,13 @@ class MapperDESY1wl(MapperBase):
                                  hdu=1)['Z_MID', 'BIN{}'.format(self.zbin + 1)]
             z = file_nz['Z_MID']
             nz = file_nz['BIN{}'.format(self.zbin + 1)]
-            z_dz = z + dz
-            sel = z_dz >= 0
-            self.dndz = np.array([z_dz[sel], nz[sel]])
-        return self.dndz
+            self.dndz = np.array([z, nz])
+
+        z, nz = self.dndz
+        z_dz = z + dz
+        sel = z_dz >= 0
+
+        return np.array([z_dz[sel], nz[sel]])
 
     def get_mask(self):
         if self.mask is None:
