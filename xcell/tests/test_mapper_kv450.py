@@ -29,11 +29,11 @@ def test_lite():
     config = get_config()
     config['path_lite'] = 'xcell/tests/data/'
     ifile = 0
-    while os.path.isfile(f'xcell/tests/data/KV450_lite_cat_{ifile}.fits'):
-        os.remove(f'xcell/tests/data/KV450_lite_cat_{ifile}.fits')
+    while os.path.isfile(f'xcell/tests/data/KV450_lite_cat_zbin{ifile}.fits'):
+        os.remove(f'xcell/tests/data/KV450_lite_cat_zbin{ifile}.fits')
         ifile += 1
     xc.mappers.MapperKV450(config)
-    assert os.path.isfile('xcell/tests/data/KV450_lite_cat_0.fits')
+    assert os.path.isfile('xcell/tests/data/KV450_lite_cat_zbin0.fits')
 
     # Non-exsisting fits files - read from lite
     config['data_catalogs'] = ['whatever', 'whatever']
