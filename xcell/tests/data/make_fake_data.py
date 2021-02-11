@@ -25,6 +25,8 @@ np.savetxt("nl.txt",
 ra, dec = hp.pix2ang(nside, np.arange(npix),
                      lonlat=True)
 on = np.ones(npix)
+half_on = np.append(np.zeros(int(npix/2)), np.ones(int(npix/2)))
+
 ottf = np.repeat(np.array([np.arange(4)]), npix//4,
                  axis=0).flatten()
 
@@ -68,10 +70,14 @@ hdu = fits.BinTableHDU.from_columns(cols)
 hdu.writeto("catalog.fits", overwrite=True)
 
 cols = fits.ColDefs([fits.Column(name='zbin_mcal', format='D', array=on),
-                     fits.Column(name='zbin_mcal_1p', format='D', array=on-1),
-                     fits.Column(name='zbin_mcal_1m', format='D', array=on-1),
-                     fits.Column(name='zbin_mcal_2p', format='D', array=on-1),
-                     fits.Column(name='zbin_mcal_2m', format='D', array=on-1),
+                     fits.Column(name='zbin_mcal_1p', format='D',
+                                 array=half_on),
+                     fits.Column(name='zbin_mcal_1m', format='D',
+                                 array=half_on),
+                     fits.Column(name='zbin_mcal_2p', format='D',
+                                 array=half_on),
+                     fits.Column(name='zbin_mcal_2m', format='D',
+                                 array=half_on),
                      fits.Column(name='coadd_objects_id',
                                  format='D', array=[1])])
 
