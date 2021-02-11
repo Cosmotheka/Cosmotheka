@@ -29,10 +29,11 @@ class MapperDESY1wl(MapperBase):
         self.zbin = config['zbin']
         self.npix = hp.nside2npix(self.nside)
         # dn/dz
-        self.nz = None
+        self.dndz = None
         # load cat
         self.cat_data = self._load_catalog()
         # get items for calibration
+        self.Rs = None
         self.Rs = self._get_Rs()
         # clean data
         self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.zbin)
@@ -117,24 +118,26 @@ class MapperDESY1wl(MapperBase):
         return e1_flag, e2_flag, mode
 
     def _get_Rs(self):
-        data_1p = self.cat_data[self.cat_data['zbin_mcal_1p'] == self.zbin]
-        data_1m = self.cat_data[self.cat_data['zbin_mcal_1m'] == self.zbin]
-        data_2p = self.cat_data[self.cat_data['zbin_mcal_2p'] == self.zbin]
-        data_2m = self.cat_data[self.cat_data['zbin_mcal_2m'] == self.zbin]
+        if self.Rs is None:
+            data_1p = self.cat_data[self.cat_data['zbin_mcal_1p'] == self.zbin]
+            data_1m = self.cat_data[self.cat_data['zbin_mcal_1m'] == self.zbin]
+            data_2p = self.cat_data[self.cat_data['zbin_mcal_2p'] == self.zbin]
+            data_2m = self.cat_data[self.cat_data['zbin_mcal_2m'] == self.zbin]
 
-        mean_e1_1p = np.mean(data_1p['e1'])
-        mean_e2_1p = np.mean(data_1p['e2'])
-        mean_e1_1m = np.mean(data_1m['e1'])
-        mean_e2_1m = np.mean(data_1m['e2'])
-        mean_e1_2p = np.mean(data_2p['e1'])
-        mean_e2_2p = np.mean(data_2p['e2'])
-        mean_e1_2m = np.mean(data_2m['e1'])
-        mean_e2_2m = np.mean(data_2m['e2'])
+            mean_e1_1p = np.mean(data_1p['e1'])
+            mean_e2_1p = np.mean(data_1p['e2'])
+            mean_e1_1m = np.mean(data_1m['e1'])
+            mean_e2_1m = np.mean(data_1m['e2'])
+            mean_e1_2p = np.mean(data_2p['e1'])
+            mean_e2_2p = np.mean(data_2p['e2'])
+            mean_e1_2m = np.mean(data_2m['e1'])
+            mean_e2_2m = np.mean(data_2m['e2'])
 
-        return np.array([[(mean_e1_1p-mean_e1_1m)/0.02,
-                          (mean_e1_2p-mean_e1_2m)/0.02],
-                         [(mean_e2_1p-mean_e2_1m)/0.02,
-                          (mean_e2_2p-mean_e2_2m)/0.02]])
+            self.Rs = np.array([[(mean_e1_1p-mean_e1_1m)/0.02,
+                                 (mean_e1_2p-mean_e1_2m)/0.02],
+                                [(mean_e2_1p-mean_e2_1m)/0.02,
+                                 (mean_e2_2p-mean_e2_2m)/0.02]])
+        return self.Rs
 
     def _remove_additive_bias(self):
         self.cat_data['e1'] -= np.mean(self.cat_data['e1'])
@@ -175,10 +178,15 @@ class MapperDESY1wl(MapperBase):
         return self.signal_map
 
     def get_nz(self, dz=0):
-        if self.nz is None:
-            self.nz = Table.read(self.config['file_nz'], format='fits',
+        if self.dndz is None:
+            file_nz = Table.read(self.config['file_nz'], format='fits',
                                  hdu=1)['Z_MID', 'BIN{}'.format(self.zbin + 1)]
-        return self.nz
+            z = file_nz['Z_MID']
+            nz = file_nz['BIN{}'.format(self.zbin + 1)]
+            z_dz = z + dz
+            sel = z_dz >= 0
+            self.dndz = np.array([z_dz[sel], nz[sel]])
+        return self.dndz
 
     def get_mask(self):
         if self.mask is None:
