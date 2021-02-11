@@ -151,7 +151,7 @@ class MapperKV450(MapperBase):
             goodpix = mask > 0
             we1[goodpix] /= mask[goodpix]
             we2[goodpix] /= mask[goodpix]
-            self.maps[mod] = [-we1, we2]
+            self.maps[mod] = [we1, -we2]
 
         self.signal_map = self.maps[mod]
         return self.signal_map
