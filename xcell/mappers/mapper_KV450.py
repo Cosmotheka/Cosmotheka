@@ -31,43 +31,27 @@ class MapperKV450(MapperBase):
                              'weight']
 
         self.mode = config.get('mode', 'shear')
-        zbin_edges = [[0.1, 0.3],
-                      [0.3, 0.5],
-                      [0.5, 0.7],
-                      [0.7, 0.9],
-                      [0.9, 1.2]]
+        self.zbin_edges = np.array([[0.1, 0.3],
+                                   [0.3, 0.5],
+                                   [0.5, 0.7],
+                                   [0.7, 0.9],
+                                   [0.9, 1.2]])
         self.npix = hp.nside2npix(self.nside)
         self.zbin = int(config['zbin'])
-        self.z_edges = zbin_edges[self.zbin]
+        self.z_edges = self.zbin_edges[self.zbin]
         # Multiplicative bias
         # Values from Table 2 of 1812.06076 (KV450 cosmo paper)
         self.m = (-0.017, -0.008, -0.015, 0.010, 0.006)
 
-        self.cat_data = []
-        for i, file_data in enumerate(self.config['data_catalogs']):
-            read_lite, fname_lite = self._check_lite_exists(i)
-            if read_lite:
-                print('loading lite cat {}'.format(i), end=' ', flush=True)
-                cat = Table.read(fname_lite, format='fits')
-            else:
-                print('loading full cat {}'.format(i), end=' ', flush=True)
-                cat = Table.read(file_data, format='fits')[self.column_names]
-                # GAAP cut
-                goodgaap = cat['GAAP_Flag_ugriZYJHKs'] == 0
-                cat = cat[goodgaap]
-                if fname_lite is not None:
-                    cat.write(fname_lite)
-            # Binning
-            goodbin = self._bin_z(cat)
-            cat = cat[goodbin]
-            # Additive bias on galaxies
-            self._remove_additive_bias(cat)
-            self.cat_data.append(cat)
+        read_lite, fname_lite = self._check_lite_exists(self.zbin)
+        if read_lite:
+            print(f'loading lite cat {self.zbin}', flush=True)
+            self.cat = Table.read(fname_lite, format='fits')
+        else:
+            print(f'loading full cat {self.zbin}', flush=True)
+            self.cat = self._create_catalog()
 
-        self.cat_data = vstack(self.cat_data)
-        self._remove_multiplicative_bias()
-
-        print('Catalogs loaded', end=' ', flush=True)
+        print('Catalogs loaded', flush=True)
 
         self.dndz = np.loadtxt(self.config['file_nz'], unpack=True)
         self.sel = {'galaxies': 1, 'stars': 0}
@@ -80,6 +64,33 @@ class MapperKV450(MapperBase):
 
         self.nl_coupled = None
         self.nls = {'PSF': None, 'shear': None, 'stars': None}
+
+    def _create_catalog(self):
+        nzbins = self.zbin_edges.shape[0]
+        data = [Table() for i in range(nzbins)]
+
+        for file_data in self.config['data_catalogs']:
+            data_cat = Table.read(file_data, format='fits')[self.column_names]
+            # GAAP cut
+            goodgaap = data_cat['GAAP_Flag_ugriZYJHKs'] == 0
+            data_cat = data_cat[goodgaap]
+
+            for i in range(nzbins):
+                # Binning
+                sel = self._bin_z(data_cat, i)
+                data_zbin = data_cat[sel]
+                self._remove_additive_bias(data_zbin)
+                data[i] = vstack([data[i], data_zbin])
+
+        for zbin, cat_zbin in enumerate(data):
+            self._remove_multiplicative_bias(cat_zbin, zbin)
+            read_lite, fname_lite = self._check_lite_exists(zbin)
+            print(fname_lite)
+            if fname_lite is not None:
+                print(f'Writing lite catalog: {fname_lite}', flush=True)
+                cat_zbin.write(fname_lite)
+
+        return data[self.zbin]
 
     def _set_mode(self, mode=None):
         if mode is None:
@@ -101,17 +112,18 @@ class MapperKV450(MapperBase):
             raise ValueError(f"Unknown mode {mode}")
         return kind, e1_flag, e2_flag, mode
 
-    def _check_lite_exists(self, i):
+    def _check_lite_exists(self, zbin):
         if self.path_lite is None:
             return False, None
         else:
-            fname_lite = self.path_lite + f'KV450_lite_cat_{i}.fits'
+            fname_lite = self.path_lite + f'KV450_lite_cat_zbin{zbin}.fits'
             return os.path.isfile(fname_lite), fname_lite
 
-    def _bin_z(self, cat):
+    def _bin_z(self, cat, zbin):
         z_key = 'Z_B'
-        return ((cat[z_key] > self.z_edges[0]) &
-                (cat[z_key] <= self.z_edges[1]))
+        z_edges = self.zbin_edges[zbin]
+        return ((cat[z_key] > z_edges[0]) &
+                (cat[z_key] <= z_edges[1]))
 
     def _remove_additive_bias(self, cat):
         sel_gals = cat['SG_FLAG'] == 1
@@ -123,14 +135,14 @@ class MapperKV450(MapperBase):
             cat['bias_corrected_e1'][sel_gals] -= e1mean
             cat['bias_corrected_e2'][sel_gals] -= e2mean
 
-    def _remove_multiplicative_bias(self):
-        sel_gals = self.cat_data['SG_FLAG'] == 1
-        self.cat_data['bias_corrected_e1'][sel_gals] /= 1 + self.m[self.zbin]
-        self.cat_data['bias_corrected_e2'][sel_gals] /= 1 + self.m[self.zbin]
+    def _remove_multiplicative_bias(self, cat_data, zbin):
+        sel_gals = cat_data['SG_FLAG'] == 1
+        cat_data['bias_corrected_e1'][sel_gals] /= 1 + self.m[zbin]
+        cat_data['bias_corrected_e2'][sel_gals] /= 1 + self.m[zbin]
 
     def _get_gals_or_stars(self, kind='galaxies'):
-        sel = self.cat_data['SG_FLAG'] == self.sel[kind]
-        return self.cat_data[sel]
+        sel = self.cat['SG_FLAG'] == self.sel[kind]
+        return self.cat[sel]
 
     def get_signal_map(self, mode=None):
         kind, e1f, e2f, mod = self._set_mode(mode)
