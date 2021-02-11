@@ -61,17 +61,12 @@ class MapperDESY1gc(MapperBase):
         return self.mask
 
     def get_nz(self, dz=0):
-        if self.dndz is None:
-            # Equivalent to getting columns 1 and 3 in previous code
-            z = self.nz['Z_MID']
-            pz = self.nz['BIN%d' % (self.zbin+1)]
-            # Calculate z bias
-            z_dz = z - dz
-            # Set to 0 points where z_dz < 0:
-            sel = z_dz >= 0
-            z_dz = z_dz[sel]
-            pz = pz[sel]
-        return np.array([z_dz, pz])
+        z = self.nz['Z_MID']
+        nz = self.nz['BIN%d' % (self.zbin+1)]
+        # Shift distribution by dz and remove z + dz < 0
+        z_dz = z + dz
+        sel = z_dz >= 0
+        return np.array([z_dz[sel], nz[sel]])
 
     def get_signal_map(self):
         if self.delta_map is None:

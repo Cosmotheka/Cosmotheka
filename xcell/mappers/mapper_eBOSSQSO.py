@@ -65,12 +65,17 @@ class MappereBOSSQSO(MapperBase):
         weights = cat_SYSTOT*cat_CP*cat_NOZ  # FKP left out
         return weights
 
-    def get_nz(self):
+    def get_nz(self, dz=0):
         if self.dndz is None:
             h, b = np.histogram(self.cat_data['Z'], bins=self.z_arr_dim,
                                 weights=self.w_data)
-            self.dndz = np.array([b[:-1], b[1:], h])
-        return self.dndz
+            self.dndz = np.array([0.5 * (b[:-1] + b[1:]), h])
+
+        z, nz = self.dndz
+        z_dz = z + dz
+        sel = z_dz >= 0
+
+        return np.array([z_dz[sel], nz[sel]])
 
     def get_signal_map(self):
         if self.delta_map is None:

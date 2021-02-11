@@ -63,5 +63,5 @@ def test_get_nz():
     m = get_mapper()
     z, nz = m.get_nz(dz=0)
     assert len(z) == len(nz) == 400
-    z, nz = m.get_nz(dz=0.3)
+    z, nz = m.get_nz(dz=-0.3)
     assert len(z) == len(nz) == 370
