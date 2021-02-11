@@ -1,7 +1,6 @@
 from .mapper_base import MapperBase
 from .utils import get_map_from_points
-from astropy.table import Table, Column
-import astropy.table
+from astropy.table import Table, hstack
 import numpy as np
 import healpy as hp
 import os
@@ -30,10 +29,17 @@ class MapperDESY1wl(MapperBase):
         self.zbin = config['zbin']
         self.npix = hp.nside2npix(self.nside)
         # dn/dz
-        self.nz = None
+        self.dndz = None
         # load cat
         self.cat_data = self._load_catalog()
+        # get items for calibration
+        self.Rs = None
+        self.Rs = self._get_Rs()
+        # clean data
+        self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.zbin)
+        # calibrate
         self._remove_additive_bias()
+        self._remove_multiplicative_bias()
 
         self.signal_map = None
         self.maps = {'PSF': None, 'shear': None}
@@ -50,9 +56,11 @@ class MapperDESY1wl(MapperBase):
         # Galaxy catalog
         columns_data = ['coadd_objects_id', 'e1', 'e2',
                         'psf_e1', 'psf_e2', 'ra', 'dec',
-                        'R11', 'R22', 'flags_select']
+                        'R11', 'R12', 'R21', 'R22',
+                        'flags_select']
         # z-bin catalog
-        columns_zbin = ['coadd_objects_id', 'zbin_mcal']
+        columns_zbin = ['zbin_mcal', 'zbin_mcal_1p',
+                        'zbin_mcal_1m', 'zbin_mcal_2p', 'zbin_mcal_2m']
 
         read_lite, fname_lite = self._check_lite_exists(self.zbin)
 
@@ -67,15 +75,17 @@ class MapperDESY1wl(MapperBase):
             cat_zbin = Table.read(self.config['zbin_cat'],
                                   format='fits', memmap=True)
             cat_zbin.keep_columns(columns_zbin)
-            self.cat_data = astropy.table.join(self.cat_data, cat_zbin)
-            # Note: By default join uses checks the values of the column named
-            # the same in both tables
-            col_w = Column(name='weight',
-                           data=np.ones(len(self.cat_data), dtype=int))
-            self.cat_data.add_column(col_w)
+            self.cat_data = hstack([self.cat_data, cat_zbin])
 
             # remove bins which are not the one of interest
-            self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.zbin)
+            # Logic: If item in one of zbins --> sel = False
+            # Thus it is not removed by next line
+            sel = (self.cat_data['zbin_mcal'] != self.zbin) * \
+                (self.cat_data['zbin_mcal_1p'] != self.zbin) * \
+                (self.cat_data['zbin_mcal_1m'] != self.zbin) * \
+                (self.cat_data['zbin_mcal_2p'] != self.zbin) * \
+                (self.cat_data['zbin_mcal_2m'] != self.zbin)
+            self.cat_data.remove_rows(sel)
             # filter for -90<dec<-35
             self.cat_data.remove_rows(self.cat_data['dec'] < -90)
             self.cat_data.remove_rows(self.cat_data['dec'] > -35)
@@ -83,7 +93,6 @@ class MapperDESY1wl(MapperBase):
             self.cat_data.remove_rows(self.cat_data['flags_select'] != 0)
             if fname_lite is not None:
                 self.cat_data.write(fname_lite)
-
         return self.cat_data
 
     def _check_lite_exists(self, i):
@@ -108,9 +117,44 @@ class MapperDESY1wl(MapperBase):
             raise ValueError(f"Unknown mode {mode}")
         return e1_flag, e2_flag, mode
 
+    def _get_Rs(self):
+        if self.Rs is None:
+            data_1p = self.cat_data[self.cat_data['zbin_mcal_1p'] == self.zbin]
+            data_1m = self.cat_data[self.cat_data['zbin_mcal_1m'] == self.zbin]
+            data_2p = self.cat_data[self.cat_data['zbin_mcal_2p'] == self.zbin]
+            data_2m = self.cat_data[self.cat_data['zbin_mcal_2m'] == self.zbin]
+
+            mean_e1_1p = np.mean(data_1p['e1'])
+            mean_e2_1p = np.mean(data_1p['e2'])
+            mean_e1_1m = np.mean(data_1m['e1'])
+            mean_e2_1m = np.mean(data_1m['e2'])
+            mean_e1_2p = np.mean(data_2p['e1'])
+            mean_e2_2p = np.mean(data_2p['e2'])
+            mean_e1_2m = np.mean(data_2m['e1'])
+            mean_e2_2m = np.mean(data_2m['e2'])
+
+            self.Rs = np.array([[(mean_e1_1p-mean_e1_1m)/0.02,
+                                 (mean_e1_2p-mean_e1_2m)/0.02],
+                                [(mean_e2_1p-mean_e2_1m)/0.02,
+                                 (mean_e2_2p-mean_e2_2m)/0.02]])
+        return self.Rs
+
     def _remove_additive_bias(self):
         self.cat_data['e1'] -= np.mean(self.cat_data['e1'])
         self.cat_data['e2'] -= np.mean(self.cat_data['e2'])
+        return
+
+    def _remove_multiplicative_bias(self):
+        # Should be done only with galaxies truly in zbin
+        Rg = np.array([[np.mean(self.cat_data['R11']),
+                        np.mean(self.cat_data['R12'])],
+                       [np.mean(self.cat_data['R21']),
+                        np.mean(self.cat_data['R22'])]])
+        Rmat = Rg + self.Rs
+        one_plus_m = np.sum(np.diag(Rmat))*0.5
+
+        self.cat_data['e1'] /= one_plus_m
+        self.cat_data['e2'] /= one_plus_m
         return
 
     def get_signal_map(self, mode=None):
@@ -133,11 +177,16 @@ class MapperDESY1wl(MapperBase):
         self.signal_map = self.maps[mod]
         return self.signal_map
 
-    def get_nz(self):
-        if self.nz is None:
-            self.nz = Table.read(self.config['file_nz'], format='fits',
+    def get_nz(self, dz=0):
+        if self.dndz is None:
+            file_nz = Table.read(self.config['file_nz'], format='fits',
                                  hdu=1)['Z_MID', 'BIN{}'.format(self.zbin + 1)]
-        return self.nz
+            z = file_nz['Z_MID']
+            nz = file_nz['BIN{}'.format(self.zbin + 1)]
+            z_dz = z + dz
+            sel = z_dz >= 0
+            self.dndz = np.array([z_dz[sel], nz[sel]])
+        return self.dndz
 
     def get_mask(self):
         if self.mask is None:
