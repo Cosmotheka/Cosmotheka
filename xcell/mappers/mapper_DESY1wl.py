@@ -79,11 +79,11 @@ class MapperDESY1wl(MapperBase):
             # remove bins which are not the one of interest
             # Logic: If item in one of zbins --> sel = False
             # Thus it is not removed by next line
-            sel = self.cat_data['zbin_mcal'].any() != self.zbin * \
-                self.cat_data['zbin_mcal_1p'].any() != self.zbin * \
-                self.cat_data['zbin_mcal_1m'].any() != self.zbin * \
-                self.cat_data['zbin_mcal_2p'].any() != self.zbin * \
-                self.cat_data['zbin_mcal_2m'].any() != self.zbin
+            sel = (self.cat_data['zbin_mcal'] != self.zbin) * \
+                (self.cat_data['zbin_mcal_1p'] != self.zbin) * \
+                (self.cat_data['zbin_mcal_1m'] != self.zbin) * \
+                (self.cat_data['zbin_mcal_2p'] != self.zbin) * \
+                (self.cat_data['zbin_mcal_2m'] != self.zbin)
             self.cat_data.remove_rows(sel)
             # filter for -90<dec<-35
             self.cat_data.remove_rows(self.cat_data['dec'] < -90)
