@@ -195,14 +195,11 @@ class MapperKV450(MapperBase):
         if not dz:
             return self.dndz
 
-        z, pz = self.dndz
-        # Calculate z bias
-        z_dz = z - dz
-        # Set to 0 points where z_dz < 0:
+        z, nz = self.dndz
+        z_dz = z + dz
         sel = z_dz >= 0
-        z_dz = z_dz[sel]
-        pz = pz[sel]
-        return np.array([z_dz, pz])
+
+        return np.array([z_dz[sel], nz[sel]])
 
     def get_dtype(self):
         return 'galaxy_shear'
