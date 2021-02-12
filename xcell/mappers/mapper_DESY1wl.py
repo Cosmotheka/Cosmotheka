@@ -165,7 +165,7 @@ class MapperDESY1wl(MapperBase):
                                       ra_name='ra',
                                       dec_name='dec')
             we2 = get_map_from_points(self.cat_data, self.nside,
-                                      w=self.cat_data[e1f],
+                                      w=self.cat_data[e2f],
                                       ra_name='ra',
                                       dec_name='dec')
             mask = self.get_mask()
