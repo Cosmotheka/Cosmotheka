@@ -141,13 +141,13 @@ cls:
   DESgc-DESwl:
     compute: 'all'
   DESgc-eBOSS:
-    compute: 'all'
+    compute: 'None'
   DESgc-PLAcv:
     compute: 'all'
   DESwl-DESwl:
     compute: 'all'
   DESwl-eBOSS:
-    compute: 'all'
+    compute: 'None'
   DESwl-PLAcv:
     compute: 'all'
   eBOSS-eBOSS:
