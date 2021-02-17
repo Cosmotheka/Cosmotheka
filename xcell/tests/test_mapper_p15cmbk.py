@@ -33,9 +33,9 @@ def test_get_mask():
     assert np.all(np.fabs(d-1) < 1E-5)
 
 
-def test_get_nl():
+def test_get_nl_coupled():
     m = get_mapper()
-    nl = m.get_nl()
+    nl = m.get_nl_coupled()
     cl = m.get_cl_fiducial()
     ll = m.get_ells()
     assert nl.shape == (1, 3*32)

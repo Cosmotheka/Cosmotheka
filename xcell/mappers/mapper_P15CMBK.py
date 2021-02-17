@@ -47,7 +47,7 @@ class MapperP15CMBK(MapperBase):
                                     nside_out=self.nside)
         return self.mask
 
-    def get_nl(self):
+    def get_nl_coupled(self):
         if self.nl_coupled is None:
             self.nl_coupled = self.noise['Nl'].values
         return np.array([self.nl_coupled])
