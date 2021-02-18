@@ -134,7 +134,8 @@ tracers:
     file_noise: '/mnt/extraspace/damonge/S8z_data/Planck_data/COM_Lensing_4096_R3.00/MV/nlkk.dat' 
     nside: 4096
     mask_name: 'mask_PLAcv'
-    mapper_class: 'MapperP15CMBK'
+    mapper_class: 'MapperP18CMBK'
+    path_lite: '/mnt/extraspace/gravityls_3/S8z/data/derived_products/planck_lensing/COM_Lensing_4096_R3.00/'
 
 cls:
   # Options: all, cross, None

@@ -7,12 +7,14 @@ def get_config():
             'file_mask': 'xcell/tests/data/map.fits',
             'file_noise': 'xcell/tests/data/nl.txt',
             'mask_name': 'mask_CMBK',
+            'mask_aposize': 3,  # Must be large than pixel size
+            'mask_apotype': 'C1',
             'nside': 32}
 
 
 def get_mapper():
     config = get_config()
-    return xc.mappers.MapperP15CMBK(config)
+    return xc.mappers.MapperP18CMBK(config)
 
 
 def test_smoke():
@@ -33,15 +35,18 @@ def test_get_mask():
     assert np.all(np.fabs(d-1) < 1E-5)
 
 
-def test_get_nl():
+def test_get_nl_coupled():
     m = get_mapper()
-    nl = m.get_nl()
+    nl = m.get_nl_coupled()
     cl = m.get_cl_fiducial()
-    ll = m.get_ells()
+    ll_tb = m.get_ells_in_table()
+    ell = m.get_ell()
+
     assert nl.shape == (1, 3*32)
     assert np.all(np.fabs(nl) < 1E-15)
     assert cl.shape == (1, 3*32)
-    assert np.allclose(ll, np.arange(3*32))
+    assert np.allclose(ll_tb, np.arange(3*32))
+    assert np.all(ell == np.arange(3 * 32))
 
 
 def test_get_nmt_field():
