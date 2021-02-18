@@ -14,7 +14,7 @@ def get_config():
 
 def get_mapper():
     config = get_config()
-    return xc.mappers.MapperP15CMBK(config)
+    return xc.mappers.MapperP18CMBK(config)
 
 
 def test_smoke():

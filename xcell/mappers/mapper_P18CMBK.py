@@ -6,18 +6,18 @@ import pymaster as nmt
 import os
 
 
-class MapperP15CMBK(MapperBase):
+class MapperP18CMBK(MapperBase):
     def __init__(self, config):
         """
         config - dict
-        {'file_klm':'COM_Lensing_2048_R2.00/dat_klm.fits',
-         'file_mask':'COM_Lensing_2048_R2.00/mask.fits.gz',
-         'file_noise':'COM_Lensing_2048_R2.00/nlkk.dat',
+        {'file_klm':'COM_Lensing_4096_R3.00/MV/dat_klm.fits',
+         'file_mask':'COM_Lensing_4096_R3.00/mask.fits.gz',
+         'file_noise':'COM_Lensing_4096_R3.00/MV/nlkk.dat',
          'path_lite': './path/lite'
          'mask_aposize': 0.2,
          'mask_apotype': 'C1',
          'mask_name': 'mask_CMBK',
-         'nside':2048}
+         'nside':4096}
         """
         self._get_defaults(config)
         self.mask_apotype = config.get('mask_apotype', 'C1')
