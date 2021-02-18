@@ -7,6 +7,8 @@ def get_config():
             'file_mask': 'xcell/tests/data/map.fits',
             'file_noise': 'xcell/tests/data/nl.txt',
             'mask_name': 'mask_CMBK',
+            'mask_aposize': 3,  # Must be large than pixel size
+            'mask_apotype': 'C1',
             'nside': 32}
 
 

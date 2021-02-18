@@ -2,6 +2,8 @@ from .mapper_base import MapperBase
 import pandas as pd
 import numpy as np
 import healpy as hp
+import pymaster as nmt
+import os
 
 
 class MapperP15CMBK(MapperBase):
@@ -11,10 +13,16 @@ class MapperP15CMBK(MapperBase):
         {'file_klm':'COM_Lensing_2048_R2.00/dat_klm.fits',
          'file_mask':'COM_Lensing_2048_R2.00/mask.fits.gz',
          'file_noise':'COM_Lensing_2048_R2.00/nlkk.dat',
+         'path_lite': './path/lite'
+         'mask_aposize': 0.2,
+         'mask_apotype': 'C1',
          'mask_name': 'mask_CMBK',
          'nside':2048}
         """
         self._get_defaults(config)
+        self.mask_apotype = config.get('mask_apotype', 'C1')
+        self.mask_aposize = config.get('mask_aposize', 0.2)
+        self.path_lite = config.get('path_lite', None)
 
         # Read noise file
         self.noise = pd.read_table(self.config['file_noise'],
@@ -29,6 +37,15 @@ class MapperP15CMBK(MapperBase):
         self.mask = None
         self.cl_fid = None
 
+    def _check_mask_exists(self):
+        if self.path_lite is None:
+            return False, None
+        else:
+            file_name = f'P15CMBK_mask_{self.mask_aposize}_{self.mask_apotype}.fits.gz'
+            fname_lite = os.path.join(self.path_lite, file_name)
+            os.makedirs(self.path_lite, exist_ok=True)
+            return os.path.isfile(fname_lite), fname_lite
+
     def get_signal_map(self):
         if self.signal_map is None:
             # Read alms
@@ -40,13 +57,22 @@ class MapperP15CMBK(MapperBase):
 
     def get_mask(self):
         if self.mask is None:
-            self.mask = hp.read_map(self.config['file_mask'],
-                                    verbose=False)
-            self.mask = self.r.rotate_map_pixel(self.mask)
-            # Binerize
-            self.mask[self.mask < 0.5] = 0
-            self.mask[self.mask >= 0.5] = 1.
-            #
+            read_lite, fname = self._check_mask_exists()
+            if read_lite:
+                self.mask = hp.read_map(fname)
+            else:
+                self.mask = hp.read_map(self.config['file_mask'],
+                                        verbose=False)
+                self.mask = self.r.rotate_map_pixel(self.mask)
+                # Binerize
+                self.mask[self.mask < 0.5] = 0
+                self.mask[self.mask >= 0.5] = 1.
+                # Apodize
+                self.mask = nmt.mask_apodization(self.mask, self.mask_aposize,
+                                                 self.mask_apotype)
+                if fname:
+                    hp.write_map(fname, self.mask)
+                #
             self.mask = hp.ud_grade(self.mask,
                                     nside_out=self.nside)
         return self.mask
