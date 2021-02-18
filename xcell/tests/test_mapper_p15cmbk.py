@@ -39,11 +39,14 @@ def test_get_nl_coupled():
     m = get_mapper()
     nl = m.get_nl_coupled()
     cl = m.get_cl_fiducial()
-    ll = m.get_ells()
+    ll_tb = m.get_ells_in_table()
+    ell = m.get_ell()
+
     assert nl.shape == (1, 3*32)
     assert np.all(np.fabs(nl) < 1E-15)
     assert cl.shape == (1, 3*32)
-    assert np.allclose(ll, np.arange(3*32))
+    assert np.allclose(ll_tb, np.arange(3*32))
+    assert np.all(ell == np.arange( 3 * 32 ))
 
 
 def test_get_nmt_field():

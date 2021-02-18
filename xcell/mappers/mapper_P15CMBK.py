@@ -1,5 +1,5 @@
 from .mapper_base import MapperBase
-import pandas as pd
+from scipy.interpolate import interp1d
 import numpy as np
 import healpy as hp
 import pymaster as nmt
@@ -24,10 +24,9 @@ class MapperP15CMBK(MapperBase):
         self.mask_aposize = config.get('mask_aposize', 0.2)
         self.path_lite = config.get('path_lite', None)
 
-        # Read noise file
-        self.noise = pd.read_table(self.config['file_noise'],
-                                   names=['l', 'Nl', 'Nl+Cl'],
-                                   sep=" ", encoding='utf-8')
+        # Read noise file. Column order is: ['l', 'Nl', 'Nl+Cl']
+        self.noise = np.loadtxt(self.config['file_noise'], unpack=True)
+
         # Galactic-to-celestial coordinate rotator
         self.r = hp.Rotator(coord=['G', 'C'])
 
@@ -41,7 +40,8 @@ class MapperP15CMBK(MapperBase):
         if self.path_lite is None:
             return False, None
         else:
-            file_name = f'P15CMBK_mask_{self.mask_aposize}_{self.mask_apotype}.fits.gz'
+            file_name = '_'.join([f'P15CMBK_mask_{self.mask_aposize}',
+                                  f'{self.mask_apotype}.fits.gz'])
             fname_lite = os.path.join(self.path_lite, file_name)
             os.makedirs(self.path_lite, exist_ok=True)
             return os.path.isfile(fname_lite), fname_lite
@@ -79,17 +79,32 @@ class MapperP15CMBK(MapperBase):
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
-            self.nl_coupled = self.noise['Nl'].values
-        return np.array([self.nl_coupled])
+            ell = self.get_ell()
+            nl = self.noise[1]
+            nl = interp1d(self.noise[0], nl, bounds_error=False,
+                          fill_value=(nl[0], nl[-1]))(ell)
+
+            # The Nl in the file is decoupled. To "couple" it, multiply by the
+            # mean of the squared mask. This will account for the factor that
+            # will be divided for the coviariance.
+            nl *= np.mean(self.get_mask() ** 2.)
+            self.nl_coupled = np.array([nl])
+        return self.nl_coupled
 
     def get_cl_fiducial(self):
         if self.cl_fid is None:
-            self.cl_fid = (self.noise['Nl+Cl'].values -
-                           self.noise['Nl'].values)
-        return np.array([self.cl_fid])
+            ell = self.get_ell()
+            cl = self.noise[2] - self.noise[1]
+            cl = interp1d(self.noise[0], cl, bounds_error=False,
+                          fill_value=(cl[0], cl[-1]))(ell)
+            self.cl_fid = np.array([cl])
+        return self.cl_fid
 
-    def get_ells(self):
-        return self.noise['l'].values
+    def get_ell(self):
+        return np.arange(3 * self.nside)
+
+    def get_ells_in_table(self):
+        return self.noise[0]
 
     def get_dtype(self):
         return 'cmb_convergence'
