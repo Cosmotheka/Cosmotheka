@@ -46,7 +46,7 @@ def test_get_nl_coupled():
     assert np.all(np.fabs(nl) < 1E-15)
     assert cl.shape == (1, 3*32)
     assert np.allclose(ll_tb, np.arange(3*32))
-    assert np.all(ell == np.arange( 3 * 32 ))
+    assert np.all(ell == np.arange(3 * 32))
 
 
 def test_get_nmt_field():
