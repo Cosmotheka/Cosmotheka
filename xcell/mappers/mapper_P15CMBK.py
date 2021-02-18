@@ -43,6 +43,10 @@ class MapperP15CMBK(MapperBase):
             self.mask = hp.read_map(self.config['file_mask'],
                                     verbose=False)
             self.mask = self.r.rotate_map_pixel(self.mask)
+            # Binerize
+            self.mask[self.mask < 0.5] = 0
+            self.mask[self.mask >= 0.5] = 1.
+            #
             self.mask = hp.ud_grade(self.mask,
                                     nside_out=self.nside)
         return self.mask
