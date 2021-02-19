@@ -114,6 +114,8 @@ tracers:
     mask_name: 'mask_QSO_0'
     mapper_class: 'MappereBOSSQSO'
     bias: 1
+    nl_marginalize: True
+    nl_prior: 0.1
 
   eBOSS__1:
     data_catalogs:
@@ -127,6 +129,8 @@ tracers:
     mask_name: 'mask_QSO_1'
     mapper_class: 'MappereBOSSQSO'
     bias: 1
+    nl_marginalize: True
+    nl_prior: 0.1
 
   PLAcv:
     file_klm: '/mnt/extraspace/damonge/S8z_data/Planck_data/COM_Lensing_4096_R3.00/MV/dat_klm.fits'
