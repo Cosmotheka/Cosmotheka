@@ -26,7 +26,7 @@ def get_config(fsky=0.2):
         'sigma8': 0.8111,
         'w0': -1,
         'wa': 0,
-        'transfer_function': 'boltzmann_camb',
+        'transfer_function': 'eisenstein_hu',
         'baryons_power_spectrum': 'nobaryons',
     }
     dummy0 = {'mask_name': 'mask_dummy0', 'mapper_class': 'MapperDummy',
@@ -62,6 +62,19 @@ def get_cov_class(fsky=0.2):
 def test_smoke():
     get_cl_class()
     get_cov_class()
+
+
+def test_cov_nlmarg():
+    data = get_config(0.2)
+    data['tracers']['Dummy__0']['nl_marginalize'] = True
+    data['tracers']['Dummy__0']['nl_prior'] = 1E30
+    data['tracers']['Dummy__0']['noise_level'] = 1E-5
+    cov_class = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
+    cov = cov_class.get_covariance()
+    num_l = len(cov)
+    oo = np.ones(num_l)
+    chi2 = np.dot(oo, np.linalg.solve(cov, oo))
+    assert np.fabs(chi2) < 1E-5*num_l
 
 
 def test_get_ell_cl():

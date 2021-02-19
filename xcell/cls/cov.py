@@ -112,7 +112,8 @@ class Cov():
                                       wa, wb)
 
         if self.nl_marg:
-            _, nl = self.clA1A2.get_ell_nl().flatten()
+            _, nl = self.clA1A2.get_ell_nl()
+            nl = nl.flatten()
             cov += self.nl_prior**2 * (nl[:, None] * nl[None, :])
 
         self.cov = cov

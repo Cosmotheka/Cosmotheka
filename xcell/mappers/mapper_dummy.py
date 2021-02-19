@@ -44,11 +44,15 @@ class MapperDummy(MapperBase):
             'baryons_power_spectrum': 'nobaryons',
         }
         self.cosmo_pars = self.config.get('cosmo', cosmo)
+        self.noise_level = self.config.get('noise_level', 0)
         self.cosmo = ccl.Cosmology(**self.cosmo_pars)
         ccl.sigma8(self.cosmo)
         self.dtype = self.config.get('dtype', 'galaxy_density')
         self._check_dtype()
         self.spin = self._get_spin_from_dtype(self.dtype)
+        self.nmaps = 1
+        if self.spin:
+            self.nmaps = 2
 
         self.signal_map = None
         self.nl_coupled = None
@@ -111,10 +115,11 @@ class MapperDummy(MapperBase):
             np.random.seed(self.seed)
             cl = self.get_cl()
             if self.spin == 0:
-                self.signal_map = [hp.synfast(cl, self.nside)]
+                self.signal_map = [hp.synfast(cl, self.nside, verbose=False)]
             elif self.spin == 2:
                 _, mq, mu = hp.synfast([0*cl, cl, 0*cl, 0*cl],
-                                       self.nside, new=True)
+                                       self.nside, new=True,
+                                       verbose=False)
                 self.signal_map = [mq, mu]
         return self.signal_map
 
@@ -149,7 +154,8 @@ class MapperDummy(MapperBase):
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             # Coupled analytical noise bias
-            self.nl_coupled = np.zeros((1, 3*self.nside))
+            self.nl_coupled = np.zeros((self.nmaps*self.nmaps,
+                                        3*self.nside)) + self.noise_level
         return self.nl_coupled
 
     def get_dtype(self):
