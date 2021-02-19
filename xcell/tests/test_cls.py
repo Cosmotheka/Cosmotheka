@@ -8,9 +8,12 @@ from xcell.mappers import MapperDummy
 
 
 # Remove previous test results
-tmpdir = './xcell/tests/cls/dummy'
-if os.path.isdir(tmpdir):
-    shutil.rmtree(tmpdir)
+tmpdir1 = './xcell/tests/cls/dummy1'
+if os.path.isdir(tmpdir1):
+    shutil.rmtree(tmpdir1)
+tmpdir2 = './xcell/tests/cls/dummy2'
+if os.path.isdir(tmpdir2):
+    shutil.rmtree(tmpdir2)
 
 
 def get_config(fsky=0.2):
@@ -46,7 +49,7 @@ def get_config(fsky=0.2):
                           'cov': True,
                           'mcm': True,
                           'cmcm': True},
-            'output': tmpdir}
+            'output': tmpdir1}
 
 
 def get_cl_class(fsky=0.2):
@@ -69,6 +72,7 @@ def test_cov_nlmarg():
     data['tracers']['Dummy__0']['nl_marginalize'] = True
     data['tracers']['Dummy__0']['nl_prior'] = 1E30
     data['tracers']['Dummy__0']['noise_level'] = 1E-5
+    data['output'] = tmpdir2
     cov_class = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
     cov = cov_class.get_covariance()
     num_l = len(cov)
