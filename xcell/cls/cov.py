@@ -28,6 +28,12 @@ class Cov():
         self.recompute_cov = self.data.data['recompute']['cov']
         self.recompute_cmcm = self.data.data['recompute']['cmcm']
         self.cov = None
+        # Noise marginalization?
+        self.nl_marg = False
+        if (trA1 == trA2 == trB1 == trB2):
+            trconf = self.data.data['tracers'][trA1]
+            self.nl_marg = trconf.get('nl_marginalize', False)
+            self.nl_prior = trconf.get('nl_prior', 1E30)
 
     def get_outdir(self):
         root = self.data.data['output']
@@ -104,6 +110,11 @@ class Cov():
         cov = nmt.gaussian_covariance(cw, s_a1, s_a2, s_b1, s_b2,
                                       cla1b1, cla1b2, cla2b1, cla2b2,
                                       wa, wb)
+
+        if self.nl_marg:
+            _, nl = self.clA1A2.get_ell_nl()
+            nl = nl.flatten()
+            cov += self.nl_prior**2 * (nl[:, None] * nl[None, :])
 
         self.cov = cov
         np.savez_compressed(fname, cov=cov)
