@@ -68,7 +68,7 @@ class MappereBOSSQSO(MapperBase):
     def get_nz(self, dz=0):
         if self.dndz is None:
             h, b = np.histogram(self.cat_data['Z'], bins=self.z_arr_dim,
-                                weights=self.w_data)
+                                weights=self.w_data, range=[0.5, 2.5])
             self.dndz = np.array([0.5 * (b[:-1] + b[1:]), h])
 
         z, nz = self.dndz
