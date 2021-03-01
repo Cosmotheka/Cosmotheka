@@ -8,97 +8,138 @@ import pymaster as nmt
 import os
 
 
-class MappereBOSSQSO(MapperBase):
+class MapperDECaLS(MapperBase):
     def __init__(self, config):
         """
         config - dict
-          {'data_catalogs':['eBOSS_QSO_clustering_data-NGC-vDR16.fits'],
-           'random_catalogs':['eBOSS_QSO_clustering_random-NGC-vDR16.fits'],
-           'z_edges':[0, 1.5],
-           'nside':nside,
+          {'data_catalogs':['data_Legacy_Survey_BASS-MZLS_galaxies-selection.fits'],
+           'mask': 'data_Legacy_footprint_final_mask.fits',
+           'comp_map': 'data_Legacy_footprint_completeness_mask_128.fits',
+           'stars': 'data_allwise_total_rot_1024.fits',
+           'zbin': 0,
+           'nside': 128,
            'nside_mask': nside_mask,
-           'mask_name': 'mask_QSO_NGC_1'}
+           'mask_name': 'mask_DECaLS_SGC'}
         """
         self._get_defaults(config)
+        self.nside_fid = 1024
 
         self.cat_data = []
-        self.cat_random = []
         self.z_arr_dim = config.get('z_arr_dim', 50)
+        self.npix = hp.nside2npix(self.nside)
 
-        for file_data, file_random in zip(self.config['data_catalogs'],
-                                          self.config['random_catalogs']):
+        for file_data in self.config['data_catalogs']:
             if not os.path.isfile(file_data):
                 raise ValueError(f"File {file_data} not found")
             with fits.open(file_data) as f:
                 self.cat_data.append(Table.read(f))
-            if not os.path.isfile(file_random):
-                raise ValueError(f"File {file_random} not found")
-            with fits.open(file_random) as f:
-                self.cat_random.append(Table.read(f))
-
+                
         self.cat_data = vstack(self.cat_data)
-        self.cat_random = vstack(self.cat_random)
-        self.nside_mask = config.get('nside_mask', self.nside)
-        self.npix = hp.nside2npix(self.nside)
-
-        self.z_edges = config['z_edges']
-
+        
+        bin_edges = [[0.00, 0.30],
+                     [0.30, 0.45],
+                     [0.45, 0.60],
+                     [0.60, 0.80]]
+        
+        self.zbin = config['zbin']
+        self.z_edges = bin_edges[self.zbin]
         self.cat_data = self._bin_z(self.cat_data)
-        self.cat_random = self._bin_z(self.cat_random)
-        self.w_data = self._get_weights(self.cat_data)
-        self.w_random = self._get_weights(self.cat_random)
-        self.alpha = np.sum(self.w_data)/np.sum(self.w_random)
 
         self.dndz = None
         self.delta_map = None
         self.nl_coupled = None
         self.mask = None
+        self.comp_map = None
+        self.stars = None
 
     def _bin_z(self, cat):
-        return cat[(cat['Z'] >= self.z_edges[0]) &
-                   (cat['Z'] < self.z_edges[1])]
+        return cat[(cat['PHOTOZ_3DINFER'] >= self.z_edges[0]) &
+                   (cat['PHOTOZ_3DINFER'] < self.z_edges[1])]
 
-    def _get_weights(self, cat):
-        cat_SYSTOT = np.array(cat['WEIGHT_SYSTOT'])
-        cat_CP = np.array(cat['WEIGHT_CP'])
-        cat_NOZ = np.array(cat['WEIGHT_NOZ'])
-        weights = cat_SYSTOT*cat_CP*cat_NOZ  # FKP left out
-        return weights
-
-    def get_nz(self, dz=0):
-        if self.dndz is None:
-            h, b = np.histogram(self.cat_data['Z'], bins=self.z_arr_dim,
-                                weights=self.w_data)
-            self.dndz = np.array([0.5 * (b[:-1] + b[1:]), h])
-
+    def get_nz(self, convolve=True, dz=0):
+        #if self.dndz is None:
+        h, b = np.histogram(self.cat_data['PHOTOZ_3DINFER'], bins=self.z_arr_dim)
+        z_arr = 0.5 * (b[:-1] + b[1:])
+        self.dndz = np.array([z_arr, h])
+        lorentzian = self._get_lorentzian(z_arr)
+        print(lorentzian)
+        conv = np.sum(self.dndz[1]*lorentzian, axis=1)
+        # Normalization
+        conv /= np.sum(conv) 
+        if convolve:
+            self.dndz = np.array([self.dndz[0], conv])
+        else:
+            self.dndz = np.array([self.dndz[0],
+                                  self.dndz[1]/np.sum(self.dndz[1])])
+        #####
+            
         z, nz = self.dndz
         z_dz = z + dz
         sel = z_dz >= 0
-
         return np.array([z_dz[sel], nz[sel]])
 
+    def _get_lorentzian(self, z_arr):
+        # a m s 
+        params = np.array([[1.257, -0.0010, 0.0122],
+                           [1.104, 0.0076, 0.0151],
+                           [1.476, -0.0024, 0.0155],
+                           [2.019, -0.0042, 0.0265]])
+        [a, m, s] =  params[self.zbin]
+        lorentzian = np.zeros([len(z_arr), len(z_arr)])
+        # NOTE: sample more points
+        for zs_i, zs in enumerate(z_arr):
+            for zp_i, zp in enumerate(z_arr):
+                lorentzian[zp_i, zs_i] = ((zp-zs-m)/(s**2))**2
+                lorentzian[zp_i, zs_i] /= 2*a
+                lorentzian[zp_i, zs_i] += 1
+                lorentzian[zp_i, zs_i] = lorentzian[zp_i, zs_i]**(-a)                  
+        return lorentzian               
+    
     def get_signal_map(self):
         if self.delta_map is None:
             self.delta_map = np.zeros(self.npix)
-            nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            w=self.w_data)
-            nmap_random = get_map_from_points(self.cat_random, self.nside,
-                                              w=self.w_random)
-
-            mask = self.get_mask()
-            goodpix = mask > 0
-            self.delta_map = (nmap_data - self.alpha * nmap_random)
-            self.delta_map[goodpix] /= mask[goodpix]
+            self.comp_map = self._get_comp_map() 
+            self.stars = self._get_stars()
+            # PROBLEM: correction factor too big for threshold
+            nmap_data = get_map_from_points(self.cat_data, self.nside)
+            mean_n = self._get_mean_n(nmap_data)
+            self.mask = self.get_mask()
+            goodpix = self.mask > 0
+            self.delta_map[goodpix] = nmap_data[goodpix]/self.comp_map[goodpix]
+            self.delta_map[goodpix] /= mean_n
+            self.delta_map[goodpix] += -1
         return [self.delta_map]
 
+    def _get_mean_n(self, nmap):
+        goodpix = self.comp_map > 0.95 
+        goodpix *= self.stars < 8520
+        goodpix *= self.mask > 0
+        n_mean = np.mean(nmap[goodpix])
+        return n_mean
+    
+    def _get_stars(self):
+        if self.stars is None:
+            self.stars = hp.read_map(self.config['stars'])
+            area_ratio = (self.nside_fid/self.nside)**2 
+            self.stars = area_ratio * hp.ud_grade(self.stars,
+                                                 nside_out=self.nside)
+            # correct for the fact that threshold is given 
+            # in stars per degree^2 as opposed to pixel
+            self.stars *= (360**2/np.pi)/(12*self.nside**2)
+        return self.stars
+    
+    def _get_comp_map(self):
+        if self.comp_map is None:
+            self.comp_map = hp.read_map(self.config['comp_map'])
+            area_ratio = 1# (self.nside_fid/self.nside)**2
+            self.comp_map = area_ratio * hp.ud_grade(self.comp_map,
+                                                 nside_out=self.nside)
+        return self.comp_map
+    
     def get_mask(self):
         if self.mask is None:
-            self.mask = get_map_from_points(self.cat_random,
-                                            self.nside_mask,
-                                            w=self.w_random)
-            self.mask *= self.alpha
-            # Account for different pixel areas
-            area_ratio = (self.nside_mask/self.nside)**2
+            self.mask = hp.read_map(self.config['mask'])
+            area_ratio = (self.nside_fid/self.nside)**2
             self.mask = area_ratio * hp.ud_grade(self.mask,
                                                  nside_out=self.nside)
         return self.mask
@@ -107,7 +148,7 @@ class MappereBOSSQSO(MapperBase):
         if self.nl_coupled is None:
             if self.nside < 4096:
                 print('calculing nl from weights')
-                pixel_A = 4*np.pi/hp.nside2npix(self.nside)
+                pixel_A = 4*np.pi/self.npix
                 mask = self.get_mask()
                 w2_data = get_map_from_points(self.cat_data, self.nside,
                                               w=self.w_data**2)
