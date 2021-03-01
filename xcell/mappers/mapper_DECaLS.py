@@ -51,6 +51,7 @@ class MapperDECaLS(MapperBase):
         self.mask = None
         self.comp_map = None
         self.stars = None
+        self.bmask = None
 
     def _bin_z(self, cat):
         return cat[(cat['PHOTOZ_3DINFER'] >= self.z_edges[0]) &
@@ -95,76 +96,105 @@ class MapperDECaLS(MapperBase):
                 lorentzian[zp_i, zs_i] = lorentzian[zp_i, zs_i]**(-a)                  
         return lorentzian               
     
-    def get_signal_map(self):
+    def get_signal_map(self, apply_galactic_correction=True):
         if self.delta_map is None:
-            self.delta_map = np.zeros(self.npix)
+            d = np.zeros(self.npix)
             self.comp_map = self._get_comp_map() 
+            self.bmask = self._get_binary_mask()
             self.stars = self._get_stars()
-            # PROBLEM: correction factor too big for threshold
             nmap_data = get_map_from_points(self.cat_data, self.nside)
             mean_n = self._get_mean_n(nmap_data)
-            self.mask = self.get_mask()
-            goodpix = self.mask > 0
-            self.delta_map[goodpix] = nmap_data[goodpix]/self.comp_map[goodpix]
-            self.delta_map[goodpix] /= mean_n
-            self.delta_map[goodpix] += -1
+            goodpix = self.bmask > 0
+            d[goodpix] = nmap_data[goodpix]/(mean_n*self.comp_map[goodpix])-1
+            if apply_galactic_correction:
+                gcorr = self._get_galactic_correction(d, self.stars, self.bmask)
+                d -= gcorr['delta_map']
+            self.delta_map = d
         return [self.delta_map]
 
+    def _get_galactic_correction(self, delta, stars, bmask, nbins=14, npoly=5):
+        # Create bins of star density
+        stbins = np.linspace(np.log10(stars[bmask>0].min()),
+                             np.log10(stars[bmask>0].max()), nbins+1)
+        d_mean = []
+        d_std = []
+        # Loop over bins and compute <delta> and std(delta) in each star bin
+        for ib, st in enumerate(stbins[:-1]):
+            stp1 = stbins[ib+1]
+            msk = (bmask>0) & (np.log10(stars)<=stp1) & (np.log10(stars)>=st)
+            dm = np.mean(delta[msk])
+            dn = np.sum(msk).astype(float)
+            ds = np.std(delta[msk])/np.sqrt(dn)
+            d_mean.append(dm)
+            d_std.append(ds)
+        d_mean = np.array(d_mean)
+        d_std = np.array(d_std)
+        # Now create a 5-th order polynomial fitting these data
+        stmid = 0.5*(stbins[1:]+stbins[:-1])
+        params = np.polyfit(stmid, d_mean, npoly, w=1./d_std)
+        df = np.poly1d(params)
+        # Create correction map
+        d_corr = np.zeros_like(delta)
+        d_corr[bmask>0] = df(np.log10(stars[bmask>0]))
+        return {'stars': stmid,
+                'delta_mean': d_mean,
+                'delta_std': d_std,
+                'delta_func': df,
+                'delta_map': d_corr}
+
     def _get_mean_n(self, nmap):
-        goodpix = self.comp_map > 0.95 
-        goodpix *= self.stars < 8520
-        goodpix *= self.mask > 0
-        n_mean = np.mean(nmap[goodpix])
+        self.comp_map = self._get_comp_map()
+        self.stars = self._get_stars()
+        self.bmask = self._get_binary_mask()
+        goodpix = (self.comp_map > 0.95) & (self.stars < 8515) & (self.bmask > 0)
+        n_mean = np.sum(nmap[goodpix])/np.sum(self.comp_map[goodpix])
         return n_mean
     
     def _get_stars(self):
         if self.stars is None:
-            self.stars = hp.read_map(self.config['stars'])
-            area_ratio = (self.nside_fid/self.nside)**2 
-            self.stars = area_ratio * hp.ud_grade(self.stars,
-                                                 nside_out=self.nside)
-            # correct for the fact that threshold is given 
-            # in stars per degree^2 as opposed to pixel
-            self.stars *= (360**2/np.pi)/(12*self.nside**2)
+            # Power = -2 makes sure the total number of stars is conserved
+            self.stars = hp.ud_grade(hp.read_map(self.config['stars'], verbose=False),
+                                     nside_out=self.nside, power=-2)
+            # Convert to stars per deg^2
+            pix_srad = 4*np.pi/self.npix
+            pix_deg2 = pix_srad*(180/np.pi)**2
+            self.stars /= pix_deg2
         return self.stars
     
     def _get_comp_map(self):
         if self.comp_map is None:
-            self.comp_map = hp.read_map(self.config['comp_map'])
-            area_ratio = 1# (self.nside_fid/self.nside)**2
-            self.comp_map = area_ratio * hp.ud_grade(self.comp_map,
-                                                 nside_out=self.nside)
+            self.comp_map = hp.ud_grade(hp.read_map(self.config['comp_map'], verbose=False),
+                                        nside_out=self.nside)
         return self.comp_map
     
+    def _get_binary_mask(self):
+        if self.bmask is None:
+            self.bmask = hp.ud_grade(hp.read_map(self.config['mask'], verbose=False),
+                                     nside_out=self.nside)
+        return self.bmask
+
     def get_mask(self):
         if self.mask is None:
-            self.mask = hp.read_map(self.config['mask'])
-            area_ratio = (self.nside_fid/self.nside)**2
-            self.mask = area_ratio * hp.ud_grade(self.mask,
-                                                 nside_out=self.nside)
+            self.bmask = self._get_binary_mask()
+            self.comp_map = self._get_comp_map()
+            self.mask = self.bmask * self.comp_map
         return self.mask
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
-            if self.nside < 4096:
+            if (self.nside < 4096) or (self.config.get('nl_analytic', True)):
                 print('calculing nl from weights')
-                pixel_A = 4*np.pi/self.npix
-                mask = self.get_mask()
-                w2_data = get_map_from_points(self.cat_data, self.nside,
-                                              w=self.w_data**2)
-                w2_random = get_map_from_points(self.cat_random, self.nside,
-                                                w=self.w_random**2)
-                goodpix = mask > 0
-                N_ell = (w2_data[goodpix].sum() +
-                         self.alpha**2*w2_random[goodpix].sum())
-                N_ell *= pixel_A**2/(4*np.pi)
-                self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
+                goodpix = self.mask > 0
+                n = get_map_from_points(self.cat_data, self.nside)
+                N_mean = self._get_mean_n(n)
+                N_mean_srad = N_mean * self.npix / (4 * np.pi)
+                N_ell = np.mean(self.mask) / N_mean_srad
             else:
                 print('calculating nl from mean cl values')
                 f = self.get_nmt_field()
                 cl = nmt.compute_coupled_cell(f, f)[0]
                 N_ell = np.mean(cl[2000:2*self.nside])
-                self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
+            self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
 
     def get_dtype(self):
