@@ -2,6 +2,7 @@ from .mapper_base import MapperBase
 from .utils import get_map_from_points
 from astropy.io import fits
 from astropy.table import Table, vstack
+from scipy.integrate import simps
 import numpy as np
 import healpy as hp
 import pymaster as nmt
@@ -12,20 +13,21 @@ class MapperDECaLS(MapperBase):
     def __init__(self, config):
         """
         config - dict
-          {'data_catalogs':['data_Legacy_Survey_BASS-MZLS_galaxies-selection.fits'],
-           'mask': 'data_Legacy_footprint_final_mask.fits',
-           'comp_map': 'data_Legacy_footprint_completeness_mask_128.fits',
-           'stars': 'data_allwise_total_rot_1024.fits',
+          {'data_catalogs':['Legacy_Survey_BASS-MZLS_galaxies-selection.fits'],
            'zbin': 0,
-           'nside': 128,
-           'nside_mask': nside_mask,
-           'mask_name': 'mask_DECaLS_SGC'}
+           'z_name': 'PHOTOZ_3DINFER',
+           'z_arr_dim': 500,
+           'binary_mask': 'Legacy_footprint_final_mask.fits',
+           'nl_analytic': True,
+           'completeness_map': 'Legacy_footprint_completeness_mask_128.fits',
+           'star_map': 'allwise_total_rot_1024.fits',
+           'nside': 1024,
+           'mask_name': 'mask_DECaLS'}
         """
         self._get_defaults(config)
         self.nside_fid = 1024
 
         self.cat_data = []
-        self.z_arr_dim = config.get('z_arr_dim', 200)
         self.npix = hp.nside2npix(self.nside)
 
         for file_data in self.config['data_catalogs']:
@@ -45,6 +47,8 @@ class MapperDECaLS(MapperBase):
         self.z_edges = bin_edges[self.zbin]
         self.cat_data = self._bin_z(self.cat_data)
 
+        self.pz = config.get('z_name', 'PHOTOZ_3DINFER')
+        self.z_arr_dim = config.get('z_arr_dim', 500)
         self.dndz = None
         self.delta_map = None
         self.nl_coupled = None
@@ -54,46 +58,33 @@ class MapperDECaLS(MapperBase):
         self.bmask = None
 
     def _bin_z(self, cat):
-        return cat[(cat['PHOTOZ_3DINFER'] >= self.z_edges[0]) &
-                   (cat['PHOTOZ_3DINFER'] < self.z_edges[1])]
+        return cat[(cat[self.pz] >= self.z_edges[0]) &
+                   (cat[self.pz] < self.z_edges[1])]
 
-    def get_nz(self, convolve=True, dz=0):
+    def get_nz(self, dz=0):
         if self.dndz is None:
-            h, b = np.histogram(self.cat_data['PHOTOZ_3DINFER'],
+            h, b = np.histogram(self.cat_data[self.pz],
                                 range=[-0.3, 1], bins=self.z_arr_dim)
             z_arr = 0.5 * (b[:-1] + b[1:])
-            self.dndz = np.array([z_arr, h])
-            lorentzian = self._get_lorentzian(z_arr)
-            conv = np.sum(self.dndz[1]*lorentzian, axis=1)
-            # Normalization
-            conv /= np.sum(conv)
-            if convolve:
-                self.dndz = np.array([self.dndz[0], conv])
-            else:
-                self.dndz = np.array([self.dndz[0],
-                                      self.dndz[1]/np.sum(self.dndz[1])])
+            kernel = self._get_lorentzian(z_arr)
+            nz_photo = h.astype(float)
+            nz_spec = simps(kernel*nz_photo[None, :], x=z_arr, axis=1)
+            nz_spec /= simps(nz_spec, x=z_arr)
+            self.dndz = np.array([z_arr, nz_spec])
 
         z, nz = self.dndz
         z_dz = z + dz
         sel = z_dz >= 0
         return np.array([z_dz[sel], nz[sel]])
 
-    def _get_lorentzian(self, z_arr):
+    def _get_lorentzian(self, zz):
         # a m s
         params = np.array([[1.257, -0.0010, 0.0122],
                            [1.104, 0.0076, 0.0151],
                            [1.476, -0.0024, 0.0155],
                            [2.019, -0.0042, 0.0265]])
         [a, m, s] = params[self.zbin]
-        lorentzian = np.zeros([len(z_arr), len(z_arr)])
-        # NOTE: sample more points
-        for zs_i, zs in enumerate(z_arr):
-            for zp_i, zp in enumerate(z_arr):
-                lorentzian[zp_i, zs_i] = ((zp-zs-m)/s)**2
-                lorentzian[zp_i, zs_i] /= 2*a
-                lorentzian[zp_i, zs_i] += 1
-                lorentzian[zp_i, zs_i] = lorentzian[zp_i, zs_i]**(-a)
-        return lorentzian
+        return 1./(1+((zz[:, None]-zz[None, :]-m)/s)**2/(2*a))**a
 
     def get_signal_map(self, apply_galactic_correction=True):
         if self.delta_map is None:
@@ -157,7 +148,7 @@ class MapperDECaLS(MapperBase):
     def _get_stars(self):
         if self.stars is None:
             # Power = -2 makes sure the total number of stars is conserved
-            self.stars = hp.ud_grade(hp.read_map(self.config['stars'],
+            self.stars = hp.ud_grade(hp.read_map(self.config['star_map'],
                                                  verbose=False),
                                      nside_out=self.nside, power=-2)
             # Convert to stars per deg^2
@@ -169,14 +160,14 @@ class MapperDECaLS(MapperBase):
     def _get_comp_map(self):
         if self.comp_map is None:
             self.comp_map = hp.ud_grade(hp.read_map(
-                                        self.config['comp_map'],
+                                        self.config['completeness_map'],
                                         verbose=False),
                                         nside_out=self.nside)
         return self.comp_map
 
     def _get_binary_mask(self):
         if self.bmask is None:
-            self.bmask = hp.ud_grade(hp.read_map(self.config['mask'],
+            self.bmask = hp.ud_grade(hp.read_map(self.config['binary_mask'],
                                                  verbose=False),
                                      nside_out=self.nside)
         return self.bmask
@@ -191,13 +182,11 @@ class MapperDECaLS(MapperBase):
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             if (self.nside < 4096) or (self.config.get('nl_analytic', True)):
-                print('calculing nl from weights')
                 n = get_map_from_points(self.cat_data, self.nside)
                 N_mean = self._get_mean_n(n)
                 N_mean_srad = N_mean * self.npix / (4 * np.pi)
                 N_ell = np.mean(self.mask) / N_mean_srad
             else:
-                print('calculating nl from mean cl values')
                 f = self.get_nmt_field()
                 cl = nmt.compute_coupled_cell(f, f)[0]
                 N_ell = np.mean(cl[4000:2*self.nside])
