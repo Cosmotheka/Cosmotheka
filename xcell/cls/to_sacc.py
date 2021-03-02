@@ -130,7 +130,7 @@ class sfile():
             self.s.add_tracer('NZ', tr, quantity=quantity, spin=spin,
                               z=z, nz=nz)
         elif quantity == 'cmb_convergence':
-            ell = mapper.get_ells()
+            ell = mapper.get_ell()
             nl = mapper.get_nl_coupled()
 
             beam = np.ones_like(ell)
