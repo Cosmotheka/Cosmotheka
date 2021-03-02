@@ -25,7 +25,7 @@ class MapperDECaLS(MapperBase):
         self.nside_fid = 1024
 
         self.cat_data = []
-        self.z_arr_dim = config.get('z_arr_dim', 50)
+        self.z_arr_dim = config.get('z_arr_dim', 200)
         self.npix = hp.nside2npix(self.nside)
 
         for file_data in self.config['data_catalogs']:
@@ -58,21 +58,19 @@ class MapperDECaLS(MapperBase):
                    (cat['PHOTOZ_3DINFER'] < self.z_edges[1])]
 
     def get_nz(self, convolve=True, dz=0):
-        #if self.dndz is None:
-        h, b = np.histogram(self.cat_data['PHOTOZ_3DINFER'], bins=self.z_arr_dim)
-        z_arr = 0.5 * (b[:-1] + b[1:])
-        self.dndz = np.array([z_arr, h])
-        lorentzian = self._get_lorentzian(z_arr)
-        print(lorentzian)
-        conv = np.sum(self.dndz[1]*lorentzian, axis=1)
-        # Normalization
-        conv /= np.sum(conv) 
-        if convolve:
-            self.dndz = np.array([self.dndz[0], conv])
-        else:
-            self.dndz = np.array([self.dndz[0],
-                                  self.dndz[1]/np.sum(self.dndz[1])])
-        #####
+        if self.dndz is None:
+            h, b = np.histogram(self.cat_data['PHOTOZ_3DINFER'], range=[-0.3, 1], bins=self.z_arr_dim)
+            z_arr = 0.5 * (b[:-1] + b[1:])
+            self.dndz = np.array([z_arr, h])
+            lorentzian = self._get_lorentzian(z_arr)
+            conv = np.sum(self.dndz[1]*lorentzian, axis=1)
+            # Normalization
+            conv /= np.sum(conv) 
+            if convolve:
+                self.dndz = np.array([self.dndz[0], conv])
+            else:
+                self.dndz = np.array([self.dndz[0],
+                                      self.dndz[1]/np.sum(self.dndz[1])])
             
         z, nz = self.dndz
         z_dz = z + dz
@@ -90,7 +88,7 @@ class MapperDECaLS(MapperBase):
         # NOTE: sample more points
         for zs_i, zs in enumerate(z_arr):
             for zp_i, zp in enumerate(z_arr):
-                lorentzian[zp_i, zs_i] = ((zp-zs-m)/(s**2))**2
+                lorentzian[zp_i, zs_i] = ((zp-zs-m)/s)**2
                 lorentzian[zp_i, zs_i] /= 2*a
                 lorentzian[zp_i, zs_i] += 1
                 lorentzian[zp_i, zs_i] = lorentzian[zp_i, zs_i]**(-a)                  
@@ -193,7 +191,7 @@ class MapperDECaLS(MapperBase):
                 print('calculating nl from mean cl values')
                 f = self.get_nmt_field()
                 cl = nmt.compute_coupled_cell(f, f)[0]
-                N_ell = np.mean(cl[2000:2*self.nside])
+                N_ell = np.mean(cl[4000:2*self.nside])
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
 
