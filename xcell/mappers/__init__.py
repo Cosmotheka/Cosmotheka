@@ -5,6 +5,7 @@ from .mapper_DESY1wl import MapperDESY1wl
 from .mapper_eBOSSQSO import MappereBOSSQSO
 from .mapper_KV450 import MapperKV450
 from .mapper_P18CMBK import MapperP18CMBK
+from .mapper_DECaLS import MapperDECaLS
 from .mapper_dummy import MapperDummy
 from .utils import get_map_from_points
 
