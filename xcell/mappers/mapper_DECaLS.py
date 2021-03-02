@@ -25,7 +25,8 @@ class MapperDECaLS(MapperBase):
            'mask_name': 'mask_DECaLS'}
         """
         self._get_defaults(config)
-        self.nside_fid = 1024
+        self.pz = config.get('z_name', 'PHOTOZ_3DINFER')
+        self.z_arr_dim = config.get('z_arr_dim', 500)
 
         self.cat_data = []
         self.npix = hp.nside2npix(self.nside)
@@ -47,8 +48,8 @@ class MapperDECaLS(MapperBase):
         self.z_edges = bin_edges[self.zbin]
         self.cat_data = self._bin_z(self.cat_data)
 
-        self.pz = config.get('z_name', 'PHOTOZ_3DINFER')
-        self.z_arr_dim = config.get('z_arr_dim', 500)
+        # Angular mask flag
+        self.mskflag = self._get_angmask(self.cat_data)
         self.dndz = None
         self.delta_map = None
         self.nl_coupled = None
@@ -57,13 +58,21 @@ class MapperDECaLS(MapperBase):
         self.stars = None
         self.bmask = None
 
+    def _get_angmask(self, cat):
+        bmask = hp.read_map(self.config['binary_mask'],
+                            verbose=False)
+        nside = hp.npix2nside(len(bmask))
+        ipix = hp.ang2pix(nside, cat['RA'], cat['DEC'],
+                          lonlat=True)
+        return bmask[ipix] > 0.
+
     def _bin_z(self, cat):
         return cat[(cat[self.pz] >= self.z_edges[0]) &
                    (cat[self.pz] < self.z_edges[1])]
 
     def get_nz(self, dz=0):
         if self.dndz is None:
-            h, b = np.histogram(self.cat_data[self.pz],
+            h, b = np.histogram(self.cat_data[self.pz][self.mskflag],
                                 range=[-0.3, 1], bins=self.z_arr_dim)
             z_arr = 0.5 * (b[:-1] + b[1:])
             kernel = self._get_lorentzian(z_arr)
