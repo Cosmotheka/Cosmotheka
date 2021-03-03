@@ -49,9 +49,9 @@ def test_get_signal_map():
     assert sh.shape == (2, hp.nside2npix(32))
     assert psf.shape == (2, hp.nside2npix(32))
     assert star.shape == (2, hp.nside2npix(32))
-    assert np.all(np.fabs(sh+(np.mean(es)-es)/(1+m.m[0])) < 1E-5)
-    assert np.all(np.fabs(psf-es) < 1E-5)
-    assert np.all(np.fabs(star-es) < 1E-5)
+    assert np.all(np.fabs(-sh+(np.mean(es)-es)/(1+m.m[0])) < 1E-5)
+    assert np.all(np.fabs(-psf-es) < 1E-5)
+    assert np.all(np.fabs(-star-es) < 1E-5)
 
 
 def test_get_mask():
