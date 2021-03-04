@@ -194,7 +194,8 @@ class MapperDECaLS(MapperBase):
                 n = get_map_from_points(self.cat_data, self.nside)
                 N_mean = self._get_mean_n(n)
                 N_mean_srad = N_mean * self.npix / (4 * np.pi)
-                N_ell = np.mean(self.mask) / N_mean_srad
+                mask = self.get_mask()
+                N_ell = np.mean(mask) / N_mean_srad
             else:
                 f = self.get_nmt_field()
                 cl = nmt.compute_coupled_cell(f, f)[0]
