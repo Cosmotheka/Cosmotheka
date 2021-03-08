@@ -16,7 +16,7 @@ if os.path.isdir(tmpdir2):
     shutil.rmtree(tmpdir2)
 
 
-def get_config(fsky=0.2):
+def get_config(fsky=0.2, fsky2=0.3):
     nside = 32
     # Set only the necessary entries. Leave the others to their default value.
     cosmo = {
@@ -34,9 +34,11 @@ def get_config(fsky=0.2):
     }
     dummy0 = {'mask_name': 'mask_dummy0', 'mapper_class': 'MapperDummy',
               'cosmo': cosmo, 'nside': nside, 'fsky': fsky, 'seed': 0}
+    dummy1 = {'mask_name': 'mask_dummy1', 'mapper_class': 'MapperDummy',
+              'cosmo': cosmo, 'nside': nside, 'fsky': fsky2, 'seed': 100}
     bpw_edges = list(range(0, 3 * nside, 4))
 
-    return {'tracers': {'Dummy__0': dummy0},
+    return {'tracers': {'Dummy__0': dummy0, 'Dummy__1': dummy1},
             'cls': {'Dummy-Dummy': {'compute': 'all'}},
             'cov': {'fiducial': {'cosmo': cosmo, 'gc_bias':  False,
                                  'wl_m': False, 'wl_ia': False}},
@@ -187,3 +189,16 @@ def test_cls_vs_namaster():
     chi2_m = dCl.dot(icov_nmt).dot(dCl)
 
     assert chi2/chi2_m - 1 < 1e-5
+
+
+def test_symmetric():
+    data = get_config()
+    cl_class01 = Cl(data, 'Dummy__0', 'Dummy__1')
+    cl_class10 = Cl(data, 'Dummy__1', 'Dummy__0')
+
+    assert np.all(np.array(cl_class01.get_masks()) ==
+                  np.array(cl_class10.get_masks()[::-1]))
+    assert np.all(cl_class01.get_ell_cl()[1] == cl_class10.get_ell_cl()[1])
+    assert np.all(cl_class01.get_ell_nl()[1] == cl_class10.get_ell_nl()[1])
+    assert np.all(cl_class01.get_ell_nl_cp()[1] ==
+                  cl_class10.get_ell_nl_cp()[1])
