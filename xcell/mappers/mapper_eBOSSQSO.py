@@ -38,7 +38,7 @@ class MappereBOSSQSO(MapperBase):
 
         self.cat_data = vstack(self.cat_data)
         self.cat_random = vstack(self.cat_random)
-        self.nside_mask = config.get('nside_mask', self.nside)
+        self.nside_mask = config.get('nside_mask', 512)
         self.npix = hp.nside2npix(self.nside)
 
         self.z_edges = config['z_edges']
