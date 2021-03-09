@@ -26,9 +26,8 @@ def get_mem(data, trs, compute):
     return mem
 
 
-def launch_cls(data, queue, njobs, wsp=False, fiducial=False):
+def launch_cls(data, queue, njobs, nc, mem, wsp=False, fiducial=False):
     #######
-    nc = 24  # 8
     #
     cl_tracers = data.get_cl_trs_names(wsp)
     outdir = data.data['output']
@@ -45,9 +44,6 @@ def launch_cls(data, queue, njobs, wsp=False, fiducial=False):
         if os.path.isfile(fname):
             continue
 
-        # mem = get_mem(data, (tr1, tr2), 'cls') / nc
-        queue = 'cmb'
-        mem = 8  # for cmb queue
         if not fiducial:
             pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
             pyrun = '-m xcell.cls.cl {} {} {}'.format(args.INPUT, tr1, tr2)
@@ -61,9 +57,8 @@ def launch_cls(data, queue, njobs, wsp=False, fiducial=False):
         time.sleep(1)
 
 
-def launch_cov(data, queue, njobs, wsp=False):
+def launch_cov(data, queue, njobs, nc, mem, wsp=False):
     #######
-    nc = 24  # 28 # 10
     #
     cov_tracers = data.get_cov_trs_names(wsp)
     outdir = data.data['output']
@@ -75,9 +70,6 @@ def launch_cov(data, queue, njobs, wsp=False):
         fname = os.path.join(outdir, 'cov', comment + '.npz')
         if os.path.isfile(fname):
             continue
-        # mem = get_mem(data, trs, 'cov') / nc
-        queue = 'cmb'
-        mem = 8  # for cmb queue
         pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
         pyrun = '-m xcell.cls.cov {} {} {} {} {}'.format(args.INPUT, *trs)
         print(pyexec + " " + pyrun)
@@ -86,14 +78,12 @@ def launch_cov(data, queue, njobs, wsp=False):
         time.sleep(1)
 
 
-def launch_to_sacc(data, name, use, queue):
+def launch_to_sacc(data, name, use, queue, nc, mem):
     outdir = data.data['output']
     fname = os.path.join(outdir, name)
     if os.path.isfile(fname):
         return
 
-    nc = 24
-    mem = 7.
     comment = 'to_sacc'
     pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
     pyrun = '-m xcell.cls.to_sacc {} {}'.format(args.INPUT, name)
@@ -112,8 +102,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Compute Cls and cov from data.yml file")
     parser.add_argument('INPUT', type=str, help='Input YAML data file')
     parser.add_argument('compute', type=str, help='Compute: cls, cov or to_sacc.')
+    parser.add_argument('--nc', type=int, default=28, help='Maximum number of jobs to launch')
+    parser.add_argument('--mem', type=int, default=7., help='Maximum number of jobs to launch')
     parser.add_argument('--queue', type=str, default='berg', help='SLURM queue to use')
-    parser.add_argument('--njobs', type=int, default=20, help='Maximum number of jobs to launch')
+    parser.add_argument('--njobs', type=int, default=100000, help='Maximum number of jobs to launch')
     parser.add_argument('--wsp', default=False, action='store_true',
                         help='Set if you want to compute the different workspaces first')
     parser.add_argument('--to_sacc_name', type=str, default='cls_cov.fits', help='Sacc file name')
@@ -132,9 +124,9 @@ if __name__ == "__main__":
     njobs = args.njobs
 
     if args.compute == 'cls':
-        launch_cls(data, queue, njobs, args.wsp, args.cls_fiducial)
+        launch_cls(data, queue, njobs, args.nc, args.mem, args.wsp, args.cls_fiducial)
     elif args.compute == 'cov':
-        launch_cov(data, queue, njobs, args.wsp)
+        launch_cov(data, queue, njobs, args.nc, args.mem, args.wsp)
     elif args.compute == 'to_sacc':
         if args.to_sacc_use_nl and args.to_sacc_use_fiducial:
             raise ValueError(
@@ -145,7 +137,7 @@ if __name__ == "__main__":
             use = 'fiducial'
         else:
             use = 'cls'
-        launch_to_sacc(data, args.to_sacc_name, use, queue)
+        launch_to_sacc(data, args.to_sacc_name, use, queue, args.nc, args.mem)
     else:
         raise ValueError(
                 "Compute value '{}' not understood".format(args.compute))
