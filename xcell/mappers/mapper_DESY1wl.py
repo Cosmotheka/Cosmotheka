@@ -171,8 +171,8 @@ class MapperDESY1wl(MapperBase):
             return self.signal_map
 
         # This will only be computed if self.maps['mod'] is None
-        file_name1 = f'DESwlMETACAL_signal_map_{mod}_e1_zbin{self.zbin}.fits.gz'
-        file_name2 = f'DESwlMETACAL_signal_map_{mod}_e2_zbin{self.zbin}.fits.gz'
+        file_name1 = f'DESwlMETACAL_signal_map_{mod}_e1_zbin{self.zbin}_ns{self.nside}.fits.gz'
+        file_name2 = f'DESwlMETACAL_signal_map_{mod}_e2_zbin{self.zbin}_ns{self.nside}.fits.gz'
         read_lite1, fname_lite1 = self._check_lite_exists(file_name1)
         read_lite2, fname_lite2 = self._check_lite_exists(file_name2)
         if read_lite1 and read_lite2:
@@ -220,7 +220,7 @@ class MapperDESY1wl(MapperBase):
             return self.mask
 
         # This will only be computed if self.maps['mod'] is None
-        file_name = f'DESwlMETACAL_mask_zbin{self.zbin}.fits.gz'
+        file_name = f'DESwlMETACAL_mask_zbin{self.zbin}_ns{self.nside}.fits.gz'
         read_lite, fname_lite = self._check_lite_exists(file_name)
 
         if read_lite:
@@ -239,7 +239,7 @@ class MapperDESY1wl(MapperBase):
             return self.nl_coupled
 
         # This will only be computed if self.maps['mod'] is None
-        file_name = f'DESwlMETACAL_{mod}_w2s2_zbin{self.zbin}.fits.gz'
+        file_name = f'DESwlMETACAL_{mod}_w2s2_zbin{self.zbin}_ns{self.nside}.fits.gz'
         read_lite, fname_lite = self._check_lite_exists(file_name)
 
         if read_lite:
