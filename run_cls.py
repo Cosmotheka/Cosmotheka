@@ -114,8 +114,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Compute Cls and cov from data.yml file")
     parser.add_argument('INPUT', type=str, help='Input YAML data file')
     parser.add_argument('compute', type=str, help='Compute: cls, cov or to_sacc.')
-    parser.add_argument('--nc', type=int, default=28, help='Maximum number of jobs to launch')
-    parser.add_argument('--mem', type=int, default=7., help='Maximum number of jobs to launch')
+    parser.add_argument('--nc', type=int, default=28, help='Number of cores to use')
+    parser.add_argument('--mem', type=int, default=7., help='Memory (in GB) per core to use')
     parser.add_argument('--queue', type=str, default='berg', help='SLURM queue to use')
     parser.add_argument('--njobs', type=int, default=100000, help='Maximum number of jobs to launch')
     parser.add_argument('--wsp', default=False, action='store_true',
