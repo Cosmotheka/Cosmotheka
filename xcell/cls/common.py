@@ -158,3 +158,10 @@ class Data():
         config = self.data['tracers'][tr]
         mapper_class = config['mapper_class']
         return mapper_from_name(mapper_class)(config)
+
+    def read_symmetric(self, tr1, tr2):
+        if ((tr1, tr2) not in self.get_cl_trs_names()) and \
+           ((tr2, tr1) in self.get_cl_trs_names()):
+            return True
+        else:
+            return False

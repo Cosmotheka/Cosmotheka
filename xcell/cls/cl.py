@@ -10,14 +10,11 @@ import warnings
 class ClBase():
     def __init__(self, data, tr1, tr2):
         self.data = Data(data=data)
-        if ((tr1, tr2) not in self.data.get_cl_trs_names()) and \
-           ((tr2, tr1) in self.data.get_cl_trs_names()):
-            warnings.warn('Reading the symmetric element.')
-            self.tr1 = tr2
-            self.tr2 = tr1
-        else:
-            self.tr1 = tr1
-            self.tr2 = tr2
+        self.tr1 = tr1
+        self.tr2 = tr2
+        self._read_symmetric = self.data.read_symmetric(tr1, tr2)
+        if self._read_symmetric:
+            warnings.warn('Reading/computing the symmetric element.')
         self._mapper1 = None
         self._mapper2 = None
         #
@@ -103,6 +100,8 @@ class Cl(ClBase):
 
     def _compute_workspace(self):
         mask1, mask2 = self.get_masks_names()
+        if self._read_symmetric:
+            mask1, mask2 = mask2, mask1
         fname = os.path.join(self.outdir, f'w__{mask1}__{mask2}.fits')
         w = nmt.NmtWorkspace()
         if self.recompute_mcm or (not os.path.isfile(fname)):
@@ -119,7 +118,10 @@ class Cl(ClBase):
         return w
 
     def get_cl_file(self):
-        fname = os.path.join(self.outdir, f'cl_{self.tr1}_{self.tr2}.npz')
+        if self._read_symmetric:
+            fname = os.path.join(self.outdir, f'cl_{self.tr2}_{self.tr1}.npz')
+        else:
+            fname = os.path.join(self.outdir, f'cl_{self.tr1}_{self.tr2}.npz')
         ell = self.b.get_effective_ells()
         recompute = self.recompute_cls or self.recompute_mcm
         if recompute or (not os.path.isfile(fname)):
@@ -232,7 +234,10 @@ class ClFid(ClBase):
 
     def get_cl_file(self):
         nside = self.data.data['healpy']['nside']
-        fname = os.path.join(self.outdir, f'cl_{self.tr1}_{self.tr2}.npz')
+        if self._read_symmetric:
+            fname = os.path.join(self.outdir, f'cl_{self.tr2}_{self.tr1}.npz')
+        else:
+            fname = os.path.join(self.outdir, f'cl_{self.tr1}_{self.tr2}.npz')
         ell = np.arange(3 * nside)
         if not os.path.isfile(fname):
             ccl_tr1, ccl_tr2 = self.get_tracers_ccl()
