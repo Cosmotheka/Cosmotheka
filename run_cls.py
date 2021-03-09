@@ -2,6 +2,7 @@
 from xcell.cls.common import Data
 import os
 import time
+import subprocess
 
 
 ##############################################################################
@@ -26,6 +27,11 @@ def get_mem(data, trs, compute):
     return mem
 
 
+def get_queued_jobs():
+    result = subprocess.run(['q', '-tn'], stdout=subprocess.PIPE)
+    return result.stdout.decode('utf-8')
+
+
 def launch_cls(data, queue, njobs, nc, mem, wsp=False, fiducial=False):
     #######
     #
@@ -33,11 +39,14 @@ def launch_cls(data, queue, njobs, nc, mem, wsp=False, fiducial=False):
     outdir = data.data['output']
     if fiducial:
         outdir = os.path.join(outdir, 'fiducial')
+    qjobs = get_queued_jobs()
     c = 0
     for tr1, tr2 in cl_tracers:
+        comment = 'cl_{}_{}'.format(tr1, tr2)
         if c >= njobs:
             break
-        comment = 'cl_{}_{}'.format(tr1, tr2)
+        elif comment in qjobs:
+            continue
         # TODO: don't hard-code it!
         trreq = data.get_tracers_bare_name_pair(tr1, tr2, '_')
         fname = os.path.join(outdir, trreq, comment + '.npz')
@@ -62,11 +71,14 @@ def launch_cov(data, queue, njobs, nc, mem, wsp=False):
     #
     cov_tracers = data.get_cov_trs_names(wsp)
     outdir = data.data['output']
+    qjobs = get_queued_jobs()
     c = 0
     for trs in cov_tracers:
+        comment = 'cov_{}_{}_{}_{}'.format(*trs)
         if c >= njobs:
             break
-        comment = 'cov_{}_{}_{}_{}'.format(*trs)
+        elif comment in qjobs:
+            continue
         fname = os.path.join(outdir, 'cov', comment + '.npz')
         if os.path.isfile(fname):
             continue
