@@ -113,7 +113,8 @@ tracers:
     nside: 512
     mask_name: 'mask_QSO_0'
     mapper_class: 'MappereBOSSQSO'
-    bias: 1
+    # bias obtained fitting the fiducial Cl between kmin = 0.02, kmax = 0.15
+    bias: 2.1
 
   eBOSS__1:
     data_catalogs:
@@ -126,7 +127,8 @@ tracers:
     nside: 512
     mask_name: 'mask_QSO_1'
     mapper_class: 'MappereBOSSQSO'
-    bias: 1
+    # bias obtained fitting the fiducial Cl between kmin = 0.02, kmax = 0.15
+    bias: 2.5
 
   PLAcv:
     file_klm: '/mnt/extraspace/damonge/S8z_data/Planck_data/COM_Lensing_4096_R3.00/MV/dat_klm.fits'
