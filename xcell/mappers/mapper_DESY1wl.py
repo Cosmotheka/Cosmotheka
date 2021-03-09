@@ -7,7 +7,7 @@ import os
 
 
 class MapperDESY1wl(MapperBase):
-    def __init__(self, config):
+    def __init__(self, config, fast=False):
         """
         Data source:
         https://des.ncsa.illinois.edu/releases/y1a1/key-catalogs/key-shape
@@ -31,15 +31,9 @@ class MapperDESY1wl(MapperBase):
         # dn/dz
         self.dndz = None
         # load cat
-        self.cat_data = self._load_catalog()
+        self.cat_data = None
         # get items for calibration
         self.Rs = None
-        self.Rs = self._get_Rs()
-        # clean data
-        self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.zbin)
-        # calibrate
-        self._remove_additive_bias()
-        self._remove_multiplicative_bias()
 
         self.signal_map = None
         self.maps = {'PSF': None, 'shear': None}
@@ -48,6 +42,19 @@ class MapperDESY1wl(MapperBase):
 
         self.nl_coupled = None
         self.nls = {'PSF': None, 'shear': None}
+
+        if not fast:
+            # load cat
+            self.cat_data = self._load_catalog()
+            # get items for calibration
+            self.Rs = None
+            self.Rs = self._get_Rs()
+            # clean data
+            self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.zbin)
+            # calibrate
+            self._remove_additive_bias()
+            self._remove_multiplicative_bias()
+
 
     def _load_catalog(self):
         # Read catalogs
@@ -62,7 +69,8 @@ class MapperDESY1wl(MapperBase):
         columns_zbin = ['zbin_mcal', 'zbin_mcal_1p',
                         'zbin_mcal_1m', 'zbin_mcal_2p', 'zbin_mcal_2m']
 
-        read_lite, fname_lite = self._check_lite_exists(self.zbin)
+        file_name = f'DESwlMETACAL_catalog_lite_zbin{self.zbin}.fits'
+        read_lite, fname_lite = self._check_lite_exists(file_name)
 
         if read_lite:
             print('Loading lite bin{} cat'.format(self.zbin))
@@ -95,11 +103,10 @@ class MapperDESY1wl(MapperBase):
                 self.cat_data.write(fname_lite)
         return self.cat_data
 
-    def _check_lite_exists(self, i):
+    def _check_lite_exists(self, file_name):
         if self.path_lite is None:
             return False, None
         else:
-            file_name = f'DESwlMETACAL_catalog_lite_zbin{i}.fits'
             fname_lite = os.path.join(self.path_lite, file_name)
             return os.path.isfile(fname_lite), fname_lite
 
@@ -159,7 +166,22 @@ class MapperDESY1wl(MapperBase):
 
     def get_signal_map(self, mode=None):
         e1f, e2f, mod = self._set_mode(mode)
-        if self.maps[mod] is None:
+        if self.maps[mod] is not None:
+            self.signal_map = self.maps[mod]
+            return self.signal_map
+
+        # This will only be computed if self.maps['mod'] is None
+        file_name1 = f'DESwlMETACAL_signal_map_{mod}_e1_zbin{self.zbin}.fits.gz'
+        file_name2 = f'DESwlMETACAL_signal_map_{mod}_e2_zbin{self.zbin}.fits.gz'
+        read_lite1, fname_lite1 = self._check_lite_exists(file_name1)
+        read_lite2, fname_lite2 = self._check_lite_exists(file_name2)
+        if read_lite1 and read_lite2:
+            print('Loading bin{} signal map'.format(self.zbin))
+            e1 = hp.read_map(fname_lite1)
+            e2 = hp.read_map(fname_lite2)
+            self.maps[mod] = [-e1, e2]
+        else:
+            print('Computing bin{} signal map'.format(self.zbin))
             we1 = get_map_from_points(self.cat_data, self.nside,
                                       w=self.cat_data[e1f],
                                       ra_name='ra',
@@ -173,6 +195,8 @@ class MapperDESY1wl(MapperBase):
             we1[goodpix] /= mask[goodpix]
             we2[goodpix] /= mask[goodpix]
             self.maps[mod] = [-we1, we2]
+            hp.write_map(fname_lite1, we1)
+            hp.write_map(fname_lite2, we2)
 
         self.signal_map = self.maps[mod]
         return self.signal_map
@@ -192,22 +216,46 @@ class MapperDESY1wl(MapperBase):
         return np.array([z_dz[sel], nz[sel]])
 
     def get_mask(self):
-        if self.mask is None:
+        if self.mask is not None:
+            return self.mask
+
+        # This will only be computed if self.maps['mod'] is None
+        file_name = f'DESwlMETACAL_mask_zbin{self.zbin}.fits.gz'
+        read_lite, fname_lite = self._check_lite_exists(file_name)
+
+        if read_lite:
+            print('Loading bin{} mask'.format(self.zbin))
+            self.mask = hp.read_map(fname_lite)
+        else:
             self.mask = get_map_from_points(self.cat_data, self.nside,
                                             ra_name='ra', dec_name='dec')
+            hp.write_map(fname_lite, self.mask)
         return self.mask
 
     def get_nl_coupled(self, mode=None):
         e1f, e2f, mod = self._set_mode(mode)
-        if self.nls[mod] is None:
+        if self.nls[mod] is not None:
+            self.nl_coupled = self.nls[mod]
+            return self.nl_coupled
+
+        # This will only be computed if self.maps['mod'] is None
+        file_name = f'DESwlMETACAL_{mod}_w2s2_zbin{self.zbin}.fits.gz'
+        read_lite, fname_lite = self._check_lite_exists(file_name)
+
+        if read_lite:
+            print('Loading w2s2 bin{} map'.format(self.zbin))
+            w2s2 = hp.read_map(fname_lite)
+        else:
             w2s2 = get_map_from_points(self.cat_data, self.nside,
                                        w=0.5*(self.cat_data[e1f]**2 +
                                               self.cat_data[e2f]**2),
                                        ra_name='ra', dec_name='dec')
-            N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
-            nl = N_ell * np.ones(3*self.nside)
-            nl[:2] = 0  # Ylm = for l < spin
-            self.nls[mod] = np.array([nl, 0*nl, 0*nl, nl])
+            hp.write_map(fname_lite, w2s2)
+
+        N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
+        nl = N_ell * np.ones(3*self.nside)
+        nl[:2] = 0  # Ylm = for l < spin
+        self.nls[mod] = np.array([nl, 0*nl, 0*nl, nl])
         self.nl_coupled = self.nls[mod]
         return self.nl_coupled
 
