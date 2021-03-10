@@ -7,7 +7,7 @@ import os
 
 
 class MapperDESY1wl(MapperBase):
-    def __init__(self, config, fast=False):
+    def __init__(self, config):
         """
         Data source:
         https://des.ncsa.illinois.edu/releases/y1a1/key-catalogs/key-shape
@@ -43,11 +43,11 @@ class MapperDESY1wl(MapperBase):
         self.nl_coupled = None
         self.nls = {'PSF': None, 'shear': None}
 
-        if not fast:
+    def get_catalog(self):
+        if self.cat_data is None:
             # load cat
             self.cat_data = self._load_catalog()
             # get items for calibration
-            self.Rs = None
             self.Rs = self._get_Rs()
             # clean data
             self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.zbin)
@@ -55,6 +55,7 @@ class MapperDESY1wl(MapperBase):
             self._remove_additive_bias()
             self._remove_multiplicative_bias()
 
+        return self.cat_data
 
     def _load_catalog(self):
         # Read catalogs
@@ -182,12 +183,13 @@ class MapperDESY1wl(MapperBase):
             self.maps[mod] = [-e1, e2]
         else:
             print('Computing bin{} signal map'.format(self.zbin))
-            we1 = get_map_from_points(self.cat_data, self.nside,
-                                      w=self.cat_data[e1f],
+            cat_data = self.get_catalog()
+            we1 = get_map_from_points(cat_data, self.nside,
+                                      w=cat_data[e1f],
                                       ra_name='ra',
                                       dec_name='dec')
-            we2 = get_map_from_points(self.cat_data, self.nside,
-                                      w=self.cat_data[e2f],
+            we2 = get_map_from_points(cat_data, self.nside,
+                                      w=cat_data[e2f],
                                       ra_name='ra',
                                       dec_name='dec')
             mask = self.get_mask()
@@ -195,8 +197,8 @@ class MapperDESY1wl(MapperBase):
             we1[goodpix] /= mask[goodpix]
             we2[goodpix] /= mask[goodpix]
             self.maps[mod] = [-we1, we2]
-            hp.write_map(fname_lite1, we1)
-            hp.write_map(fname_lite2, we2)
+            hp.write_map(fname_lite1, we1, overwrite=True)
+            hp.write_map(fname_lite2, we2, overwrite=True)
 
         self.signal_map = self.maps[mod]
         return self.signal_map
@@ -227,9 +229,10 @@ class MapperDESY1wl(MapperBase):
             print('Loading bin{} mask'.format(self.zbin))
             self.mask = hp.read_map(fname_lite)
         else:
-            self.mask = get_map_from_points(self.cat_data, self.nside,
+            cat_data = self.get_catalog()
+            self.mask = get_map_from_points(cat_data, self.nside,
                                             ra_name='ra', dec_name='dec')
-            hp.write_map(fname_lite, self.mask)
+            hp.write_map(fname_lite, self.mask, overwrite=True)
         return self.mask
 
     def get_nl_coupled(self, mode=None):
@@ -246,11 +249,12 @@ class MapperDESY1wl(MapperBase):
             print('Loading w2s2 bin{} map'.format(self.zbin))
             w2s2 = hp.read_map(fname_lite)
         else:
-            w2s2 = get_map_from_points(self.cat_data, self.nside,
-                                       w=0.5*(self.cat_data[e1f]**2 +
-                                              self.cat_data[e2f]**2),
+            cat_data = self.get_catalog()
+            w2s2 = get_map_from_points(cat_data, self.nside,
+                                       w=0.5*(cat_data[e1f]**2 +
+                                              cat_data[e2f]**2),
                                        ra_name='ra', dec_name='dec')
-            hp.write_map(fname_lite, w2s2)
+            hp.write_map(fname_lite, w2s2, overwrite=True)
 
         N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
         nl = N_ell * np.ones(3*self.nside)
