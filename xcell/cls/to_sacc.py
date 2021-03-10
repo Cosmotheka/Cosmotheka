@@ -150,9 +150,6 @@ class sfile():
             cl = ClFid(self.data.data, tr1, tr2)
             ws_bpw = np.zeros((ells_eff.size, ells_nobin.size))
             ws_bpw[np.arange(ells_eff.size), ells_eff.astype(int)] = 1
-        elif not self.use_nl:
-            w = cl.get_workspace()
-            ws_bpw = w.get_bandpower_windows()
 
         cl.get_cl_file()
 
@@ -168,7 +165,7 @@ class sfile():
                 cli = ws_bpw.dot(cl.cl[i])
                 wins = sacc.BandpowerWindow(ells_nobin, ws_bpw.T)
             else:
-                wins = sacc.BandpowerWindow(ells_nobin, ws_bpw[i, :, i, :].T)
+                wins = sacc.BandpowerWindow(ells_nobin, cl.wins[i, :, i, :].T)
                 cli = cl.cl[i]
 
             self.s.add_ell_cl(cl_type, tr1, tr2, ells_eff, cli, window=wins)

@@ -103,6 +103,7 @@ def test_get_ell_cl():
     sigma = np.sqrt(np.diag(cov))
 
     assert np.all(np.fabs(cl_m1 - cl) < 5 * sigma)
+    assert np.all(cl_class.wins == w.get_bandpower_windows())
 
 
 def test_get_covariance():
