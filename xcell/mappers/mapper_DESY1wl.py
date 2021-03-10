@@ -172,8 +172,13 @@ class MapperDESY1wl(MapperBase):
             return self.signal_map
 
         # This will only be computed if self.maps['mod'] is None
-        file_name1 = f'DESwlMETACAL_signal_map_{mod}_e1_zbin{self.zbin}_ns{self.nside}.fits.gz'
-        file_name2 = f'DESwlMETACAL_signal_map_{mod}_e2_zbin{self.zbin}_ns{self.nside}.fits.gz'
+        file_name1 = \
+            f'DESwlMETACAL_signal_map_{mod}_e1_zbin{self.zbin}_ns{self.nside}'
+        file_name2 = \
+            f'DESwlMETACAL_signal_map_{mod}_e2_zbin{self.zbin}_ns{self.nside}'
+        # Add extension separately to respect text width < 78
+        file_name1 += '.fits.gz'
+        file_name2 += '.fits.gz'
         read_lite1, fname_lite1 = self._check_lite_exists(file_name1)
         read_lite2, fname_lite2 = self._check_lite_exists(file_name2)
         if read_lite1 and read_lite2:
@@ -197,6 +202,8 @@ class MapperDESY1wl(MapperBase):
             we1[goodpix] /= mask[goodpix]
             we2[goodpix] /= mask[goodpix]
             self.maps[mod] = [-we1, we2]
+            # overwrite = True in case it is also being computed by other
+            # process
             hp.write_map(fname_lite1, we1, overwrite=True)
             hp.write_map(fname_lite2, we2, overwrite=True)
 
@@ -232,6 +239,8 @@ class MapperDESY1wl(MapperBase):
             cat_data = self.get_catalog()
             self.mask = get_map_from_points(cat_data, self.nside,
                                             ra_name='ra', dec_name='dec')
+            # overwrite = True in case it is also being computed by other
+            # process
             hp.write_map(fname_lite, self.mask, overwrite=True)
         return self.mask
 
@@ -242,7 +251,8 @@ class MapperDESY1wl(MapperBase):
             return self.nl_coupled
 
         # This will only be computed if self.maps['mod'] is None
-        file_name = f'DESwlMETACAL_{mod}_w2s2_zbin{self.zbin}_ns{self.nside}.fits.gz'
+        file_name = \
+            f'DESwlMETACAL_{mod}_w2s2_zbin{self.zbin}_ns{self.nside}.fits.gz'
         read_lite, fname_lite = self._check_lite_exists(file_name)
 
         if read_lite:
@@ -254,6 +264,8 @@ class MapperDESY1wl(MapperBase):
                                        w=0.5*(cat_data[e1f]**2 +
                                               cat_data[e2f]**2),
                                        ra_name='ra', dec_name='dec')
+            # overwrite = True in case it is also being computed by other
+            # process
             hp.write_map(fname_lite, w2s2, overwrite=True)
 
         N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
