@@ -70,6 +70,7 @@ class Cl(ClBase):
         ##################
         self.nl = None
         self.nl_cp = None
+        self.wins = None
 
     def get_NmtBin(self):
         trs = self.data.get_tracers_bare_name_pair(self.tr1, self.tr2)
@@ -128,6 +129,7 @@ class Cl(ClBase):
             mapper1, mapper2 = self.get_mappers()
             f1, f2 = self.get_nmt_fields()
             w = self.get_workspace()
+            wins = w.get_bandpower_windows()
             cl = w.decouple_cell(nmt.compute_coupled_cell(f1, f2))
             if self.tr1 == self.tr2:
                 nl_cp = mapper1.get_nl_coupled()
@@ -135,7 +137,7 @@ class Cl(ClBase):
             else:
                 nl_cp = np.zeros((cl.shape[0], 3 * self.nside))
                 nl = np.zeros_like(cl)
-            np.savez(fname, ell=ell, cl=cl-nl, nl=nl, nl_cp=nl_cp)
+            np.savez(fname, ell=ell, cl=cl-nl, nl=nl, nl_cp=nl_cp, wins=wins)
             self.recompute_cls = False
 
         cl_file = np.load(fname)
@@ -149,6 +151,7 @@ class Cl(ClBase):
         self.cl = cl_file['cl']
         self.nl = cl_file['nl']
         self.nl_cp = cl_file['nl_cp']
+        self.wins = cl_file['wins']
         return cl_file
 
     def get_ell_nl(self):
@@ -172,6 +175,11 @@ class Cl(ClBase):
         m1 = mapper1.mask_name
         m2 = mapper2.mask_name
         return m1, m2
+
+    def get_bandpower_windows(self):
+        if self.ell is None:
+            self.get_cl_file()
+        return self.wins
 
 
 class ClFid(ClBase):
