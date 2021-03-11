@@ -45,6 +45,8 @@ class MapperKV450(MapperBase):
 
         self.cat_data = None
 
+        self.w2s2 = None
+
         self.dndz = np.loadtxt(self.config['file_nz'], unpack=True)
         self.sel = {'galaxies': 1, 'stars': 0}
 
@@ -209,15 +211,20 @@ class MapperKV450(MapperBase):
         self.mask = self.masks[kind]
         return self.mask
 
+    def _get_w2s2(self, mode):
+        kind, e1f, e2f, mod = self._set_mode(mode)
+        data = self._get_gals_or_stars(kind)
+        wcol = data['weight']**2*0.5*(data[e1f]**2+data[e2f]**2)
+        self.w2s2 = get_map_from_points(data, self.nside, w=wcol,
+                                        ra_name='ALPHA_J2000',
+                                        dec_name='DELTA_J2000')
+        return self.w2s2
+
     def get_nl_coupled(self, mode=None):
         kind, e1f, e2f, mod = self._set_mode(mode)
         if self.nls[mod] is None:
-            data = self._get_gals_or_stars(kind)
-            wcol = data['weight']**2*0.5*(data[e1f]**2+data[e2f]**2)
-            w2s2 = get_map_from_points(data, self.nside, w=wcol,
-                                       ra_name='ALPHA_J2000',
-                                       dec_name='DELTA_J2000')
-            N_ell = hp.nside2pixarea(self.nside) * np.mean(w2s2)
+            self.w2s2 = self._get_w2s2(mode)
+            N_ell = hp.nside2pixarea(self.nside) * np.mean(self.w2s2)
             nl = N_ell * np.ones(3*self.nside)
             nl[:2] = 0  # ylm = 0 for l < spin
             self.nls[mod] = np.array([nl, 0*nl, 0*nl, nl])
