@@ -73,7 +73,10 @@ class Cl(ClBase):
         self.wins = None
 
     def get_NmtBin(self):
-        trs = self.data.get_tracers_bare_name_pair(self.tr1, self.tr2)
+        if self._read_symmetric:
+            trs = self.data.get_tracers_bare_name_pair(self.tr2, self.tr1)
+        else:
+            trs = self.data.get_tracers_bare_name_pair(self.tr1, self.tr2)
         if 'bpw_edges' in self.data.data['cls'][trs].keys():
             bpw_edges = np.array(self.data.data['cls'][trs]['bpw_edges'])
         else:
