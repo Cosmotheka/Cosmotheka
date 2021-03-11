@@ -147,9 +147,9 @@ class MapperKV450(MapperBase):
         cat_data['bias_corrected_e2'][sel_gals] /= 1 + self.m[zbin]
 
     def _get_gals_or_stars(self, kind='galaxies'):
-        self.cat_data = self.get_catalog()
-        sel = self.cat_data['SG_FLAG'] == self.sel[kind]
-        return self.cat_data[sel]
+        cat_data = self.get_catalog()
+        sel = cat_data['SG_FLAG'] == self.sel[kind]
+        return cat_data[sel]
 
     def get_signal_map(self, mode=None):
         kind, e1f, e2f, mod = self._set_mode(mode)
