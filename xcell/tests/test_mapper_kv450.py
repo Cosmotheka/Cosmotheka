@@ -32,7 +32,8 @@ def test_lite():
     while os.path.isfile(f'xcell/tests/data/KV450_lite_cat_zbin{ifile}.fits'):
         os.remove(f'xcell/tests/data/KV450_lite_cat_zbin{ifile}.fits')
         ifile += 1
-    xc.mappers.MapperKV450(config)
+    m = xc.mappers.MapperKV450(config)
+    m.get_catalog()
     assert os.path.isfile('xcell/tests/data/KV450_lite_cat_zbin0.fits')
 
     # Non-exsisting fits files - read from lite
