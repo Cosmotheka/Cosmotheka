@@ -236,8 +236,8 @@ class MapperDESY1wl(MapperBase):
             print('Loading bin{} mask'.format(self.zbin))
             self.mask = hp.read_map(fname_lite)
         else:
-            self.cat_data = self.get_catalog()
-            self.mask = get_map_from_points(self.cat_data, self.nside,
+            cat_data = self.get_catalog()
+            self.mask = get_map_from_points(cat_data, self.nside,
                                             ra_name='ra', dec_name='dec')
             # overwrite = True in case it is also being computed by other
             # process

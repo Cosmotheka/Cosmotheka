@@ -187,6 +187,12 @@ class MapperKV450(MapperBase):
             goodpix = mask > 0
             we1[goodpix] /= mask[goodpix]
             we2[goodpix] /= mask[goodpix]
+
+            # overwrite = True in case it is also being computed by other
+            # process
+            hp.write_map(fname_lite1, we1, overwrite=True)
+            hp.write_map(fname_lite2, we2, overwrite=True)
+
             self.maps[mod] = [-we1, we2]
 
         self.signal_map = self.maps[mod]
