@@ -101,7 +101,7 @@ class MapperDECaLS(MapperBase):
     def get_signal_map(self, apply_galactic_correction=True):
         if self.delta_map is None:
             d = np.zeros(self.npix)
-            cata_data = self.get_catalog()
+            cat_data = self.get_catalog()
             self.comp_map = self._get_comp_map()
             self.bmask = self._get_binary_mask()
             self.stars = self._get_stars()
