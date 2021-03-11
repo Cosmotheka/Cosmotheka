@@ -42,7 +42,7 @@ class MapperKV450(MapperBase):
         # Multiplicative bias
         # Values from Table 2 of 1812.06076 (KV450 cosmo paper)
         self.m = (-0.017, -0.008, -0.015, 0.010, 0.006)
-        
+
         self.cat_data = None
 
         self.dndz = np.loadtxt(self.config['file_nz'], unpack=True)
@@ -56,7 +56,7 @@ class MapperKV450(MapperBase):
 
         self.nl_coupled = None
         self.nls = {'PSF': None, 'shear': None, 'stars': None}
-        
+
     def get_catalog(self):
         if self.cat_data is None:
             read_lite, fname_lite = self._check_lite_exists(self.zbin)
@@ -68,7 +68,7 @@ class MapperKV450(MapperBase):
                 self.cat_data = self._load_catalog()
 
             print('Catalogs loaded', flush=True)
-         
+
         return self.cat_data
 
     def _load_catalog(self):
@@ -147,7 +147,7 @@ class MapperKV450(MapperBase):
         cat_data['bias_corrected_e2'][sel_gals] /= 1 + self.m[zbin]
 
     def _get_gals_or_stars(self, kind='galaxies'):
-        self.cat_data = get_catalog()
+        self.cat_data = self.get_catalog()
         sel = self.cat_data['SG_FLAG'] == self.sel[kind]
         return self.cat_data[sel]
 
@@ -156,8 +156,8 @@ class MapperKV450(MapperBase):
         if self.maps[mod] is not None:
             self.signal_map = self.maps[mod]
             return self.signal_map
-        
-        #This will only be computed if self.maps['mod'] is None
+
+        # This will only be computed if self.maps['mod'] is None
         file_name1 = \
             f'KV450_signal_map_{mod}_e1_zbin{self.zbin}_ns{self.nside}'
         file_name2 = \
