@@ -101,11 +101,11 @@ class MapperDECaLS(MapperBase):
     def get_signal_map(self, apply_galactic_correction=True):
         if self.delta_map is None:
             d = np.zeros(self.npix)
-            self.cata_data = self.get_catalog()
+            cata_data = self.get_catalog()
             self.comp_map = self._get_comp_map()
             self.bmask = self._get_binary_mask()
             self.stars = self._get_stars()
-            nmap_data = get_map_from_points(self.cat_data, self.nside)
+            nmap_data = get_map_from_points(cat_data, self.nside)
             mean_n = self._get_mean_n(nmap_data)
             goodpix = self.bmask > 0
             d[goodpix] = nmap_data[goodpix]/(mean_n*self.comp_map[goodpix])-1
@@ -195,8 +195,8 @@ class MapperDECaLS(MapperBase):
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             if (self.nside < 4096) or (self.config.get('nl_analytic', True)):
-                self.cat_data = self.get_catalog()
-                n = get_map_from_points(self.cat_data, self.nside)
+                cat_data = self.get_catalog()
+                n = get_map_from_points(cat_data, self.nside)
                 N_mean = self._get_mean_n(n)
                 N_mean_srad = N_mean * self.npix / (4 * np.pi)
                 N_ell = np.mean(self.mask) / N_mean_srad
