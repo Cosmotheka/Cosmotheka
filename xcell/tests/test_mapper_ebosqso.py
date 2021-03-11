@@ -17,7 +17,8 @@ def get_mapper():
 
 def test_smoke():
     m = get_mapper()
-    assert len(m.w_data) == 2*hp.nside2npix(32)
+    m._get_w(mod='data')
+    assert len(m.ws['data']) == 2*hp.nside2npix(32)
 
 
 def test_get_nz():
