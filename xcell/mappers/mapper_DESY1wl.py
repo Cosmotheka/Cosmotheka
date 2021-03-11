@@ -188,13 +188,13 @@ class MapperDESY1wl(MapperBase):
             self.maps[mod] = [-e1, e2]
         else:
             print('Computing bin{} signal map'.format(self.zbin))
-            cat_data = self.get_catalog()
-            we1 = get_map_from_points(cat_data, self.nside,
-                                      w=cat_data[e1f],
+            self.cat_data = self.get_catalog()
+            we1 = get_map_from_points(self.cat_data, self.nside,
+                                      w=self.cat_data[e1f],
                                       ra_name='ra',
                                       dec_name='dec')
-            we2 = get_map_from_points(cat_data, self.nside,
-                                      w=cat_data[e2f],
+            we2 = get_map_from_points(self.cat_data, self.nside,
+                                      w=self.cat_data[e2f],
                                       ra_name='ra',
                                       dec_name='dec')
             mask = self.get_mask()
@@ -236,8 +236,8 @@ class MapperDESY1wl(MapperBase):
             print('Loading bin{} mask'.format(self.zbin))
             self.mask = hp.read_map(fname_lite)
         else:
-            cat_data = self.get_catalog()
-            self.mask = get_map_from_points(cat_data, self.nside,
+            self.cat_data = self.get_catalog()
+            self.mask = get_map_from_points(self.cat_data, self.nside,
                                             ra_name='ra', dec_name='dec')
             # overwrite = True in case it is also being computed by other
             # process
@@ -259,10 +259,10 @@ class MapperDESY1wl(MapperBase):
             print('Loading w2s2 bin{} map'.format(self.zbin))
             w2s2 = hp.read_map(fname_lite)
         else:
-            cat_data = self.get_catalog()
-            w2s2 = get_map_from_points(cat_data, self.nside,
-                                       w=0.5*(cat_data[e1f]**2 +
-                                              cat_data[e2f]**2),
+            self.cat_data = self.get_catalog()
+            w2s2 = get_map_from_points(self.cat_data, self.nside,
+                                       w=0.5*(self.cat_data[e1f]**2 +
+                                              self.cat_data[e2f]**2),
                                        ra_name='ra', dec_name='dec')
             # overwrite = True in case it is also being computed by other
             # process

@@ -42,16 +42,8 @@ class MapperKV450(MapperBase):
         # Multiplicative bias
         # Values from Table 2 of 1812.06076 (KV450 cosmo paper)
         self.m = (-0.017, -0.008, -0.015, 0.010, 0.006)
-
-        read_lite, fname_lite = self._check_lite_exists(self.zbin)
-        if read_lite:
-            print(f'loading lite cat {self.zbin}', flush=True)
-            self.cat = Table.read(fname_lite, format='fits')
-        else:
-            print(f'loading full cat {self.zbin}', flush=True)
-            self.cat = self._create_catalog()
-
-        print('Catalogs loaded', flush=True)
+        
+        self.cat_data = None
 
         self.dndz = np.loadtxt(self.config['file_nz'], unpack=True)
         self.sel = {'galaxies': 1, 'stars': 0}
@@ -64,8 +56,22 @@ class MapperKV450(MapperBase):
 
         self.nl_coupled = None
         self.nls = {'PSF': None, 'shear': None, 'stars': None}
+        
+    def get_catalog(self):
+        if self.cat_data is None:
+            read_lite, fname_lite = self._check_lite_exists(self.zbin)
+            if read_lite:
+                print(f'loading lite cat {self.zbin}', flush=True)
+                self.cat_data = Table.read(fname_lite, format='fits')
+            else:
+                print(f'loading full cat {self.zbin}', flush=True)
+                self.cat_data = self._load_catalog()
 
-    def _create_catalog(self):
+            print('Catalogs loaded', flush=True)
+         
+        return self.cat_data
+
+    def _load_catalog(self):
         nzbins = self.zbin_edges.shape[0]
         data = [Table() for i in range(nzbins)]
 
@@ -141,12 +147,33 @@ class MapperKV450(MapperBase):
         cat_data['bias_corrected_e2'][sel_gals] /= 1 + self.m[zbin]
 
     def _get_gals_or_stars(self, kind='galaxies'):
-        sel = self.cat['SG_FLAG'] == self.sel[kind]
-        return self.cat[sel]
+        self.cat_data = get_catalog()
+        sel = self.cat_data['SG_FLAG'] == self.sel[kind]
+        return self.cat_data[sel]
 
     def get_signal_map(self, mode=None):
         kind, e1f, e2f, mod = self._set_mode(mode)
-        if self.maps[mod] is None:
+        if self.maps[mod] is not None:
+            self.signal_map = self.maps[mod]
+            return self.signal_map
+        
+        #This will only be computed if self.maps['mod'] is None
+        file_name1 = \
+            f'KV450_signal_map_{mod}_e1_zbin{self.zbin}_ns{self.nside}'
+        file_name2 = \
+            f'KV450_signal_map_{mod}_e2_zbin{self.zbin}_ns{self.nside}'
+        # Add extension separately to respect text width < 78
+        file_name1 += '.fits.gz'
+        file_name2 += '.fits.gz'
+        read_lite1, fname_lite1 = self._check_lite_exists(file_name1)
+        read_lite2, fname_lite2 = self._check_lite_exists(file_name2)
+        if read_lite1 and read_lite2:
+            print('Loading bin{} signal map'.format(self.zbin))
+            e1 = hp.read_map(fname_lite1)
+            e2 = hp.read_map(fname_lite2)
+            self.maps[mod] = [-e1, e2]
+        else:
+            print('Computing bin{} signal map'.format(self.zbin))
             data = self._get_gals_or_stars(kind)
             wcol = data['weight']*data[e1f]
             we1 = get_map_from_points(data, self.nside, w=wcol,
