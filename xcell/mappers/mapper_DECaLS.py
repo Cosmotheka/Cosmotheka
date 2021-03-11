@@ -28,16 +28,8 @@ class MapperDECaLS(MapperBase):
         self.pz = config.get('z_name', 'PHOTOZ_3DINFER')
         self.z_arr_dim = config.get('z_arr_dim', 500)
 
-        self.cat_data = []
+        self.cat_data = None
         self.npix = hp.nside2npix(self.nside)
-
-        for file_data in self.config['data_catalogs']:
-            if not os.path.isfile(file_data):
-                raise ValueError(f"File {file_data} not found")
-            with fits.open(file_data) as f:
-                self.cat_data.append(Table.read(f))
-
-        self.cat_data = vstack(self.cat_data)
 
         bin_edges = [[0.00, 0.30],
                      [0.30, 0.45],
@@ -57,7 +49,18 @@ class MapperDECaLS(MapperBase):
         self.comp_map = None
         self.stars = None
         self.bmask = None
-
+   
+    def get_catalogs()
+        if self.cat_data is None:
+            for file_data in self.config['data_catalogs']:
+            if not os.path.isfile(file_data):
+                raise ValueError(f"File {file_data} not found")
+            with fits.open(file_data) as f:
+                self.cat_data.append(Table.read(f))
+            self.cat_data = vstack(self.cat_data)
+            
+        return self.cat_data
+    
     def _get_angmask(self, cat):
         bmask = hp.read_map(self.config['binary_mask'],
                             verbose=False)
@@ -98,6 +101,7 @@ class MapperDECaLS(MapperBase):
     def get_signal_map(self, apply_galactic_correction=True):
         if self.delta_map is None:
             d = np.zeros(self.npix)
+            sefl.cata_data = self.get_catalog()
             self.comp_map = self._get_comp_map()
             self.bmask = self._get_binary_mask()
             self.stars = self._get_stars()
@@ -191,6 +195,7 @@ class MapperDECaLS(MapperBase):
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             if (self.nside < 4096) or (self.config.get('nl_analytic', True)):
+                self.cat_data = get_catalog()
                 n = get_map_from_points(self.cat_data, self.nside)
                 N_mean = self._get_mean_n(n)
                 N_mean_srad = N_mean * self.npix / (4 * np.pi)
