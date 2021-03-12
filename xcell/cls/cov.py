@@ -89,8 +89,8 @@ class Cov():
 
 
         # Load all masks once
-        m_a1, m_b1 = self.clA1B1.get_masks()
-        m_a2, m_b2 = self.clA2B2.get_masks()
+        m_a1, m_a2 = self.clA1A2.get_masks()
+        m_b1, m_b2 = self.clB1B2.get_masks()
 
         # Compute weighted Cls
         cla1b1 = self._get_cl_for_cov(self.clA1B1, self.clfid_A1B1, m_a1, m_b1)
