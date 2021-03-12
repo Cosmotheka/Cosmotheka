@@ -87,7 +87,6 @@ class Cov():
             self.cov = np.load(fname)['cov']
             return self.cov
 
-
         # Load all masks once
         m_a1, m_a2 = self.clA1A2.get_masks()
         m_b1, m_b2 = self.clB1B2.get_masks()
