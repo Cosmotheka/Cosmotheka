@@ -15,16 +15,17 @@ class Cov():
         self.trA2 = trA2
         self.trB1 = trB1
         self.trB2 = trB2
-        self.clA1A2 = Cl(data, trA1, trA2)
-        self.clB1B2 = Cl(data, trB1, trB2)
-        self.clA1B1 = Cl(data, trA1, trB1)
-        self.clA1B2 = Cl(data, trA1, trB2)
-        self.clA2B1 = Cl(data, trA2, trB1)
-        self.clA2B2 = Cl(data, trA2, trB2)
-        self.clfid_A1B1 = ClFid(data, trA1, trB1)
-        self.clfid_A1B2 = ClFid(data, trA1, trB2)
-        self.clfid_A2B1 = ClFid(data, trA2, trB1)
-        self.clfid_A2B2 = ClFid(data, trA2, trB2)
+        cl_dic, clfid_dic = self._load_Cls()
+        self.clA1A2 = cl_dic[(trA1, trA2)]
+        self.clB1B2 = cl_dic[(trB1, trB2)]
+        self.clA1B1 = cl_dic[(trA1, trB1)]
+        self.clA1B2 = cl_dic[(trA1, trB2)]
+        self.clA2B1 = cl_dic[(trA2, trB1)]
+        self.clA2B2 = cl_dic[(trA2, trB2)]
+        self.clfid_A1B1 = clfid_dic[(trA1, trB1)]
+        self.clfid_A1B2 = clfid_dic[(trA1, trB2)]
+        self.clfid_A2B1 = clfid_dic[(trA2, trB1)]
+        self.clfid_A2B2 = clfid_dic[(trA2, trB2)]
         self.recompute_cov = self.data.data['recompute']['cov']
         self.recompute_cmcm = self.data.data['recompute']['cmcm']
         self.cov = None
@@ -34,6 +35,29 @@ class Cov():
             trconf = self.data.data['tracers'][trA1]
             self.nl_marg = trconf.get('nl_marginalize', False)
             self.nl_prior = trconf.get('nl_prior', 1E30)
+
+    def _load_Cls(self):
+        data = self.data.data
+        trs_comb = [(self.trA1, self.trA2),
+                    (self.trB1, self.trB2),
+                    (self.trA1, self.trB1),
+                    (self.trA1, self.trB2),
+                    (self.trA2, self.trB1),
+                    (self.trA2, self.trB2)]
+
+        # Load data Cls
+        cl_dic = {}
+        for trs in trs_comb:
+            if trs not in cl_dic.keys():
+                cl_dic[trs] = Cl(data, *trs)
+
+        # Load fiducial Cls
+        clfid_dic = {}
+        for trs in trs_comb[2:]:
+            if trs not in clfid_dic.keys():
+                clfid_dic[trs] = ClFid(data, *trs)
+
+        return cl_dic, clfid_dic
 
     def get_outdir(self):
         root = self.data.data['output']
@@ -64,6 +88,18 @@ class Cov():
 
         return cw
 
+    def _get_cl_for_cov(self, clab, clab_fid, ma, mb):
+        mean_mamb = np.mean(ma * mb)
+        nl_cp = clab.get_ell_nl_cp()[1]
+        if not mean_mamb:
+            cl_cp = np.zeros_like(nl_cp)
+        else:
+            w = clab.get_workspace()
+            cl_cp = w.couple_cell(clab_fid.get_ell_cl()[1])
+            cl_cp = (cl_cp + nl_cp) / mean_mamb
+
+        return cl_cp
+
     def get_covariance(self):
         fname = os.path.join(self.outdir,
                              'cov_{}_{}_{}_{}.npz'.format(self.trA1,
@@ -75,41 +111,33 @@ class Cov():
             self.cov = np.load(fname)['cov']
             return self.cov
 
-        wa1b1 = self.clA1B1.get_workspace()
-        wa1b2 = self.clA1B2.get_workspace()
-        wa2b1 = self.clA2B1.get_workspace()
-        wa2b2 = self.clA2B2.get_workspace()
+        # Load all masks once
+        m_a1, m_a2 = self.clA1A2.get_masks()
+        m_b1, m_b2 = self.clB1B2.get_masks()
 
-        # Couple Theory Cls
-        cla1b1 = wa1b1.couple_cell(self.clfid_A1B1.get_ell_cl()[1])
-        cla1b2 = wa1b2.couple_cell(self.clfid_A1B2.get_ell_cl()[1])
-        cla2b1 = wa2b1.couple_cell(self.clfid_A2B1.get_ell_cl()[1])
-        cla2b2 = wa2b2.couple_cell(self.clfid_A2B2.get_ell_cl()[1])
+        # Compute weighted Cls
+        cla1b1 = self._get_cl_for_cov(self.clA1B1, self.clfid_A1B1, m_a1, m_b1)
+        cla1b2 = self._get_cl_for_cov(self.clA1B2, self.clfid_A1B2, m_a1, m_b2)
+        cla2b1 = self._get_cl_for_cov(self.clA2B1, self.clfid_A2B1, m_a2, m_b1)
+        cla2b2 = self._get_cl_for_cov(self.clA2B2, self.clfid_A2B2, m_a2, m_b2)
+
         #####
-        nla1b1 = self.clA1B1.get_ell_nl_cp()[1]
-        nla1b2 = self.clA1B2.get_ell_nl_cp()[1]
-        nla2b1 = self.clA2B1.get_ell_nl_cp()[1]
-        nla2b2 = self.clA2B2.get_ell_nl_cp()[1]
-        #####
-        m_a1, m_b1 = self.clA1B1.get_masks()
-        m_a2, m_b2 = self.clA2B2.get_masks()
+        if np.any(cla1b1) or np.any(cla1b2) or np.any(cla2b1) or \
+                np.any(cla2b2):
+            wa = self.clA1A2.get_workspace()
+            wb = self.clB1B2.get_workspace()
+            cw = self.get_covariance_workspace()
 
-        # Weight the Cls
-        cla1b1 = (cla1b1 + nla1b1) / np.mean(m_a1 * m_b1)
-        cla1b2 = (cla1b2 + nla1b2) / np.mean(m_a1 * m_b2)
-        cla2b1 = (cla2b1 + nla2b1) / np.mean(m_a2 * m_b1)
-        cla2b2 = (cla2b2 + nla2b2) / np.mean(m_a2 * m_b2)
-        #####
-        wa = self.clA1A2.get_workspace()
-        wb = self.clB1B2.get_workspace()
-        cw = self.get_covariance_workspace()
+            s_a1, s_a2 = self.clA1A2.get_spins()
+            s_b1, s_b2 = self.clB1B2.get_spins()
 
-        s_a1, s_a2 = self.clA1A2.get_spins()
-        s_b1, s_b2 = self.clB1B2.get_spins()
-
-        cov = nmt.gaussian_covariance(cw, s_a1, s_a2, s_b1, s_b2,
-                                      cla1b1, cla1b2, cla2b1, cla2b2,
-                                      wa, wb)
+            cov = nmt.gaussian_covariance(cw, s_a1, s_a2, s_b1, s_b2,
+                                          cla1b1, cla1b2, cla2b1, cla2b2,
+                                          wa, wb)
+        else:
+            size1 = self.clA1A2.get_ell_cl()[1].size
+            size2 = self.clB1B2.get_ell_cl()[1].size
+            cov = np.zeros((size1, size2))
 
         if self.nl_marg:
             _, nl = self.clA1A2.get_ell_nl()
