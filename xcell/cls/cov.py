@@ -15,16 +15,17 @@ class Cov():
         self.trA2 = trA2
         self.trB1 = trB1
         self.trB2 = trB2
-        self.clA1A2 = Cl(data, trA1, trA2)
-        self.clB1B2 = Cl(data, trB1, trB2)
-        self.clA1B1 = Cl(data, trA1, trB1)
-        self.clA1B2 = Cl(data, trA1, trB2)
-        self.clA2B1 = Cl(data, trA2, trB1)
-        self.clA2B2 = Cl(data, trA2, trB2)
-        self.clfid_A1B1 = ClFid(data, trA1, trB1)
-        self.clfid_A1B2 = ClFid(data, trA1, trB2)
-        self.clfid_A2B1 = ClFid(data, trA2, trB1)
-        self.clfid_A2B2 = ClFid(data, trA2, trB2)
+        cl_dic, clfid_dic = self._load_Cls()
+        self.clA1A2 = cl_dic[(trA1, trA2)]
+        self.clB1B2 = cl_dic[(trB1, trB2)]
+        self.clA1B1 = cl_dic[(trA1, trB1)]
+        self.clA1B2 = cl_dic[(trA1, trB2)]
+        self.clA2B1 = cl_dic[(trA2, trB1)]
+        self.clA2B2 = cl_dic[(trA2, trB2)]
+        self.clfid_A1B1 = clfid_dic[(trA1, trB1)]
+        self.clfid_A1B2 = clfid_dic[(trA1, trB2)]
+        self.clfid_A2B1 = clfid_dic[(trA2, trB1)]
+        self.clfid_A2B2 = clfid_dic[(trA2, trB2)]
         self.recompute_cov = self.data.data['recompute']['cov']
         self.recompute_cmcm = self.data.data['recompute']['cmcm']
         self.cov = None
@@ -34,6 +35,29 @@ class Cov():
             trconf = self.data.data['tracers'][trA1]
             self.nl_marg = trconf.get('nl_marginalize', False)
             self.nl_prior = trconf.get('nl_prior', 1E30)
+
+    def _load_Cls(self):
+        data = self.data.data
+        trs_comb = [(self.trA1, self.trA2),
+                    (self.trB1, self.trB2),
+                    (self.trA1, self.trB1),
+                    (self.trA1, self.trB2),
+                    (self.trA2, self.trB1),
+                    (self.trA2, self.trB2)]
+
+        # Load data Cls
+        cl_dic = {}
+        for trs in trs_comb:
+            if trs not in cl_dic.keys():
+                cl_dic[trs] = Cl(data, *trs)
+
+        # Load fiducial Cls
+        clfid_dic = {}
+        for trs in trs_comb[2:]:
+            if trs not in clfid_dic.keys():
+                clfid_dic[trs] = ClFid(data, *trs)
+
+        return cl_dic, clfid_dic
 
     def get_outdir(self):
         root = self.data.data['output']
