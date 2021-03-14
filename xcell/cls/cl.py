@@ -25,9 +25,11 @@ class ClBase():
     def get_outdir(self, subdir=''):
         root = self.data.data['output']
         if self._read_symmetric:
-            trreq = self.data.get_tracers_bare_name_pair(self.tr2, self.tr1, '_')
+            trreq = self.data.get_tracers_bare_name_pair(self.tr2, self.tr1,
+                                                         '_')
         else:
-            trreq = self.data.get_tracers_bare_name_pair(self.tr1, self.tr2, '_')
+            trreq = self.data.get_tracers_bare_name_pair(self.tr1, self.tr2,
+                                                         '_')
         outdir = os.path.join(root, subdir, trreq)
         return outdir
 
