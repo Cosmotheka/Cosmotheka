@@ -202,12 +202,23 @@ class MapperKV450(MapperBase):
 
     def get_mask(self, mode=None):
         kind, e1f, e2f, mod = self._set_mode(mode)
-        if self.masks[kind] is None:
+        if self.masks[kind] is not None:
+            self.mask = self.masks[kind]
+            return self.mask
+        file_name = \
+            f'DESwlMETACAL_mask_{kind}_zbin{self.zbin}_ns{self.nside}'
+        file_name += '.fits.gz'
+        read_lite, fname_lite = self._check_lite_exists(file_name)
+        if read_lite:
+            print('Loading bin{} mask'.format(self.zbin))
+            self.masks[kind] = hp.read_map(fname_lite)
+        else:
             data = self._get_gals_or_stars(kind)
             self.masks[kind] = get_map_from_points(data, self.nside,
                                                    w=data['weight'],
                                                    ra_name='ALPHA_J2000',
                                                    dec_name='DELTA_J2000')
+            hp.write_map(fname_lite, self.masks[kind], overwrite=True)
         self.mask = self.masks[kind]
         return self.mask
 
