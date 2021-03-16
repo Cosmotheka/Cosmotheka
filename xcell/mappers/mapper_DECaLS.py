@@ -28,7 +28,7 @@ class MapperDECaLS(MapperBase):
         self.pz = config.get('z_name', 'PHOTOZ_3DINFER')
         self.z_arr_dim = config.get('z_arr_dim', 500)
 
-        self.cat_data = []
+        self.cat_data = None
         self.npix = hp.nside2npix(self.nside)
 
         bin_edges = [[0.00, 0.30],
@@ -50,7 +50,8 @@ class MapperDECaLS(MapperBase):
         self.bmask = None
 
     def get_catalogs(self):
-        if len(self.cat_data) == 0:
+        if self.cat_data is None:
+            self.cat_data = []
             for file_data in self.config['data_catalogs']:
                 if not os.path.isfile(file_data):
                     raise ValueError(f"File {file_data} not found")
