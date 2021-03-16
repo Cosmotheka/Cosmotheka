@@ -45,6 +45,9 @@ class MapperKV450(MapperBase):
 
         self.cat_data = None
 
+        self.w2s2 = None
+        self.w2s2s = {'PSF': None, 'shear': None, 'stars': None}
+
         self.dndz = np.loadtxt(self.config['file_nz'], unpack=True)
         self.sel = {'galaxies': 1, 'stars': 0}
 
@@ -200,24 +203,53 @@ class MapperKV450(MapperBase):
 
     def get_mask(self, mode=None):
         kind, e1f, e2f, mod = self._set_mode(mode)
-        if self.masks[kind] is None:
+        if self.masks[kind] is not None:
+            self.mask = self.masks[kind]
+            return self.mask
+        file_name = \
+            f'KV450_mask_{kind}_zbin{self.zbin}_ns{self.nside}'
+        file_name += '.fits.gz'
+        read_lite, fname_lite = self._check_lite_exists(file_name)
+        if read_lite:
+            print('Loading bin{} mask'.format(self.zbin))
+            self.masks[kind] = hp.read_map(fname_lite)
+        else:
             data = self._get_gals_or_stars(kind)
             self.masks[kind] = get_map_from_points(data, self.nside,
                                                    w=data['weight'],
                                                    ra_name='ALPHA_J2000',
                                                    dec_name='DELTA_J2000')
+            hp.write_map(fname_lite, self.masks[kind], overwrite=True)
         self.mask = self.masks[kind]
         return self.mask
+
+    def _get_w2s2(self, mode):
+        kind, e1f, e2f, mod = self._set_mode(mode)
+        if self.w2s2s[mod] is not None:
+            self.w2s2 = self.w2s2s[mod]
+            return self.w2s2
+        file_name = \
+            f'KV450_w2s2_{kind}_zbin{self.zbin}_ns{self.nside}'
+        file_name += '.fits.gz'
+        read_lite, fname_lite = self._check_lite_exists(file_name)
+        if read_lite:
+            print('Loading bin{} w2s2'.format(self.zbin))
+            self.w2s2s[mod] = hp.read_map(fname_lite)
+        else:
+            data = self._get_gals_or_stars(kind)
+            wcol = data['weight']**2*0.5*(data[e1f]**2+data[e2f]**2)
+            self.w2s2s[mod] = get_map_from_points(data, self.nside, w=wcol,
+                                                  ra_name='ALPHA_J2000',
+                                                  dec_name='DELTA_J2000')
+            hp.write_map(fname_lite, self.w2s2s[mod], overwrite=True)
+            self.w2s2 = self.w2s2s[mod]
+        return self.w2s2
 
     def get_nl_coupled(self, mode=None):
         kind, e1f, e2f, mod = self._set_mode(mode)
         if self.nls[mod] is None:
-            data = self._get_gals_or_stars(kind)
-            wcol = data['weight']**2*0.5*(data[e1f]**2+data[e2f]**2)
-            w2s2 = get_map_from_points(data, self.nside, w=wcol,
-                                       ra_name='ALPHA_J2000',
-                                       dec_name='DELTA_J2000')
-            N_ell = hp.nside2pixarea(self.nside) * np.mean(w2s2)
+            self.w2s2 = self._get_w2s2(mode)
+            N_ell = hp.nside2pixarea(self.nside) * np.mean(self.w2s2)
             nl = N_ell * np.ones(3*self.nside)
             nl[:2] = 0  # ylm = 0 for l < spin
             self.nls[mod] = np.array([nl, 0*nl, 0*nl, nl])
