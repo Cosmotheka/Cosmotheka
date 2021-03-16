@@ -21,7 +21,7 @@ class MappereBOSSQSO(MapperBase):
         """
         self._get_defaults(config)
 
-        self.cats = {'data': [], 'random': []}
+        self.cats = {'data': None, 'random': None}
 
         self.z_arr_dim = config.get('z_arr_dim', 50)
         self.nside_mask = config.get('nside_mask', 512)
@@ -42,7 +42,8 @@ class MappereBOSSQSO(MapperBase):
         else:
             data_file = self.config['random_catalogs']
 
-        if len(self.cats[mod]) == 0:
+        if self.cats[mod] is None:
+            self.cats[mod] = []
             for file in data_file:
                 if not os.path.isfile(file):
                     raise ValueError(f"File {file} not found")
