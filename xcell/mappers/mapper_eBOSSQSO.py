@@ -43,14 +43,13 @@ class MappereBOSSQSO(MapperBase):
             data_file = self.config['random_catalogs']
 
         if self.cats[mod] is None:
-            self.cats[mod] = []
+            cats = []
             for file in data_file:
                 if not os.path.isfile(file):
                     raise ValueError(f"File {file} not found")
                 with fits.open(file) as f:
-                    self.cats[mod].append(Table.read(f))
-        self.cats[mod] = vstack(self.cats[mod])
-        self.cats[mod] = self._bin_z(self.cats[mod])
+                    cats.append(self._bin_z(Table.read(f)))
+            self.cats[mod] = vstack(cats)
         return self.cats[mod]
 
     def _bin_z(self, cat):
