@@ -46,11 +46,18 @@ class sfile():
         nbpw = ell.size
         #
         cl_ng_tracers = self.data.get_cov_ng_cl_tracers()
-        ncls = len(cl_ng_tracers)
-        #
+        # Read the NG covmat from file
         cov_ng = self.data.data['cov']['ng']
-        cov = np.load(cov_ng['path']).reshape((ncls, nbpw, ncls, nbpw))
+        cov = np.load(cov_ng['path'])
+        ncls = int(cov.shape[0] / nbpw)
+        cov = cov.reshape((ncls, nbpw, ncls, nbpw))
+        if ('has_b' in cov_ng) and (cov_ng['has_b'] is True):
+            raise ValueError('Reading CovNG with B-modes not implemented')
+        else:
+            if ncls != len(cl_ng_tracers):
+                raise ValueError('Number of cls do not match')
 
+        # Initialize the covmat that will go into the sacc file
         ndim = self.s.mean.size
         covmat = np.zeros((int(ndim/nbpw), nbpw, int(ndim/nbpw), nbpw))
         print(ndim/nbpw)
