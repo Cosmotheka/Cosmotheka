@@ -123,7 +123,9 @@ class Data():
                 if ix not in ix_reverse:
                     ix_reverse.append(ix)
             else:
-                raise ValueError(f'Tracers {tr1}-{tr2} not found in NG cov.')
+                # raise ValueError(f'Tracers {tr1}-{tr2} not found in NG cov.')
+                warn(f'Tracers {tr1}-{tr2} not found in NG cov.')
+                continue
             cl_ng[ix].append((tr1, tr2))
 
         for ix in ix_reverse:
