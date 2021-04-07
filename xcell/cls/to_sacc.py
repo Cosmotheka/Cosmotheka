@@ -56,9 +56,13 @@ class sfile():
         print(ndim/nbpw)
         cl_tracers = self.s.get_tracer_combinations()
         for i, trs1 in enumerate(cl_tracers):
+            if trs1 not in cl_ng_tracers:
+                continue
             ix1 = cl_ng_tracers.index(trs1)
             cl_ix1 = int(self.s.indices(tracers=trs1)[0] / nbpw)
             for j, trs2 in enumerate(cl_tracers[i:], i):
+                if trs2 not in cl_ng_tracers:
+                    continue
                 ix2 = cl_ng_tracers.index(trs2)
                 cl_ix2 = int(self.s.indices(tracers=trs2)[0] / nbpw)
                 covi = cov[ix1, :, ix2, :]
