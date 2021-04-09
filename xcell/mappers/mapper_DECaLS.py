@@ -28,16 +28,8 @@ class MapperDECaLS(MapperBase):
         self.pz = config.get('z_name', 'PHOTOZ_3DINFER')
         self.z_arr_dim = config.get('z_arr_dim', 500)
 
-        self.cat_data = []
+        self.cat_data = None
         self.npix = hp.nside2npix(self.nside)
-
-        for file_data in self.config['data_catalogs']:
-            if not os.path.isfile(file_data):
-                raise ValueError(f"File {file_data} not found")
-            with fits.open(file_data) as f:
-                self.cat_data.append(Table.read(f))
-
-        self.cat_data = vstack(self.cat_data)
 
         bin_edges = [[0.00, 0.30],
                      [0.30, 0.45],
@@ -46,10 +38,9 @@ class MapperDECaLS(MapperBase):
 
         self.zbin = config['zbin']
         self.z_edges = bin_edges[self.zbin]
-        self.cat_data = self._bin_z(self.cat_data)
 
         # Angular mask flag
-        self.mskflag = self._get_angmask(self.cat_data)
+        self.mskflag = None
         self.dndz = None
         self.delta_map = None
         self.nl_coupled = None
@@ -58,13 +49,29 @@ class MapperDECaLS(MapperBase):
         self.stars = None
         self.bmask = None
 
-    def _get_angmask(self, cat):
-        bmask = hp.read_map(self.config['binary_mask'],
-                            verbose=False)
-        nside = hp.npix2nside(len(bmask))
-        ipix = hp.ang2pix(nside, cat['RA'], cat['DEC'],
-                          lonlat=True)
-        return bmask[ipix] > 0.
+    def get_catalogs(self):
+        if self.cat_data is None:
+            self.cat_data = []
+            for file_data in self.config['data_catalogs']:
+                if not os.path.isfile(file_data):
+                    raise ValueError(f"File {file_data} not found")
+                with fits.open(file_data) as f:
+                    self.cat_data.append(Table.read(f))
+            self.cat_data = vstack(self.cat_data)
+            self.cat_data = self._bin_z(self.cat_data)
+
+        return self.cat_data
+
+    def _get_angmask(self):
+        if self.mskflag is None:
+            cat = self.get_catalogs()
+            bmask = hp.read_map(self.config['binary_mask'],
+                                verbose=False)
+            nside = hp.npix2nside(len(bmask))
+            ipix = hp.ang2pix(nside, cat['RA'], cat['DEC'],
+                              lonlat=True)
+            self.mskflag = bmask[ipix] > 0.
+        return self.mskflag
 
     def _bin_z(self, cat):
         return cat[(cat[self.pz] >= self.z_edges[0]) &
@@ -72,7 +79,8 @@ class MapperDECaLS(MapperBase):
 
     def get_nz(self, dz=0):
         if self.dndz is None:
-            h, b = np.histogram(self.cat_data[self.pz][self.mskflag],
+            mskflag = self._get_angmask()
+            h, b = np.histogram(self.cat_data[self.pz][mskflag],
                                 range=[-0.3, 1], bins=self.z_arr_dim)
             z_arr = 0.5 * (b[:-1] + b[1:])
             kernel = self._get_lorentzian(z_arr)
@@ -98,10 +106,11 @@ class MapperDECaLS(MapperBase):
     def get_signal_map(self, apply_galactic_correction=True):
         if self.delta_map is None:
             d = np.zeros(self.npix)
+            cat_data = self.get_catalogs()
             self.comp_map = self._get_comp_map()
             self.bmask = self._get_binary_mask()
             self.stars = self._get_stars()
-            nmap_data = get_map_from_points(self.cat_data, self.nside)
+            nmap_data = get_map_from_points(cat_data, self.nside)
             mean_n = self._get_mean_n(nmap_data)
             goodpix = self.bmask > 0
             d[goodpix] = nmap_data[goodpix]/(mean_n*self.comp_map[goodpix])-1
@@ -191,7 +200,8 @@ class MapperDECaLS(MapperBase):
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             if (self.nside < 4096) or (self.config.get('nl_analytic', True)):
-                n = get_map_from_points(self.cat_data, self.nside)
+                cat_data = self.get_catalogs()
+                n = get_map_from_points(cat_data, self.nside)
                 N_mean = self._get_mean_n(n)
                 N_mean_srad = N_mean * self.npix / (4 * np.pi)
                 mask = self.get_mask()

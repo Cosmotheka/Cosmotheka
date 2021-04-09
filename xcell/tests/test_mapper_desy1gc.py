@@ -25,16 +25,20 @@ def test_get_binning():
     for b in [0, 4]:
         config['zbin'] = b
         m = xc.mappers.MapperDESY1gc(config)
+        m.get_catalog()
+        m._get_w()
         assert len(m.cat_data) == 0
-        assert np.sum(np.fabs(m.w_data)) < 1E-1
+        assert np.sum(np.fabs(m.w)) < 1E-1
 
     # All galaxies
     ngal = hp.nside2npix(config['nside'])
     config['zbin'] = 2
     m = xc.mappers.MapperDESY1gc(config)
+    m.get_catalog()
+    m._get_w()
     assert len(m.cat_data) == ngal
     # Weight = 2
-    assert np.sum(np.fabs(m.w_data))-2*ngal < 1E-5
+    assert np.sum(np.fabs(m.w))-2*ngal < 1E-5
 
 
 def test_get_mask():
