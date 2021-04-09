@@ -35,7 +35,7 @@ class Cov():
             trconf = self.data.data['tracers'][trA1]
             self.nl_marg = trconf.get('nl_marginalize', False)
             self.nl_prior = trconf.get('nl_prior', 1E30)
-        self.spin0 = self.data.data['cov'].get('spin0_cov', False)
+        self.spin0 = self.data.data['cov'].get('spin0', False)
 
     def _load_Cls(self):
         data = self.data.data
