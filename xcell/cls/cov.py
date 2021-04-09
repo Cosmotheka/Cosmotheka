@@ -100,7 +100,8 @@ class Cov():
 
         return cl_cp
 
-    def get_covariance(self, spin0=False):
+    def get_covariance(self):
+        spin0 = self.data.data['healpy'].get('spin0_cov', False)
         fname = os.path.join(self.outdir,
                              'cov_{}_{}_{}_{}.npz'.format(self.trA1,
                                                           self.trA2,
