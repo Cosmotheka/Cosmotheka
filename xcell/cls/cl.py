@@ -97,21 +97,35 @@ class Cl(ClBase):
         f2 = mapper2.get_nmt_field()
         return f1, f2
 
-    def get_workspace(self):
-        if self._w is None:
-            self._w = self._compute_workspace()
-        return self._w
+    def get_workspace(self, spin0=False):
+        if spin0:
+            w = self._compute_workspace(spin0=spin0)
+            return w
+        else:
+            if self._w is None:
+                self._w = self._compute_workspace()
+            return self._w
 
-    def _compute_workspace(self):
+    def _compute_workspace(self, spin0=False):
         mask1, mask2 = self.get_masks_names()
         if self._read_symmetric:
             mask1, mask2 = mask2, mask1
-        fname = os.path.join(self.outdir, f'w__{mask1}__{mask2}.fits')
+        if spin0:
+            fname = os.path.join(self.outdir, f'w0__{mask1}__{mask2}.fits')
+        else:
+            fname = os.path.join(self.outdir, f'w__{mask1}__{mask2}.fits')
         w = nmt.NmtWorkspace()
         if self.recompute_mcm or (not os.path.isfile(fname)):
             n_iter = self.data.data['healpy']['n_iter_mcm']
             l_toeplitz, l_exact, dl_band = self.data.check_toeplitz('cls')
-            f1, f2 = self.get_nmt_fields()
+            if spin0:
+                m1, m2 = self.get_mappers()
+                msk1 = m1.get_mask()
+                msk2 = m2.get_mask()
+                f1 = nmt.NmtField(msk1, None, spin=0)
+                f2 = nmt.NmtField(msk2, None, spin=0)
+            else:
+                f1, f2 = self.get_nmt_fields()
             w.compute_coupling_matrix(f1, f2, self.b, n_iter=n_iter,
                                       l_toeplitz=l_toeplitz, l_exact=l_exact,
                                       dl_band=dl_band)
