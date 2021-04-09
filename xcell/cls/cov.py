@@ -197,8 +197,8 @@ class Cov():
 
         if np.any(cla1b1) or np.any(cla1b2) or np.any(cla2b1) or \
                 np.any(cla2b2):
-            wa = self.clA1A2.get_workspace(spin0=self.spin0)
-            wb = self.clB1B2.get_workspace(spin0=self.spin0)
+            wa = self.clA1A2.get_workspace_cov()
+            wb = self.clB1B2.get_workspace_cov()
             cw = self.get_covariance_workspace()
 
             s_a1, s_a2 = self.clA1A2.get_spins()

@@ -72,6 +72,7 @@ class Cl(ClBase):
         self.recompute_mcm = self.data.data['recompute']['mcm']
         # Not needed to load cl if already computed
         self._w = None
+        self._wcov = None
         ##################
         self.nl = None
         self.nl_cp = None
@@ -102,16 +103,25 @@ class Cl(ClBase):
         f2 = mapper2.get_nmt_field()
         return f1, f2
 
-    def get_workspace(self, spin0=False):
-        if spin0:
-            w = self._compute_workspace(spin0=spin0)
-            return w
-        else:
-            if self._w is None:
-                self._w = self._compute_workspace()
-            return self._w
+    def get_workspace(self):
+        if self._w is None:
+            self._w = self._compute_workspace()
+        return self._w
+
+    def get_workspace_cov(self):
+        if self._wcov is None:
+            spin0 = self.data.data['cov'].get('spin0_cov', False)
+            if spin0 and (self.get_spins() != (0, 0)):
+                self._wcov = self._compute_workspace(spin0=spin0)
+            else:
+                self._wcov = self.get_workspace()
+
+        return self._wcov
 
     def _compute_workspace(self, spin0=False):
+        # Check if the fields are already of spin0 to avoid computing the
+        # workspace twice
+        spin0 = spin0 and (self.get_spins() != (0, 0))
         mask1, mask2 = self.get_masks_names()
         if self._read_symmetric:
             mask1, mask2 = mask2, mask1
