@@ -31,6 +31,17 @@ def get_queued_jobs():
     result = subprocess.run(['q', '-tn'], stdout=subprocess.PIPE)
     return result.stdout.decode('utf-8')
 
+
+def check_skip(data, skip, trs):
+    for tr in trs:
+        if tr in skip:
+            return True
+        elif data.get_tracer_bare_name(tr) in skip:
+            return True
+    return False
+
+
+
 def get_pyexec(comment, nc, queue, mem, onlogin):
     if onlogin:
         pyexec = "/usr/bin/python3"
@@ -40,7 +51,7 @@ def get_pyexec(comment, nc, queue, mem, onlogin):
     return pyexec
 
 
-def launch_cls(data, queue, njobs, nc, mem, wsp=False, fiducial=False, onlogin=False):
+def launch_cls(data, queue, njobs, nc, mem, wsp=False, fiducial=False, onlogin=False, skip=[]):
     #######
     #
     cl_tracers = data.get_cl_trs_names(wsp)
@@ -55,10 +66,15 @@ def launch_cls(data, queue, njobs, nc, mem, wsp=False, fiducial=False, onlogin=F
             break
         elif comment in qjobs:
             continue
+        elif check_skip(data, skip, [tr1, tr2]):
+            continue
         # TODO: don't hard-code it!
         trreq = data.get_tracers_bare_name_pair(tr1, tr2, '_')
         fname = os.path.join(outdir, trreq, comment + '.npz')
-        if os.path.isfile(fname):
+        recompute_cls = data.data['recompute']['cls']
+        recompute_mcm = data.data['recompute']['mcm']
+        recompute = recompute_cls or recompute_mcm
+        if os.path.isfile(fname) and (not recompute):
             continue
 
         if not fiducial:
@@ -74,7 +90,7 @@ def launch_cls(data, queue, njobs, nc, mem, wsp=False, fiducial=False, onlogin=F
         time.sleep(1)
 
 
-def launch_cov(data, queue, njobs, nc, mem, wsp=False, onlogin=False):
+def launch_cov(data, queue, njobs, nc, mem, wsp=False, onlogin=False, skip=[]):
     #######
     #
     cov_tracers = data.get_cov_trs_names(wsp)
@@ -87,8 +103,11 @@ def launch_cov(data, queue, njobs, nc, mem, wsp=False, onlogin=False):
             break
         elif comment in qjobs:
             continue
+        elif check_skip(data, skip, trs):
+            continue
         fname = os.path.join(outdir, 'cov', comment + '.npz')
-        if os.path.isfile(fname):
+        recompute = data.data['recompute']['cov'] or data.data['recompute']['cmcm']
+        if os.path.isfile(fname) and (not recompute):
             continue
         pyexec = get_pyexec(comment, nc, queue, mem, onlogin)
         pyrun = '-m xcell.cls.cov {} {} {} {} {}'.format(args.INPUT, *trs)
@@ -135,20 +154,22 @@ if __name__ == "__main__":
                         help="Set if you want to use the fiducial Cl and covG instead of data cls")
     parser.add_argument('--cls_fiducial', default=False, action='store_true', help='Set to compute the fiducial cls')
     parser.add_argument('--onlogin', default=False, action='store_true', help='Run the jobs in the login screen instead appending them to the queue')
+    parser.add_argument('--skip', default=[], nargs='+', help='Skip the following tracers. It can be given as DECALS__0 to skip only DECALS__0 tracer or DECALS to skip all DECALS tracers')
+    parser.add_argument('--override_yaml', default=False, action='store_true', help='Override the YAML file if already stored. Be ware that this could cause compatibility problems in your data!')
     args = parser.parse_args()
 
     ##############################################################################
 
-    data = Data(data_path=args.INPUT)
+    data = Data(data_path=args.INPUT, override=args.override_yaml)
 
     queue = args.queue
     njobs = args.njobs
     onlogin = args.onlogin
 
     if args.compute == 'cls':
-        launch_cls(data, queue, njobs, args.nc, args.mem, args.wsp, args.cls_fiducial, onlogin)
+        launch_cls(data, queue, njobs, args.nc, args.mem, args.wsp, args.cls_fiducial, onlogin, args.skip)
     elif args.compute == 'cov':
-        launch_cov(data, queue, njobs, args.nc, args.mem, args.wsp, onlogin)
+        launch_cov(data, queue, njobs, args.nc, args.mem, args.wsp, onlogin, args.skip)
     elif args.compute == 'to_sacc':
         if args.to_sacc_use_nl and args.to_sacc_use_fiducial:
             raise ValueError(
