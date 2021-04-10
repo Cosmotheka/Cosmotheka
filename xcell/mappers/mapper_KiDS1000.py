@@ -96,7 +96,7 @@ class MapperKiDS1000(MapperBase):
         if mode == 'shear':
             kind = 'galaxies'
             e1_flag = 'e1'
-            e2_flag = 'd1'
+            e2_flag = 'e2'
         elif mode == 'PSF':
             kind = 'galaxies'
             e1_flag = 'PSF_e1'
@@ -104,7 +104,7 @@ class MapperKiDS1000(MapperBase):
         elif mode == 'stars':
             kind = 'stars'
             e1_flag = 'e1'
-            e2_flag = 'e1'
+            e2_flag = 'e2'
         else:
             raise ValueError(f"Unknown mode {mode}")
         return kind, e1_flag, e2_flag, mode
