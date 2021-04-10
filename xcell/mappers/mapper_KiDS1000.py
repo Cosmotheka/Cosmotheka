@@ -129,8 +129,6 @@ class MapperKiDS1000(MapperBase):
                                 weights=cat['weight'][sel_gals])
             e2mean = np.average(cat['e2'][sel_gals],
                                 weights=cat['weight'][sel_gals])
-            # TODO: do we need to correct the alpha term too?
-            print(e1mean, e2mean)
             cat['e1'][sel_gals] -= e1mean
             cat['e2'][sel_gals] -= e2mean
 
