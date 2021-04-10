@@ -71,7 +71,10 @@ def launch_cls(data, queue, njobs, nc, mem, wsp=False, fiducial=False, onlogin=F
         # TODO: don't hard-code it!
         trreq = data.get_tracers_bare_name_pair(tr1, tr2, '_')
         fname = os.path.join(outdir, trreq, comment + '.npz')
-        if os.path.isfile(fname):
+        recompute_cls = data.data['recompute']['cls']
+        recompute_mcm = data.data['recompute']['mcm']
+        recompute = recompute_cls or recompute_mcm
+        if os.path.isfile(fname) and (not recompute):
             continue
 
         if not fiducial:
@@ -103,7 +106,8 @@ def launch_cov(data, queue, njobs, nc, mem, wsp=False, onlogin=False, skip=[]):
         elif check_skip(data, skip, trs):
             continue
         fname = os.path.join(outdir, 'cov', comment + '.npz')
-        if os.path.isfile(fname):
+        recompute = data.data['recompute']['cov'] or data.data['recompute']['cmcm']
+        if os.path.isfile(fname) and (not recompute):
             continue
         pyexec = get_pyexec(comment, nc, queue, mem, onlogin)
         pyrun = '-m xcell.cls.cov {} {} {} {} {}'.format(args.INPUT, *trs)
