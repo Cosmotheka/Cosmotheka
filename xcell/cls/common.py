@@ -36,7 +36,7 @@ class Data():
             self.data = self.read_data(files[0])
         elif len(files) > 1:
             raise ValueError(f'More than 1 YML file in outdir: {outdir}.')
-        elif ( (len(files) == 0) or override) and self.data_path:
+        elif ((len(files) == 0) or override) and self.data_path:
             shutil.copy(self.data_path, outdir)
         else:
             fname = os.path.join(outdir, 'data.yml')
