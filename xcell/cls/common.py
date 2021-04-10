@@ -8,7 +8,7 @@ import shutil
 
 
 class Data():
-    def __init__(self, data_path='', data={}):
+    def __init__(self, data_path='', data={}, override=False):
         if (data_path) and (data):
             raise ValueError('Only one of data_path or data must be given. \
                              Both set.')
@@ -23,20 +23,20 @@ class Data():
                              None set.')
 
         os.makedirs(self.data['output'], exist_ok=True)
-        self._check_yml_in_outdir()
+        self._check_yml_in_outdir(override)
 
-    def _check_yml_in_outdir(self):
+    def _check_yml_in_outdir(self, override=False):
         outdir = self.data['output']
         fname = os.path.join(outdir, '*.yml')
         files = glob(fname)
-        if len(files) == 1:
+        if (len(files) == 1) and (not override):
             warn(f'A YML file was found in outdir: {outdir}. Using it \
                  instead of input config.')
             self.data_path = files[0]
             self.data = self.read_data(files[0])
         elif len(files) > 1:
             raise ValueError(f'More than 1 YML file in outdir: {outdir}.')
-        elif (not len(files)) and self.data_path:
+        elif ( (len(files) == 0) or override) and self.data_path:
             shutil.copy(self.data_path, outdir)
         else:
             fname = os.path.join(outdir, 'data.yml')
