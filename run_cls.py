@@ -31,8 +31,16 @@ def get_queued_jobs():
     result = subprocess.run(['q', '-tn'], stdout=subprocess.PIPE)
     return result.stdout.decode('utf-8')
 
+def get_pyexec(comment, nc, queue, mem, onlogin):
+    if onlogin:
+        pyexec = "/usr/bin/python3"
+    else:
+        pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
 
-def launch_cls(data, queue, njobs, nc, mem, wsp=False, fiducial=False):
+    return pyexec
+
+
+def launch_cls(data, queue, njobs, nc, mem, wsp=False, fiducial=False, onlogin=False):
     #######
     #
     cl_tracers = data.get_cl_trs_names(wsp)
@@ -54,10 +62,10 @@ def launch_cls(data, queue, njobs, nc, mem, wsp=False, fiducial=False):
             continue
 
         if not fiducial:
-            pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
+            pyexec = get_pyexec(comment, nc, queue, mem, onlogin)
             pyrun = '-m xcell.cls.cl {} {} {}'.format(args.INPUT, tr1, tr2)
         else:
-            pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, 2)
+            pyexec = get_pyexec(comment, nc, queue, 2, onlogin)
             pyrun = '-m xcell.cls.cl {} {} {} --fiducial'.format(args.INPUT, tr1, tr2)
 
         print(pyexec + " " + pyrun)
@@ -66,7 +74,7 @@ def launch_cls(data, queue, njobs, nc, mem, wsp=False, fiducial=False):
         time.sleep(1)
 
 
-def launch_cov(data, queue, njobs, nc, mem, wsp=False):
+def launch_cov(data, queue, njobs, nc, mem, wsp=False, onlogin=False):
     #######
     #
     cov_tracers = data.get_cov_trs_names(wsp)
@@ -82,7 +90,7 @@ def launch_cov(data, queue, njobs, nc, mem, wsp=False):
         fname = os.path.join(outdir, 'cov', comment + '.npz')
         if os.path.isfile(fname):
             continue
-        pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
+        pyexec = get_pyexec(comment, nc, queue, mem, onlogin)
         pyrun = '-m xcell.cls.cov {} {} {} {} {}'.format(args.INPUT, *trs)
         print(pyexec + " " + pyrun)
         os.system(pyexec + " " + pyrun)
@@ -90,14 +98,14 @@ def launch_cov(data, queue, njobs, nc, mem, wsp=False):
         time.sleep(1)
 
 
-def launch_to_sacc(data, name, use, queue, nc, mem):
+def launch_to_sacc(data, name, use, queue, nc, mem, onlogin=False):
     outdir = data.data['output']
     fname = os.path.join(outdir, name)
     if os.path.isfile(fname):
         return
 
     comment = 'to_sacc'
-    pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
+    pyexec = get_pyexec(comment, nc, queue, mem, onlogin)
     pyrun = '-m xcell.cls.to_sacc {} {}'.format(args.INPUT, name)
     if use == 'nl':
         pyrun += ' --use_nl'
@@ -126,6 +134,7 @@ if __name__ == "__main__":
     parser.add_argument('--to_sacc_use_fiducial', default=False, action='store_true',
                         help="Set if you want to use the fiducial Cl and covG instead of data cls")
     parser.add_argument('--cls_fiducial', default=False, action='store_true', help='Set to compute the fiducial cls')
+    parser.add_argument('--onlogin', default=False, action='store_true', help='Run the jobs in the login screen instead appending them to the queue')
     args = parser.parse_args()
 
     ##############################################################################
@@ -134,11 +143,12 @@ if __name__ == "__main__":
 
     queue = args.queue
     njobs = args.njobs
+    onlogin = args.onlogin
 
     if args.compute == 'cls':
-        launch_cls(data, queue, njobs, args.nc, args.mem, args.wsp, args.cls_fiducial)
+        launch_cls(data, queue, njobs, args.nc, args.mem, args.wsp, args.cls_fiducial, onlogin)
     elif args.compute == 'cov':
-        launch_cov(data, queue, njobs, args.nc, args.mem, args.wsp)
+        launch_cov(data, queue, njobs, args.nc, args.mem, args.wsp, onlogin)
     elif args.compute == 'to_sacc':
         if args.to_sacc_use_nl and args.to_sacc_use_fiducial:
             raise ValueError(
@@ -149,7 +159,7 @@ if __name__ == "__main__":
             use = 'fiducial'
         else:
             use = 'cls'
-        launch_to_sacc(data, args.to_sacc_name, use, queue, args.nc, args.mem)
+        launch_to_sacc(data, args.to_sacc_name, use, queue, args.nc, args.mem, onlogin)
     else:
         raise ValueError(
                 "Compute value '{}' not understood".format(args.compute))
