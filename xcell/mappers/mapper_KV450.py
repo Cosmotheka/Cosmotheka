@@ -242,7 +242,7 @@ class MapperKV450(MapperBase):
                                                   ra_name='ALPHA_J2000',
                                                   dec_name='DELTA_J2000')
             hp.write_map(fname_lite, self.w2s2s[mod], overwrite=True)
-            self.w2s2 = self.w2s2s[mod]
+        self.w2s2 = self.w2s2s[mod]
         return self.w2s2
 
     def get_nl_coupled(self, mode=None):
