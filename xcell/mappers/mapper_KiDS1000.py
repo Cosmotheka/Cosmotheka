@@ -38,7 +38,7 @@ class MapperKiDS1000(MapperBase):
 
         self.cat_data = None
         self.w2s2 = None
-        self.w2s2 = {'PSF': None, 'shear': None, 'stars': None}
+        self.w2s2s = {'PSF': None, 'shear': None, 'stars': None}
 
         self.dndz = np.loadtxt(self.config['file_nz'], unpack=True)
         self.sel = {'galaxies': 1, 'stars': 0}
@@ -230,7 +230,7 @@ class MapperKiDS1000(MapperBase):
                                                   ra_name='RAJ2000',
                                                   dec_name='DECJ2000')
             hp.write_map(fname_lite, self.w2s2s[mod], overwrite=True)
-            self.w2s2 = self.w2s2s[mod]
+        self.w2s2 = self.w2s2s[mod]
         return self.w2s2
 
     def get_nl_coupled(self, mode=None):
