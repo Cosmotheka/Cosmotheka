@@ -113,64 +113,43 @@ class Cov():
                                         [cla2b1[-1]], [cla2b2[-1]],
                                         wa, wb)
         nbpw_a, nbpw_b = cov_e.shape
+        nclsa = np.max([1, s_a1 + s_a2])
+        nclsb = np.max([1, s_b1 + s_b2])
+        cov = np.zeros([nbpw_a, nclsa, nbpw_b, nclsb])
         # 00, 02
         if (s_a1 + s_a2 == 0) and (s_b1 + s_b2 == 2):
-            nclsa = 1
-            nclsb = 2
-            cov = np.zeros([nclsa, nbpw_a, nclsb, nbpw_b])
-            cov[0, :, 0, :] = cov_e
-            cov[0, :, 1, :] = cov_b
+            cov[:, 0, :, 0] = cov_e
+            cov[:, 0, :, 1] = cov_b
         # 02, 00
         elif (s_a1 + s_a2 == 2) and (s_b1 + s_b2 == 0):
-            nclsa = 2
-            nclsb = 1
-            cov = np.zeros([nclsa, nbpw_a, nclsb, nbpw_b])
-            cov[0, :, 0, :] = cov_e
-            cov[1, :, 0, :] = cov_b
+            cov[:, 0, :, 0] = cov_e
+            cov[:, 1, :, 0] = cov_b
         # 00, 22
         elif (s_a1 + s_a2 == 0) and (s_b1 + s_b2 == 4):
-            nclsa = 1
-            nclsb = 4
-            cov = np.zeros([nclsa, nbpw_a, nclsb, nbpw_b])
-            cov[0, :, 0, :] = cov_e
-            cov[0, :, 3, :] = cov_b
+            cov[:, 0, :, 0] = cov_e
+            cov[:, 0, :, 3] = cov_b
         # 22, 00
         elif (s_a1 + s_a2 == 4) and (s_b1 + s_b2 == 0):
-            nclsa = 4
-            nclsb = 1
-            cov = np.zeros([nclsa, nbpw_a, nclsb, nbpw_b])
-            cov[0, :, 0, :] = cov_e
-            cov[3, :, 0, :] = cov_b
+            cov[:, 0, :, 0] = cov_e
+            cov[:, 3, :, 0] = cov_b
         # 02, 02
         elif (s_a1 + s_a2 == 2) and (s_b1 + s_b2 == 2):
-            nclsa = 2
-            nclsb = 2
-            cov = np.zeros([nclsa, nbpw_a, nclsb, nbpw_b])
-            cov[0, :, 0, :] = cov_e
-            cov[1, :, 1, :] = cov_b
+            cov[:, 0, :, 0] = cov_e
+            cov[:, 1, :, 1] = cov_b
         # 02, 22
         elif (s_a1 + s_a2 == 2) and (s_b1 + s_b2 == 4):
-            nclsa = 2
-            nclsb = 4
-            cov = np.zeros([nclsa, nbpw_a, nclsb, nbpw_b])
-            cov[0, :, 0, :] = cov_e
-            cov[1, :, 3, :] = cov_b
+            cov[:, 0, :, 0] = cov_e
+            cov[:, 1, :, 3] = cov_b
         # 22, 02
         elif (s_a1 + s_a2 == 4) and (s_b1 + s_b2 == 2):
-            nclsa = 4
-            nclsb = 2
-            cov = np.zeros([nclsa, nbpw_a, nclsb, nbpw_b])
-            cov[0, :, 0, :] = cov_e
-            cov[3, :, 1, :] = cov_b
+            cov[:, 0, :, 0] = cov_e
+            cov[:, 3, :, 1] = cov_b
         # 22, 22
         elif (s_a1 + s_a2 == 4) and (s_b1 + s_b2 == 4):
-            nclsa = 4
-            nclsb = 4
-            cov = np.zeros([nclsa, nbpw_a, nclsb, nbpw_b])
-            cov[0, :, 0, :] = cov_e
-            cov[1, :, 1, :] = cov_b
-            cov[2, :, 2, :] = cov_b
-            cov[3, :, 3, :] = cov_b
+            cov[:, 0, :, 0] = cov_e
+            cov[:, 1, :, 1] = cov_b
+            cov[:, 2, :, 2] = cov_b
+            cov[:, 3, :, 3] = cov_b
 
         return cov.reshape([nclsa*nbpw_a, nclsb*nbpw_b])
 
