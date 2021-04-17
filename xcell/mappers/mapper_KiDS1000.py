@@ -21,7 +21,7 @@ class MapperKiDS1000(MapperBase):
         self._get_defaults(config)
         self.path_lite = config.get('path_lite', None)
         self.column_names = ['SG_FLAG', 'Z_B', 'Z_B_MIN', 'Z_B_MAX',
-                             'RAJ2000', 'DECJ2000', 'PSF_e1', 'PSF_e2',
+                             'ALPHA_J2000', 'DELTA_J2000', 'PSF_e1', 'PSF_e2',
                              'e1', 'e2', 'weight']
         self.mode = config.get('mode', 'shear')
         self.zbin_edges = np.array([[0.1, 0.3],
