@@ -1,35 +1,28 @@
 from .mapper_base import MapperBase
 from .utils import get_map_from_points
-from astropy.table import Table, vstack
+from astropy.table import Table
 import numpy as np
 import healpy as hp
 import os
 
 
-class MapperKV450(MapperBase):
+class MapperKiDS1000(MapperBase):
     def __init__(self, config):
         """
         config - dict
-          {'data_catalogs': ['KV450_G12_reweight_3x4x4_v2_good.cat',
-                             'KV450_G23_reweight_3x4x4_v2_good.cat',
-                             'KV450_GS_reweight_3x4x4_v2_good.cat',
-                             'KV450_G15_reweight_3x4x4_v2_good.cat',
-                             'KV450_G9_reweight_3x4x4_v2_good.cat'] ,
-          'file_nz': Nz_DIR_z0.1t0.3.asc,
+          {'data_catalog': 'KiDS_DR4.1_ugriZYJHKs_SOM_gold_WL_cat.fits',
+           'file_nz': SOM_N_of_Z/K1000_..._TOMO1_Nz.asc
           'zbin':0,
           'nside':nside,
-          'mask_name': 'mask_KV450_0',
+          'mask_name': 'mask_KiDS1000_0',
           'path_lite': path}
         """
 
         self._get_defaults(config)
         self.path_lite = config.get('path_lite', None)
-        self.column_names = ['SG_FLAG', 'GAAP_Flag_ugriZYJHKs',
-                             'Z_B', 'Z_B_MIN', 'Z_B_MAX',
+        self.column_names = ['SG_FLAG', 'Z_B', 'Z_B_MIN', 'Z_B_MAX',
                              'ALPHA_J2000', 'DELTA_J2000', 'PSF_e1', 'PSF_e2',
-                             'bias_corrected_e1', 'bias_corrected_e2',
-                             'weight']
-
+                             'e1', 'e2', 'weight']
         self.mode = config.get('mode', 'shear')
         self.zbin_edges = np.array([[0.1, 0.3],
                                     [0.3, 0.5],
@@ -40,11 +33,10 @@ class MapperKV450(MapperBase):
         self.zbin = int(config['zbin'])
         self.z_edges = self.zbin_edges[self.zbin]
         # Multiplicative bias
-        # Values from Table 2 of 1812.06076 (KV450 cosmo paper)
-        self.m = (-0.017, -0.008, -0.015, 0.010, 0.006)
+        # Values from Table 1 of 2007.01845
+        self.m = (-0.009, -0.011, -0.015, 0.002, 0.007)
 
         self.cat_data = None
-
         self.w2s2 = None
         self.w2s2s = {'PSF': None, 'shear': None, 'stars': None}
 
@@ -76,20 +68,16 @@ class MapperKV450(MapperBase):
 
     def _load_catalog(self):
         nzbins = self.zbin_edges.shape[0]
-        data = [Table() for i in range(nzbins)]
+        data = []
 
-        for file_data in self.config['data_catalogs']:
-            data_cat = Table.read(file_data, format='fits')[self.column_names]
-            # GAAP cut
-            goodgaap = data_cat['GAAP_Flag_ugriZYJHKs'] == 0
-            data_cat = data_cat[goodgaap]
-
-            for i in range(nzbins):
-                # Binning
-                sel = self._bin_z(data_cat, i)
-                data_zbin = data_cat[sel]
-                self._remove_additive_bias(data_zbin)
-                data[i] = vstack([data[i], data_zbin])
+        data_cat = Table.read(self.config['data_catalog'],
+                              format='fits')[self.column_names]
+        for i in range(nzbins):
+            # binning
+            sel = self._bin_z(data_cat, i)
+            data_zbin = data_cat[sel]
+            self._remove_additive_bias(data_zbin)
+            data.append(data_zbin)
 
         for zbin, cat_zbin in enumerate(data):
             self._remove_multiplicative_bias(cat_zbin, zbin)
@@ -107,16 +95,16 @@ class MapperKV450(MapperBase):
 
         if mode == 'shear':
             kind = 'galaxies'
-            e1_flag = 'bias_corrected_e1'
-            e2_flag = 'bias_corrected_e2'
+            e1_flag = 'e1'
+            e2_flag = 'e2'
         elif mode == 'PSF':
             kind = 'galaxies'
             e1_flag = 'PSF_e1'
             e2_flag = 'PSF_e2'
         elif mode == 'stars':
             kind = 'stars'
-            e1_flag = 'bias_corrected_e1'
-            e2_flag = 'bias_corrected_e2'
+            e1_flag = 'e1'
+            e2_flag = 'e2'
         else:
             raise ValueError(f"Unknown mode {mode}")
         return kind, e1_flag, e2_flag, mode
@@ -125,7 +113,7 @@ class MapperKV450(MapperBase):
         if self.path_lite is None:
             return False, None
         else:
-            fname_lite = self.path_lite + f'KV450_lite_cat_zbin{zbin}.fits'
+            fname_lite = self.path_lite + f'KiDS1000_lite_cat_zbin{zbin}.fits'
             return os.path.isfile(fname_lite), fname_lite
 
     def _bin_z(self, cat, zbin):
@@ -137,17 +125,17 @@ class MapperKV450(MapperBase):
     def _remove_additive_bias(self, cat):
         sel_gals = cat['SG_FLAG'] == 1
         if np.any(sel_gals):
-            e1mean = np.average(cat['bias_corrected_e1'][sel_gals],
+            e1mean = np.average(cat['e1'][sel_gals],
                                 weights=cat['weight'][sel_gals])
-            e2mean = np.average(cat['bias_corrected_e2'][sel_gals],
+            e2mean = np.average(cat['e2'][sel_gals],
                                 weights=cat['weight'][sel_gals])
-            cat['bias_corrected_e1'][sel_gals] -= e1mean
-            cat['bias_corrected_e2'][sel_gals] -= e2mean
+            cat['e1'][sel_gals] -= e1mean
+            cat['e2'][sel_gals] -= e2mean
 
-    def _remove_multiplicative_bias(self, cat_data, zbin):
-        sel_gals = cat_data['SG_FLAG'] == 1
-        cat_data['bias_corrected_e1'][sel_gals] /= 1 + self.m[zbin]
-        cat_data['bias_corrected_e2'][sel_gals] /= 1 + self.m[zbin]
+    def _remove_multiplicative_bias(self, cat, zbin):
+        sel_gals = cat['SG_FLAG'] == 1
+        cat['e1'][sel_gals] /= 1 + self.m[zbin]
+        cat['e2'][sel_gals] /= 1 + self.m[zbin]
 
     def _get_gals_or_stars(self, kind='galaxies'):
         cat_data = self.get_catalog()
@@ -162,9 +150,9 @@ class MapperKV450(MapperBase):
 
         # This will only be computed if self.maps['mod'] is None
         file_name1 = \
-            f'KV450_signal_map_{mod}_e1_zbin{self.zbin}_ns{self.nside}'
+            f'KiDS1000_signal_map_{mod}_e1_zbin{self.zbin}_ns{self.nside}'
         file_name2 = \
-            f'KV450_signal_map_{mod}_e2_zbin{self.zbin}_ns{self.nside}'
+            f'KiDS1000_signal_map_{mod}_e2_zbin{self.zbin}_ns{self.nside}'
         # Add extension separately to respect text width < 78
         file_name1 += '.fits.gz'
         file_name2 += '.fits.gz'
@@ -180,12 +168,12 @@ class MapperKV450(MapperBase):
             data = self._get_gals_or_stars(kind)
             wcol = data['weight']*data[e1f]
             we1 = get_map_from_points(data, self.nside, w=wcol,
-                                      ra_name='ALPHA_J2000',
-                                      dec_name='DELTA_J2000')
+                                      ra_name='RAJ2000',
+                                      dec_name='DECJ2000')
             wcol = data['weight']*data[e2f]
             we2 = get_map_from_points(data, self.nside, w=wcol,
-                                      ra_name='ALPHA_J2000',
-                                      dec_name='DELTA_J2000')
+                                      ra_name='RAJ2000',
+                                      dec_name='DECJ2000')
             mask = self.get_mask(mod)
             goodpix = mask > 0
             we1[goodpix] /= mask[goodpix]
@@ -207,7 +195,7 @@ class MapperKV450(MapperBase):
             self.mask = self.masks[kind]
             return self.mask
         file_name = \
-            f'KV450_mask_{kind}_zbin{self.zbin}_ns{self.nside}'
+            f'KiDS1000_mask_{kind}_zbin{self.zbin}_ns{self.nside}'
         file_name += '.fits.gz'
         read_lite, fname_lite = self._check_lite_exists(file_name)
         if read_lite:
@@ -217,8 +205,8 @@ class MapperKV450(MapperBase):
             data = self._get_gals_or_stars(kind)
             self.masks[kind] = get_map_from_points(data, self.nside,
                                                    w=data['weight'],
-                                                   ra_name='ALPHA_J2000',
-                                                   dec_name='DELTA_J2000')
+                                                   ra_name='RAJ2000',
+                                                   dec_name='DECJ2000')
             hp.write_map(fname_lite, self.masks[kind], overwrite=True)
         self.mask = self.masks[kind]
         return self.mask
@@ -229,7 +217,7 @@ class MapperKV450(MapperBase):
             self.w2s2 = self.w2s2s[mod]
             return self.w2s2
         file_name = \
-            f'KV450_w2s2_{kind}_zbin{self.zbin}_ns{self.nside}'
+            f'KiDS1000_w2s2_{kind}_zbin{self.zbin}_ns{self.nside}'
         file_name += '.fits.gz'
         read_lite, fname_lite = self._check_lite_exists(file_name)
         if read_lite:
@@ -239,8 +227,8 @@ class MapperKV450(MapperBase):
             data = self._get_gals_or_stars(kind)
             wcol = data['weight']**2*0.5*(data[e1f]**2+data[e2f]**2)
             self.w2s2s[mod] = get_map_from_points(data, self.nside, w=wcol,
-                                                  ra_name='ALPHA_J2000',
-                                                  dec_name='DELTA_J2000')
+                                                  ra_name='RAJ2000',
+                                                  dec_name='DECJ2000')
             hp.write_map(fname_lite, self.w2s2s[mod], overwrite=True)
         self.w2s2 = self.w2s2s[mod]
         return self.w2s2
