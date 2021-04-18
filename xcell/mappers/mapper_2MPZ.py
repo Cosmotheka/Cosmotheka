@@ -14,7 +14,8 @@ class Mapper2MPZ(MapperBase):
           {'data_catalog': 'Legacy_Survey_BASS-MZLS_galaxies-selection.fits',
            'mask': 'mask.fits',
            'z_edges': [0, 0.5],
-           'path_rerun': .
+           'path_rerun': '.',
+           'n_jk_dir': 100,
            'mask_name': 'mask_2MPZ'}
         """
         self._get_defaults(config)
@@ -26,7 +27,6 @@ class Mapper2MPZ(MapperBase):
         # Angular mask
         self.dndz = None
         self.mask = None
-        self.ipix = None
         self.dndz = None
         self.delta_map = None
         self.nl_coupled = None
@@ -65,28 +65,46 @@ class Mapper2MPZ(MapperBase):
         ids = cat['ZSPEC'] > -1
         return cat[ids]
 
-    def get_nz(self, dz=0):
+    def get_nz(self, dz=0, return_jk_error=False):
         if self.dndz is None:
-            f_exists, f_name = self._check_rerun_file_exists('nz_2MPZ.txt')
+            f_exists, f_name = self._check_rerun_file_exists('nz_2MPZ.npz')
+            # Read from file if it exists
             if f_exists:
-                zm, nz = np.loadtxt(f_name, unpack=True)
-            else:
+                d = np.load(f_name)
+                zm = d['z_mid']
+                nz = d['nz']
+                nz_jk = d['nz_jk']
+            else:  # Else compute DIR N(z) and jackknife resamples
                 c_p = self.get_catalog()
                 c_s = self._get_specsample(c_p)
-                z, nz = get_DIR_Nz(c_s, c_p,
-                                   ['JCORR', 'KCORR', 'HCORR',
-                                    'W1MCORR', 'W2MCORR',
-                                    'BCALCORR', 'RCALCORR', 'ICALCORR'],
-                                   zflag='ZSPEC', zrange=[0, 1.], nz=100)
+                # Sort spec sample by nested pixel index so jackknife
+                # samples are spatially correlated.
+                ip_s = hp.ring2nest(self.nside,
+                                    hp.ang2pix(self.nside, c_s['SUPRA'],
+                                               c_s['SUPDEC'], lonlat=True))
+                idsort = np.argsort(ip_s)
+                c_s = c_s[idsort]
+                # Compute DIR N(z)
+                z, nz, nz_jk = get_DIR_Nz(c_s, c_p,
+                                          ['JCORR', 'KCORR', 'HCORR',
+                                           'W1MCORR', 'W2MCORR',
+                                           'BCALCORR', 'RCALCORR', 'ICALCORR'],
+                                          zflag='ZSPEC', zrange=[0, 1.], nz=100,
+                                          njk=self.config.get('n_jk_dir', 100))
                 zm = 0.5*(z[1:] + z[:-1])
                 if f_name is not None:
-                    np.savetxt(f_name, np.transpose([zm, nz]))
-            self.dndz = (zm, nz)
+                    np.savez(f_name, z_mid=zm, nz=nz, nz_jk=nz_jk)
+            self.dndz = (zm, nz, nz_jk)
 
-        z, nz = self.dndz
+        z, nz, nz_jk = self.dndz
         z_dz = z + dz
         sel = z_dz >= 0
-        return np.array([z_dz[sel], nz[sel]])
+        if return_jk_error:
+            njk = len(nz_jk)
+            enz = np.std(nz_jk, axis=0)*np.sqrt((njk-1)**2/njk)
+            return np.array([z_dz[sel], nz[sel], enz[sel]])
+        else:
+            return np.array([z_dz[sel], nz[sel]])
 
     def get_signal_map(self, apply_galactic_correction=True):
         if self.delta_map is None:
