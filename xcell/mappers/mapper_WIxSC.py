@@ -221,7 +221,9 @@ class MapperWIxSC(MapperBase):
         if self.nl_coupled is None:
             if (self.nside < 4096) or (self.config.get('nl_analytic', True)):
                 cat_data = self.get_catalog()
-                n = get_map_from_points(cat_data, self.nside)
+                n = get_map_from_points(cat_data, self.nside,
+                                        ra_name='RA', dec_name='DEC',
+                                        in_radians=True)
                 N_mean = self._get_mean_n(n)
                 N_mean_srad = N_mean * self.npix / (4 * np.pi)
                 mask = self.get_mask()
