@@ -89,7 +89,9 @@ class Mapper2MPZ(MapperBase):
                                           ['JCORR', 'KCORR', 'HCORR',
                                            'W1MCORR', 'W2MCORR',
                                            'BCALCORR', 'RCALCORR', 'ICALCORR'],
-                                          zflag='ZSPEC', zrange=[0, 1.], nz=100,
+                                          zflag='ZSPEC',
+                                          zrange=[0, 1.],
+                                          nz=100,
                                           njk=self.config.get('n_jk_dir', 100))
                 zm = 0.5*(z[1:] + z[:-1])
                 if f_name is not None:
