@@ -3,10 +3,17 @@ import healpy as hp
 
 
 def get_map_from_points(cat, nside, w=None,
-                        ra_name='RA', dec_name='DEC'):
+                        ra_name='RA', dec_name='DEC',
+                        in_radians=False):
     npix = hp.nside2npix(nside)
-    ipix = hp.ang2pix(nside, cat[ra_name], cat[dec_name],
-                      lonlat=True)
+    if in_radians:
+        ipix = hp.ang2pix(nside,
+                          np.degrees(cat[ra_name]),
+                          np.degrees(cat[dec_name]),
+                          lonlat=True)
+    else:
+        ipix = hp.ang2pix(nside, cat[ra_name], cat[dec_name],
+                          lonlat=True)
     numcount = np.bincount(ipix, weights=w, minlength=npix)
     return numcount
 
