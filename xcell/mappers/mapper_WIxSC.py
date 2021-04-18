@@ -15,6 +15,7 @@ class MapperWIxSC(MapperBase):
           {'data_catalog': 'WIxSC.fits',
            'mask': 'mask.fits',
            'star_map': 'stars.fits',
+           'spec_sample': 'zSpec-comp-WIxSC.csv',
            'bin_name': '0',
            'z_edges': [0, 0.5],
            'path_rerun': '.',
@@ -86,7 +87,12 @@ class MapperWIxSC(MapperBase):
                    (cat['ZPHOTO_CORR'] < self.z_edges[1])]
 
     def _get_specsample(self, cat):
-        raise NotImplementedError("Not yet")
+        import pandas as pd
+        # Read full spectroscopic sample
+        ds = Table.from_pandas(pd.read_csv(self.config['spec_sample']))
+        msk = ((ds['zCorr'] < self.z_edges[-1]) &
+               (ds['zCorr'] >= self.z_edges[0]))
+        return ds[msk]
 
     def get_nz(self, dz=0, return_jk_error=False):
         if self.dndz is None:
@@ -104,17 +110,18 @@ class MapperWIxSC(MapperBase):
                 # Sort spec sample by nested pixel index so jackknife
                 # samples are spatially correlated.
                 ip_s = hp.ring2nest(self.nside,
-                                    hp.ang2pix(self.nside, c_s['SUPRA'],
-                                               c_s['SUPDEC'], lonlat=True))
+                                    hp.ang2pix(self.nside, c_s['ra_WISE'],
+                                               c_s['dec_WISE'], lonlat=True))
                 idsort = np.argsort(ip_s)
                 c_s = c_s[idsort]
                 # Compute DIR N(z)
                 z, nz, nz_jk = get_DIR_Nz(c_s, c_p,
-                                          ['W1MCORR', 'W2MCORR',
-                                           'BCALCORR', 'RCALCORR'],
-                                          zflag='ZSPEC',
+                                          ['W1c', 'W2c', 'Bcc', 'Rcc'],
+                                          zflag='Zspec',
                                           zrange=[0, 1.],
                                           nz=100,
+                                          bands_photo=['W1MCORR', 'W2MCORR',
+                                                       'BCALCORR', 'RCALCORR'],
                                           njk=self.config.get('n_jk_dir', 100))
                 zm = 0.5*(z[1:] + z[:-1])
                 if f_name is not None:

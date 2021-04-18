@@ -19,11 +19,14 @@ def get_map_from_points(cat, nside, w=None,
 
 
 def get_DIR_Nz(cat_spec, cat_photo, bands, zflag,
-               zrange, nz, nearest_neighbors=10, njk=100):
+               zrange, nz, nearest_neighbors=10, njk=100,
+               bands_photo=None):
     from sklearn.neighbors import NearestNeighbors
     from scipy.spatial import cKDTree
     train_data = np.array([cat_spec[c] for c in bands]).T
-    photo_data = np.array([cat_photo[c] for c in bands]).T
+    if bands_photo is None:
+        bands_photo = bands
+    photo_data = np.array([cat_photo[c] for c in bands_photo]).T
 
     # Get nearest neighbors
     n_nbrs = NearestNeighbors(n_neighbors=nearest_neighbors,
