@@ -178,7 +178,7 @@ class MapperWIxSC(MapperBase):
         n_mean = np.sum(nmap[goodpix])/np.sum(self.mask[goodpix])
         return n_mean
 
-    def _get_galactic_correction(self, delta, stars, bmask, nbins=14, npoly=5):
+    def _get_galactic_correction(self, delta, stars, bmask, nbins=14, npoly=3):
         # Create bins of star density
         stbins = np.linspace(np.log10(stars[bmask > 0].min()),
                              np.log10(stars[bmask > 0].max()), nbins+1)
@@ -197,7 +197,7 @@ class MapperWIxSC(MapperBase):
             d_std.append(ds)
         d_mean = np.array(d_mean)
         d_std = np.array(d_std)
-        # Now create a 5-th order polynomial fitting these data
+        # Now create a 3-rd order polynomial fitting these data
         stmid = 0.5*(stbins[1:]+stbins[:-1])
         params = np.polyfit(stmid, d_mean, npoly, w=1./d_std)
         df = np.poly1d(params)
