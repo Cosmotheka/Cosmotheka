@@ -168,12 +168,12 @@ class MapperKiDS1000(MapperBase):
             data = self._get_gals_or_stars(kind)
             wcol = data['weight']*data[e1f]
             we1 = get_map_from_points(data, self.nside, w=wcol,
-                                      ra_name='RAJ2000',
-                                      dec_name='DECJ2000')
+                                      ra_name='ALPHA_J2000',
+                                      dec_name='DELTA_J2000')
             wcol = data['weight']*data[e2f]
             we2 = get_map_from_points(data, self.nside, w=wcol,
-                                      ra_name='RAJ2000',
-                                      dec_name='DECJ2000')
+                                      ra_name='ALPHA_J2000',
+                                      dec_name='DELTA_J2000')
             mask = self.get_mask(mod)
             goodpix = mask > 0
             we1[goodpix] /= mask[goodpix]
@@ -205,8 +205,8 @@ class MapperKiDS1000(MapperBase):
             data = self._get_gals_or_stars(kind)
             self.masks[kind] = get_map_from_points(data, self.nside,
                                                    w=data['weight'],
-                                                   ra_name='RAJ2000',
-                                                   dec_name='DECJ2000')
+                                                   ra_name='ALPHA_J2000',
+                                                   dec_name='DELTA_J2000')
             hp.write_map(fname_lite, self.masks[kind], overwrite=True)
         self.mask = self.masks[kind]
         return self.mask
@@ -227,8 +227,8 @@ class MapperKiDS1000(MapperBase):
             data = self._get_gals_or_stars(kind)
             wcol = data['weight']**2*0.5*(data[e1f]**2+data[e2f]**2)
             self.w2s2s[mod] = get_map_from_points(data, self.nside, w=wcol,
-                                                  ra_name='RAJ2000',
-                                                  dec_name='DECJ2000')
+                                                  ra_name='ALPHA_J2000',
+                                                  dec_name='DELTA_J2000')
             hp.write_map(fname_lite, self.w2s2s[mod], overwrite=True)
         self.w2s2 = self.w2s2s[mod]
         return self.w2s2
