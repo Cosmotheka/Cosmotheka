@@ -9,7 +9,7 @@ import os
 
 
 class sfile():
-    def __init__(self, datafile, output, use='cls'):
+    def __init__(self, datafile, output, use='cls', m_marg=False):
         self.data = Data(data_path=datafile)
         self.outdir = self.data.data['output']
         self.use_nl = False
@@ -22,6 +22,7 @@ class sfile():
             self.use_fiducial = True
         else:
             raise ValueError('Use must be one of cls, nl or fiducial')
+        self.m_marg = m_marg
         self.s = sacc.Sacc()
         self.add_tracers()
         self.add_ell_cls()
@@ -82,7 +83,7 @@ class sfile():
         covmat = self.read_covariance_NG()
         self.s.add_covariance(covmat)
 
-    def add_covariance_G(self):
+    def add_covariance_G(self, m_marg):
         # Get nbpw
         dtype = self.s.get_data_types()[0]
         tracers = self.s.get_tracer_combinations(data_type=dtype)[0]
@@ -102,7 +103,11 @@ class sfile():
                 dtypes2 = self.get_datatypes_from_dof(dof2)
                 print(trs1, trs2)
 
-                cov = Cov(self.data.data, *trs1, *trs2).get_covariance()
+                cov_class = Cov(self.data.data, *trs1, *trs2)
+                if m_marg:
+                    cov = cov_class.get_covariance_m_marg()
+                else:
+                    cov = cov_class.get_covariance()
                 cov = cov.reshape((nbpw, dof1, nbpw, dof2))
 
                 for i, dt1 in enumerate(dtypes1):
@@ -121,10 +126,13 @@ class sfile():
         self.s.add_covariance(covmat)
 
     def add_covariance(self):
-        if self.use_nl and ('ng' in self.data.data['cov']):
-            self.add_covariance_NG()
+        if self.use_nl:
+            if self.m_marg:
+                self.add_covariance_G(self.m_marg)
+            elif 'ng' in self.data.data['cov']:
+                self.add_covariance_NG()
         else:
-            self.add_covariance_G()
+            self.add_covariance_G(self.m_marg)
 
     def add_tracer(self, tr):
         config = self.data.data['tracers'][tr]
@@ -217,6 +225,9 @@ if __name__ == "__main__":
     parser.add_argument('--use_fiducial', action='store_true', default=False,
                         help="Set if you want to use the fiducial Cl and \
                         covG instead of data cls")
+    parser.add_argument('--m_marg', action='store_true', default=False,
+                        help="Set if you want to use store the covariance for \
+                        the maginalized multiplicative bias.")
     args = parser.parse_args()
 
     if args.use_nl and args.use_fiducial:
@@ -228,4 +239,4 @@ if __name__ == "__main__":
     else:
         use = 'cls'
 
-    sfile = sfile(args.INPUT, args.name, use)
+    sfile = sfile(args.INPUT, args.name, use, args.m_marg)
