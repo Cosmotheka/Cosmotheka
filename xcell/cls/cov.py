@@ -228,10 +228,18 @@ class Cov():
         #
         cla1a2 = self._get_cl_for_cov(self.clA1A2, self.clfid_A1A2, m_a1, m_a2)
         clb1b2 = self._get_cl_for_cov(self.clB1B2, self.clfid_B1B2, m_b1, m_b2)
-        sigma_a1 = self.data.data['tracers'][self.trA1].get('sigma_m', 0)
-        sigma_a2 = self.data.data['tracers'][self.trA2].get('sigma_m', 0)
-        sigma_b1 = self.data.data['tracers'][self.trB1].get('sigma_m', 0)
-        sigma_b2 = self.data.data['tracers'][self.trB2].get('sigma_m', 0)
+        t_a1, t_a2 = self.clA1A2.get_dtypes()
+        t_b1, t_b2 = self.clB1B2.get_dtypes()
+        #
+        sigma_a1 = sigma_a2 = sigma_b1 = sigma_b2 = 0
+        if t_a1 == 'galaxy_shear':
+            sigma_a1 = self.data.data['tracers'][self.trA1].get('sigma_m', 0)
+        if t_a2 == 'galaxy_shear':
+            sigma_a2 = self.data.data['tracers'][self.trA2].get('sigma_m', 0)
+        if t_b1 == 'galaxy_shear':
+            sigma_b1 = self.data.data['tracers'][self.trB1].get('sigma_m', 0)
+        if t_b2 == 'galaxy_shear':
+            sigma_b2 = self.data.data['tracers'][self.trB2].get('sigma_m', 0)
         #
         cov = cla1a2[:, None] * clb1b2[None, :]
         cov *= (sigma_a1 * sigma_b1 + sigma_a1 * sigma_b2 +
