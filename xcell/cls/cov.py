@@ -243,7 +243,7 @@ class Cov():
         if t_b2 == 'galaxy_shear':
             sigma_b2 = self.data.data['tracers'][self.trB2].get('sigma_m', 0)
         #
-        cov = cla1a2[:, None] * clb1b2[None, :]
+        cov = cla1a2.flatten()[:, None] * clb1b2.flatten()[None, :]
         cov *= (sigma_a1 * sigma_b1 + sigma_a1 * sigma_b2 +
                 sigma_a2 * sigma_b1 + sigma_a2 * sigma_b2)
         return cov
