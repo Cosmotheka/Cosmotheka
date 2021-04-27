@@ -22,6 +22,8 @@ class Cov():
         self.clA1B2 = cl_dic[(trA1, trB2)]
         self.clA2B1 = cl_dic[(trA2, trB1)]
         self.clA2B2 = cl_dic[(trA2, trB2)]
+        self.clfid_A1A2 = clfid_dic[(trA1, trA2)]
+        self.clfid_B1B2 = clfid_dic[(trB1, trB2)]
         self.clfid_A1B1 = clfid_dic[(trA1, trB1)]
         self.clfid_A1B2 = clfid_dic[(trA1, trB2)]
         self.clfid_A2B1 = clfid_dic[(trA2, trB1)]
@@ -39,11 +41,6 @@ class Cov():
         self.spin0 = self.data.data['cov'].get('spin0', False)
         # Multiplicative bias marginalization
         self.m_marg= self.data.data['cov'].get('m_marg', False)
-        if self.m_marg:
-            # These are only needed in this case. If needed in other cases,
-            # initialize them in the __init__ with _load_Cls and clfid_dic.
-            self.clfid_A1A2 = ClFid(data, self.trA1, self.trA2)
-            self.clfid_B1B2 = ClFid(data, self.trB1, self.trB2)
 
     def _load_Cls(self):
         data = self.data.data
@@ -62,7 +59,7 @@ class Cov():
 
         # Load fiducial Cls
         clfid_dic = {}
-        for trs in trs_comb[2:]:
+        for trs in trs_comb:
             if trs not in clfid_dic.keys():
                 clfid_dic[trs] = ClFid(data, *trs)
 
