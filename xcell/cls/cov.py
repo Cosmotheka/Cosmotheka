@@ -219,7 +219,12 @@ class Cov():
     def get_covariance_nl_marg(self):
         _, nl = self.clA1A2.get_ell_nl()
         nl = nl.flatten()
-        return self.nl_prior**2 * (nl[:, None] * nl[None, :])
+        if (self.trA1 == self.trA2 == self.trB1 == self.trB2):
+            cov = self.nl_prior**2 * (nl[:, None] * nl[None, :])
+        else:
+            cov = np.zeros((nl.size, nl.size))
+
+        return cov
 
     def get_covariance_m_marg(self):
         # Load all masks once
@@ -256,8 +261,18 @@ if __name__ == "__main__":
     parser.add_argument('trA2', type=str, help='Tracer A2 name')
     parser.add_argument('trB1', type=str, help='Tracer B1 name')
     parser.add_argument('trB2', type=str, help='Tracer B2 name')
+    parser.add_argument('--m_marg', default=False, action='store_true',
+                        help='Compute multiplicative bias marginalization cov')
+    parser.add_argument('--nl_marg', default=False, action='store_true',
+                        help='Compute noise bias marginalization cov')
     args = parser.parse_args()
 
     data = Data(data_path=args.INPUT).data
     cov = Cov(data, args.trA1, args.trA2, args.trB1, args.trB2)
-    cov.get_covariance()
+
+    if args.m_marg:
+        cov.get_covariance_m_marg()
+    elif args.nl_marg:
+        cov.get_covariance_nl_marg()
+    else:
+        cov.get_covariance()
