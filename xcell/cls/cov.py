@@ -35,7 +35,15 @@ class Cov():
             trconf = self.data.data['tracers'][trA1]
             self.nl_marg = trconf.get('nl_marginalize', False)
             self.nl_prior = trconf.get('nl_prior', 1E30)
+        # Spin-0 approximation
         self.spin0 = self.data.data['cov'].get('spin0', False)
+        # Multiplicative bias marginalization
+        self.m_marg= self.data.data['cov'].get('m_marg', False)
+        if self.m_marg:
+            # These are only needed in this case. If needed in other cases,
+            # initialize them in the __init__ with _load_Cls and clfid_dic.
+            self.clfid_A1A2 = ClFid(data, self.trA1, self.trA2)
+            self.clfid_B1B2 = ClFid(data, self.trB1, self.trB2)
 
     def _load_Cls(self):
         data = self.data.data
@@ -198,13 +206,36 @@ class Cov():
             cov = np.zeros((size1, size2))
 
         if self.nl_marg:
-            _, nl = self.clA1A2.get_ell_nl()
-            nl = nl.flatten()
-            cov += self.nl_prior**2 * (nl[:, None] * nl[None, :])
+            cov += self.get_covariance_nl_marg()
+
+        if self.m_marg:
+            cov += self.get_covariance_m_marg()
 
         self.cov = cov
         np.savez_compressed(fname, cov=cov)
         self.recompute_cov = False
+        return cov
+
+    def get_covariance_nl_marg(self):
+        _, nl = self.clA1A2.get_ell_nl()
+        nl = nl.flatten()
+        return self.nl_prior**2 * (nl[:, None] * nl[None, :])
+
+    def get_covariance_m_marg(self):
+        # Load all masks once
+        m_a1, m_a2 = self.clA1A2.get_masks()
+        m_b1, m_b2 = self.clB1B2.get_masks()
+        #
+        cla1a2 = self._get_cl_for_cov(self.clA1A2, self.clfid_A1A2, m_a1, m_a2)
+        clb1b2 = self._get_cl_for_cov(self.clB1B2, self.clfid_B1B2, m_b1, m_b2)
+        sigma_a1 = self.data.data['tracers'][self.trA1].get('sigma_m', 0)
+        sigma_a2 = self.data.data['tracers'][self.trA2].get('sigma_m', 0)
+        sigma_b1 = self.data.data['tracers'][self.trB1].get('sigma_m', 0)
+        sigma_b2 = self.data.data['tracers'][self.trB2].get('sigma_m', 0)
+        #
+        cov = cla1a2[:, None] * clb1b2[None, :]
+        cov *= (sigma_a1 * sigma_b1 + sigma_a1 * sigma_b2 +
+                sigma_a2 * sigma_b1 + sigma_a2 * sigma_b2)
         return cov
 
 
