@@ -224,12 +224,19 @@ class Cov():
         return cov
 
     def get_covariance_m_marg(self):
-        # Load all masks once
-        m_a1, m_a2 = self.clA1A2.get_masks()
-        m_b1, m_b2 = self.clB1B2.get_masks()
+        _, cla1a2 = self.clfid_A1A2.get_ell_cl()
+        _, clb1b2 = self.clfid_B1B2.get_ell_cl()
+        wins_a1a2 = self.clA1A2.get_bandpower_windows()
+        wins_b1b2 = self.clB1B2.get_bandpower_windows()
         #
-        cla1a2 = self._get_cl_for_cov(self.clA1A2, self.clfid_A1A2, m_a1, m_a2)
-        clb1b2 = self._get_cl_for_cov(self.clB1B2, self.clfid_B1B2, m_b1, m_b2)
+        ncls_a1a2, nell_cp = cla1a2.shape
+        wins_a1a2 = wins_a1a2.reshape((-1, ncls_a1a2 * nell_cp))
+        ncls_b1b2, nell_cp = clb1b2.shape
+        wins_b1b2 = wins_b1b2.reshape((-1, ncls_b1b2 * nell_cp))
+        #
+        cla1a2 = wins_a1a2.dot(cla1a2.flatten()).reshape((ncls_a1a2, -1))
+        clb1b2 = wins_b1b2.dot(clb1b2.flatten()).reshape((ncls_b1b2, -1))
+        #
         t_a1, t_a2 = self.clA1A2.get_dtypes()
         t_b1, t_b2 = self.clB1B2.get_dtypes()
         #
