@@ -40,7 +40,7 @@ class Cov():
         # Spin-0 approximation
         self.spin0 = self.data.data['cov'].get('spin0', False)
         # Multiplicative bias marginalization
-        self.m_marg= self.data.data['cov'].get('m_marg', False)
+        self.m_marg = self.data.data['cov'].get('m_marg', False)
 
     def _load_Cls(self):
         data = self.data.data
