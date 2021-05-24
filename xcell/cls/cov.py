@@ -22,6 +22,8 @@ class Cov():
         self.clA1B2 = cl_dic[(trA1, trB2)]
         self.clA2B1 = cl_dic[(trA2, trB1)]
         self.clA2B2 = cl_dic[(trA2, trB2)]
+        self.clfid_A1A2 = clfid_dic[(trA1, trA2)]
+        self.clfid_B1B2 = clfid_dic[(trB1, trB2)]
         self.clfid_A1B1 = clfid_dic[(trA1, trB1)]
         self.clfid_A1B2 = clfid_dic[(trA1, trB2)]
         self.clfid_A2B1 = clfid_dic[(trA2, trB1)]
@@ -35,7 +37,10 @@ class Cov():
             trconf = self.data.data['tracers'][trA1]
             self.nl_marg = trconf.get('nl_marginalize', False)
             self.nl_prior = trconf.get('nl_prior', 1E30)
+        # Spin-0 approximation
         self.spin0 = self.data.data['cov'].get('spin0', False)
+        # Multiplicative bias marginalization
+        self.m_marg = self.data.data['cov'].get('m_marg', False)
 
     def _load_Cls(self):
         data = self.data.data
@@ -54,7 +59,7 @@ class Cov():
 
         # Load fiducial Cls
         clfid_dic = {}
-        for trs in trs_comb[2:]:
+        for trs in trs_comb:
             if trs not in clfid_dic.keys():
                 clfid_dic[trs] = ClFid(data, *trs)
 
@@ -198,13 +203,56 @@ class Cov():
             cov = np.zeros((size1, size2))
 
         if self.nl_marg:
-            _, nl = self.clA1A2.get_ell_nl()
-            nl = nl.flatten()
-            cov += self.nl_prior**2 * (nl[:, None] * nl[None, :])
+            cov += self.get_covariance_nl_marg()
+
+        if self.m_marg:
+            cov += self.get_covariance_m_marg()
 
         self.cov = cov
         np.savez_compressed(fname, cov=cov)
         self.recompute_cov = False
+        return cov
+
+    def get_covariance_nl_marg(self):
+        _, nl = self.clA1A2.get_ell_nl()
+        nl = nl.flatten()
+        if (self.trA1 == self.trA2 == self.trB1 == self.trB2):
+            cov = self.nl_prior**2 * (nl[:, None] * nl[None, :])
+        else:
+            cov = np.zeros((nl.size, nl.size))
+
+        return cov
+
+    def get_covariance_m_marg(self):
+        _, cla1a2 = self.clfid_A1A2.get_ell_cl()
+        _, clb1b2 = self.clfid_B1B2.get_ell_cl()
+        wins_a1a2 = self.clA1A2.get_bandpower_windows()
+        wins_b1b2 = self.clB1B2.get_bandpower_windows()
+        #
+        ncls_a1a2, nell_cp = cla1a2.shape
+        wins_a1a2 = wins_a1a2.reshape((-1, ncls_a1a2 * nell_cp))
+        ncls_b1b2, nell_cp = clb1b2.shape
+        wins_b1b2 = wins_b1b2.reshape((-1, ncls_b1b2 * nell_cp))
+        #
+        cla1a2 = wins_a1a2.dot(cla1a2.flatten()).reshape((ncls_a1a2, -1))
+        clb1b2 = wins_b1b2.dot(clb1b2.flatten()).reshape((ncls_b1b2, -1))
+        #
+        t_a1, t_a2 = self.clA1A2.get_dtypes()
+        t_b1, t_b2 = self.clB1B2.get_dtypes()
+        #
+        sigma_a1 = sigma_a2 = sigma_b1 = sigma_b2 = 0
+        if t_a1 == 'galaxy_shear':
+            sigma_a1 = self.data.data['tracers'][self.trA1].get('sigma_m', 0)
+        if t_a2 == 'galaxy_shear':
+            sigma_a2 = self.data.data['tracers'][self.trA2].get('sigma_m', 0)
+        if t_b1 == 'galaxy_shear':
+            sigma_b1 = self.data.data['tracers'][self.trB1].get('sigma_m', 0)
+        if t_b2 == 'galaxy_shear':
+            sigma_b2 = self.data.data['tracers'][self.trB2].get('sigma_m', 0)
+        #
+        cov = cla1a2.flatten()[:, None] * clb1b2.flatten()[None, :]
+        cov *= (sigma_a1 * sigma_b1 + sigma_a1 * sigma_b2 +
+                sigma_a2 * sigma_b1 + sigma_a2 * sigma_b2)
         return cov
 
 
@@ -217,8 +265,18 @@ if __name__ == "__main__":
     parser.add_argument('trA2', type=str, help='Tracer A2 name')
     parser.add_argument('trB1', type=str, help='Tracer B1 name')
     parser.add_argument('trB2', type=str, help='Tracer B2 name')
+    parser.add_argument('--m_marg', default=False, action='store_true',
+                        help='Compute multiplicative bias marginalization cov')
+    parser.add_argument('--nl_marg', default=False, action='store_true',
+                        help='Compute noise bias marginalization cov')
     args = parser.parse_args()
 
     data = Data(data_path=args.INPUT).data
     cov = Cov(data, args.trA1, args.trA2, args.trB1, args.trB2)
-    cov.get_covariance()
+
+    if args.m_marg:
+        cov.get_covariance_m_marg()
+    elif args.nl_marg:
+        cov.get_covariance_nl_marg()
+    else:
+        cov.get_covariance()
