@@ -34,20 +34,27 @@ jobs:
             pip install -U numpy
             pip install -U scipy
             pip install -U flake8
-            pip install -U pytest
+            pip install -U pytest pytest-cov
             pip install -U astropy
             pip install -U healpy
             pip install -U pandas
             pip install -U pymaster
             pip install -U pyccl
             pip install -U camb
+            pip install -U coveralls
 
         - name: Flake
           run: |
             flake8 xcell/
 
         - name: Python unit tests
-          run: pytest -vv xcell
+          run: pytest -vv xcell --cov=xcell
+
+        - name: coveralls
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          run:
+            coveralls --service=github
                     
         - name: Cache pip
           uses: actions/cache@v2

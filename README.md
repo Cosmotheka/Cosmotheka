@@ -1,4 +1,6 @@
 # DEScls
+[![Coverage Status](https://coveralls.io/repos/github/xC-ell/xCell/badge.svg?branch=master)](https://coveralls.io/github/xC-ell/xCell?branch=master)
+
 Repository with the Cls of galaxy clustering and weak lensing for the public DESY1 dataset.
 
 # Usage
