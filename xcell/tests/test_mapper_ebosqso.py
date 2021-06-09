@@ -20,6 +20,11 @@ def test_get_dtype():
     assert m.get_dtype() == 'galaxy_density'
 
 
+def test_get_spin():
+    m = get_mapper()
+    assert m.get_spin() == 0
+
+
 def test_smoke():
     m = get_mapper()
     m._get_w(mod='data')
