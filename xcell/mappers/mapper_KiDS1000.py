@@ -20,9 +20,6 @@ class MapperKiDS1000(MapperBase):
 
         self._get_defaults(config)
         self.path_lite = config.get('path_lite', None)
-        self.column_names = ['SG_FLAG', 'Z_B', 'Z_B_MIN', 'Z_B_MAX',
-                             'ALPHA_J2000', 'DELTA_J2000', 'PSF_e1', 'PSF_e2',
-                             'e1', 'e2', 'weight']
         self.mode = config.get('mode', 'shear')
         self.zbin_edges = np.array([[0.1, 0.3],
                                     [0.3, 0.5],
@@ -51,6 +48,12 @@ class MapperKiDS1000(MapperBase):
 
         self.nl_coupled = None
         self.nls = {'PSF': None, 'shear': None, 'stars': None}
+
+        self.e1_flag = config.get('e1_flag', 'e1')
+        self.e2_flag = config.get('e2_flag', 'e2')
+        self.column_names = ['SG_FLAG', 'Z_B', 'Z_B_MIN', 'Z_B_MAX',
+                             'ALPHA_J2000', 'DELTA_J2000', 'PSF_e1', 'PSF_e2',
+                             self.e1_flag, self.e2_flag, 'weight']
 
     def get_catalog(self):
         if self.cat_data is None:
@@ -95,16 +98,16 @@ class MapperKiDS1000(MapperBase):
 
         if mode == 'shear':
             kind = 'galaxies'
-            e1_flag = 'e1'
-            e2_flag = 'e2'
+            e1_flag = self.e1_flag
+            e2_flag = self.e2_flag
         elif mode == 'PSF':
             kind = 'galaxies'
             e1_flag = 'PSF_e1'
             e2_flag = 'PSF_e2'
         elif mode == 'stars':
             kind = 'stars'
-            e1_flag = 'e1'
-            e2_flag = 'e2'
+            e1_flag = self.e1_flag
+            e2_flag = self.e2_flag
         else:
             raise ValueError(f"Unknown mode {mode}")
         return kind, e1_flag, e2_flag, mode
@@ -125,17 +128,17 @@ class MapperKiDS1000(MapperBase):
     def _remove_additive_bias(self, cat):
         sel_gals = cat['SG_FLAG'] == 1
         if np.any(sel_gals):
-            e1mean = np.average(cat['e1'][sel_gals],
+            e1mean = np.average(cat[self.e1_flag][sel_gals],
                                 weights=cat['weight'][sel_gals])
-            e2mean = np.average(cat['e2'][sel_gals],
+            e2mean = np.average(cat[self.e2_flag][sel_gals],
                                 weights=cat['weight'][sel_gals])
-            cat['e1'][sel_gals] -= e1mean
-            cat['e2'][sel_gals] -= e2mean
+            cat[self.e1_flag][sel_gals] -= e1mean
+            cat[self.e2_flag][sel_gals] -= e2mean
 
     def _remove_multiplicative_bias(self, cat, zbin):
         sel_gals = cat['SG_FLAG'] == 1
-        cat['e1'][sel_gals] /= 1 + self.m[zbin]
-        cat['e2'][sel_gals] /= 1 + self.m[zbin]
+        cat[self.e1_flag][sel_gals] /= 1 + self.m[zbin]
+        cat[self.e2_flag][sel_gals] /= 1 + self.m[zbin]
 
     def _get_gals_or_stars(self, kind='galaxies'):
         cat_data = self.get_catalog()
