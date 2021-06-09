@@ -71,7 +71,7 @@ class MapperP18CMBK(MapperBase):
                 self.mask = nmt.mask_apodization(self.mask, self.mask_aposize,
                                                  self.mask_apotype)
                 if fname:
-                    hp.write_map(fname, self.mask)
+                    hp.write_map(fname, self.mask, overwrite=True)
                 #
             self.mask = hp.ud_grade(self.mask,
                                     nside_out=self.nside)
