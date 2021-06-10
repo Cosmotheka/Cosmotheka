@@ -102,4 +102,4 @@ def test_get_nz():
     m = get_mapper()
     z, nz = m.get_nz()
     assert np.all(z == 0.6 * np.ones(m.npix))
-    assert np.all(nz == (m.zbin + 1)* np.ones(m.npix))
+    assert np.all(nz == (m.zbin + 1) * np.ones(m.npix))
