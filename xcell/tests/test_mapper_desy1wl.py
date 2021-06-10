@@ -89,3 +89,10 @@ def test_get_nl_coupled():
     psfp = np.mean(np.arange(4)**2)*aa
     assert np.all(psf[0][:2] == 0)
     assert np.fabs(np.mean(psf[0][2:])-psfp) < 1E-5
+
+
+def test_get_dtype():
+    m = get_mapper()
+    dtype = m.get_dtype()
+    assert dtype == 'galaxy_shear'
+
