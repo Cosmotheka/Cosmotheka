@@ -81,14 +81,21 @@ cols = fits.ColDefs([fits.Column(name='zbin_mcal', format='D', array=on),
                      fits.Column(name='zbin_mcal_2m', format='D',
                                  array=half_on),
                      fits.Column(name='coadd_objects_id',
-                                 format='D', array=[1])])
+                                 format='D', array=[1]),
+                     # Needed by test_mapper_desy1wl
+                     fits.Column(name='Z_MID', format='D', array=0.6*on),
+                     fits.Column(name='BIN1', format='D', array=1*on),
+                     fits.Column(name='BIN2', format='D', array=2*on),
+                     fits.Column(name='BIN3', format='D', array=3*on),
+                     fits.Column(name='BIN4', format='D', array=4*on)
+                     ])
 
 hdu = fits.BinTableHDU.from_columns(cols)
 hdu.writeto("cat_zbin.fits", overwrite=True)
 
-with fits.open("catalog.fits") as f:
-    t = Table.read(f)
-    t['SG_FLAG'][:] = 0
-    t.write('catalog_stars.fits')
-
-wget.download("http://desdr-server.ncsa.illinois.edu/despublic/y1a1_files/chains/2pt_NG_mcal_1110.fits")  # noqa
+# with fits.open("catalog.fits") as f:
+#     t = Table.read(f)
+#     t['SG_FLAG'][:] = 0
+#     t.write('catalog_stars.fits')
+#
+# wget.download("http://desdr-server.ncsa.illinois.edu/despublic/y1a1_files/chains/2pt_NG_mcal_1110.fits")  # noqa

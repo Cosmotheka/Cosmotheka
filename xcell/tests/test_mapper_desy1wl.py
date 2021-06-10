@@ -7,6 +7,7 @@ import os
 def get_config():
     return {'data_cat': 'xcell/tests/data/catalog.fits',
             'zbin_cat': 'xcell/tests/data/cat_zbin.fits',
+            'file_nz': 'xcell/tests/data/cat_zbin.fits',
             'path_lite': 'xcell/tests/data/',
             'zbin': 1, 'nside': 32, 'mask_name': 'mask'}
 
@@ -96,3 +97,9 @@ def test_get_dtype():
     dtype = m.get_dtype()
     assert dtype == 'galaxy_shear'
 
+
+def test_get_nz():
+    m = get_mapper()
+    z, nz = m.get_nz()
+    assert np.all(z == 0.6 * np.ones(m.npix))
+    assert np.all(nz == (m.zbin + 1)* np.ones(m.npix))
