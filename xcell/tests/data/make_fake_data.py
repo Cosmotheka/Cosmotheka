@@ -93,9 +93,9 @@ cols = fits.ColDefs([fits.Column(name='zbin_mcal', format='D', array=on),
 hdu = fits.BinTableHDU.from_columns(cols)
 hdu.writeto("cat_zbin.fits", overwrite=True)
 
-# with fits.open("catalog.fits") as f:
-#     t = Table.read(f)
-#     t['SG_FLAG'][:] = 0
-#     t.write('catalog_stars.fits')
-#
-# wget.download("http://desdr-server.ncsa.illinois.edu/despublic/y1a1_files/chains/2pt_NG_mcal_1110.fits")  # noqa
+with fits.open("catalog.fits") as f:
+    t = Table.read(f)
+    t['SG_FLAG'][:] = 0
+    t.write('catalog_stars.fits')
+
+wget.download("http://desdr-server.ncsa.illinois.edu/despublic/y1a1_files/chains/2pt_NG_mcal_1110.fits")  # noqa
