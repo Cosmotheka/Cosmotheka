@@ -2,6 +2,7 @@ import numpy as np
 import xcell as xc
 import healpy as hp
 import os
+import glob
 
 
 def get_config():
@@ -33,20 +34,18 @@ def get_es():
 def test_lite():
     config = get_config()
     config['path_lite'] = 'xcell/tests/data/'
-    ifile = 0
-    while os.path.isfile(
-            f'xcell/tests/data/DESwlMETACAL_catalog_lite_zbin{ifile}.fits'):
-        os.remove(
-                f'xcell/tests/data/DESwlMETACAL_catalog_lite_zbin{ifile}.fits')
-        ifile += 1
-    xc.mappers.MapperDESY1wl(config)
+    flite = glob.glob('xcell/tests/data/DESwlMETACAL_catalog_lite_zbin*.fits')
+    for f in flite:
+        os.remove(f)
+    cat = xc.mappers.MapperDESY1wl(config).get_catalog()
     zbin = config['zbin']
     assert os.path.isfile(
             f'xcell/tests/data/DESwlMETACAL_catalog_lite_zbin{zbin}.fits')
 
     # Non-exsisting fits files - read from lite
     config['data_catalogs'] = 'whatever'
-    xc.mappers.MapperDESY1wl(config)
+    cat_from_lite = xc.mappers.MapperDESY1wl(config).get_catalog()
+    assert np.all(cat == cat_from_lite)
 
 
 def test_get_signal_map():
