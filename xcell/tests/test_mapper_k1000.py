@@ -34,17 +34,26 @@ def test_lite():
     predir = 'xcell/tests/data/'
     config = get_config()
     config['path_lite'] = predir
-    ifile = 0
-    while os.path.isfile(f'{predir}KiDS1000_lite_cat_zbin{ifile}.fits'):
-        os.remove(f'{predir}KiDS1000_lite_cat_zbin{ifile}.fits')
-        ifile += 1
+    prefix = f'{predir}KiDS1000_lite'
+    os.system(f'rm -r {prefix}*')
     m = xc.mappers.MapperKiDS1000(config)
     m.get_catalog()
-    assert os.path.isfile(f'{predir}KiDS1000_lite_cat_zbin0.fits')
+    assert os.path.isfile(f'{prefix}_cat_zbin0.fits')
+    m.get_signal_map()
+    assert os.path.isfile(f'{prefix}_shear_e1_ns32_zbin0.fits.gz')
+    assert os.path.isfile(f'{prefix}_shear_e2_ns32_zbin0.fits.gz')
+    assert os.path.isfile(f'{prefix}_galaxies_mask_ns32_zbin0.fits.gz')
+    m.get_nl_coupled()
+    assert os.path.isfile(f'{prefix}_galaxies_w2s2_ns32_zbin0.fits.gz')
 
     # Non-exsisting fits files - read from lite
     config['data_catalog'] = 'whatever'
-    xc.mappers.MapperKiDS1000(config)
+    m = xc.mappers.MapperKiDS1000(config)
+    m.get_catalog()
+    m.get_mask()
+    m.get_signal_map()
+    m.get_nl_coupled()
+    os.system(f'rm -r {prefix}*')
 
 
 def test_get_signal_map():
@@ -60,6 +69,10 @@ def test_get_signal_map():
     assert np.all(np.fabs(-sh+(np.mean(es)-es)/(1+m.m[0])) < 1E-5)
     assert np.all(np.fabs(-psf-es) < 1E-5)
     assert np.all(np.fabs(-star-es) < 1E-5)
+
+    # Check pre-loaded map
+    sh2 = np.array(m.get_signal_map('shear'))
+    assert np.all(sh2 == sh)
 
 
 def test_get_mask():
@@ -93,3 +106,19 @@ def test_get_nl_coupled():
     starp = 4*np.mean(np.arange(4)**2)*aa
     assert np.all(star[0][:2] == 0)
     assert np.fabs(np.mean(star[0][2:])-starp) < 1E-5
+
+
+def test_get_nz():
+    m = get_mapper()
+    z, nz = m.get_nz()
+    assert len(nz) == 70
+
+
+def test_get_dtype():
+    m = get_mapper()
+    assert m.get_dtype() == 'galaxy_shear'
+
+
+def test_get_spin():
+    m = get_mapper()
+    assert m.get_spin() == 2
