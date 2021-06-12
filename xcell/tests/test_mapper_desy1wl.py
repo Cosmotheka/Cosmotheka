@@ -3,6 +3,7 @@ import xcell as xc
 import healpy as hp
 import os
 import glob
+from astropy.table import Table, hstack
 
 
 def get_config():
@@ -17,6 +18,14 @@ def get_mapper():
     return xc.mappers.MapperDESY1wl(get_config())
 
 
+def remove_lite():
+    config = get_config()
+    plite = config['path_lite']
+    flite = glob.glob(plite + 'DESwlMETACAL_catalog_lite_zbin*.fits')
+    for f in flite:
+        os.remove(f)
+
+
 def test_smoke():
     # Checks for errors in summoning mapper
     get_mapper()
@@ -29,6 +38,33 @@ def get_es():
     npix = hp.nside2npix(32)
     return np.repeat(np.array([np.arange(4)]), npix//4,
                      axis=0).flatten()
+
+
+def test_load_catalog():
+    remove_lite()
+    config = get_config()
+    m = get_mapper()
+    cat = m._load_catalog()
+
+    columns_data = ['coadd_objects_id', 'e1', 'e2',
+                    'psf_e1', 'psf_e2', 'ra', 'dec',
+                    'R11', 'R12', 'R21', 'R22',
+                    'flags_select']
+    columns_zbin = ['zbin_mcal', 'zbin_mcal_1p',
+                    'zbin_mcal_1m', 'zbin_mcal_2p', 'zbin_mcal_2m']
+
+    cat_data = Table.read(config['data_cat'], format='fits')
+    cat_data.keep_columns(columns_data)
+
+    cat_zbin = Table.read(config['zbin_cat'], format='fits')
+    cat_zbin.keep_columns(columns_zbin)
+    cat_data = hstack([cat_data, cat_zbin])
+
+    cat_data.remove_rows(cat_data['dec'] < -90)
+    cat_data.remove_rows(cat_data['dec'] > -35)
+
+    assert(len(cat_data) == len(cat))
+    assert(np.all(cat_data == cat))
 
 
 def test_lite():
