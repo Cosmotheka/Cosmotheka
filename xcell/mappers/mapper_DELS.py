@@ -9,7 +9,7 @@ import pymaster as nmt
 import os
 
 
-class MapperDECaLS(MapperBase):
+class MapperDELS(MapperBase):
     def __init__(self, config):
         """
         config - dict
@@ -22,7 +22,7 @@ class MapperDECaLS(MapperBase):
            'completeness_map': 'Legacy_footprint_completeness_mask_128.fits',
            'star_map': 'allwise_total_rot_1024.fits',
            'nside': 1024,
-           'mask_name': 'mask_DECaLS'}
+           'mask_name': 'mask_DELS'}
         """
         self._get_defaults(config)
         self.pz = config.get('z_name', 'PHOTOZ_3DINFER')

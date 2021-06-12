@@ -14,7 +14,7 @@ def get_config():
 
 
 def get_mapper():
-    return xc.mappers.MapperDECaLS(get_config())
+    return xc.mappers.MapperDELS(get_config())
 
 
 def test_smoke():
@@ -64,3 +64,8 @@ def test_get_nl_coupled():
     nl_pred *= pix_area**2/(4*np.pi)
     nl = m.get_nl_coupled()
     assert np.all(np.fabs(nl-nl_pred) < 1E-5)
+
+
+def test_get_dtype():
+    m = get_mapper()
+    assert m.get_dtype() == 'galaxy_density'
