@@ -45,10 +45,24 @@ def test_lorentzian():
 def test_get_signal_map():
     m = get_mapper()
     d = m.get_signal_map(apply_galactic_correction=False)
-    assert len(d) == 1
-    d = d[0]
-    assert len(d) == hp.nside2npix(m.nside)
+    d = np.array(d)
+    assert d.shape == (1, hp.nside2npix(m.nside))
     assert np.all(np.fabs(d) < 1E-15)
+
+
+def test_galactic_correction():
+    # Test that the galactic corrector returns something close
+    # to zero when using a map of stars that is the same as
+    # the signal.
+    np.random.seed(1234)
+    m = get_mapper()
+    nside = 32
+    npix = hp.nside2npix(nside)
+    delta = np.random.randn(npix)
+    stars = 10.**delta
+    mask = np.ones(npix)
+    d = m._get_galactic_correction(delta, stars, mask)
+    assert np.std(delta-d['delta_map']) < 0.1
 
 
 def test_get_mask():

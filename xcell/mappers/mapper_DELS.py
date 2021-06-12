@@ -5,7 +5,6 @@ from astropy.table import Table, vstack
 from scipy.integrate import simps
 import numpy as np
 import healpy as hp
-import pymaster as nmt
 import os
 
 
@@ -18,7 +17,6 @@ class MapperDELS(MapperBase):
            'z_name': 'PHOTOZ_3DINFER',
            'z_arr_dim': 500,
            'binary_mask': 'Legacy_footprint_final_mask.fits',
-           'nl_analytic': True,
            'completeness_map': 'Legacy_footprint_completeness_mask_128.fits',
            'star_map': 'allwise_total_rot_1024.fits',
            'nside': 1024,
@@ -199,17 +197,12 @@ class MapperDELS(MapperBase):
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
-            if (self.nside < 4096) or (self.config.get('nl_analytic', True)):
-                cat_data = self.get_catalogs()
-                n = get_map_from_points(cat_data, self.nside)
-                N_mean = self._get_mean_n(n)
-                N_mean_srad = N_mean * self.npix / (4 * np.pi)
-                mask = self.get_mask()
-                N_ell = np.mean(mask) / N_mean_srad
-            else:
-                f = self.get_nmt_field()
-                cl = nmt.compute_coupled_cell(f, f)[0]
-                N_ell = np.mean(cl[4000:2*self.nside])
+            cat_data = self.get_catalogs()
+            n = get_map_from_points(cat_data, self.nside)
+            N_mean = self._get_mean_n(n)
+            N_mean_srad = N_mean * self.npix / (4 * np.pi)
+            mask = self.get_mask()
+            N_ell = np.mean(mask) / N_mean_srad
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
 
