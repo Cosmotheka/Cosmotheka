@@ -15,6 +15,16 @@ def get_mapper():
     return xc.mappers.MappereBOSSQSO(get_config())
 
 
+def test_get_dtype():
+    m = get_mapper()
+    assert m.get_dtype() == 'galaxy_density'
+
+
+def test_get_spin():
+    m = get_mapper()
+    assert m.get_spin() == 0
+
+
 def test_smoke():
     m = get_mapper()
     m._get_w(mod='data')
@@ -36,6 +46,15 @@ def test_get_signal_map():
     d = d[0]
     assert len(d) == hp.nside2npix(m.nside)
     assert np.all(np.fabs(d) < 1E-15)
+
+
+def test_get_nl_coupled_data():
+    c = get_config()
+    c['nside_nl_threshold'] = 1
+    c['lmin_nl_from_data'] = 10
+    m = xc.mappers.MappereBOSSQSO(c)
+    nl = m.get_nl_coupled()
+    assert np.all(nl == 0)
 
 
 def test_get_mask():
