@@ -96,6 +96,7 @@ def test_file_inconsistent_errors():
     clo2 = Cl(data, 'Dummy__0', 'Dummy__0')
     with pytest.raises(ValueError):
         clo2.get_ell_cl()
+    os.remove(os.path.join(tmpdir1, 'data.yml'))
 
 
 def test_get_ell_cl():
