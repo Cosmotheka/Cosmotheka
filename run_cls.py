@@ -154,7 +154,7 @@ if __name__ == "__main__":
                         help="Set if you want to use the fiducial Cl and covG instead of data cls")
     parser.add_argument('--cls_fiducial', default=False, action='store_true', help='Set to compute the fiducial cls')
     parser.add_argument('--onlogin', default=False, action='store_true', help='Run the jobs in the login screen instead appending them to the queue')
-    parser.add_argument('--skip', default=[], nargs='+', help='Skip the following tracers. It can be given as DECALS__0 to skip only DECALS__0 tracer or DECALS to skip all DECALS tracers')
+    parser.add_argument('--skip', default=[], nargs='+', help='Skip the following tracers. It can be given as DELS__0 to skip only DELS__0 tracer or DELS to skip all DELS tracers')
     parser.add_argument('--override_yaml', default=False, action='store_true', help='Override the YAML file if already stored. Be ware that this could cause compatibility problems in your data!')
     args = parser.parse_args()
 
