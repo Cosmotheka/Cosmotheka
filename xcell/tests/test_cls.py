@@ -5,6 +5,7 @@ from xcell.cls.cl import Cl
 from xcell.cls.cov import Cov
 import pymaster as nmt
 from xcell.mappers import MapperDummy
+import pytest
 
 
 # Remove previous test results
@@ -81,6 +82,20 @@ def test_cov_nlmarg():
     oo = np.ones(num_l)
     chi2 = np.dot(oo, np.linalg.solve(cov, oo))
     assert np.fabs(chi2) < 1E-5*num_l
+
+
+def test_file_inconsistent_errors():
+    clo = get_cl_class()
+    ell, cl = clo.get_ell_cl()
+    # Change bpws and try to read file
+    data = get_config(0.2)
+    data['bpw_edges'] = data['bpw_edges'][:-1]
+    data['recompute']['cls'] = False
+    data['recompute']['mcm'] = False
+    os.remove(os.path.join(tmpdir1, 'data.yml'))
+    clo2 = Cl(data, 'Dummy__0', 'Dummy__0')
+    with pytest.raises(ValueError):
+        clo2.get_ell_cl()
 
 
 def test_get_ell_cl():
