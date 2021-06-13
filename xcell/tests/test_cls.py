@@ -120,6 +120,7 @@ def test_get_ell_cl():
 
     assert np.all(np.fabs(cl_m1 - cl) < 5 * sigma)
     assert np.all(cl_class.wins == w.get_bandpower_windows())
+    os.system("rm xcell/tests/cls/dummy1/*")
 
 
 def test_get_covariance():
@@ -143,7 +144,7 @@ def test_get_covariance():
     cov = cov_class.get_covariance()
 
     cov_m = np.zeros_like(cov)
-    diag = (2 * cl_m1 ** 2) / (2 * ell + 1)
+    diag = (2 * cl_m1 ** 2) / (2 * ell + 1) / 4
     np.fill_diagonal(cov_m, diag)
 
     icov = np.linalg.inv(cov)
@@ -153,13 +154,14 @@ def test_get_covariance():
     chi2 = dCl.dot(icov).dot(dCl)
     chi2_m = dCl.dot(icov_m).dot(dCl)
 
-    assert chi2/chi2_m - 1 < 1e-5
+    assert np.fabs(chi2/chi2_m) - 1 < 0.01
+    os.system("rm xcell/tests/cls/dummy1/*")
 
 
 def test_cls_vs_namaster():
     # cls
     # Get cl from randomnly generated map ("data")
-    cl_class = get_cl_class(fsky=1)
+    cl_class = get_cl_class()
     ell, cl_data = cl_class.get_ell_cl()
     b = cl_class.get_NmtBin()
 
@@ -204,8 +206,13 @@ def test_cls_vs_namaster():
 
     chi2 = dCl.dot(icov).dot(dCl)
     chi2_m = dCl.dot(icov_nmt).dot(dCl)
+    assert np.fabs(chi2/chi2_m) - 1 < 1e-5
 
-    assert chi2/chi2_m - 1 < 1e-5
+    # Compute bandpower windows
+    win = cl_class.get_bandpower_windows()
+    bpwin = wsp.get_bandpower_windows()
+    assert np.all(win == bpwin)
+    os.system("rm xcell/tests/cls/dummy1/*")
 
 
 def test_symmetric():
@@ -219,3 +226,4 @@ def test_symmetric():
     assert np.all(cl_class01.get_ell_nl()[1] == cl_class10.get_ell_nl()[1])
     assert np.all(cl_class01.get_ell_nl_cp()[1] ==
                   cl_class10.get_ell_nl_cp()[1])
+    os.system("rm xcell/tests/cls/dummy1/*")
