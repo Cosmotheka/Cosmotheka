@@ -8,7 +8,7 @@ import pymaster as nmt
 import os
 
 
-class MappereBOSSQSO(MapperSDSS):
+class MapperBOSSLOWZ(MapperSDSS):
     def __init__(self, config):
         """
         config - dict
@@ -36,6 +36,7 @@ class MappereBOSSQSO(MapperSDSS):
         self.nl_coupled = None
         self.mask = None
 
+
     def get_catalog(self, mod='data'):
         if mod == 'data':
             data_file = self.config['data_catalogs']
@@ -56,7 +57,6 @@ class MappereBOSSQSO(MapperSDSS):
         return cat[(cat['Z'] >= self.z_edges[0]) &
                    (cat['Z'] < self.z_edges[1])]
 
-
     def get_nz(self, dz=0):
         if self.dndz is None:
             cat_data = self.get_catalog(mod='data')
@@ -68,7 +68,6 @@ class MappereBOSSQSO(MapperSDSS):
         z_dz = z + dz
         sel = z_dz >= 0
         return np.array([z_dz[sel], nz[sel]])
-
 
     def get_dtype(self):
         return 'galaxy_density'
