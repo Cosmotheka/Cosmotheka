@@ -165,3 +165,20 @@ def test_get_cov_ng_cl_tracers():
         cl_trs_cov.extend(d[trs])
 
     assert cl_trs_cov == data.get_cov_ng_cl_tracers()
+
+
+def test_filter_tracers_wsp():
+    data = get_data()
+    config = get_config_dict()
+
+    all_tracers = list(config['tracers'].keys())
+    trs_wsp = []
+    trs_mask = []
+    for tr, val in config['tracers'].items():
+        mask_name = val['mask_name']
+        if mask_name not in trs_mask:
+            trs_wsp.append(tr)
+            trs_mask.append(mask_name)
+
+    assert trs_wsp == data.filter_tracers_wsp(all_tracers)
+
