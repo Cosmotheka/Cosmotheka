@@ -2,6 +2,7 @@ import numpy as np
 import xcell as xc
 import healpy as hp
 import os
+import glob
 
 
 def get_config(w_stars=False):
@@ -30,30 +31,43 @@ def get_es():
                      axis=0).flatten()
 
 
+def remove_lite(predir):
+    flite = glob.glob(predir + 'KiDS1000_lite*.fits*')
+    for f in flite:
+        os.remove(f)
+
+
 def test_lite():
     predir = 'xcell/tests/data/'
     config = get_config()
     config['path_lite'] = predir
     prefix = f'{predir}KiDS1000_lite'
-    os.system(f'rm -r {prefix}*')
+    remove_lite(predir)
     m = xc.mappers.MapperKiDS1000(config)
     m.get_catalog()
     assert os.path.isfile(f'{prefix}_cat_zbin0.fits')
-    m.get_signal_map()
+    map1 = np.array(m.get_signal_map())
+    mask1 = m.get_mask()
     assert os.path.isfile(f'{prefix}_shear_e1_ns32_zbin0.fits.gz')
     assert os.path.isfile(f'{prefix}_shear_e2_ns32_zbin0.fits.gz')
     assert os.path.isfile(f'{prefix}_galaxies_mask_ns32_zbin0.fits.gz')
-    m.get_nl_coupled()
+    nl1 = m.get_nl_coupled()
     assert os.path.isfile(f'{prefix}_galaxies_w2s2_ns32_zbin0.fits.gz')
 
     # Non-exsisting fits files - read from lite
     config['data_catalog'] = 'whatever'
     m = xc.mappers.MapperKiDS1000(config)
     m.get_catalog()
-    m.get_mask()
-    m.get_signal_map()
-    m.get_nl_coupled()
-    os.system(f'rm -r {prefix}*')
+    mask2 = m.get_mask()
+    map2 = np.array(m.get_signal_map())
+    nl2 = m.get_nl_coupled()
+    print(np.amax(np.fabs(mask1-mask2)))
+    print(np.amax(np.fabs(map1-map2)))
+    print(np.amax(np.fabs(nl1-nl2)))
+    assert np.all(np.fabs(mask1 - mask2) < 1E-5)
+    assert np.all(np.fabs(map1 - map2) < 1E-5)
+    assert np.all(np.fabs(nl1 - nl2) < 1E-5)
+    remove_lite(predir)
 
 
 def test_get_signal_map():
@@ -95,23 +109,26 @@ def test_get_nl_coupled():
     sh = m.get_nl_coupled()
     shp = 4*np.std(np.arange(4))**2*aa/(1+m.m[0])**2
     assert np.all(sh[0][:2] == 0)
-    assert np.fabs(np.mean(sh[0][2:])-shp) < 1E-5
+    assert np.fabs(np.mean(sh[0][2:])/shp-1) < 1E-5
 
     psf = m.get_nl_coupled('PSF')
     psfp = 4*np.mean(np.arange(4)**2)*aa
     assert np.all(psf[0][:2] == 0)
-    assert np.fabs(np.mean(psf[0][2:])-psfp) < 1E-5
+    assert np.fabs(np.mean(psf[0][2:])/psfp-1) < 1E-5
 
     star = ms.get_nl_coupled('stars')
     starp = 4*np.mean(np.arange(4)**2)*aa
     assert np.all(star[0][:2] == 0)
-    assert np.fabs(np.mean(star[0][2:])-starp) < 1E-5
+    assert np.fabs(np.mean(star[0][2:])/starp-1) < 1E-5
 
 
 def test_get_nz():
     m = get_mapper()
     z, nz = m.get_nz()
-    assert len(nz) == 70
+    zb, nzb = np.loadtxt("xcell/tests/data/Nz_DIR_z0.1t0.3.asc",
+                         unpack=True)[:2]
+    assert np.all(z == zb)
+    assert np.all(nz == nzb)
 
 
 def test_get_dtype():
