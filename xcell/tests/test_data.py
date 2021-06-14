@@ -3,6 +3,7 @@ import pytest
 import os
 import yaml
 from xcell.cls.data import Data
+from ..mappers import mapper_from_name
 
 
 def read_yaml_file(file):
@@ -195,3 +196,15 @@ def test_check_toeplitz():
     data = Data(data=config)
     assert (-1, -1, -1) == data.check_toeplitz('cls')
     assert (-1, -1, -1) == data.check_toeplitz('cov')
+
+    remove_yml_file(config)
+
+
+def test_get_mapper():
+    data = get_data()
+    config = get_config_dict()
+
+    for tr, val in config['tracers'].items():
+        class_name = val['mapper_class']
+        m = data.get_mapper(tr)
+        assert isinstance(m, mapper_from_name(class_name))
