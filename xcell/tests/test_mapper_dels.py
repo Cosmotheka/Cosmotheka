@@ -14,7 +14,7 @@ def get_config():
 
 
 def get_mapper():
-    return xc.mappers.MapperDECaLS(get_config())
+    return xc.mappers.MapperDELS(get_config())
 
 
 def test_smoke():
@@ -45,10 +45,24 @@ def test_lorentzian():
 def test_get_signal_map():
     m = get_mapper()
     d = m.get_signal_map(apply_galactic_correction=False)
-    assert len(d) == 1
-    d = d[0]
-    assert len(d) == hp.nside2npix(m.nside)
+    d = np.array(d)
+    assert d.shape == (1, hp.nside2npix(m.nside))
     assert np.all(np.fabs(d) < 1E-15)
+
+
+def test_galactic_correction():
+    # Test that the galactic corrector returns something close
+    # to zero when using a map of stars that is the same as
+    # the signal.
+    np.random.seed(1234)
+    m = get_mapper()
+    nside = 32
+    npix = hp.nside2npix(nside)
+    delta = np.random.randn(npix)
+    stars = 10.**delta
+    mask = np.ones(npix)
+    d = m._get_galactic_correction(delta, stars, mask)
+    assert np.std(delta-d['delta_map']) < 0.1
 
 
 def test_get_mask():
@@ -64,3 +78,8 @@ def test_get_nl_coupled():
     nl_pred *= pix_area**2/(4*np.pi)
     nl = m.get_nl_coupled()
     assert np.all(np.fabs(nl-nl_pred) < 1E-5)
+
+
+def test_get_dtype():
+    m = get_mapper()
+    assert m.get_dtype() == 'galaxy_density'

@@ -35,6 +35,10 @@ class MappereBOSSQSO(MapperBase):
         self.delta_map = None
         self.nl_coupled = None
         self.mask = None
+        self.nside_nl_threshold = config.get('nside_nl_threshold',
+                                             4096)
+        self.lmin_nl_from_data = config.get('lmin_nl_from_data',
+                                            2000)
 
     def get_catalog(self, mod='data'):
         if mod == 'data':
@@ -119,7 +123,7 @@ class MappereBOSSQSO(MapperBase):
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
-            if self.nside < 4096:
+            if self.nside < self.nside_nl_threshold:
                 print('calculing nl from weights')
                 cat_data = self.get_catalog(mod='data')
                 cat_random = self.get_catalog(mod='random')
@@ -141,7 +145,7 @@ class MappereBOSSQSO(MapperBase):
                 print('calculating nl from mean cl values')
                 f = self.get_nmt_field()
                 cl = nmt.compute_coupled_cell(f, f)[0]
-                N_ell = np.mean(cl[2000:2*self.nside])
+                N_ell = np.mean(cl[self.lmin_nl_from_data:2*self.nside])
                 self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
 

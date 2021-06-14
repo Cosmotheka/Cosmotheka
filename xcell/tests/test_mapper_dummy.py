@@ -2,6 +2,7 @@ import numpy as np
 import xcell as xc
 import healpy as hp
 import pyccl as ccl
+import pytest
 
 
 def get_config(dtype='galaxy_density', fsky=0.2):
@@ -68,6 +69,19 @@ def test_get_cl():
         cl = get_cl(dtype)
         rdev = np.fabs(cl[cl != 0] / cl_m[cl_m != 0] - 1)
         assert np.max(rdev) < 1E-5
+
+
+@pytest.mark.parametrize('dtyp', ['galaxy_density',
+                                  'galaxy_shear',
+                                  'cmb_convergence'])
+def test_get_nz(dtyp):
+    m = get_mapper(dtype=dtyp)
+    nz = m.get_nz()
+    if dtyp == 'cmb_convergence':
+        assert nz is None
+    else:
+        assert len(nz) == 2
+        assert len(nz.shape) == 2
 
 
 def test_get_signal_map():

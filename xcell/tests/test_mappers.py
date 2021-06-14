@@ -16,3 +16,15 @@ def test_maper_base_defaults():
 
     assert m.nside == 32
     assert m.mask_name == 'mask'
+
+    with pytest.raises(NotImplementedError):
+        m.get_signal_map()
+
+    with pytest.raises(NotImplementedError):
+        m.get_mask()
+
+    with pytest.raises(NotImplementedError):
+        m.get_nl_coupled()
+
+    with pytest.raises(NotImplementedError):
+        m.get_nl_covariance()
