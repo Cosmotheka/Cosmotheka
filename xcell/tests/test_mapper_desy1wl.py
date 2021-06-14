@@ -75,6 +75,8 @@ def test_lite():
     s = m.get_signal_map()
     psf = m.get_signal_map('PSF')
     mask = m.get_mask()
+    nl_cp = m.get_nl_coupled()
+    nl_cp_psf = m.get_nl_coupled('PSF')
 
     # Check lite files have been created
     zbin = config['zbin']
@@ -86,7 +88,9 @@ def test_lite():
                   f'signal_map_PSF_e1_zbin{zbin}_ns{nside}.fits.gz',
                   f'signal_map_PSF_e2_zbin{zbin}_ns{nside}.fits.gz',
                   f'signal_map_PSF_e2_zbin{zbin}_ns{nside}.fits.gz',
-                  f'mask_zbin{zbin}_ns{nside}.fits.gz']:
+                  f'mask_zbin{zbin}_ns{nside}.fits.gz',
+                  f'shear_w2s2_zbin{zbin}_ns{nside}.fits.gz',
+                  f'PSF_w2s2_zbin{zbin}_ns{nside}.fits.gz']:
         assert os.path.isfile(os.path.join(plite, "DESwlMETACAL_" + fname))
 
     # Check we recover the same mas and catalog
@@ -97,10 +101,14 @@ def test_lite():
     s_from_lite = m_lite.get_signal_map()
     psf_from_lite = m_lite.get_signal_map('PSF')
     mask_from_lite = m_lite.get_mask()
+    nl_cp_from_lite = m_lite.get_nl_coupled()
+    nl_cp_psf_from_lite = m_lite.get_nl_coupled('PSF')
     assert np.all(cat == cat_from_lite)
     assert np.all(np.array(s) == np.array(s_from_lite))
     assert np.all(np.array(psf) == np.array(psf_from_lite))
     assert np.all(mask == mask_from_lite)
+    assert np.all(nl_cp == nl_cp_from_lite)
+    assert np.all(nl_cp_psf == nl_cp_psf_from_lite)
 
     # Clean lite
     remove_lite(plite)
