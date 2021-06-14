@@ -10,7 +10,6 @@ def get_config():
     return {'data_cat': 'xcell/tests/data/catalog.fits',
             'zbin_cat': 'xcell/tests/data/cat_zbin.fits',
             'file_nz': 'xcell/tests/data/cat_zbin.fits',
-            'path_lite': 'xcell/tests/data/',
             'zbin': 1, 'nside': 32, 'mask_name': 'mask'}
 
 
@@ -18,10 +17,8 @@ def get_mapper():
     return xc.mappers.MapperDESY1wl(get_config())
 
 
-def remove_lite():
-    config = get_config()
-    plite = config['path_lite']
-    flite = glob.glob(plite + 'DESwlMETACAL_catalog_lite_zbin*.fits')
+def remove_lite(plite):
+    flite = glob.glob(plite + 'DESwlMETACAL*lite*.fits')
     for f in flite:
         os.remove(f)
 
@@ -41,7 +38,6 @@ def get_es():
 
 
 def test_load_catalog():
-    remove_lite()
     config = get_config()
     m = get_mapper()
     cat = m._load_catalog()
@@ -69,19 +65,45 @@ def test_load_catalog():
 
 def test_lite():
     config = get_config()
-    config['path_lite'] = 'xcell/tests/data/'
-    flite = glob.glob('xcell/tests/data/DESwlMETACAL_catalog_lite_zbin*.fits')
-    for f in flite:
-        os.remove(f)
-    cat = xc.mappers.MapperDESY1wl(config).get_catalog()
-    zbin = config['zbin']
-    assert os.path.isfile(
-            f'xcell/tests/data/DESwlMETACAL_catalog_lite_zbin{zbin}.fits')
+    plite = 'xcell/tests/data/'
+    config['path_lite'] = plite
+    remove_lite(plite)
+    # Initialize mapper
+    m = xc.mappers.MapperDESY1wl(config)
+    # Get maps and catalog
+    cat = m.get_catalog()
+    s = m.get_signal_map()
+    psf = m.get_signal_map('PSF')
+    mask = m.get_mask()
 
+    # Check lite files have been created
+    zbin = config['zbin']
+    nside = config['nside']
+
+    for fname in [f'catalog_lite_zbin{zbin}.fits',
+                  f'signal_map_shear_e1_zbin{zbin}_ns{nside}.fits.gz',
+                  f'signal_map_shear_e2_zbin{zbin}_ns{nside}.fits.gz',
+                  f'signal_map_PSF_e1_zbin{zbin}_ns{nside}.fits.gz',
+                  f'signal_map_PSF_e2_zbin{zbin}_ns{nside}.fits.gz',
+                  f'signal_map_PSF_e2_zbin{zbin}_ns{nside}.fits.gz',
+                  f'mask_zbin{zbin}_ns{nside}.fits.gz']:
+        assert os.path.isfile(os.path.join(plite, "DESwlMETACAL_" + fname))
+
+    # Check we recover the same mas and catalog
     # Non-exsisting fits files - read from lite
     config['data_catalogs'] = 'whatever'
-    cat_from_lite = xc.mappers.MapperDESY1wl(config).get_catalog()
+    m_lite = xc.mappers.MapperDESY1wl(config)
+    cat_from_lite = m_lite.get_catalog()
+    s_from_lite = m_lite.get_signal_map()
+    psf_from_lite = m_lite.get_signal_map('PSF')
+    mask_from_lite = m_lite.get_mask()
     assert np.all(cat == cat_from_lite)
+    assert np.all(np.array(s) == np.array(s_from_lite))
+    assert np.all(np.array(psf) == np.array(psf_from_lite))
+    assert np.all(mask == mask_from_lite)
+
+    # Clean lite
+    remove_lite(plite)
 
 
 def test_get_signal_map():
