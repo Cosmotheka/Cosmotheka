@@ -68,6 +68,19 @@ def get_cov_class(fsky=0.2):
 def test_smoke():
     get_cl_class()
     get_cov_class()
+    shutil.rmtree(tmpdir1)
+
+
+def test_get_nmtbin():
+    data = get_config()
+    cl1 = Cl(data, 'Dummy__0', 'Dummy__0')
+    shutil.rmtree(tmpdir1)
+    data['cls']['Dummy-Dummy']['bpw_edges'] = data.pop('bpw_edges')
+    cl2 = Cl(data, 'Dummy__0', 'Dummy__0')
+    shutil.rmtree(tmpdir1)
+    b1 = cl1.get_NmtBin()
+    b2 = cl2.get_NmtBin()
+    assert np.all(b1.get_effective_ells() == b2.get_effective_ells())
 
 
 def test_cov_nlmarg():
@@ -82,6 +95,7 @@ def test_cov_nlmarg():
     oo = np.ones(num_l)
     chi2 = np.dot(oo, np.linalg.solve(cov, oo))
     assert np.fabs(chi2) < 1E-5*num_l
+    shutil.rmtree(tmpdir2)
 
 
 def test_file_inconsistent_errors():
@@ -96,7 +110,7 @@ def test_file_inconsistent_errors():
     clo2 = Cl(data, 'Dummy__0', 'Dummy__0')
     with pytest.raises(ValueError):
         clo2.get_ell_cl()
-    os.remove(os.path.join(tmpdir1, 'data.yml'))
+    shutil.rmtree(tmpdir1)
 
 
 def test_get_ell_cl():
@@ -110,17 +124,18 @@ def test_get_ell_cl():
     cl_m1 = m1.get_cl()
     cl_m1_cp = w.couple_cell([cl_m1])
     cl_m1 = w.decouple_cell(cl_m1_cp)
+    shutil.rmtree(tmpdir1)
 
     # Compute covariance
     cov_class = get_cov_class()
     cov = cov_class.get_covariance()
+    shutil.rmtree(tmpdir1)
 
     # Check that true Cl is within 5sigma of data Cl
     sigma = np.sqrt(np.diag(cov))
 
     assert np.all(np.fabs(cl_m1 - cl) < 5 * sigma)
     assert np.all(cl_class.wins == w.get_bandpower_windows())
-    os.system("rm xcell/tests/cls/dummy1/*")
 
 
 def test_get_covariance():
@@ -155,7 +170,7 @@ def test_get_covariance():
     chi2_m = dCl.dot(icov_m).dot(dCl)
 
     assert np.fabs(chi2/chi2_m) - 1 < 0.01
-    os.system("rm xcell/tests/cls/dummy1/*")
+    shutil.rmtree(tmpdir1)
 
 
 def test_cls_vs_namaster():
@@ -164,10 +179,12 @@ def test_cls_vs_namaster():
     cl_class = get_cl_class()
     ell, cl_data = cl_class.get_ell_cl()
     b = cl_class.get_NmtBin()
+    shutil.rmtree(tmpdir1)
 
     # Compute covariance
     cov_class = get_cov_class()
     cov = cov_class.get_covariance()
+    shutil.rmtree(tmpdir1)
 
     # NaMaster
     config = get_config()
@@ -212,12 +229,12 @@ def test_cls_vs_namaster():
     win = cl_class.get_bandpower_windows()
     bpwin = wsp.get_bandpower_windows()
     assert np.all(win == bpwin)
-    os.system("rm xcell/tests/cls/dummy1/*")
 
 
 def test_symmetric():
     data = get_config()
     cl_class01 = Cl(data, 'Dummy__0', 'Dummy__1')
+    os.remove(os.path.join(tmpdir1, 'data.yml'))
     cl_class10 = Cl(data, 'Dummy__1', 'Dummy__0')
 
     assert np.all(np.array(cl_class01.get_masks()) ==
@@ -226,4 +243,4 @@ def test_symmetric():
     assert np.all(cl_class01.get_ell_nl()[1] == cl_class10.get_ell_nl()[1])
     assert np.all(cl_class01.get_ell_nl_cp()[1] ==
                   cl_class10.get_ell_nl_cp()[1])
-    os.system("rm xcell/tests/cls/dummy1/*")
+    shutil.rmtree(tmpdir1)
