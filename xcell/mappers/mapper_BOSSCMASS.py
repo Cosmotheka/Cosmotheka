@@ -1,5 +1,5 @@
 from .mapper_base import MapperBase
-from .utils import get_map_from_points
+from .mapper_base import MapperSDSS
 from astropy.io import fits
 from astropy.table import Table, vstack
 import numpy as np
@@ -7,17 +7,14 @@ import healpy as hp
 import pymaster as nmt
 import os
 
-
-class MapperBOSSCMASS(MapperBase):
+class MapperBOSSCMASS(MapperSDSS):
     def __init__(self, config):
         """
         config - dict
-          {'data_catalogs':['eBOSS_QSO_clustering_data-NGC-vDR16.fits'],
-           'random_catalogs':['eBOSS_QSO_clustering_random-NGC-vDR16.fits'],
-           'z_edges':[0, 1.5],
-           'nside':nside,
-           'nside_mask': nside_mask,
-           'mask_name': 'mask_QSO_NGC_1'}
+          {'data_catalogs':[data_path+'BOSSCMASS/galaxy_DR12v5_CMASS_North.fits.gz'], 
+          'random_catalogs':[data_path+'BOSSCMASS/random1_DR12v5_CMASS_North.fits.gz'],
+          'z_edges':[0, 1.5],
+          'nside':nside, 'nside_mask': nside_mask, 'mask_name': 'mask_CMASS_NGC_1'}
         """
         self._get_defaults(config)
 
@@ -26,7 +23,7 @@ class MapperBOSSCMASS(MapperBase):
         self.z_arr_dim = config.get('z_arr_dim', 50)
         self.nside_mask = config.get('nside_mask', 512)
         self.npix = hp.nside2npix(self.nside)
-        self.z_edges = config['z_edges']
+        self.mask_path = config['mask_path']
 
         self.ws = {'data': None, 'random': None}
         self.alpha = None
@@ -35,26 +32,6 @@ class MapperBOSSCMASS(MapperBase):
         self.delta_map = None
         self.nl_coupled = None
         self.mask = None
-
-    def get_catalog(self, mod='data'):
-        if mod == 'data':
-            data_file = self.config['data_catalogs']
-        else:
-            data_file = self.config['random_catalogs']
-
-        if self.cats[mod] is None:
-            cats = []
-            for file in data_file:
-                if not os.path.isfile(file):
-                    raise ValueError(f"File {file} not found")
-                with fits.open(file) as f:
-                    cats.append(self._bin_z(Table.read(f)))
-            self.cats[mod] = vstack(cats)
-        return self.cats[mod]
-
-    def _bin_z(self, cat):
-        return cat[(cat['Z'] >= self.z_edges[0]) &
-                   (cat['Z'] < self.z_edges[1])]
 
     def get_nz(self, dz=0):
         if self.dndz is None:
@@ -67,6 +44,22 @@ class MapperBOSSCMASS(MapperBase):
         z_dz = z + dz
         sel = z_dz >= 0
         return np.array([z_dz[sel], nz[sel]])
+    
+    def _get_w(self, mod='data'):
+        if self.ws[mod] is None:
+            cat = self.get_catalog(mod=mod)
+            cat_SYSTOT = np.array(cat['WEIGHT_SYSTOT'])
+            cat_CP = np.array(cat['WEIGHT_CP'])
+            cat_NOZ = np.array(cat['WEIGHT_NOZ'])
+            self.ws[mod] = cat_SYSTOT*cat_CP*cat_NOZ  # FKP left out
+        return self.ws[mod]
+    
+    def get_mask(self):
+        if self.mask is None:
+            self.mask = fits.open(self.mask_path)
+            self.mask = area_ratio * hp.ud_grade(self.mask,
+                                                 nside_out=self.nside)
+        return self.mask
 
     def get_dtype(self):
         return 'galaxy_density'

@@ -1,5 +1,10 @@
+import os
+import numpy as np
+import healpy as hp
 import pymaster as nmt
-
+from astropy.io import fits
+from astropy.table import Table, vstack
+from .utils import get_map_from_points
 
 class MapperBase(object):
     def __init__(self, config):
@@ -37,15 +42,23 @@ class MapperBase(object):
         return self.nmt_field
 
 class MapperSDSS(MapperBase):
-    
-    def _get_w(self, mod='data'):
-        if self.ws[mod] is None:
-            cat = self.get_catalog(mod=mod)
-            cat_SYSTOT = np.array(cat['WEIGHT_SYSTOT'])
-            cat_CP = np.array(cat['WEIGHT_CP'])
-            cat_NOZ = np.array(cat['WEIGHT_NOZ'])
-            self.ws[mod] = cat_SYSTOT*cat_CP*cat_NOZ  # FKP left out
-        return self.ws[mod]
+    def __init__(self):
+        return
+        
+    def get_catalog(self, mod='data'):
+        if mod == 'data':
+            data_file = self.config['data_catalogs']
+        else:
+            data_file = self.config['random_catalogs']
+        if self.cats[mod] is None:
+            cats = []
+            for file in data_file:
+                if not os.path.isfile(file):
+                    raise ValueError(f"File {file} not found")
+                with fits.open(file) as f:
+                    cats.append(self._bin_z(Table.read(f)))
+            self.cats[mod] = vstack(cats)
+        return self.cats[mod]
 
     def _get_alpha(self):
         if self.alpha is None:
@@ -71,21 +84,6 @@ class MapperSDSS(MapperBase):
             self.delta_map = (nmap_data - alpha * nmap_random)
             self.delta_map[goodpix] /= mask[goodpix]
         return [self.delta_map]
-
-    def get_mask(self):
-        if self.mask is None:
-            cat_random = self.get_catalog(mod='random')
-            w_random = self._get_w(mod='random')
-            alpha = self._get_alpha()
-            self.mask = get_map_from_points(cat_random,
-                                            self.nside_mask,
-                                            w=w_random)
-            self.mask *= alpha
-            # Account for different pixel areas
-            area_ratio = (self.nside_mask/self.nside)**2
-            self.mask = area_ratio * hp.ud_grade(self.mask,
-                                                 nside_out=self.nside)
-        return self.mask
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
