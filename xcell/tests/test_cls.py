@@ -1,7 +1,7 @@
 import shutil
 import os
 import numpy as np
-from xcell.cls.cl import Cl
+from xcell.cls.cl import Cl, ClFid
 from xcell.cls.cov import Cov
 import pymaster as nmt
 from xcell.mappers import MapperDummy
@@ -243,4 +243,13 @@ def test_symmetric():
     assert np.all(cl_class01.get_ell_nl()[1] == cl_class10.get_ell_nl()[1])
     assert np.all(cl_class01.get_ell_nl_cp()[1] ==
                   cl_class10.get_ell_nl_cp()[1])
+    shutil.rmtree(tmpdir1)
+
+
+def test_symmetric_fid():
+    data = get_config()
+    cl_class01 = ClFid(data, 'Dummy__0', 'Dummy__1')
+    os.remove(os.path.join(tmpdir1, 'data.yml'))
+    cl_class10 = ClFid(data, 'Dummy__1', 'Dummy__0')
+    assert np.all(cl_class01.get_ell_cl()[1] == cl_class10.get_ell_cl()[1])
     shutil.rmtree(tmpdir1)
