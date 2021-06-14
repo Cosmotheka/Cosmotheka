@@ -1,3 +1,4 @@
+import glob
 import pytest
 import os
 import yaml
@@ -32,8 +33,9 @@ def get_data_from_dict():
 
 def remove_yml_file(config):
     outdir = config['output']
-    fname = os.path.join(outdir, 'desy1_ebossqso_p18cmbk.yml')
-    os.remove(fname)
+    fname = os.path.join(outdir, '*.yml')
+    for f in glob.glob(fname):
+        os.remove(f)
 
 
 def test_initizalization():
@@ -41,6 +43,12 @@ def test_initizalization():
     config = read_yaml_file(input_file)
     with pytest.raises(ValueError):
         Data(input_file, data=config)
+
+    config['bpw_edges'] = [0, 10]
+    data2 = Data(data=config, override=True)
+    assert os.path.isfile('xcell/tests/cls/data.yml')
+    assert data2.data['bpw_edges'] == [0, 10]
+    remove_yml_file(config)
 
 
 def test_read_data():
