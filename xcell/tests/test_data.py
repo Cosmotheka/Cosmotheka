@@ -123,7 +123,7 @@ def test_get_cl_trs_names():
 
 def test_get_cov_trs_name():
     data = get_data()
-    config = data.data
+
     def assert_cls(wsp=False):
         cl_trs = data.get_cl_trs_names(wsp)
 
@@ -137,3 +137,31 @@ def test_get_cov_trs_name():
     assert_cls()
     assert_cls(True)
 
+
+def test_get_cov_ng_cl_tracers():
+    data = get_data()
+    config = data.data
+    cl_trs = data.get_cl_trs_names()
+
+    d = {}
+    for trs in config['cov']['ng']['order']:
+        d[trs] = []
+
+    for trs in cl_trs:
+        bn1 = data.get_tracer_bare_name(trs[0])
+        bn2 = data.get_tracer_bare_name(trs[1])
+        key = '-'.join([bn1, bn2])
+        if key in d:
+            d[key].append(trs)
+        else:
+            key = '-'.join([bn2, bn1])
+            d[key].append(trs)
+
+    # Order the tracers so that gc0 - wl0, gc1 - wl0, etc.
+    d['DESwl-DESgc'].sort(key=lambda x: x[1])
+
+    cl_trs_cov = []
+    for trs in config['cov']['ng']['order']:
+        cl_trs_cov.extend(d[trs])
+
+    assert cl_trs_cov == data.get_cov_ng_cl_tracers()
