@@ -76,3 +76,13 @@ def test_get_tracers_used():
     assert data.get_tracers_used(True) == ['DESgc__0', 'DESwl__0', 'DESwl__1',
                                            'DESwl__2', 'DESwl__3', 'PLAcv']
     remove_yml_file(data.data)
+
+
+def test_get_tracer_bare_name():
+    data = get_data()
+    config = data.data
+
+    for tr in config['tracers']:
+        bname = data.get_tracer_bare_name(tr)
+        assert tr.split('__')[0] == bname
+    remove_yml_file(data.data)
