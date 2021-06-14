@@ -1,8 +1,8 @@
 import pytest
 import os
-import shutil
 import yaml
 from xcell.cls.data import Data
+
 
 def read_yaml_file(file):
     with open(file) as f:
@@ -56,4 +56,23 @@ def test_read_saved_data():
     data = get_data()
     data2 = get_data()
     assert data.data == data2.data
+    remove_yml_file(data.data)
+
+
+def test_get_tracers_used():
+    data = get_data()
+    config = data.data
+    tracers_for_cl = data.get_tracers_used()
+
+    # In the xcell/tests/data/desy1_ebossqso_p18cmbk.yml file no eBOSS tracer
+    # is used.
+    trs = ['DESgc', 'DESwl', 'PLAcv']
+    tracers_for_cl_test = []
+    for tr in config['tracers']:
+        if tr.split('__')[0] in trs:
+            tracers_for_cl_test.append(tr)
+
+    assert tracers_for_cl == tracers_for_cl_test
+    assert data.get_tracers_used(True) == ['DESgc__0', 'DESwl__0', 'DESwl__1',
+                                           'DESwl__2', 'DESwl__3', 'PLAcv']
     remove_yml_file(data.data)

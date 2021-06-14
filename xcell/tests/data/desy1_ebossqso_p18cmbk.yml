@@ -160,9 +160,9 @@ cls:
   DESwl-PLAcv:
     compute: 'all'
   eBOSS-eBOSS:
-    compute: 'auto'
+    compute: 'None'
   eBOSS-PLAcv:
-    compute: 'all'
+    compute: 'None'
   PLAcv-PLAcv:
     compute: 'None'
 
