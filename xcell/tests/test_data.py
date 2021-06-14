@@ -44,7 +44,8 @@ def remove_outdir(config):
     if outdir != './xcell/tests/cls/':
         raise ValueError('Outdir looks odd. Not removing it as precaution')
     # Using os.rmdir as it will only remove an empty directory
-    os.rmdir(outdir)
+    elif os.path.isdir(outdir):
+        os.rmdir(outdir)
 
 
 def test_initizalization():
