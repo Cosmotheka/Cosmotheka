@@ -24,8 +24,7 @@ class MapperP18CMBK(MapperBase):
         self.mask_aposize = config.get('mask_aposize', 0.2)
         self.path_lite = config.get('path_lite', None)
 
-        # Read noise file. Column order is: ['l', 'Nl', 'Nl+Cl']
-        self.noise = np.loadtxt(self.config['file_noise'], unpack=True)
+        self.noise = None
 
         # Galactic-to-celestial coordinate rotator
         self.r = hp.Rotator(coord=['G', 'C'])
@@ -80,8 +79,9 @@ class MapperP18CMBK(MapperBase):
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             ell = self.get_ell()
-            nl = self.noise[1]
-            nl = interp1d(self.noise[0], nl, bounds_error=False,
+            noise = self._get_noise()
+            nl = noise[1]
+            nl = interp1d(noise[0], nl, bounds_error=False,
                           fill_value=(nl[0], nl[-1]))(ell)
 
             # The Nl in the file is decoupled. To "couple" it, multiply by the
@@ -94,17 +94,25 @@ class MapperP18CMBK(MapperBase):
     def get_cl_fiducial(self):
         if self.cl_fid is None:
             ell = self.get_ell()
-            cl = self.noise[2] - self.noise[1]
+            noise = self._get_noise()
+            cl = noise[2] - noise[1]
             cl = interp1d(self.noise[0], cl, bounds_error=False,
                           fill_value=(cl[0], cl[-1]))(ell)
             self.cl_fid = np.array([cl])
         return self.cl_fid
 
+    def _get_noise(self):
+        if self.noise is None:
+            # Read noise file. Column order is: ['l', 'Nl', 'Nl+Cl']
+            self.noise = np.loadtxt(self.config['file_noise'], unpack=True)
+
+        return self.noise
+
     def get_ell(self):
         return np.arange(3 * self.nside)
 
     def get_ells_in_table(self):
-        return self.noise[0]
+        return self._get_noise()[0]
 
     def get_dtype(self):
         return 'cmb_convergence'
