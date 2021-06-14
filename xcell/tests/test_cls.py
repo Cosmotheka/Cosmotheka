@@ -6,6 +6,7 @@ from xcell.cls.cov import Cov
 import pymaster as nmt
 from xcell.mappers import MapperDummy
 import pytest
+import pyccl as ccl
 
 
 # Remove previous test results
@@ -17,7 +18,9 @@ if os.path.isdir(tmpdir2):
     shutil.rmtree(tmpdir2)
 
 
-def get_config(fsky=0.2, fsky2=0.3):
+def get_config(fsky=0.2, fsky2=0.3,
+               dtype='galaxy_density',
+               dtype2='galaxy_density'):
     nside = 32
     # Set only the necessary entries. Leave the others to their default value.
     cosmo = {
@@ -65,13 +68,13 @@ def get_cov_class(fsky=0.2):
     return Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
 
 
-def test_smoke():
+def atest_smoke():
     get_cl_class()
     get_cov_class()
     shutil.rmtree(tmpdir1)
 
 
-def test_get_nmtbin():
+def atest_get_nmtbin():
     data = get_config()
     cl1 = Cl(data, 'Dummy__0', 'Dummy__0')
     shutil.rmtree(tmpdir1)
@@ -83,7 +86,7 @@ def test_get_nmtbin():
     assert np.all(b1.get_effective_ells() == b2.get_effective_ells())
 
 
-def test_cov_nlmarg():
+def atest_cov_nlmarg():
     data = get_config(0.2)
     data['tracers']['Dummy__0']['nl_marginalize'] = True
     data['tracers']['Dummy__0']['nl_prior'] = 1E30
@@ -98,7 +101,7 @@ def test_cov_nlmarg():
     shutil.rmtree(tmpdir2)
 
 
-def test_file_inconsistent_errors():
+def atest_file_inconsistent_errors():
     clo = get_cl_class()
     ell, cl = clo.get_ell_cl()
     # Change bpws and try to read file
@@ -113,7 +116,7 @@ def test_file_inconsistent_errors():
     shutil.rmtree(tmpdir1)
 
 
-def test_get_ell_cl():
+def atest_get_ell_cl():
     # Get cl from map
     cl_class = get_cl_class()
     ell, cl = cl_class.get_ell_cl()
@@ -138,7 +141,7 @@ def test_get_ell_cl():
     assert np.all(cl_class.wins == w.get_bandpower_windows())
 
 
-def test_get_covariance():
+def atest_get_covariance():
     # Get cl from randomnly generated map ("data")
     cl_class = get_cl_class(fsky=1)
     ell, cl_data = cl_class.get_ell_cl()
@@ -173,7 +176,7 @@ def test_get_covariance():
     shutil.rmtree(tmpdir1)
 
 
-def test_cls_vs_namaster():
+def atest_cls_vs_namaster():
     # cls
     # Get cl from randomnly generated map ("data")
     cl_class = get_cl_class()
@@ -231,7 +234,7 @@ def test_cls_vs_namaster():
     assert np.all(win == bpwin)
 
 
-def test_symmetric():
+def atest_symmetric():
     data = get_config()
     cl_class01 = Cl(data, 'Dummy__0', 'Dummy__1')
     os.remove(os.path.join(tmpdir1, 'data.yml'))
@@ -246,10 +249,55 @@ def test_symmetric():
     shutil.rmtree(tmpdir1)
 
 
-def test_symmetric_fid():
+def atest_symmetric_fid():
     data = get_config()
     cl_class01 = ClFid(data, 'Dummy__0', 'Dummy__1')
     os.remove(os.path.join(tmpdir1, 'data.yml'))
     cl_class10 = ClFid(data, 'Dummy__1', 'Dummy__0')
     assert np.all(cl_class01.get_ell_cl()[1] == cl_class10.get_ell_cl()[1])
     shutil.rmtree(tmpdir1)
+
+
+@pytest.mark.parametrize('tr1,tr2', [('galaxy_density', 'galaxy_density'),
+                                     ('galaxy_density', 'galaxy_shear'),
+                                     ('galaxy_density', 'cmb_convergence'),
+                                     ('galaxy_shear', 'galaxy_shear'),
+                                     ('galaxy_shear', 'cmb_convergence'),
+                                     ('cmb_convergence', 'cmb_convergence')])
+def test_clfid_against_ccl(tr1, tr2):
+    data = get_config()
+    data['tracers']['Dummy__0']['dtype'] = tr1
+    if tr1 == 'galaxy_density':
+        data['tracers']['Dummy__0']['bias'] = 1.
+    elif tr1 == 'galaxy_shear':
+        data['tracers']['Dummy__0']['m'] = 0.
+    data['tracers']['Dummy__1']['dtype'] = tr2
+    if tr2 == 'galaxy_density':
+        data['tracers']['Dummy__1']['bias'] = 1.
+    elif tr2 == 'galaxy_shear':
+        data['tracers']['Dummy__1']['m'] = 0.
+
+    cosmo = ccl.Cosmology(**data['cov']['fiducial']['cosmo'])
+    clf = ClFid(data, 'Dummy__0', 'Dummy__1')
+    d = clf.get_cl_file()
+    shutil.rmtree(tmpdir1)
+
+    def get_ccl_tracer(tr):
+        if tr == 'galaxy_density':
+            z, nz = np.loadtxt('xcell/tests/data/DESY1gc_dndz_bin0.txt',
+                               usecols=(1, 3), unpack=True)
+            t = ccl.NumberCountsTracer(cosmo, False, dndz=(z, nz),
+                                       bias=(z, np.ones_like(z)))
+        elif tr == 'galaxy_shear':
+            z, nz = np.loadtxt('xcell/tests/data/Nz_DIR_z0.1t0.3.asc',
+                               usecols=(0, 1), unpack=True)
+            t = ccl.WeakLensingTracer(cosmo, dndz=(z, nz))
+        elif tr == 'cmb_convergence':
+            t = ccl.CMBLensingTracer(cosmo, z_source=1100.)
+        return t
+
+    t1 = get_ccl_tracer(tr1)
+    t2 = get_ccl_tracer(tr2)
+    clb = ccl.angular_cl(cosmo, t1, t2, d['ell'])
+
+    assert np.all(np.fabs(clb[2:]/d['cl'][0][2:]-1) < 1E-5)
