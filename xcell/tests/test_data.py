@@ -39,6 +39,14 @@ def remove_yml_file(config):
         os.remove(f)
 
 
+def remove_outdir(config):
+    outdir = config['output']
+    if outdir != './xcell/tests/cls/':
+        raise ValueError('Outdir looks odd. Not removing it as precaution')
+    # Using os.rmdir as it will only remove an empty directory
+    os.rmdir(outdir)
+
+
 def test_initizalization():
     input_file = get_input_file()
     config = read_yaml_file(input_file)
@@ -120,6 +128,7 @@ def test_get_cl_trs_names():
 
     assert_cls()
     assert_cls(True)
+    remove_yml_file(config)
 
 
 def test_get_cov_trs_name():
@@ -137,6 +146,7 @@ def test_get_cov_trs_name():
 
     assert_cls()
     assert_cls(True)
+    remove_yml_file(data.data)
 
 
 def test_get_cov_ng_cl_tracers():
@@ -166,6 +176,7 @@ def test_get_cov_ng_cl_tracers():
         cl_trs_cov.extend(d[trs])
 
     assert cl_trs_cov == data.get_cov_ng_cl_tracers()
+    remove_yml_file(config)
 
 
 def test_filter_tracers_wsp():
@@ -182,6 +193,7 @@ def test_filter_tracers_wsp():
             trs_mask.append(mask_name)
 
     assert trs_wsp == data.filter_tracers_wsp(all_tracers)
+    remove_yml_file(config)
 
 
 def test_check_toeplitz():
@@ -210,7 +222,15 @@ def test_get_mapper():
         m = data.get_mapper(tr)
         assert isinstance(m, mapper_from_name(class_name))
 
+    remove_yml_file(config)
+
 
 def test_read_symmetric():
     data = get_data()
     assert data.read_symmetric('DESwl__3', 'DESgc__0')
+
+    remove_yml_file(data.data)
+
+
+# Remove outdir
+remove_outdir(get_config_dict())
