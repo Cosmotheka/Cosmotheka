@@ -94,3 +94,28 @@ def test_get_tracer_bare_name():
         bname = data.get_tracer_bare_name(tr)
         assert tr.split('__')[0] == bname
     remove_yml_file(data.data)
+
+
+def test_get_cl_trs_names():
+    data = get_data()
+    config = data.data
+
+    def assert_cls(wsp=False):
+        cl_trs = data.get_cl_trs_names(wsp)
+
+        cl_trs_test = []
+        trs = data.get_tracers_used(wsp)
+        for i, tri in enumerate(trs):
+            for trj in trs[i:]:
+                bn1 = data.get_tracer_bare_name(tri)
+                bn2 = data.get_tracer_bare_name(trj)
+                key = '-'.join([bn1, bn2])
+                if (config['cls'][key]['compute'] == 'auto') and (tri == trj):
+                    cl_trs_test.append((tri, trj))
+                elif config['cls'][key]['compute'] == 'all':
+                    cl_trs_test.append((tri, trj))
+
+        assert cl_trs == cl_trs_test
+
+    assert_cls()
+    assert_cls(True)
