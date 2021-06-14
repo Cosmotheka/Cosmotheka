@@ -183,6 +183,7 @@ def test_filter_tracers_wsp():
 
     assert trs_wsp == data.filter_tracers_wsp(all_tracers)
 
+
 def test_check_toeplitz():
     data = get_data()
     config = get_config_dict()
@@ -208,3 +209,8 @@ def test_get_mapper():
         class_name = val['mapper_class']
         m = data.get_mapper(tr)
         assert isinstance(m, mapper_from_name(class_name))
+
+
+def test_read_symmetric():
+    data = get_data()
+    assert data.read_symmetric('DESwl__3', 'DESgc__0')
