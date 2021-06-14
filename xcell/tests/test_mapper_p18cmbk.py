@@ -1,6 +1,7 @@
 import xcell as xc
 import numpy as np
 import os
+import shutil
 
 
 def get_config():
@@ -50,7 +51,7 @@ def test_get_mask():
     m2 = xc.mappers.MapperP18CMBK(c)
     d2 = m2.get_mask()
     assert np.all(np.fabs(d-d2) < 1E-10)
-    os.system('rm -r ./lite')
+    shutil.rmtree('./lite')
 
 
 def test_get_nl_coupled():
