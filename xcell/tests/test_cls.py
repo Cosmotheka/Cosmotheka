@@ -68,13 +68,13 @@ def get_cov_class(fsky=0.2):
     return Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
 
 
-def atest_smoke():
+def test_smoke():
     get_cl_class()
     get_cov_class()
     shutil.rmtree(tmpdir1)
 
 
-def atest_get_nmtbin():
+def test_get_nmtbin():
     data = get_config()
     cl1 = Cl(data, 'Dummy__0', 'Dummy__0')
     shutil.rmtree(tmpdir1)
@@ -86,7 +86,7 @@ def atest_get_nmtbin():
     assert np.all(b1.get_effective_ells() == b2.get_effective_ells())
 
 
-def atest_cov_nlmarg():
+def test_cov_nlmarg():
     data = get_config(0.2)
     data['tracers']['Dummy__0']['nl_marginalize'] = True
     data['tracers']['Dummy__0']['nl_prior'] = 1E30
@@ -101,7 +101,7 @@ def atest_cov_nlmarg():
     shutil.rmtree(tmpdir2)
 
 
-def atest_file_inconsistent_errors():
+def test_file_inconsistent_errors():
     clo = get_cl_class()
     ell, cl = clo.get_ell_cl()
     # Change bpws and try to read file
@@ -116,7 +116,7 @@ def atest_file_inconsistent_errors():
     shutil.rmtree(tmpdir1)
 
 
-def atest_get_ell_cl():
+def test_get_ell_cl():
     # Get cl from map
     cl_class = get_cl_class()
     ell, cl = cl_class.get_ell_cl()
@@ -141,7 +141,7 @@ def atest_get_ell_cl():
     assert np.all(cl_class.wins == w.get_bandpower_windows())
 
 
-def atest_get_covariance():
+def test_get_covariance():
     # Get cl from randomnly generated map ("data")
     cl_class = get_cl_class(fsky=1)
     ell, cl_data = cl_class.get_ell_cl()
@@ -176,7 +176,7 @@ def atest_get_covariance():
     shutil.rmtree(tmpdir1)
 
 
-def atest_cls_vs_namaster():
+def test_cls_vs_namaster():
     # cls
     # Get cl from randomnly generated map ("data")
     cl_class = get_cl_class()
@@ -234,7 +234,7 @@ def atest_cls_vs_namaster():
     assert np.all(win == bpwin)
 
 
-def atest_symmetric():
+def test_symmetric():
     data = get_config()
     cl_class01 = Cl(data, 'Dummy__0', 'Dummy__1')
     os.remove(os.path.join(tmpdir1, 'data.yml'))
@@ -249,13 +249,23 @@ def atest_symmetric():
     shutil.rmtree(tmpdir1)
 
 
-def atest_symmetric_fid():
+def test_symmetric_fid():
     data = get_config()
     cl_class01 = ClFid(data, 'Dummy__0', 'Dummy__1')
     os.remove(os.path.join(tmpdir1, 'data.yml'))
     cl_class10 = ClFid(data, 'Dummy__1', 'Dummy__0')
     assert np.all(cl_class01.get_ell_cl()[1] == cl_class10.get_ell_cl()[1])
     shutil.rmtree(tmpdir1)
+
+
+def test_cov_nonoverlap():
+    data = get_config(fsky=0.2, fsky2=0.2)
+    data['tracers']['Dummy__0']['dec0'] = 0.
+    data['tracers']['Dummy__1']['dec0'] = 180.
+    covc = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__1', 'Dummy__1')
+    cov = covc.get_covariance()
+    shutil.rmtree(tmpdir1)
+    assert np.all(cov == 0)
 
 
 @pytest.mark.parametrize('tr1,tr2', [('galaxy_density', 'galaxy_density'),
