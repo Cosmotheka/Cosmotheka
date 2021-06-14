@@ -1,6 +1,5 @@
 import xcell as xc
 import numpy as np
-import os
 import shutil
 
 
