@@ -119,3 +119,21 @@ def test_get_cl_trs_names():
 
     assert_cls()
     assert_cls(True)
+
+
+def test_get_cov_trs_name():
+    data = get_data()
+    config = data.data
+    def assert_cls(wsp=False):
+        cl_trs = data.get_cl_trs_names(wsp)
+
+        cov_trs_test = []
+        for i, trsi in enumerate(cl_trs):
+            for trsj in cl_trs[i:]:
+                cov_trs_test.append((*trsi, *trsj))
+
+        assert cov_trs_test == data.get_cov_trs_names(wsp)
+
+    assert_cls()
+    assert_cls(True)
+
