@@ -182,3 +182,16 @@ def test_filter_tracers_wsp():
 
     assert trs_wsp == data.filter_tracers_wsp(all_tracers)
 
+def test_check_toeplitz():
+    data = get_data()
+    config = get_config_dict()
+
+    assert (-1, -1, -1) == data.check_toeplitz('cls')
+    assert (2750, 1000, 2000) == data.check_toeplitz('cov')
+
+    remove_yml_file(config)
+
+    del config['toeplitz']
+    data = Data(data=config)
+    assert (-1, -1, -1) == data.check_toeplitz('cls')
+    assert (-1, -1, -1) == data.check_toeplitz('cov')

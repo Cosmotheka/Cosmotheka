@@ -200,9 +200,9 @@ toeplitz:
     l_exact: -1
     dl_band: -1
   cov:
-    l_toeplitz: -1
-    l_exact: -1
-    dl_band: -1
+    l_toeplitz: 2750
+    l_exact: 1000
+    dl_band: 2000
 
 healpy:
   n_iter_sht: 0
