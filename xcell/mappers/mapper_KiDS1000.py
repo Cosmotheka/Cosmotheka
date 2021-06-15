@@ -37,7 +37,7 @@ class MapperKiDS1000(MapperBase):
         self.w2s2 = None
         self.w2s2s = {'PSF': None, 'shear': None, 'stars': None}
 
-        self.dndz = np.loadtxt(self.config['file_nz'], unpack=True)[:2]
+        self.dndz = None
         self.sel = {'galaxies': 1, 'stars': 0}
 
         self.signal_map = None
@@ -250,6 +250,9 @@ class MapperKiDS1000(MapperBase):
         return self.nl_coupled
 
     def get_nz(self, dz=0):
+        if self.dndz is None:
+            self.dndz = np.loadtxt(self.config['file_nz'], unpack=True)[:2]
+
         if not dz:
             return self.dndz
 

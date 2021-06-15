@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from .cl import Cl, ClFid
-from .common import Data
+from .data import Data
 import os
 import numpy as np
 import pymaster as nmt
