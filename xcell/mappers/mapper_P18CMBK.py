@@ -96,7 +96,7 @@ class MapperP18CMBK(MapperBase):
             ell = self.get_ell()
             noise = self._get_noise()
             cl = noise[2] - noise[1]
-            cl = interp1d(self.noise[0], cl, bounds_error=False,
+            cl = interp1d(noise[0], cl, bounds_error=False,
                           fill_value=(cl[0], cl[-1]))(ell)
             self.cl_fid = np.array([cl])
         return self.cl_fid

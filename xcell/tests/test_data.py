@@ -72,7 +72,10 @@ def test_read_data():
 
 def test_read_saved_data():
     data = get_data()
-    data2 = get_data()
+    config = get_config_dict()
+    config['bpw_edges'] = [0, 10]
+    # Since there's a yml saved in outdir, it will read it instead of config
+    data2 = Data(data=config)
     assert data.data == data2.data
     remove_yml_file(data.data)
 
@@ -106,47 +109,43 @@ def test_get_tracer_bare_name():
     remove_yml_file(data.data)
 
 
-def test_get_cl_trs_names():
+@pytest.mark.parametrize('wsp', [True, False])
+def test_get_cl_trs_names(wsp):
     data = get_data()
     config = data.data
 
-    def assert_cls(wsp=False):
-        cl_trs = data.get_cl_trs_names(wsp)
+    cl_trs = data.get_cl_trs_names(wsp)
 
-        cl_trs_test = []
-        trs = data.get_tracers_used(wsp)
-        for i, tri in enumerate(trs):
-            for trj in trs[i:]:
-                bn1 = data.get_tracer_bare_name(tri)
-                bn2 = data.get_tracer_bare_name(trj)
-                key = '-'.join([bn1, bn2])
-                if (config['cls'][key]['compute'] == 'auto') and (tri == trj):
-                    cl_trs_test.append((tri, trj))
-                elif config['cls'][key]['compute'] == 'all':
-                    cl_trs_test.append((tri, trj))
+    cl_trs_test = []
+    trs = data.get_tracers_used(wsp)
+    for i, tri in enumerate(trs):
+        for trj in trs[i:]:
+            bn1 = data.get_tracer_bare_name(tri)
+            bn2 = data.get_tracer_bare_name(trj)
+            key = '-'.join([bn1, bn2])
+            if (config['cls'][key]['compute'] == 'auto') and (tri == trj):
+                cl_trs_test.append((tri, trj))
+            elif config['cls'][key]['compute'] == 'all':
+                cl_trs_test.append((tri, trj))
 
-        assert cl_trs == cl_trs_test
+    assert cl_trs == cl_trs_test
 
-    assert_cls()
-    assert_cls(True)
     remove_yml_file(config)
 
 
-def test_get_cov_trs_name():
+@pytest.mark.parametrize('wsp', [True, False])
+def test_get_cov_trs_name(wsp):
     data = get_data()
 
-    def assert_cls(wsp=False):
-        cl_trs = data.get_cl_trs_names(wsp)
+    cl_trs = data.get_cl_trs_names(wsp)
 
-        cov_trs_test = []
-        for i, trsi in enumerate(cl_trs):
-            for trsj in cl_trs[i:]:
-                cov_trs_test.append((*trsi, *trsj))
+    cov_trs_test = []
+    for i, trsi in enumerate(cl_trs):
+        for trsj in cl_trs[i:]:
+            cov_trs_test.append((*trsi, *trsj))
 
-        assert cov_trs_test == data.get_cov_trs_names(wsp)
+    assert cov_trs_test == data.get_cov_trs_names(wsp)
 
-    assert_cls()
-    assert_cls(True)
     remove_yml_file(data.data)
 
 
