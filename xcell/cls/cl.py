@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from .common import Data
+from .data import Data
 import numpy as np
 import pyccl as ccl
 import pymaster as nmt

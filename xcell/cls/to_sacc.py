@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from .cl import Cl, ClFid
 from .cov import Cov
-from .common import Data
+from .data import Data
 from ..mappers import mapper_from_name
 import numpy as np
 import sacc
