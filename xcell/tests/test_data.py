@@ -51,6 +51,8 @@ def remove_outdir(config):
 def test_initizalization():
     input_file = get_input_file()
     config = read_yaml_file(input_file)
+    # Check that inputting both a file path and config dictionary rieses an
+    # error
     with pytest.raises(ValueError):
         Data(input_file, data=config)
 
