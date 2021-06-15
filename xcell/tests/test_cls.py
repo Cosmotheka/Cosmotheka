@@ -270,39 +270,57 @@ def test_cov_nonoverlap():
     assert np.all(cov == 0)
 
 
-def test_cov_spin0():
+@pytest.mark.parametrize('perm', [
+    [0, 0, 0, 1],  # 00, 02
+    [0, 0, 1, 1],  # 00, 22
+    [0, 1, 0, 0],  # 02, 00
+    [0, 1, 0, 1],  # 02, 02
+    [0, 1, 1, 1],  # 02, 22
+    [1, 1, 0, 0],  # 22, 00
+    [1, 1, 0, 1],  # 22, 02
+    [1, 1, 1, 1]])  # 22, 22
+def test_cov_spin0(perm):
+    nmp = [1, 2]
+    nmaps = [nmp[p] for p in perm]
+    ncls1 = nmaps[0]*nmaps[1]
+    ncls2 = nmaps[2]*nmaps[3]
     data = get_config(fsky=1., fsky2=1.,
-                      dtype='galaxy_shear',
+                      dtype='galaxy_density',
                       dtype2='galaxy_shear')
-    data['tracers']['Dummy__0']['noise_level'] = 1E-10
+    data['tracers']['Dummy__0']['noise_level'] = 1E-5
     data['tracers']['Dummy__1']['noise_level'] = 1E-10
     nbpw = len(data['bpw_edges'])
 
     # Spin-2 covariance class
     covc2 = Cov(data,
-                'Dummy__0', 'Dummy__0',
-                'Dummy__0', 'Dummy__0')
+                f'Dummy__{perm[0]}',
+                f'Dummy__{perm[1]}',
+                f'Dummy__{perm[2]}',
+                f'Dummy__{perm[3]}')
     assert not covc2.spin0
     cov2 = covc2.get_covariance()
-    assert cov2.shape == (4*nbpw, 4*nbpw)
+    assert cov2.shape == (ncls1*nbpw, ncls2*nbpw)
     shutil.rmtree(tmpdir1)
 
     # Spin-0 covariance class
     data['cov']['spin0'] = True
     covc0 = Cov(data,
-                'Dummy__0', 'Dummy__0',
-                'Dummy__0', 'Dummy__0')
+                f'Dummy__{perm[0]}',
+                f'Dummy__{perm[1]}',
+                f'Dummy__{perm[2]}',
+                f'Dummy__{perm[3]}')
     assert covc0.spin0
     cov0 = covc0.get_covariance()
-    assert cov0.shape == (4*nbpw, 4*nbpw)
+    assert cov0.shape == (ncls1*nbpw, ncls2*nbpw)
     shutil.rmtree(tmpdir1)
 
-    # Check that they are the same on all bandpowers
-    # except the first one
-    r = np.diag(cov2)/np.diag(cov0)-1
-    # This loops through EE, EB, BE, BB
-    for i in range(4):
-        assert np.all(r[i::4][1:] < 1E-5)
+    if ncls1 == ncls2:
+        # Check that they are the same on all bandpowers
+        # except the first one
+        r = np.diag(cov2)/np.diag(cov0)-1
+        # This loops through EE, EB, BE, BB
+        for i in range(ncls1):
+            assert np.all(r[i::ncls1][1:] < 1E-5)
 
 
 @pytest.mark.parametrize('tr1,tr2', [('galaxy_density', 'galaxy_density'),
