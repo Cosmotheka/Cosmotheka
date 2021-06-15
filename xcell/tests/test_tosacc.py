@@ -6,6 +6,7 @@ import shutil
 from xcell.cls.to_sacc import sfile
 from xcell.cls.data import Data
 from xcell.cls.cl import Cl, ClFid
+from xcell.cls.cov import Cov
 
 # Remove previous test results
 tmpdir = './xcell/tests/cls/dummy1'
@@ -17,7 +18,7 @@ def remove_tmpdir():
 
 
 def get_config(fsky0=0.2, fsky1=0.3, dtype0='galaxy_density',
-               dtype1='galaxy_density'):
+               dtype1='galaxy_shear'):
     nside = 32
     # Set only the necessary entries. Leave the others to their default
     # value.
@@ -55,13 +56,13 @@ def get_config(fsky0=0.2, fsky1=0.3, dtype0='galaxy_density',
 
 
 def get_data(fsky=0.2, fsky2=0.3, dtype0='galaxy_density',
-             dtype1='galaxy_density'):
+             dtype1='galaxy_shear'):
     config = get_config(fsky, fsky2, dtype0, dtype1)
     return Data(data=config)
 
 
 def get_sfile(use='cls', m_marg=False, fsky0=0.2, fsky1=0.3, dtype0='galaxy_density',
-               dtype1='galaxy_density'):
+               dtype1='galaxy_shear'):
     # Generate data.yml file
     data = get_data(dtype0=dtype0, dtype1=dtype1)
     datafile = os.path.join(data.data['output'], 'data.yml')
@@ -82,6 +83,7 @@ def test_init(use):
 
 
 @pytest.mark.parametrize('dt1, dt2', [('galaxy_density', 'galaxy_shear'),
+                                      ('galaxy_shear', 'cmb_convergence'),
                                       ('galaxy_density', 'cmb_convergence')])
 def test_added_tracers(dt1, dt2):
     s = get_sfile(dtype0=dt1, dtype1=dt2)
@@ -106,12 +108,46 @@ def test_added_tracers(dt1, dt2):
             raise ValueError('Tracer not implemented')
 
 
-# @pytest.mark.parametrize('use', ['cls', 'nl', 'fiducial'])
-# def test_ell_cl(use):
-#     s = get_sfile(use)
-#     data = get_data()
-#     for trs in data.get_cl_trs_names():
-#         s.s.get_ell_cl()
+@pytest.mark.parametrize('use', ['cls', 'nl'])
+def test_ell_cl_autocov(use):
+    s = get_sfile(use)
+    data = get_data()
+    for dtype in s.s.get_data_types():
+        for trs in s.s.get_tracer_combinations(dtype):
+            ixd = {'cl_00': 0, 'cl_0e': 0, 'cl_0b': 1, 'cl_ee': 0}
+            if dtype in ['cl_00', 'cl_0e', 'cl_ee']:
+                ix = 0
+            elif dtype in ['cl_0b', 'cl_eb']:
+                ix = 1
+            elif dtype in ['cl_be']:
+                ix = 2
+            elif dtype in ['cl_bb']:
+                ix = 3
+            else:
+                raise ValueError(f'data_type {dtype} must be weird!')
+
+            if use == 'fiducial':
+                cl_class = ClFid(data.data, *trs)
+            else:
+                cl_class = Cl(data.data, *trs)
+
+            if use == 'nl':
+                ell, cl = s.s.get_ell_cl(dtype, trs[0], trs[1])
+                ell2, cl2 = cl_class.get_ell_nl()
+            else:
+                ell, cl, cov = s.s.get_ell_cl(dtype, trs[0], trs[1],
+                                              return_cov=True)
+                ell2, cl2 = cl_class.get_ell_cl()
+                cov_class = Cov(data.data, *trs, *trs)
+                nbpw = ell2.size
+                ncls = cl2.shape[0]
+                cov2 = cov_class.get_covariance()
+                cov2 = cov2.reshape((nbpw, ncls, nbpw, ncls))[:, ix, :, ix]
+                assert np.max(np.abs((cov - cov2) / np.mean(cov))) < 1e-5
+
+            assert np.all(ell == ell2)
+            assert np.all(cl == cl2[ix])
+
 
 if os.path.isdir(tmpdir):
     shutil.rmtree(tmpdir)
