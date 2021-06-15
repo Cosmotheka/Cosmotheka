@@ -158,7 +158,10 @@ class MapperDummy(MapperBase):
         if self.nl_coupled is None:
             # Coupled analytical noise bias
             self.nl_coupled = np.zeros((self.nmaps*self.nmaps,
-                                        3*self.nside)) + self.noise_level
+                                        3*self.nside))
+            self.nl_coupled[0] += self.noise_level
+            if self.nmaps == 2:
+                self.nl_coupled[-1] += self.noise_level
         return self.nl_coupled
 
     def get_dtype(self):

@@ -37,9 +37,11 @@ def get_config(fsky=0.2, fsky2=0.3,
         'baryons_power_spectrum': 'nobaryons',
     }
     dummy0 = {'mask_name': 'mask_dummy0', 'mapper_class': 'MapperDummy',
-              'cosmo': cosmo, 'nside': nside, 'fsky': fsky, 'seed': 0}
+              'cosmo': cosmo, 'nside': nside, 'fsky': fsky, 'seed': 0,
+              'dtype': dtype}
     dummy1 = {'mask_name': 'mask_dummy1', 'mapper_class': 'MapperDummy',
-              'cosmo': cosmo, 'nside': nside, 'fsky': fsky2, 'seed': 100}
+              'cosmo': cosmo, 'nside': nside, 'fsky': fsky2, 'seed': 100,
+              'dtype': dtype2}
     bpw_edges = list(range(0, 3 * nside, 4))
 
     return {'tracers': {'Dummy__0': dummy0, 'Dummy__1': dummy1},
@@ -266,6 +268,41 @@ def test_cov_nonoverlap():
     cov = covc.get_covariance()
     shutil.rmtree(tmpdir1)
     assert np.all(cov == 0)
+
+
+def test_cov_spin0():
+    data = get_config(fsky=1., fsky2=1.,
+                      dtype='galaxy_shear',
+                      dtype2='galaxy_shear')
+    data['tracers']['Dummy__0']['noise_level'] = 1E-10
+    data['tracers']['Dummy__1']['noise_level'] = 1E-10
+    nbpw = len(data['bpw_edges'])
+
+    # Spin-2 covariance class
+    covc2 = Cov(data,
+                'Dummy__0', 'Dummy__0',
+                'Dummy__0', 'Dummy__0')
+    assert not covc2.spin0
+    cov2 = covc2.get_covariance()
+    assert cov2.shape == (4*nbpw, 4*nbpw)
+    shutil.rmtree(tmpdir1)
+
+    # Spin-0 covariance class
+    data['cov']['spin0'] = True
+    covc0 = Cov(data,
+                'Dummy__0', 'Dummy__0',
+                'Dummy__0', 'Dummy__0')
+    assert covc0.spin0
+    cov0 = covc0.get_covariance()
+    assert cov0.shape == (4*nbpw, 4*nbpw)
+    shutil.rmtree(tmpdir1)
+
+    # Check that they are the same on all bandpowers
+    # except the first one
+    r = np.diag(cov2)/np.diag(cov0)-1
+    # This loops through EE, EB, BE, BB
+    for i in range(4):
+        assert np.all(r[i::4][1:] < 1E-5)
 
 
 @pytest.mark.parametrize('tr1,tr2', [('galaxy_density', 'galaxy_density'),

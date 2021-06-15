@@ -109,52 +109,60 @@ class Cov():
     def _get_covariance_spin0_approx(self, cw,  s_a1, s_a2, s_b1, s_b2, cla1b1,
                                      cla1b2, cla2b1, cla2b2, wa, wb):
 
-        cov_e = nmt.gaussian_covariance(cw, 0, 0, 0, 0,
-                                        [cla1b1[0]], [cla1b2[0]],
-                                        [cla2b1[0]], [cla2b2[0]],
-                                        wa, wb)
-        cov_b = nmt.gaussian_covariance(cw, 0, 0, 0, 0,
-                                        [cla1b1[-1]], [cla1b2[-1]],
-                                        [cla2b1[-1]], [cla2b2[-1]],
-                                        wa, wb)
-        nbpw_a, nbpw_b = cov_e.shape
+        cov_ee = nmt.gaussian_covariance(cw, 0, 0, 0, 0,
+                                         [cla1b1[0]], [cla1b2[0]],
+                                         [cla2b1[0]], [cla2b2[0]],
+                                         wa, wb)
+        cov_bb = nmt.gaussian_covariance(cw, 0, 0, 0, 0,
+                                         [cla1b1[-1]], [cla1b2[-1]],
+                                         [cla2b1[-1]], [cla2b2[-1]],
+                                         wa, wb)
+        nbpw_a, nbpw_b = cov_ee.shape
         nclsa = np.max([1, s_a1 + s_a2])
         nclsb = np.max([1, s_b1 + s_b2])
         cov = np.zeros([nbpw_a, nclsa, nbpw_b, nclsb])
         # 00, 02
         if (s_a1 + s_a2 == 0) and (s_b1 + s_b2 == 2):
-            cov[:, 0, :, 0] = cov_e
-            cov[:, 0, :, 1] = cov_b
+            cov[:, 0, :, 0] = cov_ee
+            cov[:, 0, :, 1] = cov_bb
         # 02, 00
         elif (s_a1 + s_a2 == 2) and (s_b1 + s_b2 == 0):
-            cov[:, 0, :, 0] = cov_e
-            cov[:, 1, :, 0] = cov_b
+            cov[:, 0, :, 0] = cov_ee
+            cov[:, 1, :, 0] = cov_bb
         # 00, 22
         elif (s_a1 + s_a2 == 0) and (s_b1 + s_b2 == 4):
-            cov[:, 0, :, 0] = cov_e
-            cov[:, 0, :, 3] = cov_b
+            cov[:, 0, :, 0] = cov_ee
+            cov[:, 0, :, 3] = cov_bb
         # 22, 00
         elif (s_a1 + s_a2 == 4) and (s_b1 + s_b2 == 0):
-            cov[:, 0, :, 0] = cov_e
-            cov[:, 3, :, 0] = cov_b
+            cov[:, 0, :, 0] = cov_ee
+            cov[:, 3, :, 0] = cov_bb
         # 02, 02
         elif (s_a1 + s_a2 == 2) and (s_b1 + s_b2 == 2):
-            cov[:, 0, :, 0] = cov_e
-            cov[:, 1, :, 1] = cov_b
+            cov[:, 0, :, 0] = cov_ee
+            cov[:, 1, :, 1] = cov_bb
         # 02, 22
         elif (s_a1 + s_a2 == 2) and (s_b1 + s_b2 == 4):
-            cov[:, 0, :, 0] = cov_e
-            cov[:, 1, :, 3] = cov_b
+            cov[:, 0, :, 0] = cov_ee
+            cov[:, 1, :, 3] = cov_bb
         # 22, 02
         elif (s_a1 + s_a2 == 4) and (s_b1 + s_b2 == 2):
-            cov[:, 0, :, 0] = cov_e
-            cov[:, 3, :, 1] = cov_b
+            cov[:, 0, :, 0] = cov_ee
+            cov[:, 3, :, 1] = cov_bb
         # 22, 22
         elif (s_a1 + s_a2 == 4) and (s_b1 + s_b2 == 4):
-            cov[:, 0, :, 0] = cov_e
-            cov[:, 1, :, 1] = cov_b
-            cov[:, 2, :, 2] = cov_b
-            cov[:, 3, :, 3] = cov_b
+            cov_eb = nmt.gaussian_covariance(cw, 0, 0, 0, 0,
+                                             [cla1b1[0]], [0*cla1b2[0]],
+                                             [0*cla2b1[0]], [cla2b2[-1]],
+                                             wa, wb)
+            cov_be = nmt.gaussian_covariance(cw, 0, 0, 0, 0,
+                                             [cla1b1[-1]], [0*cla1b2[0]],
+                                             [0*cla2b1[0]], [cla2b2[0]],
+                                             wa, wb)
+            cov[:, 0, :, 0] = cov_ee
+            cov[:, 1, :, 1] = cov_eb
+            cov[:, 2, :, 2] = cov_be
+            cov[:, 3, :, 3] = cov_bb
 
         return cov.reshape([nclsa*nbpw_a, nclsb*nbpw_b])
 
