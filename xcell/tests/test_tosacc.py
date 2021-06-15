@@ -54,14 +54,16 @@ def get_config(fsky0=0.2, fsky1=0.3, dtype0='galaxy_density',
             'output': tmpdir}
 
 
-def get_data(fsky=0.2, fsky2=0.3, ):
-    config = get_config(fsky, fsky2)
+def get_data(fsky=0.2, fsky2=0.3, dtype0='galaxy_density',
+             dtype1='galaxy_density'):
+    config = get_config(fsky, fsky2, dtype0, dtype1)
     return Data(data=config)
 
 
-def get_sfile(use='cls', m_marg=False):
+def get_sfile(use='cls', m_marg=False, fsky0=0.2, fsky1=0.3, dtype0='galaxy_density',
+               dtype1='galaxy_density'):
     # Generate data.yml file
-    data = get_data()
+    data = get_data(dtype0=dtype0, dtype1=dtype1)
     datafile = os.path.join(data.data['output'], 'data.yml')
     return sfile(datafile, 'cls_cov_dummy.fits', use, m_marg)
 
@@ -78,9 +80,12 @@ def test_init(use):
             get_sfile(use)
 
 
-def test_added_tracers():
-    s = get_sfile()
-    data = get_data()
+
+@pytest.mark.parametrize('dt1, dt2', [('galaxy_density', 'galaxy_shear'),
+                                      ('galaxy_density', 'cmb_convergence')])
+def test_added_tracers(dt1, dt2):
+    s = get_sfile(dtype0=dt1, dtype1=dt2)
+    data = get_data(dtype0=dt1, dtype1=dt2)
     for trname in data.data['tracers'].keys():
         tr = s.s.tracers[trname]
         m = data.get_mapper(trname)
@@ -100,9 +105,13 @@ def test_added_tracers():
         else:
             raise ValueError('Tracer not implemented')
 
-@pytest.mark.parametrize('use', ['cls', 'nl', 'fiducial'])
-def test_ell_cl():
-    s = get_sfile(use)
+
+# @pytest.mark.parametrize('use', ['cls', 'nl', 'fiducial'])
+# def test_ell_cl(use):
+#     s = get_sfile(use)
+#     data = get_data()
+#     for trs in data.get_cl_trs_names():
+#         s.s.get_ell_cl()
 
 if os.path.isdir(tmpdir):
     shutil.rmtree(tmpdir)
