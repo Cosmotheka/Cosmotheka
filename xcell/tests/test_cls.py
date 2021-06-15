@@ -270,6 +270,35 @@ def test_cov_nonoverlap():
     assert np.all(cov == 0)
 
 
+def test_cov_mmarg():
+    sm = 0.1
+    data = get_config(dtype='galaxy_shear')
+    data['tracers']['Dummy__0']['sigma_m'] = sm
+
+    # Homemade marginalized covariance
+    # First, get decoupled power spectra
+    # Theory power spectra
+    clf = ClFid(data, 'Dummy__0', 'Dummy__0')
+    _, cl = clf.get_ell_cl()
+    shutil.rmtree(tmpdir1)
+    # Binning
+    clc = Cl(data, 'Dummy__0', 'Dummy__0')
+    wp = clc.get_bandpower_windows()
+    shutil.rmtree(tmpdir1)
+    ncl, nbpw, _, nl = wp.shape
+    wp = wp.reshape((ncl*nbpw, ncl*nl))
+    cl = cl.reshape(ncl*nl)
+    cl = np.dot(wp, cl)
+    # Marginalized covariance term
+    covmargb = 4*sm**2*cl[:, None]*cl[None, :]
+
+    # Do with xCell
+    covc = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
+    covmarg = covc.get_covariance_m_marg()
+    shutil.rmtree(tmpdir1)
+    assert np.amax(np.fabs(covmarg-covmargb))/np.mean(covmarg) < 1E-5
+
+
 @pytest.mark.parametrize('perm', [
     [0, 0, 0, 1],  # 00, 02
     [0, 0, 1, 1],  # 00, 22
