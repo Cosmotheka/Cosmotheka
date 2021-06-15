@@ -108,10 +108,12 @@ def test_added_tracers(dt1, dt2):
             raise ValueError('Tracer not implemented')
 
 
-@pytest.mark.parametrize('use', ['cls', 'nl'])
+@pytest.mark.parametrize('use', ['cls', 'nl', 'fiducial'])
 def test_ell_cl_autocov(use):
     s = get_sfile(use)
     data = get_data()
+
+
     for dtype in s.s.get_data_types():
         for trs in s.s.get_tracer_combinations(dtype):
             ixd = {'cl_00': 0, 'cl_0e': 0, 'cl_0b': 1, 'cl_ee': 0}
@@ -138,15 +140,23 @@ def test_ell_cl_autocov(use):
                 ell, cl, cov = s.s.get_ell_cl(dtype, trs[0], trs[1],
                                               return_cov=True)
                 ell2, cl2 = cl_class.get_ell_cl()
+
                 cov_class = Cov(data.data, *trs, *trs)
-                nbpw = ell2.size
+                nbpw = ell.size
                 ncls = cl2.shape[0]
                 cov2 = cov_class.get_covariance()
                 cov2 = cov2.reshape((nbpw, ncls, nbpw, ncls))[:, ix, :, ix]
                 assert np.max(np.abs((cov - cov2) / np.mean(cov))) < 1e-5
 
-            assert np.all(ell == ell2)
-            assert np.all(cl == cl2[ix])
+
+            if use == 'fiducial':
+                # Matrices to bin the fiducial Cell
+                ws_bpw = np.zeros((ell.size, ell2.size))
+                ws_bpw[np.arange(ell.size), ell.astype(int)] = 1
+                assert np.all(cl == ws_bpw.dot(cl2[ix]))
+            else:
+                assert np.all(cl == cl2[ix])
+                assert np.all(ell == ell2)
 
 
 if os.path.isdir(tmpdir):
