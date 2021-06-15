@@ -9,10 +9,10 @@ from xcell.cls.data import Data
 # Remove previous test results
 tmpdir = './xcell/tests/cls/dummy1'
 
+
 def remove_tmpdir():
     if os.path.isdir(tmpdir):
         shutil.rmtree(tmpdir)
-
 
 
 def get_config(fsky0=0.2, fsky1=0.3, dtype0='galaxy_density',
@@ -53,7 +53,6 @@ def get_config(fsky0=0.2, fsky1=0.3, dtype0='galaxy_density',
             'output': tmpdir}
 
 
-
 def get_data(fsky=0.2, fsky2=0.3, ):
     config = get_config(fsky, fsky2)
     return Data(data=config)
@@ -70,12 +69,12 @@ def get_sfile(use='cls', m_marg=False):
 def test_init(use):
     outdir = get_config()['output']
     if use != 'potato':
-        s = get_sfile(use)
+        get_sfile(use)
         sfile_path = os.path.join(outdir, 'cls_cov_dummy.fits')
         assert os.path.isfile(sfile_path)
     else:
         with pytest.raises(ValueError):
-            s = get_sfile(use)
+            get_sfile(use)
 
 
 def test_added_tracers():
@@ -99,7 +98,6 @@ def test_added_tracers():
             assert tr.beam == np.ones_like(tr.ell)
         else:
             raise ValueError('Tracer not implemented')
-
 
 
 if os.path.isdir(tmpdir):
