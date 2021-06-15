@@ -1,5 +1,7 @@
 import os
 import pytest
+import numpy as np
+import sacc
 import shutil
 from xcell.cls.to_sacc import sfile
 from xcell.cls.data import Data
@@ -46,8 +48,8 @@ def get_config(fsky0=0.2, fsky1=0.3, dtype0='galaxy_density',
             'bpw_edges': bpw_edges,
             'healpy': {'n_iter_sht': 0, 'n_iter_mcm': 3, 'n_iter_cmcm': 3,
                        'nside': nside},
-            'recompute': {'cls': True, 'cov': True, 'mcm': True, 'cmcm':
-                          True},
+            'recompute': {'cls': False, 'cov': False, 'mcm': False, 'cmcm':
+                          False},
             'output': tmpdir}
 
 
@@ -74,6 +76,30 @@ def test_init(use):
     else:
         with pytest.raises(ValueError):
             s = get_sfile(use)
+
+
+def test_added_tracers():
+    s = get_sfile()
+    data = get_data()
+    for trname in data.data['tracers'].keys():
+        tr = s.s.tracers[trname]
+        m = data.get_mapper(trname)
+        assert tr.quantity == m.get_dtype()
+        if tr.quantity in ['galaxy_density', 'galaxy_shear']:
+            assert isinstance(tr, sacc.tracers.NZTracer)
+            z, nz = m.get_nz()
+            assert np.all(tr.z == z)
+            assert np.all(tr.nz == nz)
+        elif tr.quantity in ['cmb_convergence']:
+            assert isinstance(tr, sacc.tracers.MapTracer)
+            assert tr.ell == m.get_ell()
+            # Only here because tr.spin is not an attribute of NZTracers
+            assert tr.spin == m.get_spin()
+            assert tr.beam_extra['nl'] == m.get_nl_coupled()[0]
+            assert tr.beam == np.ones_like(tr.ell)
+        else:
+            raise ValueError('Tracer not implemented')
+
 
 
 if os.path.isdir(tmpdir):
