@@ -5,6 +5,7 @@ import sacc
 import shutil
 from xcell.cls.to_sacc import sfile
 from xcell.cls.data import Data
+from xcell.cls.cl import Cl, ClFid
 
 # Remove previous test results
 tmpdir = './xcell/tests/cls/dummy1'
@@ -99,6 +100,9 @@ def test_added_tracers():
         else:
             raise ValueError('Tracer not implemented')
 
+@pytest.mark.parametrize('use', ['cls', 'nl', 'fiducial'])
+def test_ell_cl():
+    s = get_sfile(use)
 
 if os.path.isdir(tmpdir):
     shutil.rmtree(tmpdir)
