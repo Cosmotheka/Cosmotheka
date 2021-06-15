@@ -60,6 +60,18 @@ class MapperSDSS(MapperBase):
             self.cats[mod] = vstack(cats)
         return self.cats[mod]
 
+    def get_nz(self, dz=0):
+        if self.dndz is None:
+            cat_data = self.get_catalog(mod='data')
+            w_data = self._get_w(mod='data')
+            h, b = np.histogram(cat_data['Z'], bins=self.z_arr_dim,
+                                weights=w_data) #, range=[0.5, 2.5])
+            self.dndz = np.array([0.5 * (b[:-1] + b[1:]), h])
+        z, nz = self.dndz
+        z_dz = z + dz
+        sel = z_dz >= 0
+        return np.array([z_dz[sel], nz[sel]])
+    
     def _get_alpha(self):
         if self.alpha is None:
             w_data = self._get_w(mod='data')
