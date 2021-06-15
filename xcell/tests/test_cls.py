@@ -19,8 +19,8 @@ if os.path.isdir(tmpdir2):
 
 
 def get_config(fsky=0.2, fsky2=0.3,
-               dtype='galaxy_density',
-               dtype2='galaxy_density'):
+               dtype0='galaxy_density',
+               dtype1='galaxy_density'):
     nside = 32
     # Set only the necessary entries. Leave the others to their default value.
     cosmo = {
@@ -38,10 +38,10 @@ def get_config(fsky=0.2, fsky2=0.3,
     }
     dummy0 = {'mask_name': 'mask_dummy0', 'mapper_class': 'MapperDummy',
               'cosmo': cosmo, 'nside': nside, 'fsky': fsky, 'seed': 0,
-              'dtype': dtype}
+              'dtype': dtype0}
     dummy1 = {'mask_name': 'mask_dummy1', 'mapper_class': 'MapperDummy',
               'cosmo': cosmo, 'nside': nside, 'fsky': fsky2, 'seed': 100,
-              'dtype': dtype2}
+              'dtype': dtype1}
     bpw_edges = list(range(0, 3 * nside, 4))
 
     return {'tracers': {'Dummy__0': dummy0, 'Dummy__1': dummy1},
@@ -77,12 +77,18 @@ def test_smoke():
 
 
 def test_get_nmtbin():
+    # This test checks that the bpw_edges can be read from the
+    # global part of the yaml file or from the context of one
+    # of the cross-correlations.
+    # 1. From global
     data = get_config()
     cl1 = Cl(data, 'Dummy__0', 'Dummy__0')
     shutil.rmtree(tmpdir1)
+    # 2. From cross-correlations
     data['cls']['Dummy-Dummy']['bpw_edges'] = data.pop('bpw_edges')
     cl2 = Cl(data, 'Dummy__0', 'Dummy__0')
     shutil.rmtree(tmpdir1)
+    # Check they are the same
     b1 = cl1.get_NmtBin()
     b2 = cl2.get_NmtBin()
     assert np.all(b1.get_effective_ells() == b2.get_effective_ells())
@@ -272,7 +278,7 @@ def test_cov_nonoverlap():
 
 def test_cov_mmarg():
     sm = 0.1
-    data = get_config(dtype='galaxy_shear')
+    data = get_config(dtype0='galaxy_shear')
     data['tracers']['Dummy__0']['sigma_m'] = sm
 
     # Homemade marginalized covariance
@@ -314,8 +320,8 @@ def test_cov_spin0(perm):
     ncls1 = nmaps[0]*nmaps[1]
     ncls2 = nmaps[2]*nmaps[3]
     data = get_config(fsky=1., fsky2=1.,
-                      dtype='galaxy_density',
-                      dtype2='galaxy_shear')
+                      dtype0='galaxy_density',
+                      dtype1='galaxy_shear')
     data['tracers']['Dummy__0']['noise_level'] = 1E-5
     data['tracers']['Dummy__1']['noise_level'] = 1E-10
     nbpw = len(data['bpw_edges'])
@@ -359,13 +365,11 @@ def test_cov_spin0(perm):
                                      ('galaxy_shear', 'cmb_convergence'),
                                      ('cmb_convergence', 'cmb_convergence')])
 def test_clfid_against_ccl(tr1, tr2):
-    data = get_config()
-    data['tracers']['Dummy__0']['dtype'] = tr1
+    data = get_config(dtype0=tr1, dtype1=tr2)
     if tr1 == 'galaxy_density':
         data['tracers']['Dummy__0']['bias'] = 1.
     elif tr1 == 'galaxy_shear':
         data['tracers']['Dummy__0']['m'] = 0.
-    data['tracers']['Dummy__1']['dtype'] = tr2
     if tr2 == 'galaxy_density':
         data['tracers']['Dummy__1']['bias'] = 1.
     elif tr2 == 'galaxy_shear':
