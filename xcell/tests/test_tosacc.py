@@ -178,5 +178,44 @@ def test_get_datatypes_from_dof():
         s.get_datatypes_from_dof(3)
 
 
+@pytest.mark.parametrize('m_marg', [True, False])
+def test_covariance_G(m_marg):
+    if os.path.isdir(tmpdir):
+        shutil.rmtree(tmpdir)
+
+    s = get_sfile(m_marg=m_marg)
+
+    nbpw = len(s.data.data['bpw_edges'])
+
+    ix_cov_d = {'cl_00': 0, 'cl_0e': 0, 'cl_0b': 1, 'cl_ee': 0, 'cl_eb': 1,
+                'cl_be': 2, 'cl_bb': 3}
+
+    for dt1 in s.s.get_data_types():
+        for trs1 in s.s.get_tracer_combinations(data_type=dt1):
+            dof1 = s.get_dof_tracers(trs1)
+            ix_cov1 = ix_cov_d[dt1]
+            ix1 = s.s.indices(data_type=dt1, tracers=trs1)
+            for dt2 in s.s.get_data_types():
+                for trs2 in s.s.get_tracer_combinations(data_type=dt2):
+                    dof2 = s.get_dof_tracers(trs2)
+                    ix_cov2 = ix_cov_d[dt2]
+                    ix2 = s.s.indices(data_type=dt2, tracers=trs2)
+
+                    if m_marg:
+                        cov = Cov(s.data.data, *trs1,
+                                  *trs2).get_covariance_m_marg()
+                    else:
+                        cov = Cov(s.data.data, *trs1, *trs2).get_covariance()
+                    cov = cov.reshape((nbpw, dof1, nbpw, dof2))
+                    cov = cov[:, ix_cov1, :, ix_cov2]
+
+                    scov = s.s.covariance.covmat[ix1][:, ix2]
+                    if np.any(cov):
+                        assert np.max(np.abs((scov - cov) / np.mean(cov))) < 1e-5
+                    else:
+                        assert ~np.any(scov)
+
+
+
 if os.path.isdir(tmpdir):
     shutil.rmtree(tmpdir)
