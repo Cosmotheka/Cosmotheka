@@ -24,7 +24,7 @@ class MapperBOSSLOWZ(MapperSDSS):
 
         self.cats = {'data': None, 'random': None}
 
-        self.z_arr_dim = config.get('z_arr_dim', 50)
+        self.z_arr_dim = config.get('z_arr_dim', 100)
         self.nside_mask = config.get('nside_mask', 512)
         self.npix = hp.nside2npix(self.nside)
         self.mask_path = config['mask_path']

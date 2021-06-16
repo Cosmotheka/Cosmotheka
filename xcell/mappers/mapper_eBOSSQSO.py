@@ -39,19 +39,6 @@ class MappereBOSSQSO(MapperSDSS):
     def _bin_z(self, cat):
         return cat[(cat['Z'] >= self.z_edges[0]) &
                    (cat['Z'] < self.z_edges[1])]
-
-
-    def get_nz(self, dz=0):
-        if self.dndz is None:
-            cat_data = self.get_catalog(mod='data')
-            w_data = self._get_w(mod='data')
-            h, b = np.histogram(cat_data['Z'], bins=self.z_arr_dim,
-                                weights=w_data, range=[0.5, 2.5])
-            self.dndz = np.array([0.5 * (b[:-1] + b[1:]), h])
-        z, nz = self.dndz
-        z_dz = z + dz
-        sel = z_dz >= 0
-        return np.array([z_dz[sel], nz[sel]])
     
     def _get_w(self, mod='data'):
         if self.ws[mod] is None:
