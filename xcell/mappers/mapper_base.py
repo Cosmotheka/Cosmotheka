@@ -6,6 +6,7 @@ from astropy.io import fits
 from astropy.table import Table, vstack
 from .utils import get_map_from_points
 
+
 class MapperBase(object):
     def __init__(self, config):
         self._get_defaults(config)
@@ -41,10 +42,11 @@ class MapperBase(object):
                                           templates=cont, n_iter=n_iter)
         return self.nmt_field
 
+
 class MapperSDSS(MapperBase):
     def __init__(self):
         return
-        
+
     def get_catalog(self, mod='data'):
         if mod == 'data':
             data_file = self.config['data_catalogs']
@@ -65,20 +67,20 @@ class MapperSDSS(MapperBase):
             cat_data = self.get_catalog(mod='data')
             w_data = self._get_w(mod='data')
             h, b = np.histogram(cat_data['Z'], bins=self.z_arr_dim,
-                                weights=w_data) #, range=[0.5, 2.5])
+                                weights=w_data)   # , range=[0.5, 2.5])
             self.dndz = np.array([0.5 * (b[:-1] + b[1:]), h])
         z, nz = self.dndz
         z_dz = z + dz
         sel = z_dz >= 0
         return np.array([z_dz[sel], nz[sel]])
-    
+
     def _get_alpha(self):
         if self.alpha is None:
             w_data = self._get_w(mod='data')
             w_random = self._get_w(mod='random')
             self.alpha = np.sum(w_data)/np.sum(w_random)
         return self.alpha
-    
+
     def get_signal_map(self):
         if self.delta_map is None:
             self.delta_map = np.zeros(self.npix)

@@ -1,12 +1,7 @@
-from .mapper_base import MapperBase
 from .mapper_base import MapperSDSS
-from astropy.io import fits
-from astropy.table import Table, vstack
 from .utils import get_map_from_points
 import numpy as np
 import healpy as hp
-import pymaster as nmt
-import os
 
 
 class MappereBOSSQSO(MapperSDSS):
@@ -39,7 +34,7 @@ class MappereBOSSQSO(MapperSDSS):
     def _bin_z(self, cat):
         return cat[(cat['Z'] >= self.z_edges[0]) &
                    (cat['Z'] < self.z_edges[1])]
-    
+
     def _get_w(self, mod='data'):
         if self.ws[mod] is None:
             cat = self.get_catalog(mod=mod)
@@ -48,7 +43,7 @@ class MappereBOSSQSO(MapperSDSS):
             cat_NOZ = np.array(cat['WEIGHT_NOZ'])
             self.ws[mod] = cat_SYSTOT*cat_CP*cat_NOZ  # FKP left out
         return self.ws[mod]
-    
+
     def get_mask(self):
         if self.mask is None:
             cat_random = self.get_catalog(mod='random')
@@ -63,7 +58,6 @@ class MappereBOSSQSO(MapperSDSS):
             self.mask = area_ratio * hp.ud_grade(self.mask,
                                                  nside_out=self.nside)
         return self.mask
-
 
     def get_dtype(self):
         return 'galaxy_density'

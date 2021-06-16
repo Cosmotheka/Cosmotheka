@@ -1,21 +1,18 @@
-from .mapper_base import MapperBase
 from .mapper_base import MapperSDSS
-from astropy.io import fits
-from astropy.table import Table, vstack
 from .utils import get_map_from_points
 import numpy as np
 import healpy as hp
-import pymaster as nmt
-import os
+
 
 class MapperBOSSCMASS(MapperSDSS):
     def __init__(self, config):
         """
         config - dict
-          {'data_catalogs':[data_path+'BOSSCMASS/galaxy_DR12v5_CMASS_North.fits.gz'], 
+          {'data_catalogs':[data_path+'BOSSCMASS/galaxy_DR12v5_CMASS_North.fits.gz'],
           'random_catalogs':[data_path+'BOSSCMASS/random1_DR12v5_CMASS_North.fits.gz'],
           'z_edges':[0, 1.5],
-          'nside':nside, 'nside_mask': nside_mask, 'mask_name': 'mask_CMASS_NGC_1'}
+          'nside':nside,
+          'nside_mask': nside_mask, 'mask_name': 'mask_CMASS_NGC_1'}
         """
         self._get_defaults(config)
 
@@ -38,20 +35,21 @@ class MapperBOSSCMASS(MapperSDSS):
     def _bin_z(self, cat):
         return cat[(cat['Z'] >= self.z_edges[0]) &
                    (cat['Z'] < self.z_edges[1])]
-    
+
     def _get_w(self, mod='data'):
-        #Could make this more general and pass it to the superclass
+        # Could make this more general and pass it to the superclass
         if self.ws[mod] is None:
             cat = self.get_catalog(mod=mod)
             if mod == 'data':
-                w = np.array(cat['WEIGHT_SYSTOT'])
-                w *= np.array(cat['WEIGHT_CP'])
-                w *= np.array(cat['WEIGHT_NOZ'])
+                w_systot = np.array(cat['WEIGHT_SYSTOT'])
+                w_cp = np.array(cat['WEIGHT_CP'])
+                w_noz = np.array(cat['WEIGHT_NOZ'])
+                w = w_systot*(w_cp+w_noz-1)
             elif mod == 'random':
                 w = np.ones_like(cat['RA'])
-            self.ws[mod] = w # FKP left out
+            self.ws[mod] = w  # FKP left out
         return self.ws[mod]
-    
+
     def get_mask(self):
         if self.mask is None:
             cat_random = self.get_catalog(mod='random')
@@ -66,7 +64,7 @@ class MapperBOSSCMASS(MapperSDSS):
             self.mask = area_ratio * hp.ud_grade(self.mask,
                                                  nside_out=self.nside)
         return self.mask
-    #def get_mask(self):
+    # def get_mask(self):
     #    if self.mask is None:
     #        self.mask = hp.read_map(self.mask_path, verbose=False)
     #        area_ratio = (self.nside_mask/self.nside)**2
