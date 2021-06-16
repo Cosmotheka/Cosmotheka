@@ -85,7 +85,16 @@ class Data():
         for i, tr1 in enumerate(tr_names):
             for tr2 in tr_names[i:]:
                 trreq = self.get_tracers_bare_name_pair(tr1, tr2)
-                if trreq not in self.data['cls']:
+                trreq_inv = self.get_tracers_bare_name_pair(tr2, tr1)
+                if (trreq not in self.data['cls']) and \
+                   (trreq_inv in self.data['cls']):
+                    # If the inverse is in the data file, reverse it
+                    # internally
+                    self.data['cls'][trreq] = self.data['cls'][trreq_inv]
+                    del self.data['cls'][trreq_inv]
+                elif (trreq not in self.data['cls']) and \
+                    (trreq_inv not in self.data['cls']):
+                    # If still not present, skip
                     continue
                 clreq = self.data['cls'][trreq]['compute']
                 if clreq == 'all':
