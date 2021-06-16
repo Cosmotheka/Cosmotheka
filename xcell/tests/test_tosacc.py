@@ -169,5 +169,14 @@ def test_get_dof_tracers():
         assert dof == s.get_dof_tracers((tr1, tr2))
 
 
+def test_get_datatypes_from_dof():
+    s = get_sfile()
+    assert s.get_datatypes_from_dof(1) == ['cl_00']
+    assert s.get_datatypes_from_dof(2) == ['cl_0e', 'cl_0b']
+    assert s.get_datatypes_from_dof(4) == ['cl_ee', 'cl_eb', 'cl_be', 'cl_bb']
+    with pytest.raises(ValueError):
+        s.get_datatypes_from_dof(3)
+
+
 if os.path.isdir(tmpdir):
     shutil.rmtree(tmpdir)
