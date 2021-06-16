@@ -159,5 +159,15 @@ def test_ell_cl_autocov(use):
                 assert np.all(ell == ell2)
 
 
+def test_get_dof_tracers():
+    s = get_sfile()
+    for tr1, tr2 in s.s.get_tracer_combinations():
+        s1 = np.max((s.data.get_mapper(tr1).get_spin(), 1))
+        s2 = np.max((s.data.get_mapper(tr2).get_spin(), 1))
+
+        dof = s1 * s2
+        assert dof == s.get_dof_tracers((tr1, tr2))
+
+
 if os.path.isdir(tmpdir):
     shutil.rmtree(tmpdir)
