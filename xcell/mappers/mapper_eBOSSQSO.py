@@ -21,7 +21,8 @@ class MappereBOSSQSO(MapperSDSS):
         self.z_arr_dim = config.get('z_arr_dim', 50)
         self.nside_mask = config.get('nside_mask', 512)
         self.npix = hp.nside2npix(self.nside)
-        self.z_edges = config['z_edges']
+        self.mask_path = config.get('mask_path', None)
+        self.z_edges = config.get('z_edges', [0, 3])
 
         self.ws = {'data': None, 'random': None}
         self.alpha = None
@@ -43,21 +44,6 @@ class MappereBOSSQSO(MapperSDSS):
             cat_NOZ = np.array(cat['WEIGHT_NOZ'])
             self.ws[mod] = cat_SYSTOT*cat_CP*cat_NOZ  # FKP left out
         return self.ws[mod]
-
-    def get_mask(self):
-        if self.mask is None:
-            cat_random = self.get_catalog(mod='random')
-            w_random = self._get_w(mod='random')
-            alpha = self._get_alpha()
-            self.mask = get_map_from_points(cat_random,
-                                            self.nside_mask,
-                                            w=w_random)
-            self.mask *= alpha
-            # Account for different pixel areas
-            area_ratio = (self.nside_mask/self.nside)**2
-            self.mask = area_ratio * hp.ud_grade(self.mask,
-                                                 nside_out=self.nside)
-        return self.mask
 
     def get_dtype(self):
         return 'galaxy_density'
