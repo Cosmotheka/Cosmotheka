@@ -1,5 +1,6 @@
 # flake8: noqa
 from .mapper_base import MapperBase
+from .mapper_base import MapperSDSS
 from .mapper_DESY1gc import MapperDESY1gc
 from .mapper_DESY1wl import MapperDESY1wl
 from .mapper_eBOSSQSO import MappereBOSSQSO
@@ -14,7 +15,9 @@ from .utils import get_map_from_points
 
 
 def mapper_from_name(name):
-    mappers = {m.__name__: m for m in MapperBase.__subclasses__()}
+    subcs = MapperBase.__subclasses__()
+    subcs.extend(MapperSDSS.__subclasses__())
+    mappers = {m.__name__: m for m in subcs}
     if name in mappers:
         return mappers[name]
     else:
