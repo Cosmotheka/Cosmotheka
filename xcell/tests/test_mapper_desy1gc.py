@@ -69,3 +69,9 @@ def test_get_nz():
     assert len(z) == len(nz) == 400
     z, nz = m.get_nz(dz=-0.3)
     assert len(z) == len(nz) == 370
+
+
+def test_get_dtype():
+    m = get_mapper()
+    dtype = m.get_dtype()
+    assert dtype == 'galaxy_density'

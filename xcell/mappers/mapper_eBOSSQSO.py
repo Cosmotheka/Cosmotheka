@@ -31,6 +31,10 @@ class MappereBOSSQSO(MapperSDSS):
         self.delta_map = None
         self.nl_coupled = None
         self.mask = None
+        self.nside_nl_threshold = config.get('nside_nl_threshold',
+                                             4096)
+        self.lmin_nl_from_data = config.get('lmin_nl_from_data',
+                                            2000)
 
     def _bin_z(self, cat):
         return cat[(cat['Z'] >= self.z_edges[0]) &

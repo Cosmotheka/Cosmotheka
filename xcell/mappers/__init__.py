@@ -9,7 +9,7 @@ from .mapper_BOSSLOWZ import MapperBOSSLOWZ
 from .mapper_KV450 import MapperKV450
 from .mapper_KiDS1000 import MapperKiDS1000
 from .mapper_P18CMBK import MapperP18CMBK
-from .mapper_DECaLS import MapperDECaLS
+from .mapper_DELS import MapperDELS
 from .mapper_dummy import MapperDummy
 from .utils import get_map_from_points
 
