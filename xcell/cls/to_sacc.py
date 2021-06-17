@@ -8,7 +8,7 @@ import sacc
 import os
 
 
-class sfile():
+class ClSack():
     def __init__(self, datafile, output, use='cls', m_marg=False):
         self.data = Data(data_path=datafile)
         self.outdir = self.data.data['output']
@@ -239,4 +239,4 @@ if __name__ == "__main__":
     else:
         use = 'cls'
 
-    sfile = sfile(args.INPUT, args.name, use, args.m_marg)
+    sfile = ClSack(args.INPUT, args.name, use, args.m_marg)
