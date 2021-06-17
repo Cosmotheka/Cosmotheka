@@ -290,5 +290,4 @@ def test_covariance_NG():
     assert np.max(np.abs((covmat2 - covmat)/np.mean(covmat))) < 1e-5
 
 
-if os.path.isdir(tmpdir):
-    shutil.rmtree(tmpdir)
+remove_tmpdir()
