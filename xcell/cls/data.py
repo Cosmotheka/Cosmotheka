@@ -93,7 +93,7 @@ class Data():
                     self.data['cls'][trreq] = self.data['cls'][trreq_inv]
                     del self.data['cls'][trreq_inv]
                 elif (trreq not in self.data['cls']) and \
-                    (trreq_inv not in self.data['cls']):
+                     (trreq_inv not in self.data['cls']):
                     # If still not present, skip
                     continue
                 clreq = self.data['cls'][trreq]['compute']
