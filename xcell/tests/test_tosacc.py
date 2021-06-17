@@ -180,9 +180,6 @@ def test_get_datatypes_from_dof():
 
 @pytest.mark.parametrize('m_marg', [True, False])
 def test_covariance_G(m_marg):
-    if os.path.isdir(tmpdir):
-        shutil.rmtree(tmpdir)
-
     s = get_sfile(m_marg=m_marg)
 
     nbpw = len(s.data.data['bpw_edges'])
@@ -215,6 +212,85 @@ def test_covariance_G(m_marg):
                     else:
                         assert ~np.any(scov)
 
+
+def test_covariance_NG():
+    # Generate a config file with NG covariance
+    config = get_config().copy()
+    config['cov'].update({'ng': {'path': os.path.join(tmpdir, 'dummy_cov.npy'),
+                                 'order': ['Dummy-Dummy', 'Dummy-DummyWL',
+                                           'Dummy-DummyCV', 'DummyWL-DummyWL',
+                                           'DummyWL-DummyCV', 'DummyCV-DummyCV']}})
+    config['cls'].update({'Dummy-Dummy': {'compute': 'all'},
+                          'Dummy-DummyWL': {'compute': 'all'},
+                          'Dummy-DummyCV': {'compute': 'all'},
+                          'DummyWL-DummyWL': {'compute': 'auto'},
+                          'DummyWL-DummyCV': {'compute': 'all'},
+                          'DummyCV-DummyCV': {'compute': 'all'}})
+
+
+    # Add extra difficulty by adding 2 more tracers
+    config['tracers']['DummyWL'] = config['tracers']['Dummy__1'].copy()
+    config['tracers']['DummyCV'] = config['tracers']['Dummy__0'].copy()
+    config['tracers']['DummyCV']['dtype'] = 'cmb_convergence'
+
+    # Overwrite 'data.yml' with new configuration
+    data = Data(data=config, override=True)
+    datafile = os.path.join(data.data['output'], 'data.yml')
+
+    # Populate a sacc file with cls and covG. This will be used as NG
+    # covariance later. Note that the tracers are in different order than in
+    # the config file when reading the yml file.
+    s = sfile(datafile, 'cls_cov_dummy.fits', 'cls')
+
+    covmat = s.s.covariance.covmat
+    # Set B-modes to 0 as they are set to 0 when reading the NG covariance
+    for dt in s.s.get_data_types():
+        if 'b' in dt:
+            ix = s.s.indices(data_type=dt)
+            covmat[ix] = 0
+            covmat[:, ix] = 0
+
+    # Prepare the "NG" covariance. So far NG covs with B-modes are not
+    # implemented Keep only spin-0 and E-modes
+    # Not done in previous loop because the indices vary for the sacc file and
+    # not longer correspond to those in covmat
+    for dt in s.s.get_data_types():
+        if 'b' in dt:
+            s.s.remove_selection(data_type=dt)
+
+    # Reorder the covariance as stated in the config
+    ix_reorder_d = {k: [] for k in s.data.data['cls'].keys()}
+    for trs in s.s.get_tracer_combinations():
+        key = s.data.get_tracers_bare_name_pair(*trs)
+        ix_reorder_d[key].extend(s.s.indices(tracers=trs))
+
+    ix_reorder = []
+    for key in s.data.data['cov']['ng']['order']:
+        if key not in ix_reorder_d:
+            key = '-'.join(key.split('-')[::-1])
+        ix_reorder.extend(ix_reorder_d[key])
+
+
+    # Save the reordered covariance
+    np.save(config['cov']['ng']['path'],
+            s.s.covariance.covmat[ix_reorder][:, ix_reorder])
+
+    # Populate a sacc file with nls and covNG (read previous cov)
+    s2 = sfile(datafile, 'cls_cov_dummy.fits', 'nl')
+    covmat2 = s2.s.covariance.covmat
+
+    # Remove B-modes to test if spin-0 and E-modes are correctly taken into
+    # account
+    for dt in s2.s.get_data_types():
+        if 'b' in dt:
+            s2.s.remove_selection(data_type=dt)
+
+    # Check if the covariance is correctly read with no B-modes
+    cov_no_B = s.s.covariance.covmat
+    cov_no_B2 = s2.s.covariance.covmat
+    assert np.max(np.abs((cov_no_B - cov_no_B2)/np.mean(cov_no_B))) < 1e-5
+    # Check if the full covariance is correctly generated
+    assert np.max(np.abs((covmat2 - covmat)/np.mean(covmat))) < 1e-5
 
 
 if os.path.isdir(tmpdir):
