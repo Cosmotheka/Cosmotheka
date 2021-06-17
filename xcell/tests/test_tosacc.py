@@ -61,8 +61,8 @@ def get_data(fsky=0.2, fsky2=0.3, dtype0='galaxy_density',
     return Data(data=config)
 
 
-def get_sfile(use='cls', m_marg=False, fsky0=0.2, fsky1=0.3, dtype0='galaxy_density',
-               dtype1='galaxy_shear'):
+def get_sfile(use='cls', m_marg=False, fsky0=0.2, fsky1=0.3,
+              dtype0='galaxy_density', dtype1='galaxy_shear'):
     # Generate data.yml file
     data = get_data(dtype0=dtype0, dtype1=dtype1)
     datafile = os.path.join(data.data['output'], 'data.yml')
@@ -79,7 +79,6 @@ def test_init(use):
     else:
         with pytest.raises(ValueError):
             get_sfile(use)
-
 
 
 @pytest.mark.parametrize('dt1, dt2', [('galaxy_density', 'galaxy_shear'),
@@ -113,10 +112,8 @@ def test_ell_cl_autocov(use):
     s = get_sfile(use)
     data = get_data()
 
-
     for dtype in s.s.get_data_types():
         for trs in s.s.get_tracer_combinations(dtype):
-            ixd = {'cl_00': 0, 'cl_0e': 0, 'cl_0b': 1, 'cl_ee': 0}
             if dtype in ['cl_00', 'cl_0e', 'cl_ee']:
                 ix = 0
             elif dtype in ['cl_0b', 'cl_eb']:
@@ -147,7 +144,6 @@ def test_ell_cl_autocov(use):
                 cov2 = cov_class.get_covariance()
                 cov2 = cov2.reshape((nbpw, ncls, nbpw, ncls))[:, ix, :, ix]
                 assert np.max(np.abs((cov - cov2) / np.mean(cov))) < 1e-5
-
 
             if use == 'fiducial':
                 # Matrices to bin the fiducial Cell
@@ -208,7 +204,8 @@ def test_covariance_G(m_marg):
 
                     scov = s.s.covariance.covmat[ix1][:, ix2]
                     if np.any(cov):
-                        assert np.max(np.abs((scov - cov) / np.mean(cov))) < 1e-5
+                        assert np.max(np.abs((scov - cov)
+                                             / np.mean(cov))) < 1e-5
                     else:
                         assert ~np.any(scov)
 
@@ -219,14 +216,15 @@ def test_covariance_NG():
     config['cov'].update({'ng': {'path': os.path.join(tmpdir, 'dummy_cov.npy'),
                                  'order': ['Dummy-Dummy', 'Dummy-DummyWL',
                                            'Dummy-DummyCV', 'DummyWL-DummyWL',
-                                           'DummyWL-DummyCV', 'DummyCV-DummyCV']}})
+                                           'DummyWL-DummyCV', 'DummyCV-DummyCV'
+                                           ]}})
+
     config['cls'].update({'Dummy-Dummy': {'compute': 'all'},
                           'Dummy-DummyWL': {'compute': 'all'},
                           'Dummy-DummyCV': {'compute': 'all'},
                           'DummyWL-DummyWL': {'compute': 'auto'},
                           'DummyWL-DummyCV': {'compute': 'all'},
                           'DummyCV-DummyCV': {'compute': 'all'}})
-
 
     # Add extra difficulty by adding 2 more tracers
     config['tracers']['DummyWL'] = config['tracers']['Dummy__1'].copy()
@@ -269,7 +267,6 @@ def test_covariance_NG():
         if key not in ix_reorder_d:
             key = '-'.join(key.split('-')[::-1])
         ix_reorder.extend(ix_reorder_d[key])
-
 
     # Save the reordered covariance
     np.save(config['cov']['ng']['path'],
