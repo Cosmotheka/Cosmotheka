@@ -147,3 +147,35 @@ class MapperSDSS(MapperBase):
                 N_ell = np.mean(cl[2000:2*self.nside])
                 self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
+
+    def _bin_z(self, cat):
+        return cat[(cat['Z'] >= self.z_edges[0]) &
+                   (cat['Z'] < self.z_edges[1])]
+
+    def _get_w(self, mod='data'):
+        if self.ws[mod] is None:
+            cat = self.get_catalog(mod=mod)
+            if self.w_method=='eBOSS':
+                w_systot = np.array(cat['WEIGHT_SYSTOT'])
+                w_cp = np.array(cat['WEIGHT_CP'])
+                w_noz = np.array(cat['WEIGHT_NOZ'])
+                self.ws[mod] = w_systot*w_cp*w_noz
+                # FKP left out
+            if self.w_method=='BOSS':
+                if mod == 'data':
+                    w_systot = np.array(cat['WEIGHT_SYSTOT'])
+                    w_cp = np.array(cat['WEIGHT_CP'])
+                    w_noz = np.array(cat['WEIGHT_NOZ'])
+                    w = w_systot*(w_cp+w_noz-1)
+                    # Eqn. 50 of https://arxiv.org/pdf/1509.06529.pdf
+                if mod == 'random':
+                    w = np.ones_like(cat['RA'])
+                self.ws[mod] = w  # FKP left out
+            
+        return self.ws[mod]
+
+    def get_dtype(self):
+        return 'galaxy_density'
+
+    def get_spin(self):
+        return 0

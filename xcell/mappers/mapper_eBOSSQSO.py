@@ -24,6 +24,7 @@ class MappereBOSSQSO(MapperSDSS):
         self.mask_path = config.get('mask_path', None)
         self.z_edges = config.get('z_edges', [0, 3])
 
+        self.w_method = 'eBOSS'
         self.ws = {'data': None, 'random': None}
         self.alpha = None
 
@@ -35,22 +36,3 @@ class MappereBOSSQSO(MapperSDSS):
                                              4096)
         self.lmin_nl_from_data = config.get('lmin_nl_from_data',
                                             2000)
-
-    def _bin_z(self, cat):
-        return cat[(cat['Z'] >= self.z_edges[0]) &
-                   (cat['Z'] < self.z_edges[1])]
-
-    def _get_w(self, mod='data'):
-        if self.ws[mod] is None:
-            cat = self.get_catalog(mod=mod)
-            cat_SYSTOT = np.array(cat['WEIGHT_SYSTOT'])
-            cat_CP = np.array(cat['WEIGHT_CP'])
-            cat_NOZ = np.array(cat['WEIGHT_NOZ'])
-            self.ws[mod] = cat_SYSTOT*cat_CP*cat_NOZ  # FKP left out
-        return self.ws[mod]
-
-    def get_dtype(self):
-        return 'galaxy_density'
-
-    def get_spin(self):
-        return 0

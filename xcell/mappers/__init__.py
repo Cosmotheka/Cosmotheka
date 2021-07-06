@@ -6,6 +6,8 @@ from .mapper_DESY1wl import MapperDESY1wl
 from .mapper_eBOSSQSO import MappereBOSSQSO
 from .mapper_BOSSCMASS import MapperBOSSCMASS
 from .mapper_BOSSLOWZ import MapperBOSSLOWZ
+from .mapper_eBOSSELG import MappereBOSSELG
+from .mapper_eBOSSLRG import MappereBOSSLRG
 from .mapper_KV450 import MapperKV450
 from .mapper_KiDS1000 import MapperKiDS1000
 from .mapper_P18CMBK import MapperP18CMBK
