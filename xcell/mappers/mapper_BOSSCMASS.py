@@ -1,6 +1,4 @@
 from .mapper_base import MapperSDSS
-from .utils import get_map_from_points
-import numpy as np
 import healpy as hp
 
 
@@ -33,3 +31,7 @@ class MapperBOSSCMASS(MapperSDSS):
         self.delta_map = None
         self.nl_coupled = None
         self.mask = None
+        self.nside_nl_threshold = config.get('nside_nl_threshold',
+                                             4096)
+        self.lmin_nl_from_data = config.get('lmin_nl_from_data',
+                                            2000)

@@ -117,12 +117,12 @@ class MapperSDSS(MapperBase):
                 self.mask = hp.read_map(self.mask_path, verbose=False)
                 area_ratio = (self.nside_mask/self.nside)**2
                 self.mask = area_ratio * hp.ud_grade(self.mask,
-                                                 nside_out=self.nside)
+                                                     nside_out=self.nside)
         return self.mask
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
-            if self.nside < 4096:
+            if self.nside < self.nside_nl_threshold:
                 print('calculing nl from weights')
                 cat_data = self.get_catalog(mod='data')
                 cat_random = self.get_catalog(mod='random')
@@ -144,7 +144,7 @@ class MapperSDSS(MapperBase):
                 print('calculating nl from mean cl values')
                 f = self.get_nmt_field()
                 cl = nmt.compute_coupled_cell(f, f)[0]
-                N_ell = np.mean(cl[2000:2*self.nside])
+                N_ell = np.mean(cl[self.lmin_nl_from_data:2*self.nside])
                 self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
 
@@ -155,13 +155,13 @@ class MapperSDSS(MapperBase):
     def _get_w(self, mod='data'):
         if self.ws[mod] is None:
             cat = self.get_catalog(mod=mod)
-            if self.w_method=='eBOSS':
+            if self.w_method == 'eBOSS':
                 w_systot = np.array(cat['WEIGHT_SYSTOT'])
                 w_cp = np.array(cat['WEIGHT_CP'])
                 w_noz = np.array(cat['WEIGHT_NOZ'])
                 self.ws[mod] = w_systot*w_cp*w_noz
                 # FKP left out
-            if self.w_method=='BOSS':
+            if self.w_method == 'BOSS':
                 if mod == 'data':
                     w_systot = np.array(cat['WEIGHT_SYSTOT'])
                     w_cp = np.array(cat['WEIGHT_CP'])
@@ -171,7 +171,7 @@ class MapperSDSS(MapperBase):
                 if mod == 'random':
                     w = np.ones_like(cat['RA'])
                 self.ws[mod] = w  # FKP left out
-            
+
         return self.ws[mod]
 
     def get_dtype(self):

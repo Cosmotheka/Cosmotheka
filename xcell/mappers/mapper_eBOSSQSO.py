@@ -1,6 +1,4 @@
 from .mapper_base import MapperSDSS
-from .utils import get_map_from_points
-import numpy as np
 import healpy as hp
 
 

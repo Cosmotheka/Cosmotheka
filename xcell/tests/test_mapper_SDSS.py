@@ -32,7 +32,7 @@ def test_get_spin():
     mappers = get_mappers()
     for m in mappers:
         assert m.get_spin() == 0
-    
+
 
 def test_smoke():
     mappers = get_mappers()
@@ -47,8 +47,11 @@ def test_get_nz():
         z, nz = m.get_nz()
         assert len(z) == 50
         assert len(nz) == 50
-        print(nz)
-        assert np.sum(nz) == 16*hp.nside2npix(32)
+        if m.w_method == 'eBOSS':
+            LHS = 16*hp.nside2npix(32)
+        if m.w_method == 'BOSS':
+            LHS = (3/4)*16*hp.nside2npix(32)
+        assert np.sum(nz) == LHS
 
 
 def test_get_signal_map():
@@ -60,6 +63,7 @@ def test_get_signal_map():
         assert len(d) == hp.nside2npix(m.nside)
         assert np.all(np.fabs(d) < 1E-15)
 
+
 def test_get_nl_coupled_data():
     c = get_config()
     c['nside_nl_threshold'] = 1
@@ -69,12 +73,16 @@ def test_get_nl_coupled_data():
         nl = m.get_nl_coupled()
         assert np.all(nl == 0)
 
+
 def test_get_mask():
     mappers = get_mappers()
     for m in mappers:
         d = m.get_mask()
-        print(d)
-        assert np.all(np.fabs(d-16) < 1E-5)
+        if m.w_method == 'eBOSS':
+            LHS = 16
+        if m.w_method == 'BOSS':
+            LHS = 12
+        assert np.all(np.fabs(d-LHS) < 1E-5)
 
 
 def test_get_nl_coupled():
@@ -84,5 +92,7 @@ def test_get_nl_coupled():
         # sum(w_d^2 + alpha^2 * w_r^2)
         nl_pred = 2*hp.nside2npix(32)*(8**2+1*8**2)
         nl_pred *= pix_area**2/(4*np.pi)
+        if m.w_method == 'BOSS':
+            nl_pred *= (3/4)**2
         nl = m.get_nl_coupled()
         assert np.all(np.fabs(nl-nl_pred) < 1E-5)
