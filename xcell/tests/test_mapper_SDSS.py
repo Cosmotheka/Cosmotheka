@@ -14,11 +14,8 @@ def get_config():
 def get_mappers(c=None):
     if c is None:
         c = get_config()
-    mappers = [xc.mappers.MappereBOSSQSO(c),
-               xc.mappers.MappereBOSSELG(c),
-               xc.mappers.MappereBOSSLRG(c),
-               xc.mappers.MapperBOSSCMASS(c),
-               xc.mappers.MapperBOSSLOWZ(c)]
+    mappers = [xc.mappers.MappereBOSS(c),
+               xc.mappers.MapperBOSS(c)]
     return mappers
 
 
