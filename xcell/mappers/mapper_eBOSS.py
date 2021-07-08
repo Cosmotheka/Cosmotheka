@@ -1,5 +1,4 @@
 from .mapper_SDSS import MapperSDSS
-import healpy as hp
 
 
 class MappereBOSS(MapperSDSS):

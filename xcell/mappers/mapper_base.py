@@ -1,10 +1,4 @@
-import os
-import numpy as np
-import healpy as hp
 import pymaster as nmt
-from astropy.io import fits
-from astropy.table import Table, vstack
-from .utils import get_map_from_points
 
 
 class MapperBase(object):

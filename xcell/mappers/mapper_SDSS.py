@@ -7,6 +7,7 @@ from astropy.table import Table, vstack
 from .utils import get_map_from_points
 from .mapper_base import MapperBase
 
+
 class MapperSDSS(MapperBase):
     def __init__(self, config):
         self._get_SDSS_defaults(config)
@@ -29,8 +30,8 @@ class MapperSDSS(MapperBase):
                                              4096)
         self.lmin_nl_from_data = config.get('lmin_nl_from_data',
                                             2000)
-        return 
-    
+        return
+
     def get_catalog(self, mod='data'):
         if mod == 'data':
             data_file = self.config['data_catalogs']
