@@ -154,6 +154,10 @@ class MapperDummy(MapperBase):
                 self.mask = mask_apo
         return self.mask
 
+    def get_ell(self):
+        # Needed to mimic MapperP18CMBK
+        return np.arange(3 * self.nside)
+
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             # Coupled analytical noise bias
