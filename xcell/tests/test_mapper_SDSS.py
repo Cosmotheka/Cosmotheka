@@ -74,6 +74,7 @@ def test_get_nl_coupled_data():
 def test_get_mask():
     mappers = get_mappers()
     for m in mappers:
+        print(m)
         d = m.get_mask()
         if m.w_method == 'eBOSS':
             LHS = 16

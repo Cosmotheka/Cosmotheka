@@ -19,7 +19,6 @@ class MapperSDSS(MapperBase):
         self.z_arr_dim = config.get('z_arr_dim', 50)
         self.nside_mask = config.get('nside_mask', 512)
         self.npix = hp.nside2npix(self.nside)
-        self.mask_path = config.get('mask_path', None)
         self.ws = {'data': None, 'random': None}
         self.alpha = None
         self.dndz = None
@@ -86,23 +85,17 @@ class MapperSDSS(MapperBase):
 
     def get_mask(self):
         if self.mask is None:
-            if self.mask_path is None:
-                cat_random = self.get_catalog(mod='random')
-                w_random = self._get_w(mod='random')
-                alpha = self._get_alpha()
-                self.mask = get_map_from_points(cat_random,
-                                                self.nside_mask,
-                                                w=w_random)
-                self.mask *= alpha
-                # Account for different pixel areas
-                area_ratio = (self.nside_mask/self.nside)**2
-                self.mask = area_ratio * hp.ud_grade(self.mask,
-                                                     nside_out=self.nside)
-            else:
-                self.mask = hp.read_map(self.mask_path, verbose=False)
-                area_ratio = (self.nside_mask/self.nside)**2
-                self.mask = area_ratio * hp.ud_grade(self.mask,
-                                                     nside_out=self.nside)
+            cat_random = self.get_catalog(mod='random')
+            w_random = self._get_w(mod='random')
+            alpha = self._get_alpha()
+            self.mask = get_map_from_points(cat_random,
+                                            self.nside_mask,
+                                            w=w_random)
+            self.mask *= alpha
+            # Account for different pixel areas
+            area_ratio = (self.nside_mask/self.nside)**2
+            self.mask = area_ratio * hp.ud_grade(self.mask,
+                                                 nside_out=self.nside)
         return self.mask
 
     def get_nl_coupled(self):
