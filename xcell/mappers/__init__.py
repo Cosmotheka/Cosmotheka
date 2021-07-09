@@ -14,8 +14,12 @@ from .utils import get_map_from_points
 
 
 def mapper_from_name(name):
-    subcs = MapperBase.__subclasses__()
-    subcs.extend(MapperSDSS.__subclasses__())
+    def all_subclasses(cls):
+        # Recursively find all subclasses (and their subclasses)
+        # From https://stackoverflow.com/questions/3862310
+        return set(cls.__subclasses__()).union(
+            [s for c in cls.__subclasses__() for s in all_subclasses(c)])
+    subcs = all_subclasses(MapperBase)
     mappers = {m.__name__: m for m in subcs}
     if name in mappers:
         return mappers[name]
