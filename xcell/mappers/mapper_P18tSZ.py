@@ -20,14 +20,13 @@ class MapperP18tSZ(MapperBase):
         self.beam = config.get('beam', 0.00291*np.ones(3*self.nside))
         self.file_map = config['file_map']
         self.file_mask = config['file_mask']
-        self.mode = 'FULL'
         
         # Defaults
+        self.maps = None
         self.signal_map = None
-        self.maps = {'FULL': None,
-                    'FIRST': None,
-                    'LAST': None, 
-                    'DIFF':None}
+        self.hm1_map = None
+        self.hm2_map = None
+        self.diff_map = None
         self.nl_coupled = None
         self.mask = None
         
@@ -40,21 +39,39 @@ class MapperP18tSZ(MapperBase):
         self.bands = nmt.NmtBin.from_edges(ells[:-1], ells[1:])
         self.ell_arr = bands.get_effective_ells()
         return 
-        
-    def get_signal_map(self, mode=None):
-        if mode is None:
-            mode = self.mode
-        if self.signal_map is None:
-            signal_maps = fits.open(self.file_map)[1].data
-            self.maps['FULL'] = signal_maps['FULL']
-            self.maps['FIRST'] = signal_maps['FIRST']
-            self.maps['LAST'] = signal_maps['LAST']
-            self.maps['DIFF'] = signal_maps['FIRST']-signal_maps['LAST']
-            self.signal_map = self.maps[mode]
-            self.signal_map = [hp.ud_grade(self.signal_map,
-                                           nside_out=self.nside)]
-        return self.signal_map 
+    
+    def _get_maps(self):
+        if self.maps is None:
+            self.maps = fits.open(self.file_map)[1].data
+        return self.maps
 
+    def get_signal_map(self):
+        if self.signal_map is None:
+            self.maps = self._get_maps()
+            signal_map =  self.maps['FULL']
+            self.signal_map = [hp.ud_grade(signal_map,
+                                           nside_out=self.nside)]
+        return self.signal_map
+    
+    def _get_hm_maps(self):
+        if self.hm1_map is None:
+            self.maps = self._get_maps()
+            hm1_map = self.maps['FIRST']
+            self.hm1_map = [hp.ud_grade(hm1_map,
+                                        nside_out=self.nside)]
+        if self.hm2_map is None:
+            self.maps = self._get_maps()
+            hm2_map =  self.maps['LAST']
+            self.hm2_map = [hp.ud_grade(hm2_map,
+                                        nside_out=self.nside)]
+        return self.hm1_map, self.hm2_map
+    
+    def _get_diff_map(self):
+        if self.diff_map is None:
+            self.hm1_map, self.hm2_map = self._get_hm_maps()
+            self.diff_map = self.hm1_map[0] - self.hm2_map[0]
+        return [self.diff_map]
+    
     def get_mask(self):
         if self.mask is None:
             self.mask = hp.read_map(self.file_mask)
@@ -64,10 +81,9 @@ class MapperP18tSZ(MapperBase):
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
-            self.signal_map = self.get_signal_map(mode='DIFF')
-            field = self.get_nmt_field()
-            self.nl_coupled = nmt.compute_coupled_cell(field, field)/4
-            
+            self.diff_map = self._get_diff_map()
+            diff_f = self.get_nmt_field(signal=self.diff_map)
+            self.nl_coupled = nmt.compute_coupled_cell(diff_f, diff_f)/4
         return self.nl_coupled
 
     def get_beam(self):

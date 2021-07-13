@@ -29,8 +29,9 @@ class MapperP18CIB(MapperBase):
 
     def get_mask(self):
         if self.mask is None:
-            signal_map = self.get_signal_map()
-            self.mask = np.divide(signal_map, signal_map, where=signal_map[0]>0)[0]
+            signal_map =  hp.read_map(self.file_map)
+            self.signal_map = hp.ud_grade(signal_map,
+                                           nside_out=self.nside)
         return self.mask
 
     def get_beam(self):
