@@ -83,8 +83,8 @@ class MapperDESY1gc(MapperBase):
             nmap_w = get_map_from_points(cat_data, self.nside,
                                          w=w)
             self.delta_map = np.zeros(self.npix)
-            N_mean = np.sum(nmap_w)/np.sum(mask)
             goodpix = mask > 0
+            N_mean = np.sum(nmap_w[goodpix])/np.sum(mask[goodpix])
             nm = mask*N_mean
             self.delta_map[goodpix] = (nmap_w[goodpix])/(nm[goodpix])-1
         return [self.delta_map]
