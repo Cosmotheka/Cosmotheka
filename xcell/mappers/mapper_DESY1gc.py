@@ -77,15 +77,15 @@ class MapperDESY1gc(MapperBase):
 
     def get_signal_map(self):
         if self.delta_map is None:
-            self.mask = self.get_mask()
+            mask = self.get_mask()
             cat_data = self.get_catalog()
             w = self._get_w()
             nmap_w = get_map_from_points(cat_data, self.nside,
                                          w=w)
             self.delta_map = np.zeros(self.npix)
-            N_mean = np.sum(nmap_w)/np.sum(self.mask)
-            goodpix = self.mask > 0
-            nm = self.mask*N_mean
+            N_mean = np.sum(nmap_w)/np.sum(mask)
+            goodpix = mask > 0
+            nm = mask*N_mean
             self.delta_map[goodpix] = (nmap_w[goodpix])/(nm[goodpix])-1
         return [self.delta_map]
 
@@ -97,12 +97,12 @@ class MapperDESY1gc(MapperBase):
                                          w=w)
             nmap_w2 = get_map_from_points(cat_data, self.nside,
                                           w=w**2)
-            self.mask = self.get_mask()
-            goodpix = self.mask > 0  # Already capped at mask_threshold
-            N_mean = np.sum(nmap_w[goodpix])/np.sum(self.mask[goodpix])
+            mask = self.get_mask()
+            goodpix = mask > 0  # Already capped at mask_threshold
+            N_mean = np.sum(nmap_w[goodpix])/np.sum(mask[goodpix])
             N_mean_srad = N_mean / (4 * np.pi) * self.npix
             correction = nmap_w2[goodpix].sum()/nmap_w[goodpix].sum()
-            N_ell = correction * np.mean(self.mask) / N_mean_srad
+            N_ell = correction * np.mean(mask) / N_mean_srad
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
 
