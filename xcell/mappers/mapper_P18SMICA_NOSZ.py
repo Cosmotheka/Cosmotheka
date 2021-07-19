@@ -25,7 +25,18 @@ class MapperP18SMICA_NOSZ(MapperBase):
         self.hm2_map = None
         self.diff_map = None
         self.nl_coupled = None
+        self.cl_coupled = None
+        self.custom_auto = True
         self.mask = None 
+        self.gal_mask_mode = None
+        self.gal_mask_modes = {'20%': 0,
+                               '40%': 1,
+                               '60%': 2,
+                               '70%': 3,
+                               '80%': 4,
+                               '90%': 5, 
+                               '97%': 6, 
+                               '99%': 7}
 
     def _get_bands(self):
         while i <= 3 * self.nside:
@@ -66,30 +77,34 @@ class MapperP18SMICA_NOSZ(MapperBase):
             self.mask = np.ones(12*self.nside**2)
             for key in self.file_mask.keys():
                 file = self.file_mask[key]
-                mask = hp.read_map(file)
-                mask = hp.ud_grade(mask,
-                                   nside_out=self.nside)  
-               #if key=='points':
-               #     mask = hp.read_map(file)
-               #     mask = hp.ud_grade(mask,
-               #                    nside_out=self.nside)
-               #elif key=='galactic':
-                    # This is how it should be done but it returns crap
-                    # masks = fits.open(file)[1].datafile
-                    # mask = masks['GAL060']
-               #     mask = hp.read_map(file)
-               #     mask = hp.ud_grade(mask,
-               #                        nside_out=self.nside)  
+                if key=='points':
+                    mask = hp.read_map(file)
+                    mask = hp.ud_grade(mask,
+                                   nside_out=self.nside)
+                elif key=='galactic':
+                    if self.gal_mask_mode is None:
+                        self.gal_mask_mode = '60%'
+                    field = self.gal_mask_modes[self.gal_mask_mode]
+                    mask = hp.read_map(file, field)
+                    mask = hp.ud_grade(mask,
+                                       nside_out=self.nside)
                
-                # No quite right but cannot figure it out now
-                self.mask[self.mask>0] = (1-1*abs(self.mask-mask))[self.mask>0]
+                self.mask *= mask
         return self.mask
-
+    
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             self.diff_map = self._get_diff_map()
-            diff_f = self.get_nmt_field(signal=self.diff_map)
+            diff_f = self._get_nmt_field(signal=self.diff_map)
             self.nl_coupled = nmt.compute_coupled_cell(diff_f, diff_f)/4
+        return self.nl_coupled
+
+    def get_cl_coupled(self):
+        if self.cl_coupled is None:
+            self.hm1_map, self.hm2_map = self._get_hm_maps()
+            hm1_f = self._get_nmt_field(signal=self.hm1_map)
+            hm2_f = self._get_nmt_field(signal=self.hm2_map)
+            self.cl_coupled = nmt.compute_coupled_cell(hm1_f, hm2_f)
         return self.nl_coupled
 
     def get_beam(self):

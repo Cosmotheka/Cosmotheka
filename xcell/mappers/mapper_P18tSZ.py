@@ -28,6 +28,8 @@ class MapperP18tSZ(MapperBase):
         self.hm2_map = None
         self.diff_map = None
         self.nl_coupled = None
+        self.cl_coupled = None
+        self.custom_auto = True
         self.mask = None
         
     def _get_bands(self):
@@ -84,6 +86,14 @@ class MapperP18tSZ(MapperBase):
             self.diff_map = self._get_diff_map()
             diff_f = self.get_nmt_field(signal=self.diff_map)
             self.nl_coupled = nmt.compute_coupled_cell(diff_f, diff_f)/4
+        return self.nl_coupled
+    
+    def get_cl_coupled(self):
+        if self.cl_coupled is None:
+            self.hm1_map, self.hm2_map = self._get_hm_maps()
+            hm1_f = self._get_nmt_field(signal=self.hm1_map)
+            hm2_f = self._get_nmt_field(signal=self.hm2_map)
+            self.cl_coupled = nmt.compute_coupled_cell(hm1_f, hm2_f)
         return self.nl_coupled
 
     def get_beam(self):
