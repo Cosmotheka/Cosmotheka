@@ -192,9 +192,9 @@ class Cl(ClBase):
         return self.ell, self.nl
 
     def get_ell_nl_cp(self):
-        if self.ell is None:
+        if self.nl_cp is None:
             self.get_cl_file()
-        return self.ell, self.nl_cp
+        return np.arange(3 * self.nside), self.nl_cp
 
     def get_masks(self):
         mapper1, mapper2 = self.get_mappers()
