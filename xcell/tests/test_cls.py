@@ -248,6 +248,10 @@ def test_symmetric():
     os.remove(os.path.join(tmpdir1, 'data.yml'))
     cl_class10 = Cl(data, 'Dummy__1', 'Dummy__0')
 
+    fname = os.path.join(cl_class10.outdir, f'cl_Dummy__1_Dummy__0.npz')
+    assert not os.path.isfile(fname)
+    fname = os.path.join(cl_class10.outdir, f'w__mask_dummy1_mask_dummy0.fits')
+    assert not os.path.isfile(fname)
     assert np.all(np.array(cl_class01.get_masks()) ==
                   np.array(cl_class10.get_masks()[::-1]))
     assert np.all(cl_class01.get_ell_cl()[1] == cl_class10.get_ell_cl()[1])
@@ -262,6 +266,9 @@ def test_symmetric_fid():
     cl_class01 = ClFid(data, 'Dummy__0', 'Dummy__1')
     os.remove(os.path.join(tmpdir1, 'data.yml'))
     cl_class10 = ClFid(data, 'Dummy__1', 'Dummy__0')
+
+    fname = os.path.join(cl_class10.outdir, f'cl_Dummy__1_Dummy__0.npz')
+    assert not os.path.isfile(fname)
     assert np.all(cl_class01.get_ell_cl()[1] == cl_class10.get_ell_cl()[1])
     shutil.rmtree(tmpdir1)
 
