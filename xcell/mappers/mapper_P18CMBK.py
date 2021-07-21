@@ -40,8 +40,8 @@ class MapperP18CMBK(MapperBase):
             return False, None
         else:
             file_name = '_'.join([f'P18CMBK_mask_{self.mask_aposize}',
-                                  f'{self.mask_apotype}_ns{self.nside}',
-                                  '.fits.gz'])
+                                  f'{self.mask_apotype}',
+                                  f'ns{self.nside}.fits.gz'])
             fname_lite = os.path.join(self.path_lite, file_name)
             os.makedirs(self.path_lite, exist_ok=True)
             return os.path.isfile(fname_lite), fname_lite
