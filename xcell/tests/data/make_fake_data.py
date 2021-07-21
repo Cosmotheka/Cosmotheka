@@ -26,7 +26,7 @@ hp.write_map("mask2.fits", mask2, overwrite=True)
 
 # Fake hm1 map
 hm1 = np.repeat(np.array([np.arange(4)])-2, npix//4,
-                      axis=0).flatten() + np.random.randn(npix)
+                axis=0).flatten() + np.random.randn(npix)
 hp.write_map("hm1_map.fits", hm1, overwrite=True)
 
 # Fake hm2 map
