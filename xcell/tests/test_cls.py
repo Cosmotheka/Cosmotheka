@@ -244,6 +244,9 @@ def test_cls_vs_namaster():
 
 def test_symmetric():
     data = get_config()
+    # Request only 'auto' to test if read_symmetric works in the case you have
+    # 'auto but you need the cross for the covariance
+    data['cls']['Dummy-Dummy']['compute'] = 'auto'
     cl_class01 = Cl(data, 'Dummy__0', 'Dummy__1')
     os.remove(os.path.join(tmpdir1, 'data.yml'))
     cl_class10 = Cl(data, 'Dummy__1', 'Dummy__0')
@@ -263,6 +266,9 @@ def test_symmetric():
 
 def test_symmetric_fid():
     data = get_config()
+    # Request only 'auto' to test if read_symmetric works in the case you have
+    # 'auto but you need the cross for the covariance
+    data['cls']['Dummy-Dummy']['compute'] = 'auto'
     cl_class01 = ClFid(data, 'Dummy__0', 'Dummy__1')
     os.remove(os.path.join(tmpdir1, 'data.yml'))
     cl_class10 = ClFid(data, 'Dummy__1', 'Dummy__0')
