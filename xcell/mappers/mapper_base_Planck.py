@@ -23,32 +23,20 @@ class MapperBasePlanck(MapperBase):
         self.diff_map = None
         self.nl_coupled = None
         self.cl_coupled = None
+        self.cl_mode = config.get('cl_mode', 'Auto')
         self.cls = {'Auto': None,
                     'Cross': None}
         self.custom_auto = True
         self.mask = None
-        self.gal_mask_mode = config.get('gal_mask_mode', '60%')
-        self.gal_mask_modes = {'20%': 0,
-                               '40%': 1,
-                               '60%': 2,
-                               '70%': 3,
-                               '80%': 4,
-                               '90%': 5,
-                               '97%': 6,
-                               '99%': 7}
-        self.ell_arr = None
-        self.bands = None
-        return
-
-    def _get_bands(self):
-        i = 0
-        ells = []
-        while i <= 3 * self.nside:
-            ells.append(round(i))
-            i = i+20*(1+i/240)
-
-        self.bands = nmt.NmtBin.from_edges(ells[:-1], ells[1:])
-        self.ell_arr = self.bands.get_effective_ells()
+        self.gal_mask_mode = config.get('gal_mask_mode', '0.6')
+        self.gal_mask_modes = {'0.2': 0,
+                               '0.4': 1,
+                               '0.6': 2,
+                               '0.7': 3,
+                               '0.8': 4,
+                               '0.9': 5,
+                               '0.97': 6,
+                               '0.99': 7}
         return
 
     def get_signal_map(self):
@@ -59,46 +47,10 @@ class MapperBasePlanck(MapperBase):
         return self.signal_map
 
     def get_mask(self):
-        if self.mask is None:
-            self.mask = np.ones(12*self.nside**2)
-            if self.file_mask is not None:
-                mask = hp.read_map(self.file_mask)
-                mask = hp.ud_grade(mask,
-                                   nside_out=self.nside)
-                self.mask *= mask
-            if self.file_gp_mask is not None:
-                field = self.gal_mask_modes[self.gal_mask_mode]
-                mask = hp.read_map(self.file_gp_mask, field)
-                mask = hp.ud_grade(mask,
-                                   nside_out=self.nside)
-                self.mask *= mask
-            if self.file_sp_mask is not None:
-                mask = hp.read_map(self.file_sp_mask)
-                mask = hp.ud_grade(mask,
-                                   nside_out=self.nside)
-                self.mask *= mask
-        return self.mask
+        return NotImplementedError("Do not use base class")
 
     def _get_hm_maps(self):
-        if self.hm1_map is None:
-            if self.file_hm1 is not None:
-                hm1_map = hp.read_map(self.file_hm1)
-                self.hm1_map = [hp.ud_grade(hm1_map,
-                                nside_out=self.nside)]
-            else:
-                hm1_map = hp.read_map(self.file_map, 1)
-                self.hm1_map = [hp.ud_grade(hm1_map,
-                                nside_out=self.nside)]
-        if self.hm2_map is None:
-            if self.file_hm2 is not None:
-                hm2_map = hp.read_map(self.file_hm2)
-                self.hm2_map = [hp.ud_grade(hm2_map,
-                                nside_out=self.nside)]
-            else:
-                hm2_map = hp.read_map(self.file_map, 2)
-                self.hm2_map = [hp.ud_grade(hm2_map,
-                                nside_out=self.nside)]
-        return self.hm1_map, self.hm2_map
+        return NotImplementedError("Do not use base class")
 
     def _get_diff_map(self):
         if self.diff_map is None:
@@ -113,13 +65,13 @@ class MapperBasePlanck(MapperBase):
             self.nl_coupled = nmt.compute_coupled_cell(diff_f, diff_f)/4
         return self.nl_coupled
 
-    def get_cl_coupled(self, mode='Auto'):
-        self.cl_coupled = self.cls[mode]
+    def get_cl_coupled(self): 
+        mode = self.cl_mode
         if self.cl_coupled is None:
             if mode == 'Auto':
                 f = self.get_nmt_field()
                 self.cls[mode] = nmt.compute_coupled_cell(f, f)
-            if mode == 'Cross':
+            elif mode == 'Cross':
                 self.hm1_map, self.hm2_map = self._get_hm_maps()
                 hm1_f = self._get_nmt_field(signal=self.hm1_map)
                 hm2_f = self._get_nmt_field(signal=self.hm2_map)

@@ -1,6 +1,7 @@
 import xcell as xc
 import numpy as np
 import healpy as hp
+import pytest
 
 
 def get_config():
@@ -26,11 +27,11 @@ def get_mappers(c=None):
 def test_smoke():
     get_mappers()
 
-
-def test_spin():
-    mappers = get_mappers()
-    for m in mappers:
-        assert m.get_spin() == 0
+@pytest.mark.parametrize('m', [xc.mappers.MapperP18tSZ(get_config()),
+                               xc.mappers.MapperP18SMICA_NOSZ(get_config()),
+                               xc.mappers.MapperP15CIB(get_config())])
+def test_spin(m):
+    assert m.get_spin() == 0
 
 
 def test_get_signal_map():

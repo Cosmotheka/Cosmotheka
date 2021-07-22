@@ -13,4 +13,4 @@ class MapperP15CIB(MapperBasePlanck):
         self._get_Planck_defaults(config)
 
     def get_dtype(self):
-        return 'cmb_CIB'
+        return 'cmbCluster_convergenceDensity_cl'
