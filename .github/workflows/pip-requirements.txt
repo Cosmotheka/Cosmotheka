@@ -1,0 +1,15 @@
+# Install wheel to avoid recompiling pymaster, pyccl, camb, etc.
+wheel
+numpy
+scipy
+flake8
+pytest
+pytest-cov
+astropy
+healpy
+pandas
+pymaster
+pyccl
+camb
+coveralls
+sacc

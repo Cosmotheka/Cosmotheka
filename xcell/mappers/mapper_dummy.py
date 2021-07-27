@@ -59,6 +59,9 @@ class MapperDummy(MapperBase):
         self.mask = None
         self.dndz = None
         self.cl = None
+        self.dec0 = self.config.get('dec0', 0.)
+        self.ra0 = self.config.get('ra0', 0.)
+        self.aposize = self.config.get('aposize', 1.)
 
     def _check_dtype(self):
         dtypes = ['galaxy_density', 'galaxy_shear', 'cmb_convergence']
@@ -123,23 +126,23 @@ class MapperDummy(MapperBase):
                 self.signal_map = [mq, mu]
         return self.signal_map
 
-    def get_mask(self, aps=1., dec0=0., ra0=0.):
+    def get_mask(self):
         if self.mask is None:
             if self.fsky >= 1:
                 self.mask = np.ones(hp.nside2npix(self.nside))
             else:
                 # This generates a correctly-apodized mask
-                v0 = np.array([np.sin(np.radians(90-dec0)) *
-                               np.cos(np.radians(ra0)),
-                               np.sin(np.radians(90-dec0)) *
-                               np.sin(np.radians(ra0)),
-                               np.cos(np.radians(90-dec0))])
+                v0 = np.array([np.sin(np.radians(90-self.dec0)) *
+                               np.cos(np.radians(self.ra0)),
+                               np.sin(np.radians(90-self.dec0)) *
+                               np.sin(np.radians(self.ra0)),
+                               np.cos(np.radians(90-self.dec0))])
                 vv = np.array(hp.pix2vec(self.nside,
                                          np.arange(hp.nside2npix(self.nside))))
                 cth = np.sum(v0[:, None]*vv, axis=0)
                 th = np.arccos(cth)
                 th0 = np.arccos(1-2*self.fsky)
-                th_apo = np.radians(aps)
+                th_apo = np.radians(self.aposize)
                 id0 = np.where(th >= th0)[0]
                 id1 = np.where(th <= th0-th_apo)[0]
                 idb = np.where((th > th0-th_apo) & (th < th0))[0]
@@ -151,11 +154,18 @@ class MapperDummy(MapperBase):
                 self.mask = mask_apo
         return self.mask
 
+    def get_ell(self):
+        # Needed to mimic MapperP18CMBK
+        return np.arange(3 * self.nside)
+
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             # Coupled analytical noise bias
             self.nl_coupled = np.zeros((self.nmaps*self.nmaps,
-                                        3*self.nside)) + self.noise_level
+                                        3*self.nside))
+            self.nl_coupled[0] += self.noise_level
+            if self.nmaps == 2:
+                self.nl_coupled[-1] += self.noise_level
         return self.nl_coupled
 
     def get_dtype(self):
