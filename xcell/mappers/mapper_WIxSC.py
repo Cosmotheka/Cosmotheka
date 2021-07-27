@@ -37,6 +37,10 @@ class MapperWIxSC(MapperBase):
         self.delta_map = None
         self.nl_coupled = None
         self.mask = None
+        self.nside_nl_threshold = config.get('nside_nl_threshold',
+                                             4096)
+        self.lmin_nl_from_data = config.get('lmin_nl_from_data',
+                                            2000)
 
     def get_catalog(self):
         if self.cat_data is None:
@@ -139,7 +143,7 @@ class MapperWIxSC(MapperBase):
         else:
             return np.array([z_dz[sel], nz[sel]])
 
-    def get_signal_map(self, apply_galactic_correction=True):
+    def get_signal_map(self):
         if self.delta_map is None:
             d = np.zeros(self.npix)
             self.cat_data = self.get_catalog()
@@ -152,7 +156,7 @@ class MapperWIxSC(MapperBase):
             goodpix = self.mask > 0
             # Division by mask not really necessary, since it's binary.
             d[goodpix] = nmap_data[goodpix]/(mean_n*self.mask[goodpix])-1
-            if apply_galactic_correction:
+            if self.config.get('apply_galactic_correction', True):
                 gcorr = self._get_galactic_correction(d, self.stars,
                                                       self.mask)
                 d -= gcorr['delta_map']
@@ -220,7 +224,8 @@ class MapperWIxSC(MapperBase):
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
-            if (self.nside < 4096) or (self.config.get('nl_analytic', True)):
+            if ((self.nside < self.nside_nl_threshold) or
+                    (self.config.get('nl_analytic', True))):
                 cat_data = self.get_catalog()
                 n = get_map_from_points(cat_data, self.nside,
                                         ra_name='RA', dec_name='DEC',
@@ -232,7 +237,7 @@ class MapperWIxSC(MapperBase):
             else:
                 f = self.get_nmt_field()
                 cl = nmt.compute_coupled_cell(f, f)[0]
-                N_ell = np.mean(cl[4000:2*self.nside])
+                N_ell = np.mean(cl[self.lmin_nl_from_data:2*self.nside])
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
 
