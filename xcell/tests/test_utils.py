@@ -16,6 +16,8 @@ def test_map_from_points():
 
 
 def test_get_DIR_Nz():
+    # If cat_spec and cat_photo are the same,
+    # DIR should return the N(z) of the spec catalog.
     cat = {'z': np.random.randn(1000),
            'rmag': 2+np.random.rand(1000),
            'imag': 2+np.random.rand(1000)}
@@ -27,3 +29,9 @@ def test_get_DIR_Nz():
     nzz, ze = np.histogram(cat['z'], range=[-3, 3], bins=10, density=True)
 
     assert np.all((nzz-nz)/np.amax(nzz) < 1E-10)
+
+    import matplotlib.pyplot as plt
+    plt.plot(nzz)
+    plt.errorbar(nz, yerr=np.std(nz_jk, axis=0))
+    plt.show()
+    assert False
