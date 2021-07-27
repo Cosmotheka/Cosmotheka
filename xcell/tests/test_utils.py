@@ -27,11 +27,4 @@ def test_get_DIR_Nz():
                                          bands_photo=['rmag', 'imag'])
 
     nzz, ze = np.histogram(cat['z'], range=[-3, 3], bins=10, density=True)
-
     assert np.all((nzz-nz)/np.amax(nzz) < 1E-10)
-
-    import matplotlib.pyplot as plt
-    plt.plot(nzz)
-    plt.errorbar(nz, yerr=np.std(nz_jk, axis=0))
-    plt.show()
-    assert False
