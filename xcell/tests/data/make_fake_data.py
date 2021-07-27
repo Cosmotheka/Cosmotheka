@@ -3,6 +3,7 @@ import healpy as hp
 from astropy.io import fits
 from astropy.table import Table
 import wget
+import os
 
 
 nside = 32
@@ -93,9 +94,42 @@ cols = fits.ColDefs([fits.Column(name='zbin_mcal', format='D', array=on),
 hdu = fits.BinTableHDU.from_columns(cols)
 hdu.writeto("cat_zbin.fits", overwrite=True)
 
+
 with fits.open("catalog.fits") as f:
     t = Table.read(f)
     t['SG_FLAG'][:] = 0
-    t.write('catalog_stars.fits')
+    t.write('catalog_stars.fits', overwrite=True)
 
-wget.download("http://desdr-server.ncsa.illinois.edu/despublic/y1a1_files/chains/2pt_NG_mcal_1110.fits")  # noqa
+if not os.path.isfile("2pt_NG_mcal_1110.fits"):
+    wget.download("http://desdr-server.ncsa.illinois.edu/despublic/y1a1_files/chains/2pt_NG_mcal_1110.fits")  # noqa
+
+
+zs = np.random.randn(npix)*0.05+0.15
+zs[zs < 0] = 0
+print(zs.shape)
+cols = fits.ColDefs([fits.Column(name='SUPRA', format='D',
+                                 array=ra),
+                     fits.Column(name='SUPDEC', format='D',
+                                 array=dec),
+                     fits.Column(name='ZPHOTO', format='D',
+                                 array=zs),
+                     fits.Column(name='ZSPEC', format='D',
+                                 array=zs),
+                     fits.Column(name='JCORR', format='D',
+                                 array=np.arange(npix)),
+                     fits.Column(name='KCORR', format='D',
+                                 array=np.arange(npix)),
+                     fits.Column(name='HCORR', format='D',
+                                 array=np.arange(npix)),
+                     fits.Column(name='W1MCORR', format='D',
+                                 array=np.arange(npix)),
+                     fits.Column(name='W2MCORR', format='D',
+                                 array=np.arange(npix)),
+                     fits.Column(name='BCALCORR', format='D',
+                                 array=np.arange(npix)),
+                     fits.Column(name='RCALCORR', format='D',
+                                 array=np.arange(npix)),
+                     fits.Column(name='ICALCORR', format='D',
+                                 array=np.arange(npix))])
+hdu = fits.BinTableHDU.from_columns(cols)
+hdu.writeto("catalog_2mpz.fits", overwrite=True)

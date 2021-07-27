@@ -54,7 +54,8 @@ class Mapper2MPZ(MapperBase):
 
     def _mask_catalog(self, cat):
         self.mask = self.get_mask()
-        ipix = hp.ang2pix(self.nside, cat['SUPRA'], cat['SUPDEC'], lonlat=True)
+        ipix = hp.ang2pix(self.nside, cat['SUPRA'],
+                          cat['SUPDEC'], lonlat=True)
         # Mask is binary, so 0.1 or 0.00001 doesn't really matter.
         return cat[self.mask[ipix] > 0.1]
 
@@ -115,7 +116,8 @@ class Mapper2MPZ(MapperBase):
             self.cat_data = self.get_catalog()
             self.mask = self.get_mask()
             nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            ra_name='SUPRA', dec_name='SUPDEC')
+                                            ra_name='SUPRA',
+                                            dec_name='SUPDEC')
             mean_n = np.sum(self.mask*nmap_data)/np.sum(self.mask)
             goodpix = self.mask > 0
             # Division by mask not really necessary, since it's binary.
@@ -135,7 +137,8 @@ class Mapper2MPZ(MapperBase):
             self.cat_data = self.get_catalog()
             self.mask = self.get_mask()
             nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            ra_name='SUPRA', dec_name='SUPDEC')
+                                            ra_name='SUPRA',
+                                            dec_name='SUPDEC')
             N_mean = np.sum(self.mask*nmap_data)/np.sum(self.mask)
             N_mean_srad = N_mean * self.npix / (4 * np.pi)
             N_ell = np.mean(self.mask) / N_mean_srad
