@@ -14,6 +14,12 @@ def test_map_from_points():
                                        nside)
     assert np.all(m == 1)
 
+    # In radians
+    m = xc.mappers.get_map_from_points({'RA': np.radians(ra),
+                                        'DEC': np.radians(dec)},
+                                       nside, in_radians=True)
+    assert np.all(m == 1)
+
 
 def test_get_DIR_Nz():
     # If cat_spec and cat_photo are the same,
