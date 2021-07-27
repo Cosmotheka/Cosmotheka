@@ -13,3 +13,17 @@ def test_map_from_points():
                                         'DEC': dec},
                                        nside)
     assert np.all(m == 1)
+
+
+def test_get_DIR_Nz():
+    cat = {'z': np.random.randn(1000),
+           'rmag': 2+np.random.rand(1000),
+           'imag': 2+np.random.rand(1000)}
+    z, nz, nz_jk = xc.mappers.get_DIR_Nz(cat, cat,
+                                         ['rmag', 'imag'],
+                                         'z', [-3, 3], 10,
+                                         bands_photo=['rmag', 'imag'])
+
+    nzz, ze = np.histogram(cat['z'], range=[-3, 3], bins=10, density=True)
+
+    assert np.all((nzz-nz)/np.amax(nzz) < 1E-10)

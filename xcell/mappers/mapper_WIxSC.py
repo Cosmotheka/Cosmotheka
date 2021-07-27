@@ -80,6 +80,7 @@ class MapperWIxSC(MapperBase):
                           np.degrees(cat['RA']),
                           np.degrees(cat['DEC']),
                           lonlat=True)
+        # Mask is binary, so 0.1 or 0.00001 doesn't really matter
         return cat[self.mask[ipix] > 0.1]
 
     def _bin_z(self, cat):

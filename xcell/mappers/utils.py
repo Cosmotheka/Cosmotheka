@@ -45,6 +45,7 @@ def get_DIR_Nz(cat_spec, cat_photo, bands, zflag,
     ntrain = len(train_data)
     weights = (num_photoz * ntrain /
                (nearest_neighbors * len(photo_data)))
+
     # Compute N(z)
     dndz, zz = np.histogram(cat_spec[zflag], range=zrange, bins=nz,
                             weights=weights, density=True)
