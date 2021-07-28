@@ -275,16 +275,12 @@ class ClFid(ClBase):
 
     def compute_tracer_ccl(self, tr, mapper):
         dtype = mapper.get_dtype()
-        tracer = self.data.data['tracers'][tr]
         fiducial = self.data.data['cov']['fiducial']
         # Get Tracers
         if dtype == 'galaxy_density':
             # Import z, pz
             z, pz = mapper.get_nz(dz=0)
-            if fiducial['gc_bias'] is True:
-                bias = (z, tracer['bias'] * np.ones_like(z))
-            else:
-                bias = (z, np.ones_like(z))
+            bias = (z, np.ones_like(z))
             # Get tracer
             return ccl.NumberCountsTracer(self.cosmo, has_rsd=False,
                                           dndz=(z, pz), bias=bias)
@@ -323,6 +319,9 @@ class ClFid(ClBase):
         if not os.path.isfile(fname):
             ccl_tr1, ccl_tr2 = self.get_tracers_ccl()
             cl = self._get_ccl_cl(ccl_tr1, ccl_tr2, ell)
+            b1 = self.data.data['tracers'][self.tr1].get('bias', 1.)
+            b2 = self.data.data['tracers'][self.tr2].get('bias', 1.)
+            cl *= b1*b2
             tracers = self.data.data['tracers']
             fiducial = self.data.data['cov']['fiducial']
             d1, d2 = self.get_dtypes()
