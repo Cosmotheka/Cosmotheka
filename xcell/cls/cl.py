@@ -220,8 +220,46 @@ class ClFid(ClBase):
         self.outdir = self.get_outdir('fiducial')
         os.makedirs(self.outdir, exist_ok=True)
         self.cosmo = self.get_cosmo_ccl()
+        self.hm_par = self._get_halomodel_params()
         self._ccl_tr1 = None
         self._ccl_tr2 = None
+
+    def _get_halomodel_params(self):
+        if 'halo_model' not in self.data.data['cov']:
+            self.data.data['cov']['halo_model'] = {}
+        hmp = self.data.data['cov']['halo_model']
+
+        if 'mass_def' not in hmp:
+            md = ccl.halos.MassDef200m()
+        else:
+            mds = hmp['mass_def']
+            Delta = float(mds[:-1])
+            if mds[-1] == 'm':
+                rho_type = 'matter'
+            elif mds[-1] == 'c':
+                rho_type = 'critical'
+            else:
+                raise ValueError("Unknown density type %s" % (mds[-1]))
+            md = ccl.halos.MassDef(Delta, rho_type)
+
+        mfc = ccl.halos.mass_function_from_name(hmp.get('mass_function',
+                                                        'Tinker10'))
+        mf = mfc(self.cosmo, mass_def=md)
+
+        hbc = ccl.halos.halo_bias_from_name(hmp.get('halo_bias',
+                                                    'Tinker10'))
+        hb = hbc(self.cosmo, mass_def=md)
+
+        # We also need an NFW profile to handle certain cases
+        cmc = ccl.halos.concentration_from_name(hmp.get('concentration',
+                                                        'Duffy08'))
+        cm = cmc(mdef=md)
+        pNFW = ccl.halos.HaloProfileNFW(cm)
+        return {'mass_def': md,
+                'mass_func': mf,
+                'halo_bias': hb,
+                'cM': cm,
+                'prof_NFW': pNFW}
 
     def get_cosmo_ccl(self):
         fiducial = self.data.data['cov']['fiducial']

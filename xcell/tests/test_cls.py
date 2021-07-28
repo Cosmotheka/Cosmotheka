@@ -358,6 +358,37 @@ def test_cov_spin0(perm):
             assert np.all(r[i::ncls1][1:] < 1E-5)
 
 
+def test_clfid_halomod_settings():
+    data = get_config()
+
+    # Empty halo model parameters (default values)
+    clf = ClFid(data, 'Dummy__0', 'Dummy__1')
+    assert np.fabs(clf.hm_par['mass_def'].get_Delta(clf.cosmo, 1.)
+                   - 200) < 1E-3
+    assert clf.hm_par['mass_def'].rho_type == 'matter'
+    assert clf.hm_par['mass_func'].name == 'Tinker10'
+    assert clf.hm_par['halo_bias'].name == 'Tinker10'
+    assert clf.hm_par['cM'].name == 'Duffy08'
+    shutil.rmtree(tmpdir1)
+
+    # Custom halo model parameters
+    md = '200c'
+    mf = 'Tinker08'
+    hb = 'Tinker10'
+    cM = 'Bhattacharya13'
+    data['cov']['halo_model'] = {'mass_def': md,
+                                 'mass_function': mf,
+                                 'halo_bias': hb,
+                                 'concentration': cM}
+    clf = ClFid(data, 'Dummy__0', 'Dummy__1')
+    assert np.fabs(clf.hm_par['mass_def'].get_Delta(clf.cosmo, 1.)
+                   - 200) < 1E-3
+    assert clf.hm_par['mass_def'].rho_type == 'critical'
+    assert clf.hm_par['mass_func'].name == mf
+    assert clf.hm_par['halo_bias'].name == hb
+    assert clf.hm_par['cM'].name == cM
+
+
 @pytest.mark.parametrize('tr1,tr2', [('galaxy_density', 'galaxy_density'),
                                      ('galaxy_density', 'galaxy_shear'),
                                      ('galaxy_density', 'cmb_convergence'),
