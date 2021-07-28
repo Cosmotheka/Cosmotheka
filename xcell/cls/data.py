@@ -171,8 +171,14 @@ class Data():
         return mapper_from_name(mapper_class)(config)
 
     def read_symmetric(self, tr1, tr2):
-        if ((tr1, tr2) not in self.get_cl_trs_names()) and \
-           ((tr2, tr1) in self.get_cl_trs_names()):
+        trs_names = self.get_cl_trs_names()
+        trs_used = self.get_tracers_used()
+        # Check if the symmetric Cell is requested or if
+        # it's a Cell for the covariance, to compute it keeping the order in
+        # the yaml file, to avoid duplications
+        if ((tr1, tr2) not in trs_names) and \
+           (((tr2, tr1) in trs_names) or
+           trs_used.index(tr1) > trs_used.index(tr2)):
             return True
         else:
             return False
