@@ -272,6 +272,9 @@ class ClFid(ClBase):
                              galaxy_density, galaxy_shear or \
                              cmb_convergence!')
 
+    def _get_ccl_cl(self, ccl_tr1, ccl_tr2, ell):
+        return ccl.angular_cl(self.cosmo, ccl_tr1, ccl_tr2, ell)
+
     def get_cl_file(self):
         nside = self.data.data['healpy']['nside']
         if self._read_symmetric:
@@ -281,7 +284,7 @@ class ClFid(ClBase):
         ell = np.arange(3 * nside)
         if not os.path.isfile(fname):
             ccl_tr1, ccl_tr2 = self.get_tracers_ccl()
-            cl = ccl.angular_cl(self.cosmo, ccl_tr1, ccl_tr2, ell)
+            cl = self._get_ccl_cl(ccl_tr1, ccl_tr2, ell)
             tracers = self.data.data['tracers']
             fiducial = self.data.data['cov']['fiducial']
             d1, d2 = self.get_dtypes()
