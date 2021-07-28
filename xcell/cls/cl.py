@@ -255,11 +255,16 @@ class ClFid(ClBase):
                                                         'Duffy08'))
         cm = cmc(mdef=md)
         pNFW = ccl.halos.HaloProfileNFW(cm)
+
+        # Halo model calculator
+        hmc = ccl.halos.HMCalculator(self.cosmo, mf, hb, md)
+
         return {'mass_def': md,
                 'mass_func': mf,
                 'halo_bias': hb,
                 'cM': cm,
-                'prof_NFW': pNFW}
+                'prof_NFW': pNFW,
+                'calculator': hmc}
 
     def get_cosmo_ccl(self):
         fiducial = self.data.data['cov']['fiducial']
@@ -275,15 +280,25 @@ class ClFid(ClBase):
 
     def compute_tracer_ccl(self, tr, mapper):
         dtype = mapper.get_dtype()
+        tracer = self.data.data['tracers'][tr]
         fiducial = self.data.data['cov']['fiducial']
+        ccl_pr = self.hm_par['prof_NFW']
+        ccl_pr_2pt = None
+        with_hm = tracer.get('use_halo_model', False)
+        normed_profile = True
         # Get Tracers
         if dtype == 'galaxy_density':
             # Import z, pz
             z, pz = mapper.get_nz(dz=0)
             bias = (z, np.ones_like(z))
             # Get tracer
-            return ccl.NumberCountsTracer(self.cosmo, has_rsd=False,
-                                          dndz=(z, pz), bias=bias)
+            ccl_tr = ccl.NumberCountsTracer(self.cosmo, has_rsd=False,
+                                            dndz=(z, pz), bias=bias)
+            if with_hm:
+                hod_pars = tracer.get('hod_params', {})
+                ccl_pr = ccl.halos.HaloProfileHOD(self.hm_par['cM'],
+                                                  **hod_pars)
+                ccl_pr_2pt = ccl.halos.HaloProfile2ptHOD()
         elif dtype == 'galaxy_shear':
             # Import z, pz
             z, pz = mapper.get_nz(dz=0)
@@ -296,18 +311,58 @@ class ClFid(ClBase):
                 bz = A*((1.+z)/(1.+z0))**eta*0.0139/0.013872474
                 ia_bias = (z, bz)
             # Get tracer
-            return ccl.WeakLensingTracer(self.cosmo, dndz=(z, pz),
-                                         ia_bias=ia_bias)
+            ccl_tr = ccl.WeakLensingTracer(self.cosmo, dndz=(z, pz),
+                                           ia_bias=ia_bias)
         elif dtype == 'cmb_convergence':
             # TODO: correct z_source
-            return ccl.CMBLensingTracer(self.cosmo, z_source=1100)
+            ccl_tr = ccl.CMBLensingTracer(self.cosmo, z_source=1100)
         else:
             raise ValueError('Type of tracer not recognized. It can be \
                              galaxy_density, galaxy_shear or \
                              cmb_convergence!')
+        return {'name': tr,
+                'ccl_tr': ccl_tr,
+                'ccl_pr': ccl_pr,
+                'ccl_pr_2pt': ccl_pr_2pt,
+                'with_hm': with_hm,
+                'normed': normed_profile}
+
+    def _get_ccl_pk(self, ccl_tr1, ccl_tr2):
+        if ccl_tr1['with_hm'] or ccl_tr2['with_hm']:
+            if ccl_tr1['name'] == ccl_tr2['name']:
+                pr2pt = ccl_tr1['ccl_pr_2pt']
+            else:
+                pr2pt = None
+            k_s = np.geomspace(1E-4, 1E2, 512)
+            lk_s = np.log(k_s)
+            a_s = 1./(1+np.linspace(0., 6., 30)[::-1])
+
+            def alpha_HMCODE(a):
+                return 0.7
+
+            def k_supress(a):
+                return 0.001
+
+            pk = ccl.halos.halomod_Pk2D(self.cosmo,
+                                        self.hm_par['calculator'],
+                                        ccl_tr1['ccl_pr'],
+                                        prof_2pt=pr2pt,
+                                        prof2=ccl_tr2['ccl_pr'],
+                                        normprof1=ccl_tr1['normed'],
+                                        normprof2=ccl_tr2['normed'],
+                                        lk_arr=lk_s, a_arr=a_s,
+                                        smooth_transition=alpha_HMCODE,
+                                        supress_1h=k_supress)
+        else:
+            pk = None
+        return pk
 
     def _get_ccl_cl(self, ccl_tr1, ccl_tr2, ell):
-        return ccl.angular_cl(self.cosmo, ccl_tr1, ccl_tr2, ell)
+        pk = self._get_ccl_pk(ccl_tr1, ccl_tr2)
+        return ccl.angular_cl(self.cosmo,
+                              ccl_tr1['ccl_tr'],
+                              ccl_tr2['ccl_tr'],
+                              ell, p_of_k_a=pk)
 
     def get_cl_file(self):
         nside = self.data.data['healpy']['nside']
