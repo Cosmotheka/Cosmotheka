@@ -14,6 +14,7 @@ def get_config():
     c['lmin_nl_from_data'] = 10
     return c
 
+
 @pytest.mark.parametrize('m', [xc.mappers.MappereBOSS(get_config()),
                                xc.mappers.MapperBOSS(get_config())])
 def test_get_dtype(m):
