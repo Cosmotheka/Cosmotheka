@@ -8,18 +8,16 @@ import wget
 nside = 32
 npix = hp.nside2npix(nside)
 
-# Fake map
-m = np.ones(npix)
-
 # Fake alm
+m = np.ones(npix)
 alm = hp.map2alm(m)
 hp.write_alm("alm.fits", alm, overwrite=True)
 
 # Fake masks
-mask1 = m
+mask1 = np.ones(npix)
 mask1[int(npix*(3/4)):] = 0
 hp.write_map("mask1.fits", mask1, overwrite=True)
-mask2 = m
+mask2 = np.ones(npix)
 mask2[:-int(npix*(3/4))] = 0
 hp.write_map("mask2.fits", mask2, overwrite=True)
 
@@ -34,7 +32,9 @@ hm2 = np.repeat(np.array([np.arange(4)])-2, npix//4,
 hp.write_map("hm2_map.fits", hm2, overwrite=True)
 
 # Fake map
+m = np.ones(npix)
 hp.write_map("map.fits", [m, hm1, hm2], overwrite=True)
+hp.write_map("map_auto_test.fits", [hm1, hm1, hm2], overwrite=True)
 
 # Noise file
 np.savetxt("nl.txt",
