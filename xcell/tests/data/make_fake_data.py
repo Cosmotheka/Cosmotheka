@@ -8,8 +8,10 @@ import wget
 nside = 32
 npix = hp.nside2npix(nside)
 
-# Fake alm
+# Fake map
 m = np.ones(npix)
+
+# Fake alm
 alm = hp.map2alm(m)
 hp.write_alm("alm.fits", alm, overwrite=True)
 
@@ -32,13 +34,7 @@ hm2 = np.repeat(np.array([np.arange(4)])-2, npix//4,
 hp.write_map("hm2_map.fits", hm2, overwrite=True)
 
 # Fake map
-cols = fits.ColDefs([fits.Column(name='m', format='D', array=m),
-                     fits.Column(name='hm1', format='D', array=hm1),
-                     fits.Column(name='hm2', format='D', array=hm2)])
-hdu = fits.BinTableHDU.from_columns(cols)
-hdu.writeto("map.fits", overwrite=True)
-#hp.write_map("map.fits", m, overwrite=True)
-
+hp.write_map("map.fits", [m, hm1, hm2], overwrite=True)
 
 # Noise file
 np.savetxt("nl.txt",
