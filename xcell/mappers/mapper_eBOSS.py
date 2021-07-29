@@ -1,4 +1,5 @@
 from .mapper_SDSS import MapperSDSS
+import numpy as np
 
 
 class MappereBOSS(MapperSDSS):
@@ -14,4 +15,12 @@ class MappereBOSS(MapperSDSS):
         """
         self._get_SDSS_defaults(config)
         self.z_edges = config.get('z_edges', [0, 3])
-        self.w_method = 'eBOSS'
+
+    def _get_w(self, mod='data'):
+        if self.ws[mod] is None:
+            cat = self.get_catalog(mod=mod)
+            w_systot = np.array(cat['WEIGHT_SYSTOT'])
+            w_cp = np.array(cat['WEIGHT_CP'])
+            w_noz = np.array(cat['WEIGHT_NOZ'])
+            self.ws[mod] = w_systot*w_cp*w_noz  # FKP left out
+        return self.ws[mod]

@@ -11,7 +11,6 @@ from .mapper_base import MapperBase
 class MapperSDSS(MapperBase):
     def __init__(self, config):
         self._get_SDSS_defaults(config)
-        return
 
     def _get_SDSS_defaults(self, config):
         self._get_defaults(config)
@@ -51,7 +50,7 @@ class MapperSDSS(MapperBase):
             cat_data = self.get_catalog(mod='data')
             w_data = self._get_w(mod='data')
             h, b = np.histogram(cat_data['Z'], bins=self.z_arr_dim,
-                                weights=w_data)   # , range=[0.5, 2.5])
+                                weights=w_data, range=self.z_edges)
             self.dndz = np.array([0.5 * (b[:-1] + b[1:]), h])
         z, nz = self.dndz
         z_dz = z + dz
@@ -131,26 +130,7 @@ class MapperSDSS(MapperBase):
                    (cat['Z'] < self.z_edges[1])]
 
     def _get_w(self, mod='data'):
-        if self.ws[mod] is None:
-            cat = self.get_catalog(mod=mod)
-            if self.w_method == 'eBOSS':
-                w_systot = np.array(cat['WEIGHT_SYSTOT'])
-                w_cp = np.array(cat['WEIGHT_CP'])
-                w_noz = np.array(cat['WEIGHT_NOZ'])
-                self.ws[mod] = w_systot*w_cp*w_noz
-                # FKP left out
-            elif self.w_method == 'BOSS':
-                if mod == 'data':
-                    w_systot = np.array(cat['WEIGHT_SYSTOT'])
-                    w_cp = np.array(cat['WEIGHT_CP'])
-                    w_noz = np.array(cat['WEIGHT_NOZ'])
-                    w = w_systot*(w_cp+w_noz-1)
-                    # Eqn. 50 of https://arxiv.org/pdf/1509.06529.pdf
-                if mod == 'random':
-                    w = np.ones_like(cat['RA'])
-                self.ws[mod] = w  # FKP left out
-
-        return self.ws[mod]
+        raise NotImplementedError("Do not use base class")
 
     def get_dtype(self):
         return 'galaxy_density'
