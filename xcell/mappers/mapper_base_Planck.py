@@ -1,4 +1,3 @@
-import numpy as np
 import healpy as hp
 import pymaster as nmt
 from .mapper_base import MapperBase
@@ -65,7 +64,7 @@ class MapperBasePlanck(MapperBase):
             self.nl_coupled = nmt.compute_coupled_cell(diff_f, diff_f)/4
         return self.nl_coupled
 
-    def get_cl_coupled(self): 
+    def get_cl_coupled(self):
         mode = self.cl_mode
         if self.cl_coupled is None:
             if mode == 'Auto':

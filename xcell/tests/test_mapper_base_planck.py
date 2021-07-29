@@ -1,18 +1,17 @@
 import xcell as xc
 import numpy as np
-import healpy as hp
 import pytest
 
 
 def get_config():
     c = {'file_map': 'xcell/tests/data/map.fits',
-        'file_hm1': 'xcell/tests/data/hm1_map.fits',
-        'file_hm2': 'xcell/tests/data/hm2_map.fits',
-        'file_mask': 'xcell/tests/data/map.fits',
-        'file_gp_mask': 'xcell/tests/data/mask1.fits',
-        'file_sp_mask': 'xcell/tests/data/mask2.fits',
-        'gal_mask_mode': '0.2',
-        'nside': 32}
+         'file_hm1': 'xcell/tests/data/hm1_map.fits',
+         'file_hm2': 'xcell/tests/data/hm2_map.fits',
+         'file_mask': 'xcell/tests/data/map.fits',
+         'file_gp_mask': 'xcell/tests/data/mask1.fits',
+         'file_sp_mask': 'xcell/tests/data/mask2.fits',
+         'gal_mask_mode': '0.2',
+         'nside': 32}
     return c
 
 
@@ -41,12 +40,13 @@ def test_get_nl_coupled(m):
     assert np.mean(nl) < 0.001
 
 
-@pytest.mark.parametrize(['m', 'n'], [[xc.mappers.MapperP18tSZ(get_config()), 
-                                       xc.mappers.MapperP18tSZ(get_config())],
-                                      [xc.mappers.MapperP18SMICA_NOSZ(get_config()),
-                                       xc.mappers.MapperP18SMICA_NOSZ(get_config())],
-                                      [xc.mappers.MapperP15CIB(get_config()),
-                                       xc.mappers.MapperP15CIB(get_config())]])
+@pytest.mark.parametrize(['m', 'n'],
+                         [[xc.mappers.MapperP18tSZ(get_config()),
+                          xc.mappers.MapperP18tSZ(get_config())],
+                         [xc.mappers.MapperP18SMICA_NOSZ(get_config()),
+                          xc.mappers.MapperP18SMICA_NOSZ(get_config())],
+                         [xc.mappers.MapperP15CIB(get_config()),
+                          xc.mappers.MapperP15CIB(get_config())]])
 def test_get_cl_coupled(m, n):
     m.file_map = 'xcell/tests/data/map_auto_test.fits'
     m.cl_mode = 'Auto'

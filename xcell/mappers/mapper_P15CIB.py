@@ -1,6 +1,5 @@
 from .mapper_base_Planck import MapperBasePlanck
 import healpy as hp
-import numpy as np
 
 
 class MapperP15CIB(MapperBasePlanck):
