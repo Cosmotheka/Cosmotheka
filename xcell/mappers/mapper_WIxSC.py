@@ -88,8 +88,8 @@ class MapperWIxSC(MapperBase):
         return cat[self.mask[ipix] > 0.1]
 
     def _bin_z(self, cat):
-        return cat[(cat['ZPHOTO_CORR'] >= self.z_edges[0]) &
-                   (cat['ZPHOTO_CORR'] < self.z_edges[1])]
+        return cat[(cat['ZPHOTO_CORR'] > self.z_edges[0]) &
+                   (cat['ZPHOTO_CORR'] <= self.z_edges[1])]
 
     def _get_specsample(self, cat):
         import pandas as pd

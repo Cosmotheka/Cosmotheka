@@ -60,8 +60,8 @@ class Mapper2MPZ(MapperBase):
         return cat[self.mask[ipix] > 0.1]
 
     def _bin_z(self, cat):
-        return cat[(cat['ZPHOTO'] >= self.z_edges[0]) &
-                   (cat['ZPHOTO'] < self.z_edges[1])]
+        return cat[(cat['ZPHOTO'] > self.z_edges[0]) &
+                   (cat['ZPHOTO'] <= self.z_edges[1])]
 
     def _get_specsample(self, cat):
         ids = cat['ZSPEC'] > -1
@@ -118,7 +118,7 @@ class Mapper2MPZ(MapperBase):
             nmap_data = get_map_from_points(self.cat_data, self.nside,
                                             ra_name='SUPRA',
                                             dec_name='SUPDEC')
-            mean_n = np.sum(self.mask*nmap_data)/np.sum(self.mask)
+            mean_n = np.average(nmap_data, weights=self.mask)
             goodpix = self.mask > 0
             # Division by mask not really necessary, since it's binary.
             d[goodpix] = nmap_data[goodpix]/(mean_n*self.mask[goodpix])-1
@@ -139,7 +139,7 @@ class Mapper2MPZ(MapperBase):
             nmap_data = get_map_from_points(self.cat_data, self.nside,
                                             ra_name='SUPRA',
                                             dec_name='SUPDEC')
-            N_mean = np.sum(self.mask*nmap_data)/np.sum(self.mask)
+            N_mean = np.average(nmap_data, weights=self.mask)
             N_mean_srad = N_mean * self.npix / (4 * np.pi)
             N_ell = np.mean(self.mask) / N_mean_srad
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
