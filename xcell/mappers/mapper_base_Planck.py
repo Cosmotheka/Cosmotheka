@@ -36,7 +36,6 @@ class MapperBasePlanck(MapperBase):
                                '0.9': 5,
                                '0.97': 6,
                                '0.99': 7}
-        return
 
     def get_signal_map(self):
         if self.signal_map is None:
@@ -54,14 +53,14 @@ class MapperBasePlanck(MapperBase):
     def _get_diff_map(self):
         if self.diff_map is None:
             self.hm1_map, self.hm2_map = self._get_hm_maps()
-            self.diff_map = self.hm1_map[0] - self.hm2_map[0]
+            self.diff_map = (self.hm1_map[0] - self.hm2_map[0])/2
         return [self.diff_map]
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             self.diff_map = self._get_diff_map()
             diff_f = self._get_nmt_field(signal=self.diff_map)
-            self.nl_coupled = nmt.compute_coupled_cell(diff_f, diff_f)/4
+            self.nl_coupled = nmt.compute_coupled_cell(diff_f, diff_f)
         return self.nl_coupled
 
     def get_cl_coupled(self):

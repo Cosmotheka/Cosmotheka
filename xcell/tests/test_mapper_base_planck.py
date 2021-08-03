@@ -16,14 +16,14 @@ def get_config():
 
 
 @pytest.mark.parametrize('m', [xc.mappers.MapperP18tSZ(get_config()),
-                               xc.mappers.MapperP18SMICA_NOSZ(get_config()),
+                               xc.mappers.MapperP18SMICA(get_config()),
                                xc.mappers.MapperP15CIB(get_config())])
 def test_spin(m):
     assert m.get_spin() == 0
 
 
 @pytest.mark.parametrize('m', [xc.mappers.MapperP18tSZ(get_config()),
-                               xc.mappers.MapperP18SMICA_NOSZ(get_config()),
+                               xc.mappers.MapperP18SMICA(get_config()),
                                xc.mappers.MapperP15CIB(get_config())])
 def test_get_signal_map(m):
     d = m.get_signal_map()
@@ -33,7 +33,7 @@ def test_get_signal_map(m):
 
 
 @pytest.mark.parametrize('m', [xc.mappers.MapperP18tSZ(get_config()),
-                               xc.mappers.MapperP18SMICA_NOSZ(get_config()),
+                               xc.mappers.MapperP18SMICA(get_config()),
                                xc.mappers.MapperP15CIB(get_config())])
 def test_get_nl_coupled(m):
     nl = m.get_nl_coupled()
@@ -43,8 +43,8 @@ def test_get_nl_coupled(m):
 @pytest.mark.parametrize(['m', 'n'],
                          [[xc.mappers.MapperP18tSZ(get_config()),
                           xc.mappers.MapperP18tSZ(get_config())],
-                         [xc.mappers.MapperP18SMICA_NOSZ(get_config()),
-                          xc.mappers.MapperP18SMICA_NOSZ(get_config())],
+                         [xc.mappers.MapperP18SMICA(get_config()),
+                          xc.mappers.MapperP18SMICA(get_config())],
                          [xc.mappers.MapperP15CIB(get_config()),
                           xc.mappers.MapperP15CIB(get_config())]])
 def test_get_cl_coupled(m, n):

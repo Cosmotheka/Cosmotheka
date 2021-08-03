@@ -8,7 +8,7 @@ from .mapper_KV450 import MapperKV450
 from .mapper_KiDS1000 import MapperKiDS1000
 from .mapper_P18CMBK import MapperP18CMBK
 from .mapper_P18tSZ import MapperP18tSZ
-from .mapper_P18SMICA_NOSZ import MapperP18SMICA_NOSZ
+from .mapper_P18SMICA import MapperP18SMICA
 from .mapper_P15CIB import MapperP15CIB
 from .mapper_DELS import MapperDELS
 from .mapper_dummy import MapperDummy
