@@ -38,5 +38,5 @@ class MapperBase(object):
 
     def get_nmt_field(self, **kwargs):
         if self.nmt_field is None:
-            self.nmt_field = _get_nmt_field(signal=None, **kwargs)
+            self.nmt_field = self._get_nmt_field(signal=None, **kwargs)
         return self.nmt_field
