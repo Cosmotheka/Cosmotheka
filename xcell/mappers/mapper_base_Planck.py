@@ -6,7 +6,6 @@ from .mapper_base import MapperBase
 class MapperBasePlanck(MapperBase):
     def __init__(self, config):
         self._get_Planck_defaults(config)
-        return
 
     def _get_Planck_defaults(self, config):
         self._get_defaults(config)
