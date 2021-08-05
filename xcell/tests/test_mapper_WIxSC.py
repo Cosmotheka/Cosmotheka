@@ -11,7 +11,7 @@ def get_config():
             'mask': 'xcell/tests/data/map.fits',
             'star_map': 'xcell/tests/data/map.fits',
             'spec_sample': 'xcell/tests/data/catalog_spec_2mpz.csv',
-            'z_edges': [0, 0.5],
+            'z_edges': [-1E-10, 0.5],
             'bin_name': '0',
             'path_rerun': '.',
             'apply_galactic_correction': False,
