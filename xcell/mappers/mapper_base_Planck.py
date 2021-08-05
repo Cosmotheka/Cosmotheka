@@ -22,9 +22,6 @@ class MapperBasePlanck(MapperBase):
         self.diff_map = None
         self.nl_coupled = None
         self.cl_coupled = None
-        self.cl_mode = config.get('cl_mode', 'Auto')
-        self.cls = {'Auto': None,
-                    'Cross': None}
         self.custom_auto = True
         self.mask = None
         self.gal_mask_mode = config.get('gal_mask_mode', '0.6')
@@ -64,17 +61,11 @@ class MapperBasePlanck(MapperBase):
         return self.nl_coupled
 
     def get_cl_coupled(self):
-        mode = self.cl_mode
         if self.cl_coupled is None:
-            if mode == 'Auto':
-                f = self.get_nmt_field()
-                self.cls[mode] = nmt.compute_coupled_cell(f, f)
-            elif mode == 'Cross':
-                self.hm1_map, self.hm2_map = self._get_hm_maps()
-                hm1_f = self._get_nmt_field(signal=self.hm1_map)
-                hm2_f = self._get_nmt_field(signal=self.hm2_map)
-                self.cls[mode] = nmt.compute_coupled_cell(hm1_f, hm2_f)
-            self.cl_coupled = self.cls[mode]
+            self.hm1_map, self.hm2_map = self._get_hm_maps()
+            hm1_f = self._get_nmt_field(signal=self.hm1_map)
+            hm2_f = self._get_nmt_field(signal=self.hm2_map)
+            self.cl_coupled = nmt.compute_coupled_cell(hm1_f, hm2_f)
         return self.cl_coupled
 
     def get_beam(self):

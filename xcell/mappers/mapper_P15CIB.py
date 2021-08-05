@@ -33,4 +33,4 @@ class MapperP15CIB(MapperBasePlanck):
         return self.mask
 
     def get_dtype(self):
-        return 'cmb_temperature'
+        return 'generic'
