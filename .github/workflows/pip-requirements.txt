@@ -2,6 +2,7 @@
 wheel
 numpy
 scipy
+scikit-learn
 flake8
 pytest
 pytest-cov
