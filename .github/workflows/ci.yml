@@ -30,7 +30,7 @@ jobs:
             # Based on: https://medium.com/ai2-blog/python-caching-in-github-actions-e9452698e98d
             path: ${{ env.pythonLocation }}
             # Use hashFiles to regenerate cache when adding new dependencies
-            key: ${{ runner.os }}-cache-${{ hashFiles('.github/workflows/pip-requirements.txt') }}
+            key: ${{ runner.os }}-cache-${{ hashFiles('.github/workflows/requirements.txt') }}
 
         - name: Install GSL, FFTW (linux)
           run: |
