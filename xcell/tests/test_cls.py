@@ -149,6 +149,17 @@ def test_get_ell_cl():
     assert np.all(cl_class.wins == w.get_bandpower_windows())
 
 
+def test_get_ell_cl_cp():
+    # Get cl from map
+    cl_class = get_cl_class()
+    ell, cl = cl_class.get_ell_cl()
+    ell, cl_cp = cl_class.get_ell_cl_cp()
+
+    w = cl_class.get_workspace()
+    cl2 = w.decouple_cell(cl_cp)
+    assert np.all(np.fabs(cl / cl2 - 1) < 1e-10)
+
+
 def test_get_covariance():
     # Get cl from randomnly generated map ("data")
     cl_class = get_cl_class(fsky=1)
