@@ -15,14 +15,14 @@ def get_config():
     return c
 
 
-@pytest.mark.parametrize('m', [xc.mappers.MapperP18tSZ(get_config()),
+@pytest.mark.parametrize('m', [xc.mappers.MapperP15tSZ(get_config()),
                                xc.mappers.MapperP18SMICA(get_config()),
                                xc.mappers.MapperP15CIB(get_config())])
 def test_spin(m):
     assert m.get_spin() == 0
 
 
-@pytest.mark.parametrize('m', [xc.mappers.MapperP18tSZ(get_config()),
+@pytest.mark.parametrize('m', [xc.mappers.MapperP15tSZ(get_config()),
                                xc.mappers.MapperP18SMICA(get_config()),
                                xc.mappers.MapperP15CIB(get_config())])
 def test_get_signal_map(m):
@@ -32,7 +32,7 @@ def test_get_signal_map(m):
     assert np.all(np.fabs(d-1) < 0.02)
 
 
-@pytest.mark.parametrize('m', [xc.mappers.MapperP18tSZ(get_config()),
+@pytest.mark.parametrize('m', [xc.mappers.MapperP15tSZ(get_config()),
                                xc.mappers.MapperP18SMICA(get_config()),
                                xc.mappers.MapperP15CIB(get_config())])
 def test_get_nl_coupled(m):
@@ -41,8 +41,8 @@ def test_get_nl_coupled(m):
 
 
 @pytest.mark.parametrize(['m', 'n'],
-                         [[xc.mappers.MapperP18tSZ(get_config()),
-                          xc.mappers.MapperP18tSZ(get_config())],
+                         [[xc.mappers.MapperP15tSZ(get_config()),
+                           xc.mappers.MapperP15tSZ(get_config())],
                          [xc.mappers.MapperP18SMICA(get_config()),
                           xc.mappers.MapperP18SMICA(get_config())],
                          [xc.mappers.MapperP15CIB(get_config()),

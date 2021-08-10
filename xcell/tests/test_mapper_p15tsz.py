@@ -17,7 +17,7 @@ def get_config():
 def get_mapper(c=None):
     if c is None:
         c = get_config()
-    return xc.mappers.MapperP18tSZ(c)
+    return xc.mappers.MapperP15tSZ(c)
 
 
 def test_get_mask():

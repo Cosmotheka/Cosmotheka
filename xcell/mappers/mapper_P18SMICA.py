@@ -1,9 +1,9 @@
-from .mapper_base_Planck import MapperBasePlanck
+from .mapper_Planck_base import MapperPlanckBase
 import healpy as hp
 import numpy as np
 
 
-class MapperP18SMICA(MapperBasePlanck):
+class MapperP18SMICA(MapperPlanckBase):
     def __init__(self, config):
         """
         config - dict
@@ -12,6 +12,7 @@ class MapperP18SMICA(MapperBasePlanck):
          'nside':512}
         """
         self._get_Planck_defaults(config)
+        self.beam_info = config.get('beam_fwhm_arcmin', 5.)
 
     def _get_hm_maps(self):
         if self.hm1_map is None:

@@ -1,13 +1,13 @@
 # flake8: noqa
 from .mapper_base import MapperBase
-from .mapper_base_Planck import MapperBasePlanck
+from .mapper_Planck_base import MapperPlanckBase
 from .mapper_DESY1gc import MapperDESY1gc
 from .mapper_DESY1wl import MapperDESY1wl
 from .mapper_eBOSSQSO import MappereBOSSQSO
 from .mapper_KV450 import MapperKV450
 from .mapper_KiDS1000 import MapperKiDS1000
 from .mapper_P18CMBK import MapperP18CMBK
-from .mapper_P18tSZ import MapperP18tSZ
+from .mapper_P15tSZ import MapperP15tSZ
 from .mapper_P18SMICA import MapperP18SMICA
 from .mapper_P15CIB import MapperP15CIB
 from .mapper_DELS import MapperDELS
