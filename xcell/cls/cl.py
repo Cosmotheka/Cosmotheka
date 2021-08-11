@@ -163,15 +163,31 @@ class Cl(ClBase):
             f1, f2 = self.get_nmt_fields()
             w = self.get_workspace()
             wins = w.get_bandpower_windows()
-            cl_cp = nmt.compute_coupled_cell(f1, f2)
-            cl = w.decouple_cell(cl_cp)
+
+            # Compute power spectrum
+            # If auto-correlation, compute noise and,
+            # if needed, the custom signal power spectrum.
+            auto = self.tr1 == self.tr2
+            # Noise
             if self.tr1 == self.tr2:
                 nl_cp = mapper1.get_nl_coupled()
                 nl = w.decouple_cell(nl_cp)
             else:
                 nl_cp = np.zeros((cl.shape[0], 3 * self.nside))
                 nl = np.zeros_like(cl)
-            np.savez(fname, ell=ell, cl=cl-nl, cl_cp=cl_cp-nl_cp, nl=nl,
+            # Signal
+            if auto and mapper1.custom_auto:
+                cl_cp = mapper1.get_cl_coupled()
+                cl = w.decouple_cell(cl_cp)
+                # mapper.get_cl_coupled is assumed to return
+                # the noise-less power spectrum. No need
+                # to subtract it here.
+            else:
+                cl_cp = nmt.compute_coupled_cell(f1, f2)
+                cl = w.decouple_cell(cl_cp)
+                cl_cp -= nl_cp
+                cl -= nl
+            np.savez(fname, ell=ell, cl=cl, cl_cp=cl_cp, nl=nl,
                      nl_cp=nl_cp, wins=wins)
             self.recompute_cls = False
 
