@@ -78,6 +78,19 @@ def test_get_cl_coupled(cls):
                        rtol=0, atol=1E-10*nl_diff_scale)
 
 
+@pytest.mark.parametrize('cls', [xc.mappers.MapperP15tSZ,
+                                 xc.mappers.MapperP18SMICA,
+                                 xc.mappers.MapperP15CIB])
+def test_get_hm_maps(cls):
+    conf = get_config()
+    m = cls(conf)
+    m1b = hp.read_map(conf['file_hm1'], verbose=False)
+    m2b = hp.read_map(conf['file_hm2'], verbose=False)
+    m1, m2 = m._get_hm_maps()
+    assert np.all(m1 == m1b)
+    assert np.all(m2 == m2b)
+
+
 @pytest.mark.parametrize('cls,frac', [(xc.mappers.MapperP15tSZ, 1),
                                       (xc.mappers.MapperP15CIB, 1),
                                       (xc.mappers.MapperP18SMICA, 0.5)])
