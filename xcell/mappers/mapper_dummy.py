@@ -2,6 +2,7 @@ from .mapper_base import MapperBase
 import numpy as np
 import healpy as hp
 import pyccl as ccl
+import pymaster as nmt
 
 
 class MapperDummy(MapperBase):
@@ -53,8 +54,10 @@ class MapperDummy(MapperBase):
         self.nmaps = 1
         if self.spin:
             self.nmaps = 2
-
+        self.custom_auto = self.config.get('custom_auto', False)
+        self.custom_offset = self.config.get('custom_offset', 0.)
         self.signal_map = None
+        self.cl_coupled = None
         self.nl_coupled = None
         self.mask = None
         self.dndz = None
@@ -167,6 +170,13 @@ class MapperDummy(MapperBase):
             if self.nmaps == 2:
                 self.nl_coupled[-1] += self.noise_level
         return self.nl_coupled
+
+    def get_cl_coupled(self):
+        if self.cl_coupled is None:
+            fld = self.get_nmt_field()
+            self.cl_coupled = nmt.compute_coupled_cell(fld, fld)
+            self.cl_coupled += self.custom_offset
+        return self.cl_coupled
 
     def get_dtype(self):
         return self.dtype

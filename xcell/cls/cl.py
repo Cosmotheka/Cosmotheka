@@ -173,8 +173,10 @@ class Cl(ClBase):
                 nl_cp = mapper1.get_nl_coupled()
                 nl = w.decouple_cell(nl_cp)
             else:
-                nl_cp = np.zeros((cl.shape[0], 3 * self.nside))
-                nl = np.zeros_like(cl)
+                nmap1 = 1 + (mapper1.get_spin() > 0)
+                nmap2 = 1 + (mapper2.get_spin() > 0)
+                nl_cp = np.zeros((nmap1 * nmap2, 3 * self.nside))
+                nl = np.zeros([nmap1 * nmap2, self.b.get_n_bands()])
             # Signal
             if auto and mapper1.custom_auto:
                 cl_cp = mapper1.get_cl_coupled()
