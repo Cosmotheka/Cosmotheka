@@ -76,6 +76,7 @@ class Cl(ClBase):
         ##################
         self.nl = None
         self.nl_cp = None
+        self.cl_cp = None
         self.wins = None
 
     def get_NmtBin(self):
@@ -162,14 +163,16 @@ class Cl(ClBase):
             f1, f2 = self.get_nmt_fields()
             w = self.get_workspace()
             wins = w.get_bandpower_windows()
-            cl = w.decouple_cell(nmt.compute_coupled_cell(f1, f2))
+            cl_cp = nmt.compute_coupled_cell(f1, f2)
+            cl = w.decouple_cell(cl_cp)
             if self.tr1 == self.tr2:
                 nl_cp = mapper1.get_nl_coupled()
                 nl = w.decouple_cell(nl_cp)
             else:
                 nl_cp = np.zeros((cl.shape[0], 3 * self.nside))
                 nl = np.zeros_like(cl)
-            np.savez(fname, ell=ell, cl=cl-nl, nl=nl, nl_cp=nl_cp, wins=wins)
+            np.savez(fname, ell=ell, cl=cl-nl, cl_cp=cl_cp-nl_cp, nl=nl,
+                     nl_cp=nl_cp, wins=wins)
             self.recompute_cls = False
 
         cl_file = np.load(fname)
@@ -181,6 +184,7 @@ class Cl(ClBase):
         self.cl_file = cl_file
         self.ell = cl_file['ell']
         self.cl = cl_file['cl']
+        self.cl_cp = cl_file['cl_cp']
         self.nl = cl_file['nl']
         self.nl_cp = cl_file['nl_cp']
         self.wins = cl_file['wins']
@@ -192,9 +196,17 @@ class Cl(ClBase):
         return self.ell, self.nl
 
     def get_ell_nl_cp(self):
+        if self.nl_cp is None:
+            self.get_cl_file()
+        return np.arange(3 * self.nside), self.nl_cp
+
+    def get_ell_cl_cp(self):
+        """
+        Return the noisless coupled Cell
+        """
         if self.ell is None:
             self.get_cl_file()
-        return self.ell, self.nl_cp
+        return np.arange(3 * self.nside), self.cl_cp
 
     def get_masks(self):
         mapper1, mapper2 = self.get_mappers()

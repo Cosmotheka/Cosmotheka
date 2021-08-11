@@ -149,6 +149,17 @@ def test_get_ell_cl():
     assert np.all(cl_class.wins == w.get_bandpower_windows())
 
 
+def test_get_ell_cl_cp():
+    # Get cl from map
+    cl_class = get_cl_class()
+    ell, cl = cl_class.get_ell_cl()
+    ell, cl_cp = cl_class.get_ell_cl_cp()
+
+    w = cl_class.get_workspace()
+    cl2 = w.decouple_cell(cl_cp)
+    assert np.all(np.fabs(cl / cl2 - 1) < 1e-10)
+
+
 def test_get_covariance():
     # Get cl from randomnly generated map ("data")
     cl_class = get_cl_class(fsky=1)
@@ -244,10 +255,17 @@ def test_cls_vs_namaster():
 
 def test_symmetric():
     data = get_config()
+    # Request only 'auto' to test if read_symmetric works in the case you have
+    # 'auto but you need the cross for the covariance
+    data['cls']['Dummy-Dummy']['compute'] = 'auto'
     cl_class01 = Cl(data, 'Dummy__0', 'Dummy__1')
     os.remove(os.path.join(tmpdir1, 'data.yml'))
     cl_class10 = Cl(data, 'Dummy__1', 'Dummy__0')
 
+    fname = os.path.join(cl_class10.outdir, 'cl_Dummy__1_Dummy__0.npz')
+    assert not os.path.isfile(fname)
+    fname = os.path.join(cl_class10.outdir, 'w__mask_dummy1_mask_dummy0.fits')
+    assert not os.path.isfile(fname)
     assert np.all(np.array(cl_class01.get_masks()) ==
                   np.array(cl_class10.get_masks()[::-1]))
     assert np.all(cl_class01.get_ell_cl()[1] == cl_class10.get_ell_cl()[1])
@@ -259,9 +277,15 @@ def test_symmetric():
 
 def test_symmetric_fid():
     data = get_config()
+    # Request only 'auto' to test if read_symmetric works in the case you have
+    # 'auto but you need the cross for the covariance
+    data['cls']['Dummy-Dummy']['compute'] = 'auto'
     cl_class01 = ClFid(data, 'Dummy__0', 'Dummy__1')
     os.remove(os.path.join(tmpdir1, 'data.yml'))
     cl_class10 = ClFid(data, 'Dummy__1', 'Dummy__0')
+
+    fname = os.path.join(cl_class10.outdir, 'cl_Dummy__1_Dummy__0.npz')
+    assert not os.path.isfile(fname)
     assert np.all(cl_class01.get_ell_cl()[1] == cl_class10.get_ell_cl()[1])
     shutil.rmtree(tmpdir1)
 
