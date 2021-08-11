@@ -4,7 +4,7 @@ import pytest
 import healpy as hp
 
 
-def get_config():
+def get_config(wbeam=True):
     c = {'file_map': 'xcell/tests/data/map.fits',
          'file_hm1': 'xcell/tests/data/hm1_map.fits',
          'file_hm2': 'xcell/tests/data/hm2_map.fits',
@@ -12,22 +12,19 @@ def get_config():
          'file_gp_mask': 'xcell/tests/data/mask1.fits',
          'file_sp_mask': 'xcell/tests/data/mask2.fits',
          'gal_mask_mode': '0.2',
-         'beam_fwhm_arcmin': 0.,
          'nside': 32}
+    if wbeam:
+        c['beam_fwhm_arcmin'] = 0.
     return c
 
 
-@pytest.mark.parametrize('m', [xc.mappers.MapperP15tSZ(get_config()),
-                               xc.mappers.MapperP18SMICA(get_config()),
-                               xc.mappers.MapperP15CIB(get_config())])
-def test_spin(m):
+def test_spin():
+    m = xc.mappers.MapperPlanckBase(get_config())
     assert m.get_spin() == 0
 
 
-@pytest.mark.parametrize('m', [xc.mappers.MapperP15tSZ(get_config()),
-                               xc.mappers.MapperP18SMICA(get_config()),
-                               xc.mappers.MapperP15CIB(get_config())])
-def test_get_signal_map(m):
+def test_get_signal_map():
+    m = xc.mappers.MapperPlanckBase(get_config())
     d = m.get_signal_map()
     assert len(d) == 1
     d = d[0]
@@ -68,8 +65,8 @@ def test_get_cl_coupled(cls):
     mask = m.get_mask()
     cl_cross = m.get_cl_coupled()[0]
     nl_diff = m.get_nl_coupled()[0]
-    m1 = hp.read_map("xcell/tests/data/hm1_map.fits", verbose=False)
-    m2 = hp.read_map("xcell/tests/data/hm2_map.fits", verbose=False)
+    m1 = hp.read_map(conf['file_hm1'], verbose=False)
+    m2 = hp.read_map(conf['file_hm2'], verbose=False)
     cl_cross_bm = hp.anafast(m1*mask, m2*mask, iter=0)
     nl_diff_bm = hp.anafast(0.5*(m1-m2)*mask, iter=0)
     # Typical C_ell value for comparison (~1E-3 in this case)
@@ -79,3 +76,32 @@ def test_get_cl_coupled(cls):
                        rtol=0, atol=1E-10*cl_cross_scale)
     assert np.allclose(nl_diff, nl_diff_bm,
                        rtol=0, atol=1E-10*nl_diff_scale)
+
+
+@pytest.mark.parametrize('cls,frac', [(xc.mappers.MapperP15tSZ, 1),
+                                      (xc.mappers.MapperP15CIB, 1),
+                                      (xc.mappers.MapperP18SMICA, 0.5)])
+def test_get_mask(cls, frac):
+    m = cls(get_config())
+    npix = hp.nside2npix(m.nside)
+    mask = m.get_mask()
+    assert(np.fabs(sum(mask) - npix*frac) < 1E-5)
+
+
+@pytest.mark.parametrize('cls,typ', [(xc.mappers.MapperP15tSZ,
+                                      'cmb_tSZ'),
+                                     (xc.mappers.MapperP15CIB,
+                                      'generic'),
+                                     (xc.mappers.MapperP18SMICA,
+                                      'cmb_temperature')])
+def test_get_dtype(cls, typ):
+    m = cls(get_config())
+    assert m.get_dtype() == typ
+
+
+@pytest.mark.parametrize('cls,fwhm', [(xc.mappers.MapperP15tSZ, 10.),
+                                      (xc.mappers.MapperP15CIB, 5.),
+                                      (xc.mappers.MapperP18SMICA, 5.)])
+def test_get_fwhm(cls, fwhm):
+    m = cls(get_config(wbeam=False))
+    assert m.beam_info == fwhm
