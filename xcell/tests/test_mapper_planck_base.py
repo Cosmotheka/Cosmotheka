@@ -42,6 +42,22 @@ def test_get_nl_coupled(m):
     assert np.mean(nl) < 0.001
 
 
+def test_get_beam():
+    # No beam
+    m = xc.mappers.MapperPlanckBase(get_config())
+    beam = m.get_beam()
+    assert np.all(beam == 1.0)
+
+    # 15-arcmin beam
+    fwhm = 15.
+    m = xc.mappers.MapperPlanckBase(get_config())
+    m.beam_info = fwhm
+    beam = m.get_beam()
+    ls = np.arange(3*m.nside)
+    bls = np.exp(-0.5*ls*(ls+1)*(fwhm*np.pi/180/60/2.355)**2)
+    assert np.allclose(beam, bls, atol=0, rtol=1E-3)
+
+
 @pytest.mark.parametrize('cls', [xc.mappers.MapperP15tSZ,
                                  xc.mappers.MapperP18SMICA,
                                  xc.mappers.MapperP15CIB])

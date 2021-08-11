@@ -1,7 +1,6 @@
 import numpy as np
 import healpy as hp
 import pymaster as nmt
-from scipy.interpolate import interp1d
 from .mapper_base import MapperBase
 
 
@@ -79,13 +78,6 @@ class MapperPlanckBase(MapperBase):
         if self.beam is None:
             if self.beam_info is None:  # No beam
                 self.beam = np.ones(3*self.nside)
-            elif isinstance(self.beam_info, str):  # Path to beam file
-                d = np.loadtxt(self.beam_info, unpack=True)
-                ll = d[0]
-                bl = d[1]
-                bf = interp1d(ll, bl)
-                ell = np.arange(3*self.nside)
-                self.beam = bf(ell)
             else:
                 ell = np.arange(3*self.nside)
                 self.beam = self._beam_gaussian(ell, self.beam_info)
