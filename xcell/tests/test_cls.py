@@ -514,9 +514,10 @@ def test_clfid_halomod(tr1, tr2):
                                 normprof1=normed[tr1],
                                 normprof2=normed[tr2],
                                 lk_arr=np.log(k_arr),
-                                a_arr=a_arr,
-                                smooth_transition=(lambda a: 0.7),
-                                supress_1h=(lambda a: 0.01))
+                                a_arr=a_arr)
+    # Commented out until these features are pushed to the pip release of CCL
+    # smooth_transition=(lambda a: 0.7),
+    # supress_1h=(lambda a: 0.01))
     clb = ccl.angular_cl(cosmo, ccltr[tr1], ccltr[tr2], d['ell'], p_of_k_a=pk)
 
     assert np.all(np.fabs(clb[2:]/d['cl'][0][2:]-1) < 1E-4)

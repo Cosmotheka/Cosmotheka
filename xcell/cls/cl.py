@@ -369,9 +369,11 @@ class ClFid(ClBase):
                                         prof2=ccl_tr2['ccl_pr'],
                                         normprof1=ccl_tr1['normed'],
                                         normprof2=ccl_tr2['normed'],
-                                        lk_arr=lk_s, a_arr=a_s,
-                                        smooth_transition=self.hm_par['alpha'],
-                                        supress_1h=self.hm_par['k_suppress'])
+                                        lk_arr=lk_s, a_arr=a_s)
+            # We comment this out for now because these features are
+            # not present in the pip release of CCL
+            # smooth_transition=self.hm_par['alpha'],
+            # supress_1h=self.hm_par['k_suppress'])
         else:
             pk = None
         return pk
