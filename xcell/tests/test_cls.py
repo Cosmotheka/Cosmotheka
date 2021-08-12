@@ -176,6 +176,7 @@ def test_get_ell_cl_cp():
 
     w = cl_class.get_workspace()
     cl2 = w.decouple_cell(cl_cp)
+    shutil.rmtree(tmpdir1)
     assert np.all(np.fabs(cl / cl2 - 1) < 1e-10)
 
 
@@ -213,8 +214,8 @@ def test_get_covariance(cldata):
     chi2 = dCl.dot(icov).dot(dCl)
     chi2_m = dCl.dot(icov_m).dot(dCl)
 
-    assert np.fabs(chi2/chi2_m-1) - 1 < 0.03
     shutil.rmtree(tmpdir1)
+    assert np.fabs(chi2/chi2_m-1) - 1 < 0.03
 
 
 def test_cls_vs_namaster():
