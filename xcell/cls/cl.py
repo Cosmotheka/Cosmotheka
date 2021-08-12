@@ -271,12 +271,19 @@ class ClFid(ClBase):
         # Halo model calculator
         hmc = ccl.halos.HMCalculator(self.cosmo, mf, hb, md)
 
+        # Transition smoothing
+        alpha = hmp.get('alpha_HMCODE', 0.7)
+        # Small-k damping
+        klow = hmp.get('k_suppress', 0.01)
+
         return {'mass_def': md,
                 'mass_func': mf,
                 'halo_bias': hb,
                 'cM': cm,
                 'prof_NFW': pNFW,
-                'calculator': hmc}
+                'calculator': hmc,
+                'alpha': (lambda a: alpha),
+                'k_suppress': (lambda a: klow)}
 
     def get_cosmo_ccl(self):
         fiducial = self.data.data['cov']['fiducial']
@@ -310,7 +317,7 @@ class ClFid(ClBase):
                 hod_pars = tracer.get('hod_params', {})
                 ccl_pr = ccl.halos.HaloProfileHOD(self.hm_par['cM'],
                                                   **hod_pars)
-                ccl_pr_2pt = ccl.halos.HaloProfile2ptHOD()
+                ccl_pr_2pt = ccl.halos.Profile2ptHOD()
         elif dtype == 'galaxy_shear':
             # Import z, pz
             z, pz = mapper.get_nz(dz=0)
@@ -355,12 +362,6 @@ class ClFid(ClBase):
             lk_s = np.log(k_s)
             a_s = 1./(1+np.linspace(0., 6., 30)[::-1])
 
-            def alpha_HMCODE(a):
-                return 0.7
-
-            def k_supress(a):
-                return 0.001
-
             pk = ccl.halos.halomod_Pk2D(self.cosmo,
                                         self.hm_par['calculator'],
                                         ccl_tr1['ccl_pr'],
@@ -369,8 +370,8 @@ class ClFid(ClBase):
                                         normprof1=ccl_tr1['normed'],
                                         normprof2=ccl_tr2['normed'],
                                         lk_arr=lk_s, a_arr=a_s,
-                                        smooth_transition=alpha_HMCODE,
-                                        supress_1h=k_supress)
+                                        smooth_transition=self.hm_par['alpha'],
+                                        supress_1h=self.hm_par['k_suppress'])
         else:
             pk = None
         return pk

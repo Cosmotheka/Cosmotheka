@@ -41,6 +41,8 @@ def get_cl(dtype):
         tracer = ccl.WeakLensingTracer(cosmo, dndz=(z, nz))
     elif config['dtype'] == 'cmb_convergence':
         tracer = ccl.CMBLensingTracer(cosmo, z_source=1100)
+    elif config['dtype'] == 'cmb_tSZ':
+        tracer = ccl.tSZTracer(cosmo, z_max=3.)
 
     cl = ccl.angular_cl(cosmo, tracer, tracer, np.arange(3 * config['nside']))
     return cl
@@ -62,7 +64,8 @@ def test_get_mask():
 
 
 def test_get_cl():
-    for dtype in ['galaxy_density', 'galaxy_shear', 'cmb_convergence']:
+    for dtype in ['galaxy_density', 'galaxy_shear',
+                  'cmb_convergence', 'cmb_tSZ']:
         m = get_mapper(dtype)
         cl_m = m.get_cl()
 
@@ -73,11 +76,12 @@ def test_get_cl():
 
 @pytest.mark.parametrize('dtyp', ['galaxy_density',
                                   'galaxy_shear',
-                                  'cmb_convergence'])
+                                  'cmb_convergence',
+                                  'cmb_tSZ'])
 def test_get_nz(dtyp):
     m = get_mapper(dtype=dtyp)
     nz = m.get_nz()
-    if dtyp == 'cmb_convergence':
+    if dtyp in ['cmb_convergence', 'cmb_tSZ']:
         assert nz is None
     else:
         assert len(nz) == 2
@@ -117,9 +121,10 @@ def test_get_dtype():
 
 
 def test_get_spin():
-    for dtype in ['galaxy_density', 'galaxy_shear', 'cmb_convergence']:
+    for dtype in ['galaxy_density', 'galaxy_shear',
+                  'cmb_convergence', 'cmb_tSZ']:
         m = get_mapper(dtype)
-        if dtype in ['galaxy_density', 'cmb_convergence']:
-            assert m.get_spin() == 0
-        else:
+        if dtype == 'galaxy_shear':
             assert m.get_spin() == 2
+        else:
+            assert m.get_spin() == 0
