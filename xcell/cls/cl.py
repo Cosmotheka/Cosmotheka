@@ -167,9 +167,8 @@ class Cl(ClBase):
             # Compute power spectrum
             # If auto-correlation, compute noise and,
             # if needed, the custom signal power spectrum.
-            auto = self.tr1 == self.tr2
             # Noise
-            if self.tr1 == self.tr2:
+            if auto:
                 nl_cp = mapper1.get_nl_coupled()
                 nl = w.decouple_cell(nl_cp)
             else:

@@ -123,3 +123,18 @@ def test_get_spin():
             assert m.get_spin() == 0
         else:
             assert m.get_spin() == 2
+
+
+def test_cl_coupled():
+    config = get_config()
+    config['custom_auto'] = True
+    config['custom_offset'] = np.log(2.)*0.001
+    m = xc.mappers.MapperDummy(config)
+    cl1 = m.get_cl_coupled()[0]
+
+    mp = m.get_signal_map()
+    msk = m.get_mask()
+    cl2 = hp.anafast(mp*msk, iter=0)
+
+    assert np.allclose(cl1-np.log(2.)*0.001, cl2,
+                       atol=0, rtol=1E-10)
