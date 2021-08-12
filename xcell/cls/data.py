@@ -73,6 +73,58 @@ class Data():
             tr = ''.join(tr.split('__')[:-1])
         return tr
 
+    def _get_pair_reqs(self, tn1, tn2):
+        tb1 = self.get_tracer_bare_name(tn1)
+        tb2 = self.get_tracer_bare_name(tn2)
+        pname = f'{tb1}-{tb2}'
+        pname_inv = f'{tb1}-{tb2}'
+        compute = False
+        clcov_from_data = False
+
+        # Find if we want to compute this C_ell
+        if pname_inv in self.data['cls']:
+            pname = pname_inv
+        if pname in self.data['cls']:
+            comp = self.data['cls'][pname]['compute']
+            if ((comp == 'all') or
+                    ((comp == 'auto') and (tn1 == tn2))):
+                compute = True
+
+        # Find if this pair's C_ell should be computed
+        # from data for the covariance
+        clcovlist = self.data['cov'].get('cls_from_data', None)
+        if clcovlist:
+            if isinstance(clcovlist, str):
+                if clcovlist == 'all':
+                    # Should all cls be computed from data?
+                    clcov_from_data = True
+            elif isinstance(clcovlist, list):
+                if f'{tn1}-{tn2}' in clcovlist:
+                    # Should this particular cl be computed from data?
+                    clcov_from_data = True
+                if f'{tn2}-{tn1}' in clcovlist:
+                    # Should this particular cl be computed from data?
+                    clcov_from_data = True
+            elif isinstance(clcovlist, dict):
+                if pname_inv in clcovlist:
+                    pname = pname_inv
+                if pname in clcovlist:
+                    # Out of this group, should this cl be comp. from data?
+                    comp = clcovlist[pname]['compute']
+                    if ((comp == 'all') or
+                            ((comp == 'auto') and (tn1 == tn2))):
+                        clcov_from_data = True
+        return {'compute': compute,
+                'clcov_from_data': clcov_from_data}
+
+    def get_tracer_matrix(self):
+        tr_list = list(self.data['tracers'].keys())
+        tr_matrix = {}
+        for tn1 in tr_list:
+            for tn2 in tr_list:
+                tr_matrix[(tn1, tn2)] = self._get_pair_reqs(tn1, tn2)
+        return tr_matrix
+
     def get_tracers_bare_name_pair(self, tr1, tr2, connector='-'):
         tr1_nn = self.get_tracer_bare_name(tr1)
         tr2_nn = self.get_tracer_bare_name(tr2)

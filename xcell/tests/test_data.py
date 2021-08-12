@@ -48,6 +48,72 @@ def remove_outdir(config):
         os.rmdir(outdir)
 
 
+def get_tracer_pair_iterator(data):
+    tlist = list(data.data['tracers'].keys())
+    for t1 in tlist:
+        for t2 in tlist:
+            yield t1, t2
+
+
+def test_get_tracer_matrix():
+    # No cls from data
+    c = get_config_dict()
+    data = Data(data=c)
+    m = data.get_tracer_matrix()
+    for t1, t2 in get_tracer_pair_iterator(data):
+        assert not m[(t1, t2)]['clcov_from_data']
+    remove_yml_file(c)
+
+    # All cls from data
+    c = get_config_dict()
+    c['cov']['cls_from_data'] = 'all'
+    data = Data(data=c)
+    m = data.get_tracer_matrix()
+    for t1, t2 in get_tracer_pair_iterator(data):
+        assert m[(t1, t2)]['clcov_from_data']
+    remove_yml_file(c)
+
+    # Group cls from data (all)
+    c = get_config_dict()
+    c['cov']['cls_from_data'] = {'DESgc-DESgc': {'compute': 'all'}}
+    data = Data(data=c)
+    m = data.get_tracer_matrix()
+    for t1, t2 in get_tracer_pair_iterator(data):
+        if t1[:5] == 'DESgc' and t2[:5] == 'DESgc':
+            assert m[(t1, t2)]['clcov_from_data']
+        else:
+            assert not m[(t1, t2)]['clcov_from_data']
+    remove_yml_file(c)
+
+    # Group cls from data (auto)
+    c = get_config_dict()
+    c['cov']['cls_from_data'] = {'DESgc-DESgc': {'compute': 'auto'}}
+    data = Data(data=c)
+    m = data.get_tracer_matrix()
+    for t1, t2 in get_tracer_pair_iterator(data):
+        if t1[:5] == 'DESgc' and t2[:5] == 'DESgc' and t1 == t2:
+            assert m[(t1, t2)]['clcov_from_data']
+        else:
+            assert not m[(t1, t2)]['clcov_from_data']
+    remove_yml_file(c)
+
+    # Some cls from data
+    c = get_config_dict()
+    c['cov']['cls_from_data'] = ['DESgc__0-DESgc__0', 'DESgc__1-DESwl__1']
+    data = Data(data=c)
+    m = data.get_tracer_matrix()
+    for t1, t2 in get_tracer_pair_iterator(data):
+        if t1 == 'DESgc__0' and t2 == 'DESgc__0':
+            assert m[(t1, t2)]['clcov_from_data']
+        elif t1 == 'DESgc__1' and t2 == 'DESwl__1':
+            assert m[(t1, t2)]['clcov_from_data']
+        elif t1 == 'DESwl__1' and t2 == 'DESgc__1':
+            assert m[(t1, t2)]['clcov_from_data']
+        else:
+            assert not m[(t1, t2)]['clcov_from_data']
+    remove_yml_file(c)
+
+
 def test_initizalization():
     input_file = get_input_file()
     config = read_yaml_file(input_file)
