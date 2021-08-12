@@ -20,7 +20,8 @@ if os.path.isdir(tmpdir2):
 
 def get_config(fsky=0.2, fsky2=0.3,
                dtype0='galaxy_density',
-               dtype1='galaxy_density'):
+               dtype1='galaxy_density',
+               inc_hm=False):
     nside = 32
     # Set only the necessary entries. Leave the others to their default value.
     cosmo = {
@@ -38,15 +39,15 @@ def get_config(fsky=0.2, fsky2=0.3,
     }
     dummy0 = {'mask_name': 'mask_dummy0', 'mapper_class': 'MapperDummy',
               'cosmo': cosmo, 'nside': nside, 'fsky': fsky, 'seed': 0,
-              'dtype': dtype0}
+              'dtype': dtype0, 'use_halo_model': inc_hm}
     dummy1 = {'mask_name': 'mask_dummy1', 'mapper_class': 'MapperDummy',
               'cosmo': cosmo, 'nside': nside, 'fsky': fsky2, 'seed': 100,
-              'dtype': dtype1}
+              'dtype': dtype1, 'use_halo_model': inc_hm}
     bpw_edges = list(range(0, 3 * nside, 4))
 
     return {'tracers': {'Dummy__0': dummy0, 'Dummy__1': dummy1},
             'cls': {'Dummy-Dummy': {'compute': 'all'}},
-            'cov': {'fiducial': {'cosmo': cosmo, 'gc_bias':  False,
+            'cov': {'fiducial': {'cosmo': cosmo,
                                  'wl_m': False, 'wl_ia': False}},
             'bpw_edges': bpw_edges,
             'healpy': {'n_iter_sht': 0,
@@ -400,6 +401,38 @@ def test_cov_spin0(perm):
             assert np.all(r[i::ncls1][1:] < 1E-5)
 
 
+def test_clfid_halomod_settings():
+    data = get_config()
+
+    # Empty halo model parameters (default values)
+    clf = ClFid(data, 'Dummy__0', 'Dummy__1')
+    assert np.fabs(clf.hm_par['mass_def'].get_Delta(clf.cosmo, 1.)
+                   - 200) < 1E-3
+    assert clf.hm_par['mass_def'].rho_type == 'matter'
+    assert clf.hm_par['mass_func'].name == 'Tinker10'
+    assert clf.hm_par['halo_bias'].name == 'Tinker10'
+    assert clf.hm_par['cM'].name == 'Duffy08'
+    shutil.rmtree(tmpdir1)
+
+    # Custom halo model parameters
+    md = '200c'
+    mf = 'Tinker08'
+    hb = 'Tinker10'
+    cM = 'Bhattacharya13'
+    data['cov']['fiducial']['halo_model'] = {'mass_def': md,
+                                             'mass_function': mf,
+                                             'halo_bias': hb,
+                                             'concentration': cM}
+    clf = ClFid(data, 'Dummy__0', 'Dummy__1')
+    assert np.fabs(clf.hm_par['mass_def'].get_Delta(clf.cosmo, 1.)
+                   - 200) < 1E-3
+    assert clf.hm_par['mass_def'].rho_type == 'critical'
+    assert clf.hm_par['mass_func'].name == mf
+    assert clf.hm_par['halo_bias'].name == hb
+    assert clf.hm_par['cM'].name == cM
+    shutil.rmtree(tmpdir1)
+
+
 @pytest.mark.parametrize('tr1,tr2', [('galaxy_density', 'galaxy_density'),
                                      ('galaxy_density', 'galaxy_shear'),
                                      ('galaxy_density', 'cmb_convergence'),
@@ -441,3 +474,68 @@ def test_clfid_against_ccl(tr1, tr2):
     clb = ccl.angular_cl(cosmo, t1, t2, d['ell'])
 
     assert np.all(np.fabs(clb[2:]/d['cl'][0][2:]-1) < 1E-5)
+
+
+@pytest.mark.parametrize('tr1,tr2', [('galaxy_shear', 'galaxy_shear'),
+                                     ('galaxy_density', 'galaxy_shear'),
+                                     ('cmb_tSZ', 'galaxy_shear'),
+                                     ('cmb_tSZ', 'cmb_convergence')])
+def test_clfid_halomod(tr1, tr2):
+    data = get_config(dtype0=tr1, dtype1=tr2, inc_hm=True)
+
+    cosmo = ccl.Cosmology(**data['cov']['fiducial']['cosmo'])
+    md = ccl.halos.MassDef200m()
+    mf = ccl.halos.MassFuncTinker10(cosmo, mass_def=md)
+    hb = ccl.halos.HaloBiasTinker10(cosmo, mass_def=md)
+    cm = ccl.halos.ConcentrationDuffy08(mdef=md)
+    hmc = ccl.halos.HMCalculator(cosmo, mf, hb, md)
+    pNFW = ccl.halos.HaloProfileNFW(cm)
+    profs = {}
+    ccltr = {}
+    normed = {}
+    for tr, lab in [(tr1, 'Dummy__0'), (tr2, 'Dummy__1')]:
+        if tr == 'galaxy_density':
+            data['tracers'][lab]['hod_params'] = {'lMmin_0': 12.1,
+                                                  'lM1_p': 0.1,
+                                                  'bg_0': 1.2}
+            profs[tr] = ccl.halos.HaloProfileHOD(cm, lMmin_0=12.1,
+                                                 lM1_p=0.1, bg_0=1.2)
+            z, nz = np.loadtxt('xcell/tests/data/DESY1gc_dndz_bin0.txt',
+                               usecols=(1, 3), unpack=True)
+            ccltr[tr] = ccl.NumberCountsTracer(cosmo, False, dndz=(z, nz),
+                                               bias=(z, np.ones_like(z)))
+            normed[tr] = True
+        elif tr == 'cmb_tSZ':
+            data['tracers'][lab]['gnfw_params'] = {'mass_bias': 0.9}
+            profs[tr] = ccl.halos.HaloProfilePressureGNFW(mass_bias=0.9)
+            ccltr[tr] = ccl.tSZTracer(cosmo, z_max=3.)
+            normed[tr] = False
+        elif tr == 'galaxy_shear':
+            profs[tr] = pNFW
+            z, nz = np.loadtxt('xcell/tests/data/Nz_DIR_z0.1t0.3.asc',
+                               usecols=(0, 1), unpack=True)
+            ccltr[tr] = ccl.WeakLensingTracer(cosmo, dndz=(z, nz))
+            normed[tr] = True
+        elif tr == 'cmb_convergence':
+            profs[tr] = pNFW
+            ccltr[tr] = ccl.CMBLensingTracer(cosmo, z_source=1100.)
+            normed[tr] = True
+
+    clf = ClFid(data, 'Dummy__0', 'Dummy__1')
+    d = clf.get_cl_file()
+    shutil.rmtree(tmpdir1)
+
+    k_arr = np.geomspace(1E-4, 1E2, 512)
+    a_arr = 1./(1+np.linspace(0, 3, 15)[::-1])
+    pk = ccl.halos.halomod_Pk2D(cosmo, hmc, profs[tr1],
+                                prof2=profs[tr2],
+                                normprof1=normed[tr1],
+                                normprof2=normed[tr2],
+                                lk_arr=np.log(k_arr),
+                                a_arr=a_arr)
+    # Commented out until these features are pushed to the pip release of CCL
+    # smooth_transition=(lambda a: 0.7),
+    # supress_1h=(lambda a: 0.01))
+    clb = ccl.angular_cl(cosmo, ccltr[tr1], ccltr[tr2], d['ell'], p_of_k_a=pk)
+
+    assert np.all(np.fabs(clb[2:]/d['cl'][0][2:]-1) < 1E-4)

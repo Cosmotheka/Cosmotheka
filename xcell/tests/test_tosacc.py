@@ -45,7 +45,7 @@ def get_config(fsky0=0.2, fsky1=0.3, dtype0='galaxy_density',
 
     return {'tracers': {'Dummy__0': dummy0, 'Dummy__1': dummy1},
             'cls': {'Dummy-Dummy': {'compute': 'all'}},
-            'cov': {'fiducial': {'cosmo': cosmo, 'gc_bias':  False, 'wl_m':
+            'cov': {'fiducial': {'cosmo': cosmo, 'wl_m':
                                  False, 'wl_ia': False}},
             'bpw_edges': bpw_edges,
             'healpy': {'n_iter_sht': 0, 'n_iter_mcm': 3, 'n_iter_cmcm': 3,

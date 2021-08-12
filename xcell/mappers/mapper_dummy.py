@@ -67,16 +67,16 @@ class MapperDummy(MapperBase):
         self.aposize = self.config.get('aposize', 1.)
 
     def _check_dtype(self):
-        dtypes = ['galaxy_density', 'galaxy_shear', 'cmb_convergence']
+        dtypes = ['galaxy_density', 'galaxy_shear',
+                  'cmb_convergence', 'cmb_tSZ']
         if self.dtype not in dtypes:
             raise ValueError(f'Tracer type {self.dtype} not implemented.')
 
     def _get_spin_from_dtype(self, dtype):
-        if dtype in ['galaxy_density', 'cmb_convergence']:
-            spin = 0
-        elif dtype == 'galaxy_shear':
-            spin = 2
-        return spin
+        if dtype == 'galaxy_shear':
+            return 2
+        else:
+            return 0
 
     def get_nz(self, dz=0):
         if self.dndz is None:
@@ -86,7 +86,7 @@ class MapperDummy(MapperBase):
             elif self.dtype == 'galaxy_shear':
                 z, nz = np.loadtxt('xcell/tests/data/Nz_DIR_z0.1t0.3.asc',
                                    usecols=(0, 1), unpack=True)
-            elif self.dtype == 'cmb_convergence':
+            else:
                 return None
 
             self.dndz = np.array([z, nz])
@@ -111,6 +111,10 @@ class MapperDummy(MapperBase):
                 tracer = ccl.WeakLensingTracer(self.cosmo, dndz=(z, nz))
             elif dtype == 'cmb_convergence':
                 tracer = ccl.CMBLensingTracer(self.cosmo, z_source=1100)
+            elif dtype == 'cmb_tSZ':
+                # Note that the tSZ power spectrum implemented here is wrong
+                # But it's not worth for now adding all the halo model stuff.
+                tracer = ccl.tSZTracer(self.cosmo, z_max=3.)
 
             self.cl = ccl.angular_cl(self.cosmo, tracer, tracer, ls)
 

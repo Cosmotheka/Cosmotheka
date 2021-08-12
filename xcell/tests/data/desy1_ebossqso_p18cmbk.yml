@@ -190,7 +190,6 @@ cov:
 
 
     #### Biases to apply to the tracers ####
-    gc_bias: True 
     wl_m: False
     wl_ia: False  # If you want wl_ia, give [A, eta, z0] instead of True
 
