@@ -412,6 +412,7 @@ def test_clfid_halomod_settings():
     assert clf.hm_par['mass_func'].name == mf
     assert clf.hm_par['halo_bias'].name == hb
     assert clf.hm_par['cM'].name == cM
+    shutil.rmtree(tmpdir1)
 
 
 @pytest.mark.parametrize('tr1,tr2', [('galaxy_density', 'galaxy_density'),
