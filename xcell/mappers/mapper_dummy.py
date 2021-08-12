@@ -58,6 +58,7 @@ class MapperDummy(MapperBase):
         self.custom_offset = self.config.get('custom_offset', 0.)
         self.signal_map = None
         self.cl_coupled = None
+        self.cls_cov = None
         self.nl_coupled = None
         self.mask = None
         self.dndz = None
@@ -187,6 +188,15 @@ class MapperDummy(MapperBase):
             self.cl_coupled = nmt.compute_coupled_cell(fld, fld)
             self.cl_coupled += self.custom_offset
         return self.cl_coupled
+
+    def get_cls_covar_coupled(self):
+        if self.cls_cov is None:
+            clc = self.get_cl_coupled()
+            self.cls_cov = {'cross': clc,
+                            'auto_11': clc,
+                            'auto_12': clc,
+                            'auto_22': clc}
+        return self.cl_cov
 
     def get_dtype(self):
         return self.dtype
