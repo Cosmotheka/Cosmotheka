@@ -255,7 +255,7 @@ class ClFid(ClBase):
         dt1 = m1.get_dtype()
         dt2 = m2.get_dtype()
         if ((dt1 not in self.supported_dtypes) or
-              (dt2 not in self.supported_dtypes)):
+                (dt2 not in self.supported_dtypes)):
             raise ValueError("Fiducial C_ells cannot be computed for types "
                              f"{dt1}, {dt2}")
 

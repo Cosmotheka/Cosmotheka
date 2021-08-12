@@ -297,7 +297,7 @@ def test_symmetric():
 def test_unsupported_quantity():
     data = get_config(dtype0='generic')
     with pytest.raises(ValueError):
-        cl = ClFid(data, 'Dummy__0', 'Dummy__1')
+        ClFid(data, 'Dummy__0', 'Dummy__1')
     shutil.rmtree(tmpdir1)
 
 
