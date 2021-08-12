@@ -29,6 +29,9 @@ def get_cl(dtype):
     cosmo_pars = config['cosmo']
     cosmo = ccl.Cosmology(**cosmo_pars)
 
+    if config['dtype'] == 'generic':
+        return np.ones(3*config['nside'])
+
     if config['dtype'] == 'galaxy_density':
         z, nz = np.loadtxt('xcell/tests/data/DESY1gc_dndz_bin0.txt',
                            usecols=(1, 3), unpack=True)
@@ -63,25 +66,29 @@ def test_get_mask():
     # d = m.get_mask(fsky=0.5)
 
 
-def test_get_cl():
-    for dtype in ['galaxy_density', 'galaxy_shear',
-                  'cmb_convergence', 'cmb_tSZ']:
-        m = get_mapper(dtype)
-        cl_m = m.get_cl()
+@pytest.mark.parametrize('dtyp', ['galaxy_density',
+                                  'galaxy_shear',
+                                  'cmb_convergence',
+                                  'cmb_tSZ',
+                                  'generic'])
+def test_get_cl(dtyp):
+    m = get_mapper(dtyp)
+    cl_m = m.get_cl()
 
-        cl = get_cl(dtype)
-        rdev = np.fabs(cl[cl != 0] / cl_m[cl_m != 0] - 1)
-        assert np.max(rdev) < 1E-5
+    cl = get_cl(dtyp)
+    rdev = np.fabs(cl[cl != 0] / cl_m[cl_m != 0] - 1)
+    assert np.max(rdev) < 1E-5
 
 
 @pytest.mark.parametrize('dtyp', ['galaxy_density',
                                   'galaxy_shear',
                                   'cmb_convergence',
-                                  'cmb_tSZ'])
+                                  'cmb_tSZ',
+                                  'generic'])
 def test_get_nz(dtyp):
     m = get_mapper(dtype=dtyp)
     nz = m.get_nz()
-    if dtyp in ['cmb_convergence', 'cmb_tSZ']:
+    if dtyp in ['cmb_convergence', 'cmb_tSZ', 'generic']:
         assert nz is None
     else:
         assert len(nz) == 2

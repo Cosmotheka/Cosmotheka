@@ -294,6 +294,13 @@ def test_symmetric():
     shutil.rmtree(tmpdir1)
 
 
+def test_unsupported_quantity():
+    data = get_config(dtype0='generic')
+    with pytest.raises(ValueError):
+        cl = ClFid(data, 'Dummy__0', 'Dummy__1')
+    shutil.rmtree(tmpdir1)
+
+
 def test_symmetric_fid():
     data = get_config()
     # Request only 'auto' to test if read_symmetric works in the case you have
