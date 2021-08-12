@@ -149,6 +149,24 @@ def test_get_ell_cl():
     assert np.all(cl_class.wins == w.get_bandpower_windows())
 
 
+def test_custom_auto():
+    # No custom auto
+    data = get_config()
+    clc1 = Cl(data, 'Dummy__0', 'Dummy__0')
+    l1, cl1 = clc1.get_ell_cl_cp()
+    shutil.rmtree(tmpdir1)
+
+    # With custom auto
+    data = get_config()
+    data['tracers']['Dummy__0']['custom_auto'] = True
+    data['tracers']['Dummy__0']['custom_offset'] = np.pi*1E-5
+    clc2 = Cl(data, 'Dummy__0', 'Dummy__0')
+    l2, cl2 = clc2.get_ell_cl_cp()
+    shutil.rmtree(tmpdir1)
+
+    assert np.allclose(cl1, cl2-np.pi*1E-5, rtol=1E-4, atol=0)
+
+
 def test_get_ell_cl_cp():
     # Get cl from map
     cl_class = get_cl_class()
