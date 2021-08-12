@@ -237,9 +237,9 @@ class ClFid(ClBase):
         self._ccl_tr2 = None
 
     def _get_halomodel_params(self):
-        if 'halo_model' not in self.data.data['cov']:
-            self.data.data['cov']['halo_model'] = {}
-        hmp = self.data.data['cov']['halo_model']
+        if 'halo_model' not in self.data.data['cov']['fiducial']:
+            self.data.data['cov']['fiducial']['halo_model'] = {}
+        hmp = self.data.data['cov']['fiducial']['halo_model']
 
         if 'mass_def' not in hmp:
             md = ccl.halos.MassDef200m()
@@ -328,9 +328,15 @@ class ClFid(ClBase):
         elif dtype == 'cmb_convergence':
             # TODO: correct z_source
             ccl_tr = ccl.CMBLensingTracer(self.cosmo, z_source=1100)
+        elif dtype == 'cmb_tSZ':
+            normed_profile = False
+            ccl_tr = ccl.tSZTracer(self.cosmo, z_max=3.)
+            if with_hm:
+                pars = tracer.get('gnfw_params', {})
+                ccl_pr = ccl.halos.HaloProfilePressureGNFW(**pars)
         else:
             raise ValueError('Type of tracer not recognized. It can be \
-                             galaxy_density, galaxy_shear or \
+                             galaxy_density, galaxy_shear, cmb_tSZ, or \
                              cmb_convergence!')
         return {'name': tr,
                 'ccl_tr': ccl_tr,

@@ -400,10 +400,10 @@ def test_clfid_halomod_settings():
     mf = 'Tinker08'
     hb = 'Tinker10'
     cM = 'Bhattacharya13'
-    data['cov']['halo_model'] = {'mass_def': md,
-                                 'mass_function': mf,
-                                 'halo_bias': hb,
-                                 'concentration': cM}
+    data['cov']['fiducial']['halo_model'] = {'mass_def': md,
+                                             'mass_function': mf,
+                                             'halo_bias': hb,
+                                             'concentration': cM}
     clf = ClFid(data, 'Dummy__0', 'Dummy__1')
     assert np.fabs(clf.hm_par['mass_def'].get_Delta(clf.cosmo, 1.)
                    - 200) < 1E-3
