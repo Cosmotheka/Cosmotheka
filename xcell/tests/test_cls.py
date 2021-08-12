@@ -203,7 +203,7 @@ def test_get_covariance(cldata):
     cov_class = Cov(config, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
     cov = cov_class.get_covariance()
 
-    diag = (2 * cl_m1[0]** 2) / (2 * ell + 1) / 4
+    diag = (2 * cl_m1[0]**2) / (2 * ell + 1) / 4
     cov_m = np.diag(diag)
 
     icov = np.linalg.inv(cov)
