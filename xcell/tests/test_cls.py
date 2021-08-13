@@ -167,6 +167,16 @@ def test_custom_auto():
 
     assert np.allclose(cl1, cl2-np.pi*1E-5, rtol=1E-4, atol=0)
 
+    # Covariance custom cross
+    data = get_config()
+    data['tracers']['Dummy__0']['custom_auto'] = True
+    data['tracers']['Dummy__0']['custom_offset'] = np.pi*1E-5
+    clc3 = Cl(data, 'Dummy__0', 'Dummy__0')
+    l2, cl3 = clc3.get_ell_cl_cp_cov()
+    shutil.rmtree(tmpdir1)
+
+    assert np.allclose(cl1, cl2-np.pi*1E-5, rtol=1E-4, atol=0)
+
 
 def test_get_ell_cl_cp():
     # Get cl from map
