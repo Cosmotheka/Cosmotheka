@@ -215,7 +215,7 @@ def test_get_covariance(cldata):
     chi2_m = dCl.dot(icov_m).dot(dCl)
 
     shutil.rmtree(tmpdir1)
-    assert np.fabs(chi2/chi2_m-1) - 1 < 0.03
+    assert np.fabs(chi2/chi2_m-1) < 0.03
 
 
 def test_cls_vs_namaster():

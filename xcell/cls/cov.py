@@ -69,11 +69,14 @@ class Cov():
                     # Try to compute the fiducial Cl
                     try:
                         cl = ClFid(data, *trs)
-                    except NotImplementedError:
-                        # If that fails (e.g. unknown data type)
-                        # this will be computed from the data.
-                        cl = cl_dic[trs]
-                        self.tmat[trs]['clcov_from_data'] = True
+                    except NotImplementedError as e:
+                        if self.data.data['cov'].get('data_fallback', False):
+                            # If that fails (e.g. unknown data type)
+                            # this will be computed from the data.
+                            cl = cl_dic[trs]
+                            self.tmat[trs]['clcov_from_data'] = True
+                        else:
+                            raise NotImplementedError(e)
                 clfid_dic[trs] = cl
 
         return cl_dic, clfid_dic
