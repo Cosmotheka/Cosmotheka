@@ -225,9 +225,9 @@ class Cl(ClBase):
         self.nl_cp = cl_file['nl_cp']
         self.wins = cl_file['wins']
         self.cls_cov = {'cross': cl_file['cl_cov_cp'],
-                        'auto_11': ['cl_cov_11_cp'],
-                        'auto_12': ['cl_cov_12_cp'],
-                        'auto_22': ['cl_cov_22_cp']}
+                        'auto_11': cl_file['cl_cov_11_cp'],
+                        'auto_12': cl_file['cl_cov_12_cp'],
+                        'auto_22': cl_file['cl_cov_22_cp']}
 
         return cl_file
 

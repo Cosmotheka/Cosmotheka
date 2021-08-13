@@ -197,7 +197,7 @@ class MapperDummy(MapperBase):
                             'auto_11': clc,
                             'auto_12': clc,
                             'auto_22': clc}
-        return self.cl_cov
+        return self.cls_cov
 
     def get_dtype(self):
         return self.dtype
