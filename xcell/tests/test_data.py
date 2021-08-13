@@ -103,7 +103,7 @@ def test_get_tracer_matrix():
     m = data.get_tracer_matrix()
     for t1, t2 in get_tracer_pair_iterator(data):
         tpair = data.get_tracers_bare_name_pair(t1, t2)
-        if tpair == 'DESgc-DESgc':
+        if tpair == 'DESgc-DESgc' and t1 == t2:
             assert m[(t1, t2)]['clcov_from_data']
         else:
             assert not m[(t1, t2)]['clcov_from_data']
