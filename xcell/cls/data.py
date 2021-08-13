@@ -25,8 +25,8 @@ class Data():
         os.makedirs(self.data['output'], exist_ok=True)
         self._check_yml_in_outdir(override)
         self.tr_matrix = None
-        self.cl_tracers = {True: None, False: None}
-        self.cov_tracers = {True: None, False: None}
+        self.cl_tracers = {'wsp': None, 'no_wsp': None}
+        self.cov_tracers = {'wsp': None, 'no_wsp': None}
 
     def _check_yml_in_outdir(self, override=False):
         outdir = self.data['output']
@@ -176,9 +176,10 @@ class Data():
         return cl_tracers
 
     def get_cl_trs_names(self, wsp=False):
-        if self.cl_tracers[wsp] is None:
-            self.cl_tracers[wsp] = self._get_cl_trs_names(wsp)
-        return self.cl_tracers[wsp]
+        lab = ['no_wsp', 'wsp'][wsp]
+        if self.cl_tracers[lab] is None:
+            self.cl_tracers[lab] = self._get_cl_trs_names(wsp)
+        return self.cl_tracers[lab]
 
     def _get_cov_trs_names(self, wsp=False):
         cl_tracers = self.get_cl_trs_names(wsp)
@@ -190,9 +191,10 @@ class Data():
         return cov_tracers
 
     def get_cov_trs_names(self, wsp=False):
-        if self.cov_tracers[wsp] is None:
-            self.cov_tracers[wsp] = self._get_cov_trs_names(wsp)
-        return self.cov_tracers[wsp]
+        lab = ['no_wsp', 'wsp'][wsp]
+        if self.cov_tracers[lab] is None:
+            self.cov_tracers[lab] = self._get_cov_trs_names(wsp)
+        return self.cov_tracers[lab]
 
     def get_cov_ng_cl_tracers(self):
         cl_tracers = self.get_cl_trs_names()
