@@ -193,9 +193,9 @@ class MapperDummy(MapperBase):
     def get_cls_covar_coupled(self):
         if self.cls_cov is None:
             clc = self.get_cl_coupled()
-            self.cls_cov = {'cross': clc,
+            self.cls_cov = {'cross': clc-self.custom_offset,
                             'auto_11': clc,
-                            'auto_12': clc,
+                            'auto_12': clc-self.custom_offset,
                             'auto_22': clc}
         return self.cls_cov
 

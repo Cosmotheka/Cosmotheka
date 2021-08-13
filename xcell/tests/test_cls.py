@@ -175,7 +175,7 @@ def test_custom_auto():
     l2, cl3 = clc3.get_ell_cl_cp_cov()
     shutil.rmtree(tmpdir1)
 
-    assert np.allclose(cl1, cl2-np.pi*1E-5, rtol=1E-4, atol=0)
+    assert np.allclose(cl1, cl3, rtol=1E-4, atol=0)
 
 
 def test_get_ell_cl_cp():

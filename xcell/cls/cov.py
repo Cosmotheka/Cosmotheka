@@ -120,6 +120,9 @@ class Cov():
                 cl_cp = w.couple_cell(clab_fid.get_ell_cl()[1])
                 cl_cp += clab.get_ell_nl_cp()[1]
             else:  # Compute from data
+                # In this case we've requested to compute this
+                # C_ell from the data, so `clab_fid` is actually
+                # a `Cl` object (not a `ClFid` object).
                 cl_cp = clab_fid.get_ell_cl_cp_cov()[1]
             cl_cp = cl_cp / mean_mamb
 

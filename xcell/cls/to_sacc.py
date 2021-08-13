@@ -190,14 +190,8 @@ class ClSack():
             self.s.add_ell_cl(cl_type, tr1, tr2, ells_eff, cli, window=wins)
 
     def get_dof_tracers(self, tracers):
-        tr1, tr2 = tracers
-        s1, s2 = Cl(self.data.data, tr1, tr2).get_spins()
-
-        dof = s1 + s2
-        if dof == 0:
-            dof += 1
-
-        return dof
+        cl = Cl(self.data.data, tracers[0], tracers[1])
+        return cl.get_n_cls()
 
     def get_datatypes_from_dof(self, dof):
         if dof == 1:

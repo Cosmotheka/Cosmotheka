@@ -188,6 +188,22 @@ class Cl(ClBase):
                 cl_cp = mapper1.get_cl_coupled()
                 cl = w.decouple_cell(cl_cp)
                 cls_cov = mapper1.get_cls_covar_coupled()
+                # This function should return a dictionary with the
+                # following contents:
+                #  - 'cross': the C_ell that should be used for the
+                #       auto-correlation of this mapper when
+                #       calculating any cross-covariance involving
+                #       it. E.g. if we call this field "a", this will
+                #       play the role of C_ell^aa when computing the
+                #       cross-covariance Cov(C_ell^ab, C_ell^aa)
+                #       or Cov(C_ell^ab,C_ell^ac).
+                #  - 'auto_11/12/22': when computing the
+                #       auto-covariance of this mapper's auto-correlation,
+                #       it will be computed as the auto-covariance of
+                #       a general power spectrum C_ell^12, which involves
+                #       3 power spectra: C_ell^11, C_ell^12, C_ell^22.
+                #       These are given by the corresponding entries in
+                #       the dictionary.
                 cl_cov_cp = cls_cov['cross']
                 cl_cov_11_cp = cls_cov['auto_11']
                 cl_cov_12_cp = cls_cov['auto_12']
@@ -197,12 +213,18 @@ class Cl(ClBase):
                 # to subtract it here.
             else:
                 cl_cov_cp = nmt.compute_coupled_cell(f1, f2)
+                # A standard auto-correlation auto-covariance
+                # is just ~propto 2*C_ell^2 rather than
+                # (C_ell^11 C_ell^22+C_ell^12^2), which can be
+                # achieved by equating all 3 C_ells.
                 cl_cov_11_cp = cl_cov_cp
                 cl_cov_12_cp = cl_cov_cp
                 cl_cov_22_cp = cl_cov_cp
                 cl = w.decouple_cell(cl_cov_cp)
                 cl_cp = cl_cov_cp - nl_cp
                 cl -= nl
+            # Note that while we have subtracted the noise
+            # bias from `cl_cp`, `cl_cov_cp` still includes it.
             np.savez(fname, ell=ell, cl=cl, cl_cp=cl_cp, nl=nl,
                      nl_cp=nl_cp, cl_cov_cp=cl_cov_cp,
                      cl_cov_11_cp=cl_cov_11_cp,
