@@ -69,7 +69,7 @@ class Cov():
                     # Try to compute the fiducial Cl
                     try:
                         cl = ClFid(data, *trs)
-                    except ValueError:
+                    except NotImplementedError:
                         # If that fails (e.g. unknown data type)
                         # this will be computed from the data.
                         cl = cl_dic[trs]

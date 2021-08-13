@@ -24,6 +24,9 @@ class Data():
 
         os.makedirs(self.data['output'], exist_ok=True)
         self._check_yml_in_outdir(override)
+        self.tr_matrix = None
+        self.cl_tracers = {True: None, False: None}
+        self.cov_tracers = {True: None, False: None}
 
     def _check_yml_in_outdir(self, override=False):
         outdir = self.data['output']
@@ -73,11 +76,19 @@ class Data():
             tr = ''.join(tr.split('__')[:-1])
         return tr
 
+    def will_pair_be_computed(self, tn1, tn2):
+        tmat = self.get_tracer_matrix()
+        t = tmat[(tn1, tn2)]
+        if t['compute']:
+            if t['inv']:
+                return (tn2, tn1)
+            else:
+                return (tn1, tn2)
+        return None
+
     def _get_pair_reqs(self, tn1, tn2):
-        tb1 = self.get_tracer_bare_name(tn1)
-        tb2 = self.get_tracer_bare_name(tn2)
-        pname = f'{tb1}-{tb2}'
-        pname_inv = f'{tb1}-{tb2}'
+        pname = self.get_tracers_bare_name_pair(tn1, tn2)
+        pname_inv = self.get_tracers_bare_name_pair(tn2, tn1)
         compute = False
         clcov_from_data = False
 
@@ -89,6 +100,10 @@ class Data():
             if ((comp == 'all') or
                     ((comp == 'auto') and (tn1 == tn2))):
                 compute = True
+
+        cls_to_compute = self.get_cl_trs_names()
+        inv = (((tn2, tn1) in cls_to_compute) and
+               not ((tn1, tn2) in cls_to_compute))
 
         # Find if this pair's C_ell should be computed
         # from data for the covariance
@@ -115,15 +130,17 @@ class Data():
                             ((comp == 'auto') and (tn1 == tn2))):
                         clcov_from_data = True
         return {'compute': compute,
-                'clcov_from_data': clcov_from_data}
+                'clcov_from_data': clcov_from_data,
+                'inv': inv}
 
     def get_tracer_matrix(self):
-        tr_list = list(self.data['tracers'].keys())
-        tr_matrix = {}
-        for tn1 in tr_list:
-            for tn2 in tr_list:
-                tr_matrix[(tn1, tn2)] = self._get_pair_reqs(tn1, tn2)
-        return tr_matrix
+        if self.tr_matrix is None:
+            tr_list = list(self.data['tracers'].keys())
+            self.tr_matrix = {}
+            for tn1 in tr_list:
+                for tn2 in tr_list:
+                    self.tr_matrix[(tn1, tn2)] = self._get_pair_reqs(tn1, tn2)
+        return self.tr_matrix
 
     def get_tracers_bare_name_pair(self, tr1, tr2, connector='-'):
         tr1_nn = self.get_tracer_bare_name(tr1)
@@ -131,7 +148,7 @@ class Data():
         trreq = connector.join([tr1_nn, tr2_nn])
         return trreq
 
-    def get_cl_trs_names(self, wsp=False):
+    def _get_cl_trs_names(self, wsp=False):
         cl_tracers = []
         tr_names = self.get_tracers_used(wsp)
         for i, tr1 in enumerate(tr_names):
@@ -156,10 +173,14 @@ class Data():
                 elif clreq == 'None':
                     continue
                 cl_tracers.append((tr1, tr2))
-
         return cl_tracers
 
-    def get_cov_trs_names(self, wsp=False):
+    def get_cl_trs_names(self, wsp=False):
+        if self.cl_tracers[wsp] is None:
+            self.cl_tracers[wsp] = self._get_cl_trs_names(wsp)
+        return self.cl_tracers[wsp]
+
+    def _get_cov_trs_names(self, wsp=False):
         cl_tracers = self.get_cl_trs_names(wsp)
         cov_tracers = []
         for i, trs1 in enumerate(cl_tracers):
@@ -167,6 +188,11 @@ class Data():
                 cov_tracers.append((*trs1, *trs2))
 
         return cov_tracers
+
+    def get_cov_trs_names(self, wsp=False):
+        if self.cov_tracers[wsp] is None:
+            self.cov_tracers[wsp] = self._get_cov_trs_names(wsp)
+        return self.cov_tracers[wsp]
 
     def get_cov_ng_cl_tracers(self):
         cl_tracers = self.get_cl_trs_names()

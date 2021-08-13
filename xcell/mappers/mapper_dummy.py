@@ -71,7 +71,8 @@ class MapperDummy(MapperBase):
         dtypes = ['galaxy_density', 'galaxy_shear',
                   'cmb_convergence', 'cmb_tSZ', 'generic']
         if self.dtype not in dtypes:
-            raise ValueError(f'Tracer type {self.dtype} not implemented.')
+            raise NotImplementedError("Tracer type " + self.dtype +
+                                      " not implemented.")
 
     def _get_spin_from_dtype(self, dtype):
         if dtype == 'galaxy_shear':

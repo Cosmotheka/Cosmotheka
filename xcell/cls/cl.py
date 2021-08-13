@@ -293,8 +293,8 @@ class ClFid(ClBase):
         dt2 = m2.get_dtype()
         if ((dt1 not in self.supported_dtypes) or
                 (dt2 not in self.supported_dtypes)):
-            raise ValueError("Fiducial C_ells cannot be computed for types "
-                             f"{dt1}, {dt2}")
+            raise NotImplementedError("Fiducial C_ells cannot be "
+                                      f"computed for types {dt1}, {dt2}")
 
         self.outdir = self.get_outdir('fiducial')
         os.makedirs(self.outdir, exist_ok=True)

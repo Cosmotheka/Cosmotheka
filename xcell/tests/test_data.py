@@ -55,6 +55,16 @@ def get_tracer_pair_iterator(data):
             yield t1, t2
 
 
+def test_will_be_computed():
+    d = get_data()
+    n1 = d.will_pair_be_computed('DESwl__0', 'DESwl__1')
+    n2 = d.will_pair_be_computed('DESwl__1', 'DESwl__0')
+    n3 = d.will_pair_be_computed('DESwl__0', 'eBOSS__0')
+    assert n1 == ('DESwl__0', 'DESwl__1')
+    assert n2 == ('DESwl__0', 'DESwl__1')
+    assert not n3
+
+
 def test_get_tracer_matrix():
     # No cls from data
     c = get_config_dict()
@@ -79,7 +89,8 @@ def test_get_tracer_matrix():
     data = Data(data=c)
     m = data.get_tracer_matrix()
     for t1, t2 in get_tracer_pair_iterator(data):
-        if t1[:5] == 'DESgc' and t2[:5] == 'DESgc':
+        tpair = data.get_tracers_bare_name_pair(t1, t2)
+        if tpair == 'DESgc-DESgc':
             assert m[(t1, t2)]['clcov_from_data']
         else:
             assert not m[(t1, t2)]['clcov_from_data']
