@@ -200,7 +200,7 @@ class Cl(ClBase):
                 cl_cov_11_cp = cl_cov_cp
                 cl_cov_12_cp = cl_cov_cp
                 cl_cov_22_cp = cl_cov_cp
-                cl = w.decouple_cell(cl_cp)
+                cl = w.decouple_cell(cl_cov_cp)
                 cl_cp = cl_cov_cp - nl_cp
                 cl -= nl
             np.savez(fname, ell=ell, cl=cl, cl_cp=cl_cp, nl=nl,
