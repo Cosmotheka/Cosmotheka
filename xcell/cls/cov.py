@@ -9,6 +9,7 @@ import pymaster as nmt
 class Cov():
     def __init__(self, data, trA1, trA2, trB1, trB2):
         self.data = Data(data=data)
+        self.tmat = self.data.get_tracer_matrix()
         self.outdir = self.get_outdir()
         os.makedirs(self.outdir, exist_ok=True)
         self.trA1 = trA1
@@ -61,7 +62,22 @@ class Cov():
         clfid_dic = {}
         for trs in trs_comb:
             if trs not in clfid_dic.keys():
-                clfid_dic[trs] = ClFid(data, *trs)
+                # Cl computed from data if needed
+                if self.tmat[trs]['clcov_from_data']:
+                    cl = cl_dic[trs]
+                else:
+                    # Try to compute the fiducial Cl
+                    try:
+                        cl = ClFid(data, *trs)
+                    except NotImplementedError as e:
+                        if self.data.data['cov'].get('data_fallback', False):
+                            # If that fails (e.g. unknown data type)
+                            # this will be computed from the data.
+                            cl = cl_dic[trs]
+                            self.tmat[trs]['clcov_from_data'] = True
+                        else:
+                            raise e
+                clfid_dic[trs] = cl
 
         return cl_dic, clfid_dic
 
@@ -100,8 +116,11 @@ class Cov():
         if not mean_mamb:
             cl_cp = np.zeros_like(nl_cp)
         else:
-            w = clab.get_workspace()
-            cl_cp = w.couple_cell(clab_fid.get_ell_cl()[1])
+            if isinstance(clab_fid, ClFid):  # Compute from theory
+                w = clab.get_workspace()
+                cl_cp = w.couple_cell(clab_fid.get_ell_cl()[1])
+            else:  # Compute from data
+                cl_cp = clab_fid.get_ell_cl_cp()[1]
             cl_cp = (cl_cp + nl_cp) / mean_mamb
 
         return cl_cp
@@ -440,17 +459,18 @@ class Cov():
     def get_covariance_m_marg(self):
         _, cla1a2 = self.clfid_A1A2.get_ell_cl()
         _, clb1b2 = self.clfid_B1B2.get_ell_cl()
-        wins_a1a2 = self.clA1A2.get_bandpower_windows()
-        wins_b1b2 = self.clB1B2.get_bandpower_windows()
-        #
-        ncls_a1a2, nell_cp = cla1a2.shape
-        wins_a1a2 = wins_a1a2.reshape((-1, ncls_a1a2 * nell_cp))
-        ncls_b1b2, nell_cp = clb1b2.shape
-        wins_b1b2 = wins_b1b2.reshape((-1, ncls_b1b2 * nell_cp))
-        #
-        cla1a2 = wins_a1a2.dot(cla1a2.flatten()).reshape((ncls_a1a2, -1))
-        clb1b2 = wins_b1b2.dot(clb1b2.flatten()).reshape((ncls_b1b2, -1))
-        #
+        # Window convolution only needed if computed from theory
+        if isinstance(self.clfid_A1A2, ClFid):
+            wins_a1a2 = self.clA1A2.get_bandpower_windows()
+            ncls_a1a2, nell_cp = cla1a2.shape
+            wins_a1a2 = wins_a1a2.reshape((-1, ncls_a1a2 * nell_cp))
+            cla1a2 = wins_a1a2.dot(cla1a2.flatten()).reshape((ncls_a1a2, -1))
+        if isinstance(self.clfid_B1B2, ClFid):
+            wins_b1b2 = self.clB1B2.get_bandpower_windows()
+            ncls_b1b2, nell_cp = clb1b2.shape
+            wins_b1b2 = wins_b1b2.reshape((-1, ncls_b1b2 * nell_cp))
+            clb1b2 = wins_b1b2.dot(clb1b2.flatten()).reshape((ncls_b1b2, -1))
+
         t_a1, t_a2 = self.clA1A2.get_dtypes()
         t_b1, t_b2 = self.clB1B2.get_dtypes()
         #

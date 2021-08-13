@@ -176,12 +176,41 @@ def test_get_ell_cl_cp():
 
     w = cl_class.get_workspace()
     cl2 = w.decouple_cell(cl_cp)
+    shutil.rmtree(tmpdir1)
     assert np.all(np.fabs(cl / cl2 - 1) < 1e-10)
 
 
-def test_get_covariance():
+def test_covar_from_data():
+    config = get_config(dtype0='generic')
+    # Can't compute covariance unless we allow doing it from data
+    with pytest.raises(NotImplementedError):
+        Cov(config, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
+    shutil.rmtree(tmpdir1)
+
+    # Allow falling back to data
+    config = get_config(dtype0='generic')
+    config['cov']['data_fallback'] = True
+    cov_obj = Cov(config, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
+    cov1 = cov_obj.get_covariance()
+    shutil.rmtree(tmpdir1)
+
+    # Compute from data on purpose
+    config = get_config(dtype0='generic')
+    config['cov']['cls_from_data'] = "all"
+    cov_obj = Cov(config, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
+    cov2 = cov_obj.get_covariance()
+    shutil.rmtree(tmpdir1)
+
+    assert np.allclose(cov1, cov2, atol=1E-10, rtol=0)
+
+
+@pytest.mark.parametrize('cldata', ['all', 'none'])
+def test_get_covariance(cldata):
     # Get cl from randomnly generated map ("data")
-    cl_class = get_cl_class(fsky=1)
+    config = get_config(fsky=1)
+    config['cov']['cls_from_data'] = cldata
+
+    cl_class = Cl(config, 'Dummy__0', 'Dummy__0')
     ell, cl_data = cl_class.get_ell_cl()
 
     # Get cl from mapper (the true one)
@@ -196,12 +225,11 @@ def test_get_covariance():
     # assert np.max(np.abs(rdev) < 1e-5)
 
     # Compute covariance
-    cov_class = get_cov_class()
+    cov_class = Cov(config, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
     cov = cov_class.get_covariance()
 
-    cov_m = np.zeros_like(cov)
-    diag = (2 * cl_m1 ** 2) / (2 * ell + 1) / 4
-    np.fill_diagonal(cov_m, diag)
+    diag = (2 * cl_m1[0]**2) / (2 * ell + 1) / 4
+    cov_m = np.diag(diag)
 
     icov = np.linalg.inv(cov)
     icov_m = np.linalg.inv(cov_m)
@@ -210,8 +238,8 @@ def test_get_covariance():
     chi2 = dCl.dot(icov).dot(dCl)
     chi2_m = dCl.dot(icov_m).dot(dCl)
 
-    assert np.fabs(chi2/chi2_m) - 1 < 0.01
     shutil.rmtree(tmpdir1)
+    assert np.fabs(chi2/chi2_m-1) < 0.03
 
 
 def test_cls_vs_namaster():
@@ -291,6 +319,13 @@ def test_symmetric():
     assert np.all(cl_class01.get_ell_nl()[1] == cl_class10.get_ell_nl()[1])
     assert np.all(cl_class01.get_ell_nl_cp()[1] ==
                   cl_class10.get_ell_nl_cp()[1])
+    shutil.rmtree(tmpdir1)
+
+
+def test_unsupported_quantity():
+    data = get_config(dtype0='generic')
+    with pytest.raises(NotImplementedError):
+        ClFid(data, 'Dummy__0', 'Dummy__1')
     shutil.rmtree(tmpdir1)
 
 

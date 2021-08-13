@@ -68,9 +68,10 @@ class MapperDummy(MapperBase):
 
     def _check_dtype(self):
         dtypes = ['galaxy_density', 'galaxy_shear',
-                  'cmb_convergence', 'cmb_tSZ']
+                  'cmb_convergence', 'cmb_tSZ', 'generic']
         if self.dtype not in dtypes:
-            raise ValueError(f'Tracer type {self.dtype} not implemented.')
+            raise NotImplementedError("Tracer type " + self.dtype +
+                                      " not implemented.")
 
     def _get_spin_from_dtype(self, dtype):
         if dtype == 'galaxy_shear':
@@ -97,26 +98,32 @@ class MapperDummy(MapperBase):
 
         return np.array([z_dz[sel], nz[sel]])
 
+    def _get_cl_ccl(self, dtype):
+        ls = np.arange(3 * self.nside)
+        if dtype == 'galaxy_density':
+            z, nz = self.get_nz()
+            b = np.ones_like(z)
+            tracer = ccl.NumberCountsTracer(self.cosmo, has_rsd=False,
+                                            dndz=(z, nz), bias=(z, b))
+        elif dtype == 'galaxy_shear':
+            z, nz = self.get_nz()
+            tracer = ccl.WeakLensingTracer(self.cosmo, dndz=(z, nz))
+        elif dtype == 'cmb_convergence':
+            tracer = ccl.CMBLensingTracer(self.cosmo, z_source=1100)
+        elif dtype == 'cmb_tSZ':
+            # Note that the tSZ power spectrum implemented here is wrong
+            # But it's not worth for now adding all the halo model stuff.
+            tracer = ccl.tSZTracer(self.cosmo, z_max=3.)
+
+        return ccl.angular_cl(self.cosmo, tracer, tracer, ls)
+
     def get_cl(self):
         if self.cl is None:
-            ls = np.arange(3 * self.nside)
             dtype = self.get_dtype()
-            if dtype == 'galaxy_density':
-                z, nz = self.get_nz()
-                b = np.ones_like(z)
-                tracer = ccl.NumberCountsTracer(self.cosmo, has_rsd=False,
-                                                dndz=(z, nz), bias=(z, b))
-            elif dtype == 'galaxy_shear':
-                z, nz = self.get_nz()
-                tracer = ccl.WeakLensingTracer(self.cosmo, dndz=(z, nz))
-            elif dtype == 'cmb_convergence':
-                tracer = ccl.CMBLensingTracer(self.cosmo, z_source=1100)
-            elif dtype == 'cmb_tSZ':
-                # Note that the tSZ power spectrum implemented here is wrong
-                # But it's not worth for now adding all the halo model stuff.
-                tracer = ccl.tSZTracer(self.cosmo, z_max=3.)
-
-            self.cl = ccl.angular_cl(self.cosmo, tracer, tracer, ls)
+            if dtype == 'generic':
+                self.cl = np.ones(3 * self.nside)
+            else:
+                self.cl = self._get_cl_ccl(dtype)
 
         return self.cl
 

@@ -247,6 +247,18 @@ class Cl(ClBase):
 class ClFid(ClBase):
     def __init__(self, data, tr1, tr2):
         super().__init__(data, tr1, tr2)
+        self.supported_dtypes = ['galaxy_density',
+                                 'galaxy_shear',
+                                 'cmb_tSZ',
+                                 'cmb_convergence']
+        m1, m2 = self.get_mappers()
+        dt1 = m1.get_dtype()
+        dt2 = m2.get_dtype()
+        if ((dt1 not in self.supported_dtypes) or
+                (dt2 not in self.supported_dtypes)):
+            raise NotImplementedError("Fiducial C_ells cannot be "
+                                      f"computed for types {dt1}, {dt2}")
+
         self.outdir = self.get_outdir('fiducial')
         os.makedirs(self.outdir, exist_ok=True)
         self.cosmo = self.get_cosmo_ccl()
