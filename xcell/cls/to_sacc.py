@@ -40,22 +40,22 @@ class ClSack():
         for tr1, tr2 in cl_tracers:
             self.add_ell_cl(tr1, tr2)
 
-    def read_covariance_NG(self):
+    def read_covariance_extra(self):
         dtype = self.s.get_data_types()[0]
         cl_tracers = self.s.get_tracer_combinations(data_type=dtype)
         ell, _ = self.s.get_ell_cl(dtype, *cl_tracers[0])
         nbpw = ell.size
         #
-        cl_ng_tracers = self.data.get_cov_ng_cl_tracers()
-        # Read the NG covmat from file
-        cov_ng = self.data.data['cov']['ng']
-        cov = np.load(cov_ng['path'])
+        cl_extra_tracers = self.data.get_cov_extra_cl_tracers()
+        # Read the extra covmat from file
+        cov_extra = self.data.data['cov']['extra']
+        cov = np.load(cov_extra['path'])
         ncls = int(cov.shape[0] / nbpw)
         cov = cov.reshape((ncls, nbpw, ncls, nbpw))
-        if ('has_b' in cov_ng) and (cov_ng['has_b'] is True):
-            raise ValueError('Reading CovNG with B-modes not implemented')
+        if ('has_b' in cov_extra) and (cov_extra['has_b'] is True):
+            raise ValueError('Reading extra Cov with B-modes not implemented')
         else:
-            if ncls != len(cl_ng_tracers):
+            if ncls != len(cl_extra_tracers):
                 raise ValueError('Number of cls do not match')
 
         # Initialize the covmat that will go into the sacc file
@@ -64,14 +64,14 @@ class ClSack():
         print(ndim/nbpw)
         cl_tracers = self.s.get_tracer_combinations()
         for i, trs1 in enumerate(cl_tracers):
-            if trs1 not in cl_ng_tracers:
+            if trs1 not in cl_extra_tracers:
                 continue
-            ix1 = cl_ng_tracers.index(trs1)
+            ix1 = cl_extra_tracers.index(trs1)
             cl_ix1 = int(self.s.indices(tracers=trs1)[0] / nbpw)
             for j, trs2 in enumerate(cl_tracers[i:], i):
-                if trs2 not in cl_ng_tracers:
+                if trs2 not in cl_extra_tracers:
                     continue
-                ix2 = cl_ng_tracers.index(trs2)
+                ix2 = cl_extra_tracers.index(trs2)
                 cl_ix2 = int(self.s.indices(tracers=trs2)[0] / nbpw)
                 covi = cov[ix1, :, ix2, :]
                 covmat[cl_ix1, :, cl_ix2, :] = covi
@@ -79,8 +79,8 @@ class ClSack():
         print(self.s.indices(tracers=trs1))
         return covmat.reshape((ndim, ndim))
 
-    def add_covariance_NG(self):
-        covmat = self.read_covariance_NG()
+    def add_covariance_extra(self):
+        covmat = self.read_covariance_extra()
         self.s.add_covariance(covmat)
 
     def add_covariance_G(self, m_marg):
@@ -122,15 +122,15 @@ class ClSack():
                         covmat[np.ix_(ix1, ix2)] = covi
                         covmat[np.ix_(ix2, ix1)] = covi.T
 
-        # covmat += self.read_covariance_NG()
+        # covmat += self.read_covariance_extra()
         self.s.add_covariance(covmat)
 
     def add_covariance(self):
         if self.use_nl:
             if self.m_marg:
                 self.add_covariance_G(self.m_marg)
-            elif 'ng' in self.data.data['cov']:
-                self.add_covariance_NG()
+            elif 'extra' in self.data.data['cov']:
+                self.add_covariance_extra()
         else:
             self.add_covariance_G(self.m_marg)
 
@@ -220,7 +220,7 @@ if __name__ == "__main__":
     parser.add_argument('name', type=str, help="Name of the generated sacc \
                         file. Stored in yml['output']")
     parser.add_argument('--use_nl', action='store_true', default=False,
-                        help="Set if you want to use nl and covNG \
+                        help="Set if you want to use nl and extra cov \
                         (if present) instead of cls and covG")
     parser.add_argument('--use_fiducial', action='store_true', default=False,
                         help="Set if you want to use the fiducial Cl and \

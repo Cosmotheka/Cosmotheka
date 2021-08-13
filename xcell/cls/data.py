@@ -196,31 +196,30 @@ class Data():
             self.cov_tracers[lab] = self._get_cov_trs_names(wsp)
         return self.cov_tracers[lab]
 
-    def get_cov_ng_cl_tracers(self):
+    def get_cov_extra_cl_tracers(self):
         cl_tracers = self.get_cl_trs_names()
-        order_ng = self.data['cov']['ng']['order']
-        cl_ng = [[] for i in order_ng]
+        order_extra = self.data['cov']['extra']['order']
+        cl_extra = [[] for i in order_extra]
         ix_reverse = []
 
         for tr1, tr2 in cl_tracers:
             tr1_nn = self.get_tracer_bare_name(tr1)
             tr2_nn = self.get_tracer_bare_name(tr2)
-            if (tr1_nn + '-' + tr2_nn) in order_ng:
-                ix = order_ng.index(tr1_nn + '-' + tr2_nn)
-            elif (tr2_nn + '-' + tr1_nn) in order_ng:
-                ix = order_ng.index(tr2_nn + '-' + tr1_nn)
+            if (tr1_nn + '-' + tr2_nn) in order_extra:
+                ix = order_extra.index(tr1_nn + '-' + tr2_nn)
+            elif (tr2_nn + '-' + tr1_nn) in order_extra:
+                ix = order_extra.index(tr2_nn + '-' + tr1_nn)
                 if ix not in ix_reverse:
                     ix_reverse.append(ix)
             else:
-                # raise ValueError(f'Tracers {tr1}-{tr2} not found in NG cov.')
-                warn(f'Tracers {tr1}-{tr2} not found in NG cov.')
+                warn(f'Tracers {tr1}-{tr2} not found in extra cov.')
                 continue
-            cl_ng[ix].append((tr1, tr2))
+            cl_extra[ix].append((tr1, tr2))
 
         for ix in ix_reverse:
-            cl_ng[ix].sort(key=lambda x: x[1])
+            cl_extra[ix].sort(key=lambda x: x[1])
 
-        return [item for sublist in cl_ng for item in sublist]
+        return [item for sublist in cl_extra for item in sublist]
 
     def filter_tracers_wsp(self, tracers):
         tracers_torun = []

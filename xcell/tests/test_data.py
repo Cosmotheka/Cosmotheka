@@ -229,13 +229,13 @@ def test_get_cov_trs_name(wsp):
     remove_yml_file(data.data)
 
 
-def test_get_cov_ng_cl_tracers():
+def test_get_cov_extra_cl_tracers():
     data = get_data()
     config = data.data
     cl_trs = data.get_cl_trs_names()
 
     d = {}
-    for trs in config['cov']['ng']['order']:
+    for trs in config['cov']['extra']['order']:
         d[trs] = []
 
     for trs in cl_trs:
@@ -252,10 +252,10 @@ def test_get_cov_ng_cl_tracers():
     d['DESwl-DESgc'].sort(key=lambda x: x[1])
 
     cl_trs_cov = []
-    for trs in config['cov']['ng']['order']:
+    for trs in config['cov']['extra']['order']:
         cl_trs_cov.extend(d[trs])
 
-    assert cl_trs_cov == data.get_cov_ng_cl_tracers()
+    assert cl_trs_cov == data.get_cov_extra_cl_tracers()
     remove_yml_file(config)
 
 
