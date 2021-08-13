@@ -180,6 +180,30 @@ def test_get_ell_cl_cp():
     assert np.all(np.fabs(cl / cl2 - 1) < 1e-10)
 
 
+def test_covar_from_data():
+    config = get_config(dtype0='generic')
+    # Can't compute covariance unless we allow doing it from data
+    with pytest.raises(NotImplementedError):
+        Cov(config, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
+    shutil.rmtree(tmpdir1)
+
+    # Allow falling back to data
+    config = get_config(dtype0='generic')
+    config['cov']['data_fallback'] = True
+    cov_obj = Cov(config, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
+    cov1 = cov_obj.get_covariance()
+    shutil.rmtree(tmpdir1)
+
+    # Compute from data on purpose
+    config = get_config(dtype0='generic')
+    config['cov']['cls_from_data'] = "all"
+    cov_obj = Cov(config, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
+    cov2 = cov_obj.get_covariance()
+    shutil.rmtree(tmpdir1)
+
+    assert np.allclose(cov1, cov2, atol=1E-10, rtol=0)
+
+
 @pytest.mark.parametrize('cldata', ['all', 'none'])
 def test_get_covariance(cldata):
     # Get cl from randomnly generated map ("data")
@@ -215,7 +239,7 @@ def test_get_covariance(cldata):
     chi2_m = dCl.dot(icov_m).dot(dCl)
 
     shutil.rmtree(tmpdir1)
-    assert np.fabs(chi2/chi2_m-1) - 1 < 0.03
+    assert np.fabs(chi2/chi2_m-1) < 0.03
 
 
 def test_cls_vs_namaster():
