@@ -76,7 +76,7 @@ class Cov():
                             cl = cl_dic[trs]
                             self.tmat[trs]['clcov_from_data'] = True
                         else:
-                            raise NotImplementedError(e)
+                            raise e
                 clfid_dic[trs] = cl
 
         return cl_dic, clfid_dic
