@@ -48,6 +48,12 @@ class ClBase():
             self.get_cl_file()
         return self.ell, self.cl
 
+    def get_n_cls(self):
+        s1, s2 = self.get_spins()
+        nmap1 = 1 + (s1 > 0)
+        nmap2 = 1 + (s2 > 0)
+        return nmap1 * nmap2
+
     def get_spins(self):
         mapper1, mapper2 = self.get_mappers()
         s1 = mapper1.get_spin()
@@ -78,6 +84,7 @@ class Cl(ClBase):
         self.nl_cp = None
         self.cl_cp = None
         self.wins = None
+        self.cls_cov = None
 
     def get_NmtBin(self):
         if self._read_symmetric:
@@ -173,24 +180,57 @@ class Cl(ClBase):
                 nl_cp = mapper1.get_nl_coupled()
                 nl = w.decouple_cell(nl_cp)
             else:
-                nmap1 = 1 + (mapper1.get_spin() > 0)
-                nmap2 = 1 + (mapper2.get_spin() > 0)
-                nl_cp = np.zeros((nmap1 * nmap2, 3 * self.nside))
-                nl = np.zeros([nmap1 * nmap2, self.b.get_n_bands()])
+                n_cls = self.get_n_cls()
+                nl_cp = np.zeros((n_cls, 3 * self.nside))
+                nl = np.zeros([n_cls, self.b.get_n_bands()])
             # Signal
             if auto and mapper1.custom_auto:
                 cl_cp = mapper1.get_cl_coupled()
                 cl = w.decouple_cell(cl_cp)
+                cls_cov = mapper1.get_cls_covar_coupled()
+                # This function should return a dictionary with the
+                # following contents:
+                #  - 'cross': the C_ell that should be used for the
+                #       auto-correlation of this mapper when
+                #       calculating any cross-covariance involving
+                #       it. E.g. if we call this field "a", this will
+                #       play the role of C_ell^aa when computing the
+                #       cross-covariance Cov(C_ell^ab, C_ell^aa)
+                #       or Cov(C_ell^ab,C_ell^ac).
+                #  - 'auto_11/12/22': when computing the
+                #       auto-covariance of this mapper's auto-correlation,
+                #       it will be computed as the auto-covariance of
+                #       a general power spectrum C_ell^12, which involves
+                #       3 power spectra: C_ell^11, C_ell^12, C_ell^22.
+                #       These are given by the corresponding entries in
+                #       the dictionary.
+                cl_cov_cp = cls_cov['cross']
+                cl_cov_11_cp = cls_cov['auto_11']
+                cl_cov_12_cp = cls_cov['auto_12']
+                cl_cov_22_cp = cls_cov['auto_22']
                 # mapper.get_cl_coupled is assumed to return
                 # the noise-less power spectrum. No need
                 # to subtract it here.
             else:
-                cl_cp = nmt.compute_coupled_cell(f1, f2)
-                cl = w.decouple_cell(cl_cp)
-                cl_cp -= nl_cp
+                cl_cov_cp = nmt.compute_coupled_cell(f1, f2)
+                # A standard auto-correlation auto-covariance
+                # is just ~propto 2*C_ell^2 rather than
+                # (C_ell^11 C_ell^22+C_ell^12^2), which can be
+                # achieved by equating all 3 C_ells.
+                cl_cov_11_cp = cl_cov_cp
+                cl_cov_12_cp = cl_cov_cp
+                cl_cov_22_cp = cl_cov_cp
+                cl = w.decouple_cell(cl_cov_cp)
+                cl_cp = cl_cov_cp - nl_cp
                 cl -= nl
+            # Note that while we have subtracted the noise
+            # bias from `cl_cp`, `cl_cov_cp` still includes it.
             np.savez(fname, ell=ell, cl=cl, cl_cp=cl_cp, nl=nl,
-                     nl_cp=nl_cp, wins=wins)
+                     nl_cp=nl_cp, cl_cov_cp=cl_cov_cp,
+                     cl_cov_11_cp=cl_cov_11_cp,
+                     cl_cov_12_cp=cl_cov_12_cp,
+                     cl_cov_22_cp=cl_cov_22_cp,
+                     wins=wins)
             self.recompute_cls = False
 
         cl_file = np.load(fname)
@@ -206,6 +246,11 @@ class Cl(ClBase):
         self.nl = cl_file['nl']
         self.nl_cp = cl_file['nl_cp']
         self.wins = cl_file['wins']
+        self.cls_cov = {'cross': cl_file['cl_cov_cp'],
+                        'auto_11': cl_file['cl_cov_11_cp'],
+                        'auto_12': cl_file['cl_cov_12_cp'],
+                        'auto_22': cl_file['cl_cov_22_cp']}
+
         return cl_file
 
     def get_ell_nl(self):
@@ -225,6 +270,20 @@ class Cl(ClBase):
         if self.ell is None:
             self.get_cl_file()
         return np.arange(3 * self.nside), self.cl_cp
+
+    def get_ell_cl_cp_cov(self):
+        if self.ell is None:
+            self.get_cl_file()
+        return np.arange(3 * self.nside), self.cls_cov['cross']
+
+    def get_ell_cls_cp_cov_auto(self):
+        if self.ell is None:
+            self.get_cl_file()
+        cl11 = self.cls_cov['auto_11']
+        cl12 = self.cls_cov['auto_12']
+        cl22 = self.cls_cov['auto_22']
+        ell = np.arange(3 * self.nside)
+        return ell, cl11, cl12, cl22
 
     def get_masks(self):
         mapper1, mapper2 = self.get_mappers()

@@ -81,6 +81,30 @@ def test_get_cl_coupled(cls):
 @pytest.mark.parametrize('cls', [xc.mappers.MapperP15tSZ,
                                  xc.mappers.MapperP18SMICA,
                                  xc.mappers.MapperP15CIB])
+def test_get_cls_covar_coupled(cls):
+    conf = get_config()
+    conf['file_map'] = 'xcell/tests/data/map_auto_test.fits'
+    m = cls(conf)
+    mask = m.get_mask()
+    cls_cov = m.get_cls_covar_coupled()
+    m1 = hp.read_map(conf['file_hm1'], verbose=False)
+    m2 = hp.read_map(conf['file_hm2'], verbose=False)
+    mc = hp.read_map(conf['file_map'], verbose=False)
+    cls_bm = {'cross': hp.anafast(mc*mask, mc*mask, iter=0),
+              'auto_11': hp.anafast(m1*mask, m1*mask, iter=0),
+              'auto_12': hp.anafast(m1*mask, m2*mask, iter=0),
+              'auto_22': hp.anafast(m2*mask, m2*mask, iter=0)}
+    for k in cls_bm.keys():
+        cl = cls_cov[k][0]
+        cl_bm = cls_bm[k]
+        scale = np.mean(np.fabs(cl[2:]))
+        assert np.allclose(cl, cl_bm,
+                           rtol=0, atol=1E-10*scale)
+
+
+@pytest.mark.parametrize('cls', [xc.mappers.MapperP15tSZ,
+                                 xc.mappers.MapperP18SMICA,
+                                 xc.mappers.MapperP15CIB])
 def test_get_hm_maps(cls):
     conf = get_config()
     m = cls(conf)

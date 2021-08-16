@@ -167,6 +167,16 @@ def test_custom_auto():
 
     assert np.allclose(cl1, cl2-np.pi*1E-5, rtol=1E-4, atol=0)
 
+    # Covariance custom cross
+    data = get_config()
+    data['tracers']['Dummy__0']['custom_auto'] = True
+    data['tracers']['Dummy__0']['custom_offset'] = np.pi*1E-5
+    clc3 = Cl(data, 'Dummy__0', 'Dummy__0')
+    l2, cl3 = clc3.get_ell_cl_cp_cov()
+    shutil.rmtree(tmpdir1)
+
+    assert np.allclose(cl1, cl3, rtol=1E-4, atol=0)
+
 
 def test_get_ell_cl_cp():
     # Get cl from map
@@ -248,6 +258,11 @@ def test_cls_vs_namaster():
     cl_class = get_cl_class()
     ell, cl_data = cl_class.get_ell_cl()
     b = cl_class.get_NmtBin()
+    win = cl_class.get_bandpower_windows()
+    # Read output
+    clfile = np.load(os.path.join(tmpdir1,
+                                  'Dummy_Dummy',
+                                  'cl_Dummy__0_Dummy__0.npz'))
     shutil.rmtree(tmpdir1)
 
     # Compute covariance
@@ -273,8 +288,7 @@ def test_cls_vs_namaster():
     wsp.compute_coupling_matrix(f, f, bins=b, n_iter=n_iter_mcm)
     cl_data_nmt_cp = nmt.compute_coupled_cell(f, f)
     cl_data_nmt = wsp.decouple_cell(cl_data_nmt_cp)
-    rdev = cl_data / cl_data_nmt - 1
-    assert np.max(np.abs(rdev)) < 1e-5
+
     # Couple true Cl
     cl_m_cp = wsp.couple_cell([cl_m])
     cl_m = wsp.decouple_cell(cl_m_cp)
@@ -285,19 +299,30 @@ def test_cls_vs_namaster():
     cl_cov = cl_m_cp / np.mean(mask * mask)
     cov_nmt = nmt.gaussian_covariance(cwsp, spin, spin, spin, spin, cl_cov,
                                       cl_cov, cl_cov, cl_cov, wsp)
-
-    icov = np.linalg.inv(cov)
-    icov_nmt = np.linalg.inv(cov_nmt)
-    dCl = (cl_data - cl_m)[0]
-
-    chi2 = dCl.dot(icov).dot(dCl)
-    chi2_m = dCl.dot(icov_nmt).dot(dCl)
-    assert np.fabs(chi2/chi2_m) - 1 < 1e-5
-
-    # Compute bandpower windows
-    win = cl_class.get_bandpower_windows()
     bpwin = wsp.get_bandpower_windows()
-    assert np.all(win == bpwin)
+    icov_nmt = np.linalg.inv(cov_nmt)
+
+    def compare(cl, cv, wn, tol=1E-5):
+        rdev = cl / cl_data_nmt - 1
+        assert np.max(np.abs(rdev)) < tol
+
+        # Compare cl and covariance
+        icov = np.linalg.inv(cv)
+        dCl = (cl - cl_m)[0]
+        chi2 = dCl.dot(icov).dot(dCl)
+        chi2_m = dCl.dot(icov_nmt).dot(dCl)
+        assert np.fabs(chi2/chi2_m-1) < tol
+
+        # Compare bandpower windows
+        assert np.all(win == bpwin)
+
+    compare(cl_data, cov, win)
+    compare(clfile['cl'], cov, clfile['wins'])
+    assert np.allclose(clfile['cl_cp'], cl_data_nmt_cp, atol=0)
+    assert np.allclose(clfile['cl_cov_cp'], cl_data_nmt_cp, atol=0)
+    assert np.allclose(clfile['cl_cov_11_cp'], cl_data_nmt_cp, atol=0)
+    assert np.allclose(clfile['cl_cov_12_cp'], cl_data_nmt_cp, atol=0)
+    assert np.allclose(clfile['cl_cov_22_cp'], cl_data_nmt_cp, atol=0)
 
 
 def test_symmetric():
