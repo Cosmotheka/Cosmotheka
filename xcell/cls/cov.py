@@ -112,16 +112,19 @@ class Cov():
 
     def _get_cl_for_cov(self, clab, clab_fid, ma, mb):
         mean_mamb = np.mean(ma * mb)
-        nl_cp = clab.get_ell_nl_cp()[1]
         if not mean_mamb:
-            cl_cp = np.zeros_like(nl_cp)
+            cl_cp = np.zeros((clab.get_n_cls(), 3*clab.nside))
         else:
             if isinstance(clab_fid, ClFid):  # Compute from theory
                 w = clab.get_workspace()
                 cl_cp = w.couple_cell(clab_fid.get_ell_cl()[1])
+                cl_cp += clab.get_ell_nl_cp()[1]
             else:  # Compute from data
-                cl_cp = clab_fid.get_ell_cl_cp()[1]
-            cl_cp = (cl_cp + nl_cp) / mean_mamb
+                # In this case we've requested to compute this
+                # C_ell from the data, so `clab_fid` is actually
+                # a `Cl` object (not a `ClFid` object).
+                cl_cp = clab_fid.get_ell_cl_cp_cov()[1]
+            cl_cp = cl_cp / mean_mamb
 
         return cl_cp
 
@@ -407,10 +410,24 @@ class Cov():
         m_b1, m_b2 = self.clB1B2.get_masks()
 
         # Compute weighted Cls
-        cla1b1 = self._get_cl_for_cov(self.clA1B1, self.clfid_A1B1, m_a1, m_b1)
-        cla1b2 = self._get_cl_for_cov(self.clA1B2, self.clfid_A1B2, m_a1, m_b2)
-        cla2b1 = self._get_cl_for_cov(self.clA2B1, self.clfid_A2B1, m_a2, m_b1)
-        cla2b2 = self._get_cl_for_cov(self.clA2B2, self.clfid_A2B2, m_a2, m_b2)
+        # Check if it's the auto-covariance of an auto-correlation
+        auto_auto = self.trA1 == self.trA2 == self.trB1 == self.trB2
+        # Check if it must be computed from data
+        aa_data = auto_auto and self.tmat[(self.trA1,
+                                           self.trA2)]['clcov_from_data']
+        # If so, get these C_ells
+        if aa_data:
+            _, cla1b1, cla1b2, cla2b2 = self.clA1B1.get_ell_cls_cp_cov_auto()
+            cla2b1 = cla1b2
+        else:
+            cla1b1 = self._get_cl_for_cov(self.clA1B1, self.clfid_A1B1,
+                                          m_a1, m_b1)
+            cla1b2 = self._get_cl_for_cov(self.clA1B2, self.clfid_A1B2,
+                                          m_a1, m_b2)
+            cla2b1 = self._get_cl_for_cov(self.clA2B1, self.clfid_A2B1,
+                                          m_a2, m_b1)
+            cla2b2 = self._get_cl_for_cov(self.clA2B2, self.clfid_A2B2,
+                                          m_a2, m_b2)
 
         if np.any(cla1b1) or np.any(cla1b2) or np.any(cla2b1) or \
                 np.any(cla2b2):

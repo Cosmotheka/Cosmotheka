@@ -150,3 +150,25 @@ def test_cl_coupled():
 
     assert np.allclose(cl1-np.log(2.)*0.001, cl2,
                        atol=0, rtol=1E-10)
+
+
+def test_cls_covar_coupled():
+    offset = np.pi*0.002
+    config = get_config()
+    config['custom_auto'] = True
+    config['custom_offset'] = offset
+    m = xc.mappers.MapperDummy(config)
+    cl1 = m.get_cls_covar_coupled()
+
+    mp = m.get_signal_map()
+    msk = m.get_mask()
+    cl2 = hp.anafast(mp*msk, iter=0)
+
+    assert np.allclose(cl1['cross'][0], cl2,
+                       atol=0, rtol=1E-10)
+    assert np.allclose(cl1['auto_11'][0]-offset, cl2,
+                       atol=0, rtol=1E-10)
+    assert np.allclose(cl1['auto_12'][0], cl2,
+                       atol=0, rtol=1E-10)
+    assert np.allclose(cl1['auto_11'][0]-offset, cl2,
+                       atol=0, rtol=1E-10)

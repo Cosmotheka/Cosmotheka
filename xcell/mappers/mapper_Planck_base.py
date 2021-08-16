@@ -22,6 +22,7 @@ class MapperPlanckBase(MapperBase):
         self.diff_map = None
         self.nl_coupled = None
         self.cl_coupled = None
+        self.cls_cov = None
         self.custom_auto = True
         self.mask = None
         self.beam = None
@@ -52,8 +53,8 @@ class MapperPlanckBase(MapperBase):
     def _get_diff_map(self):
         if self.diff_map is None:
             self.hm1_map, self.hm2_map = self._get_hm_maps()
-            self.diff_map = (self.hm1_map[0] - self.hm2_map[0])/2
-        return [self.diff_map]
+            self.diff_map = [(self.hm1_map[0] - self.hm2_map[0])/2]
+        return self.diff_map
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
@@ -69,6 +70,23 @@ class MapperPlanckBase(MapperBase):
             hm2_f = self._get_nmt_field(signal=self.hm2_map)
             self.cl_coupled = nmt.compute_coupled_cell(hm1_f, hm2_f)
         return self.cl_coupled
+
+    def get_cls_covar_coupled(self):
+        if self.cls_cov is None:
+            self.signal_map = self.get_signal_map()
+            self.hm1_map, self.hm2_map = self._get_hm_maps()
+            coadd_f = self._get_nmt_field(signal=self.signal_map)
+            hm1_f = self._get_nmt_field(signal=self.hm1_map)
+            hm2_f = self._get_nmt_field(signal=self.hm2_map)
+            cl_cc = nmt.compute_coupled_cell(coadd_f, coadd_f)
+            cl_11 = nmt.compute_coupled_cell(hm1_f, hm1_f)
+            cl_12 = nmt.compute_coupled_cell(hm1_f, hm2_f)
+            cl_22 = nmt.compute_coupled_cell(hm2_f, hm2_f)
+            self.cls_cov = {'cross': cl_cc,
+                            'auto_11': cl_11,
+                            'auto_12': cl_12,
+                            'auto_22': cl_22}
+        return self.cls_cov
 
     def _beam_gaussian(self, ell, fwhm_amin):
         sigma_rad = np.radians(fwhm_amin / 2.355 / 60)
