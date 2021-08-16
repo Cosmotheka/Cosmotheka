@@ -441,12 +441,12 @@ def test_clfid_halomod_settings():
 
     # Empty halo model parameters (default values)
     clf = ClFid(data, 'Dummy__0', 'Dummy__1')
-    assert np.fabs(clf.hm_par['mass_def'].get_Delta(clf.cosmo, 1.)
+    assert np.fabs(clf.th.hm_par['mass_def'].get_Delta(clf.th.cosmo, 1.)
                    - 200) < 1E-3
-    assert clf.hm_par['mass_def'].rho_type == 'matter'
-    assert clf.hm_par['mass_func'].name == 'Tinker10'
-    assert clf.hm_par['halo_bias'].name == 'Tinker10'
-    assert clf.hm_par['cM'].name == 'Duffy08'
+    assert clf.th.hm_par['mass_def'].rho_type == 'matter'
+    assert clf.th.hm_par['mass_func'].name == 'Tinker10'
+    assert clf.th.hm_par['halo_bias'].name == 'Tinker10'
+    assert clf.th.hm_par['cM'].name == 'Duffy08'
     shutil.rmtree(tmpdir1)
 
     # Custom halo model parameters
@@ -459,12 +459,12 @@ def test_clfid_halomod_settings():
                                              'halo_bias': hb,
                                              'concentration': cM}
     clf = ClFid(data, 'Dummy__0', 'Dummy__1')
-    assert np.fabs(clf.hm_par['mass_def'].get_Delta(clf.cosmo, 1.)
+    assert np.fabs(clf.th.hm_par['mass_def'].get_Delta(clf.th.cosmo, 1.)
                    - 200) < 1E-3
-    assert clf.hm_par['mass_def'].rho_type == 'critical'
-    assert clf.hm_par['mass_func'].name == mf
-    assert clf.hm_par['halo_bias'].name == hb
-    assert clf.hm_par['cM'].name == cM
+    assert clf.th.hm_par['mass_def'].rho_type == 'critical'
+    assert clf.th.hm_par['mass_func'].name == mf
+    assert clf.th.hm_par['halo_bias'].name == hb
+    assert clf.th.hm_par['cM'].name == cM
     shutil.rmtree(tmpdir1)
 
 
