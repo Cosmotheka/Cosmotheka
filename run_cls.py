@@ -149,7 +149,7 @@ if __name__ == "__main__":
                         help='Set if you want to compute the different workspaces first')
     parser.add_argument('--to_sacc_name', type=str, default='cls_cov.fits', help='Sacc file name')
     parser.add_argument('--to_sacc_use_nl', default=False, action='store_true',
-                        help='Set if you want to use nl and covNG (if present) instead of cls and covG ')
+                        help='Set if you want to use nl and cov extra (if present) instead of cls and covG ')
     parser.add_argument('--to_sacc_use_fiducial', default=False, action='store_true',
                         help="Set if you want to use the fiducial Cl and covG instead of data cls")
     parser.add_argument('--cls_fiducial', default=False, action='store_true', help='Set to compute the fiducial cls')
