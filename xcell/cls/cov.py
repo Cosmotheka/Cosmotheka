@@ -496,21 +496,25 @@ class Cov():
         ccl_trA1 = th.compute_tracer_ccl(self.trA1,
                                          trlist[self.trA1],
                                          mpA1)
+        bA1 = trlist[self.trA1].get('bias', 1.)
         ccl_trA2 = th.compute_tracer_ccl(self.trA2,
                                          trlist[self.trA2],
                                          mpA2)
+        bA2 = trlist[self.trA2].get('bias', 1.)
         ccl_trB1 = th.compute_tracer_ccl(self.trB1,
                                          trlist[self.trB1],
                                          mpB1)
+        bB1 = trlist[self.trB1].get('bias', 1.)
         ccl_trB2 = th.compute_tracer_ccl(self.trB2,
                                          trlist[self.trB2],
                                          mpB2)
+        bB2 = trlist[self.trB2].get('bias', 1.)
         covNG = th.get_ccl_cl_covNG(ccl_trA1, ccl_trA2, ellA,
                                     ccl_trB1, ccl_trB2, ellB,
                                     fsky, kind=kind)
         # NG covariances can only be calculated for E-modes
-        cov[:, 0, :, 0] = covNG
-        return cov
+        cov[:, 0, :, 0] = covNG*bA1*bA2*bB1*bB2
+        return cov.reshape([len(ellA)*nclsa, len(ellB)*nclsb])
 
     def get_covariance_nl_marg(self):
         _, nl = self.clA1A2.get_ell_nl()

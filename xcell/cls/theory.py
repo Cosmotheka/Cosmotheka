@@ -125,12 +125,18 @@ class Theory():
             raise NotImplementedError(f"Non-Gaussian term {kind} "
                                       "not supported.")
 
+        pA1 = ccl_trA1['ccl_pr']
+        pA2 = ccl_trA2['ccl_pr']
         if ccl_trA1['name'] == ccl_trA2['name']:
             pr2ptA = ccl_trA1['ccl_pr_2pt']
+            pA2 = pA1
         else:
             pr2ptA = None
+        pB1 = ccl_trB1['ccl_pr']
+        pB2 = ccl_trB2['ccl_pr']
         if ccl_trB1['name'] == ccl_trB2['name']:
             pr2ptB = ccl_trB1['ccl_pr_2pt']
+            pB2 = pB1
         else:
             pr2ptB = None
 
@@ -138,11 +144,9 @@ class Theory():
         lk_s = np.log(k_s)
         a_s = 1./(1+np.linspace(0., 6., 30)[::-1])
         tkk = ccl.halos.halomod_Tk3D_1h(self.cosmo, self.hm_par['calculator'],
-                                        prof1=ccl_trA1['ccl_pr'],
-                                        prof2=ccl_trA2['ccl_pr'],
+                                        prof1=pA1, prof2=pA2,
                                         prof12_2pt=pr2ptA,
-                                        prof3=ccl_trB1['ccl_pr'],
-                                        prof4=ccl_trB2['ccl_pr'],
+                                        prof3=pB1, prof4=pB2,
                                         prof34_2pt=pr2ptB,
                                         normprof1=ccl_trA1['normed'],
                                         normprof2=ccl_trA2['normed'],
@@ -153,8 +157,11 @@ class Theory():
 
     def get_ccl_pk(self, ccl_tr1, ccl_tr2):
         if ccl_tr1['with_hm'] or ccl_tr2['with_hm']:
+            p1 = ccl_tr1['ccl_pr']
+            p2 = ccl_tr2['ccl_pr']
             if ccl_tr1['name'] == ccl_tr2['name']:
                 pr2pt = ccl_tr1['ccl_pr_2pt']
+                p2 = p1
             else:
                 pr2pt = None
             k_s = np.geomspace(1E-4, 1E2, 512)
@@ -163,9 +170,7 @@ class Theory():
 
             pk = ccl.halos.halomod_Pk2D(self.cosmo,
                                         self.hm_par['calculator'],
-                                        ccl_tr1['ccl_pr'],
-                                        prof_2pt=pr2pt,
-                                        prof2=ccl_tr2['ccl_pr'],
+                                        p1, prof_2pt=pr2pt, prof2=p2,
                                         normprof1=ccl_tr1['normed'],
                                         normprof2=ccl_tr2['normed'],
                                         lk_arr=lk_s, a_arr=a_s)
@@ -195,6 +200,6 @@ class Theory():
                                       cltracer2=ccl_trA2['ccl_tr'],
                                       ell=ellA,
                                       tkka=tkk, fsky=fsky,
-                                      cltracer3=ccl_trB1['ccl_pr'],
-                                      cltracer4=ccl_trB2['ccl_pr'],
+                                      cltracer3=ccl_trB1['ccl_tr'],
+                                      cltracer4=ccl_trB2['ccl_tr'],
                                       ell2=ellB)
