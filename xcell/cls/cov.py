@@ -1,6 +1,7 @@
 #!/usr/bin/python
 from .cl import Cl, ClFid
 from .data import Data
+from .theory import Theory
 import os
 import numpy as np
 import pymaster as nmt
@@ -42,6 +43,7 @@ class Cov():
         self.spin0 = self.data.data['cov'].get('spin0', False)
         # Multiplicative bias marginalization
         self.m_marg = self.data.data['cov'].get('m_marg', False)
+        self.do_NG = self.data.data['cov'].get('non_Gaussian', False)
 
     def _load_Cls(self):
         data = self.data.data
@@ -429,39 +431,90 @@ class Cov():
             cla2b2 = self._get_cl_for_cov(self.clA2B2, self.clfid_A2B2,
                                           m_a2, m_b2)
 
-        if np.any(cla1b1) or np.any(cla1b2) or np.any(cla2b1) or \
-                np.any(cla2b2):
+        notnull = (np.any(cla1b1) or np.any(cla1b2) or
+                   np.any(cla2b1) or np.any(cla2b2))
+        s_a1, s_a2 = self.clA1A2.get_spins()
+        s_b1, s_b2 = self.clB1B2.get_spins()
+
+        size1 = self.clA1A2.get_ell_cl()[1].size
+        size2 = self.clB1B2.get_ell_cl()[1].size
+        cov_G = np.zeros((size1, size2))
+        cov_NG = np.zeros((size1, size2))
+        cov_nlm = np.zeros((size1, size2))
+        cov_mm = np.zeros((size1, size2))
+        if notnull:
             wa = self.clA1A2.get_workspace_cov()
             wb = self.clB1B2.get_workspace_cov()
             cw = self.get_covariance_workspace()
 
-            s_a1, s_a2 = self.clA1A2.get_spins()
-            s_b1, s_b2 = self.clB1B2.get_spins()
             if self.spin0 and (s_a1 + s_a2 + s_b1 + s_b2 != 0):
-                cov = self._get_covariance_spin0_approx(cw, s_a1, s_a2, s_b1,
-                                                        s_b2, cla1b1, cla1b2,
-                                                        cla2b1, cla2b2, wa,
-                                                        wb)
+                cov_G = self._get_covariance_spin0_approx(cw, s_a1, s_a2, s_b1,
+                                                          s_b2, cla1b1, cla1b2,
+                                                          cla2b1, cla2b2, wa,
+                                                          wb)
 
             else:
-                cov = nmt.gaussian_covariance(cw, s_a1, s_a2, s_b1, s_b2,
-                                              cla1b1, cla1b2, cla2b1, cla2b2,
-                                              wa, wb)
-        else:
-            size1 = self.clA1A2.get_ell_cl()[1].size
-            size2 = self.clB1B2.get_ell_cl()[1].size
-            cov = np.zeros((size1, size2))
+                cov_G = nmt.gaussian_covariance(cw, s_a1, s_a2, s_b1, s_b2,
+                                                cla1b1, cla1b2, cla2b1, cla2b2,
+                                                wa, wb)
 
-        if self.nl_marg:
-            cov += self.get_covariance_nl_marg()
+        if self.nl_marg and notnull:
+            cov_nlm = self.get_covariance_nl_marg()
 
-        if self.m_marg:
-            cov += self.get_covariance_m_marg()
+        if self.m_marg and notnull:
+            cov_mm = self.get_covariance_m_marg()
 
-        self.cov = cov
-        np.savez_compressed(fname, cov=cov)
+        if self.do_NG and notnull:
+            fsky = self.data.data['cov'].get('fsky_NG', None)
+            if fsky is None:  # Calculate from masks
+                fsky = np.mean(((m_a1 > 0) & (m_a2 > 0) &
+                                (m_b1 > 0) & (m_b2 > 0)))
+            kinds = self.data.data['cov'].get('NG_terms',
+                                              ['1h'])
+            for kind in kinds:
+                cov_NG += self.get_covariance_ng_halomodel(s_a1, s_a2,
+                                                           s_b1, s_b2,
+                                                           fsky, kind)
+
+        self.cov = cov_G + cov_nlm + cov_mm + cov_NG
+        np.savez_compressed(fname, cov=self.cov, cov_G=cov_G, cov_NG=cov_NG,
+                            cov_nl_marg=cov_nlm, cov_m_marg=cov_mm)
         self.recompute_cov = False
-        return cov
+        return self.cov
+
+    def get_covariance_ng_halomodel(self, s_a1, s_a2, s_b1, s_b2,
+                                    fsky, kind='1h'):
+        ellA = self.clA1A2.b.get_effective_ells()
+        ellB = self.clB1B2.b.get_effective_ells()
+        nclsa = np.max([1, s_a1 + s_a2])
+        nclsb = np.max([1, s_b1 + s_b2])
+        cov = np.zeros([ellA.size, nclsa, ellB.size, nclsb])
+        th = Theory(self.data.data)
+        mpA1, mpA2 = self.clA1A2.get_mappers()
+        mpB1, mpB2 = self.clB1B2.get_mappers()
+        trlist = self.data.data['tracers']
+        ccl_trA1 = th.compute_tracer_ccl(self.trA1,
+                                         trlist[self.trA1],
+                                         mpA1)
+        bA1 = self.data.get_bias(self.trA1)
+        ccl_trA2 = th.compute_tracer_ccl(self.trA2,
+                                         trlist[self.trA2],
+                                         mpA2)
+        bA2 = self.data.get_bias(self.trA2)
+        ccl_trB1 = th.compute_tracer_ccl(self.trB1,
+                                         trlist[self.trB1],
+                                         mpB1)
+        bB1 = self.data.get_bias(self.trB1)
+        ccl_trB2 = th.compute_tracer_ccl(self.trB2,
+                                         trlist[self.trB2],
+                                         mpB2)
+        bB2 = self.data.get_bias(self.trB2)
+        covNG = th.get_ccl_cl_covNG(ccl_trA1, ccl_trA2, ellA,
+                                    ccl_trB1, ccl_trB2, ellB,
+                                    fsky, kind=kind)
+        # NG covariances can only be calculated for E-modes
+        cov[:, 0, :, 0] = covNG*bA1*bA2*bB1*bB2
+        return cov.reshape([ellA.size*nclsa, ellB.size*nclsb])
 
     def get_covariance_nl_marg(self):
         _, nl = self.clA1A2.get_ell_nl()
