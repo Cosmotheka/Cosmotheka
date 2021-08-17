@@ -148,11 +148,13 @@ class ClSack():
             z, nz = mapper.get_nz(dz=0)
             self.s.add_tracer('NZ', tr, quantity=quantity, spin=spin,
                               z=z, nz=nz)
-        elif quantity == 'cmb_convergence':
+        elif quantity in ['cmb_convergence', 'cmb_tSZ', 'generic']:
             ell = mapper.get_ell()
             nl = mapper.get_nl_coupled()[0]
+            beam = mapper.get_beam()
+            if beam is None:
+                beam = np.ones_like(ell)
 
-            beam = np.ones_like(ell)
             self.s.add_tracer('Map', tr, quantity=quantity, spin=spin,
                               ell=ell, beam=beam, beam_extra={'nl': nl})
         else:

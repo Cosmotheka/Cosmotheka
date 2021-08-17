@@ -112,9 +112,6 @@ class MapperP18CMBK(MapperBase):
 
         return self.noise
 
-    def get_ell(self):
-        return np.arange(3 * self.nside)
-
     def get_dtype(self):
         return 'cmb_convergence'
 
