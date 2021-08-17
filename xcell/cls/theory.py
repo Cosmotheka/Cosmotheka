@@ -2,6 +2,38 @@ import pyccl as ccl
 import numpy as np
 
 
+class ConcentrationDuffy08M500c(ccl.halos.Concentration):
+    """ Concentration-mass relation by Duffy et al. 2008
+    (arXiv:0804.2486) extended to Delta = 500-critical.
+    Args:
+        mdef (:class:`~pyccl.halos.massdef.MassDef`): a mass
+            definition object that fixes
+            the mass definition used by this c(M)
+            parametrization.
+    """
+    name = 'Duffy08M500c'
+
+    def __init__(self, mdef=None):
+        super(ConcentrationDuffy08M500c, self).__init__(mdef)
+
+    def _default_mdef(self):
+        self.mdef = ccl.halos.MassDef(500, 'critical')
+
+    def _check_mdef(self, mdef):
+        if (mdef.Delta != 500) or (mdef.rho_type != 'critical'):
+            return True
+        return False
+
+    def _setup(self):
+        self.A = 3.67
+        self.B = -0.0903
+        self.C = -0.51
+
+    def _concentration(self, cosmo, M, a):
+        M_pivot_inv = cosmo.cosmo.params.h * 5E-13
+        return self.A * (M * M_pivot_inv)**self.B * a**(-self.C)
+
+
 class Theory():
     def __init__(self, data):
         self.config = data['cov']['fiducial']
@@ -121,8 +153,11 @@ class Theory():
 
     def get_ccl_pk(self, ccl_tr1, ccl_tr2):
         if ccl_tr1['with_hm'] or ccl_tr2['with_hm']:
+            p1 = ccl_tr1['ccl_pr']
+            p2 = ccl_tr2['ccl_pr']
             if ccl_tr1['name'] == ccl_tr2['name']:
                 pr2pt = ccl_tr1['ccl_pr_2pt']
+                p2 = p1
             else:
                 pr2pt = None
             k_s = np.geomspace(1E-4, 1E2, 512)
@@ -131,9 +166,7 @@ class Theory():
 
             pk = ccl.halos.halomod_Pk2D(self.cosmo,
                                         self.hm_par['calculator'],
-                                        ccl_tr1['ccl_pr'],
-                                        prof_2pt=pr2pt,
-                                        prof2=ccl_tr2['ccl_pr'],
+                                        p1, prof_2pt=pr2pt, prof2=p2,
                                         normprof1=ccl_tr1['normed'],
                                         normprof2=ccl_tr2['normed'],
                                         lk_arr=lk_s, a_arr=a_s)
