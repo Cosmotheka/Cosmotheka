@@ -91,7 +91,8 @@ class Cl(ClBase):
             trs = self.data.get_tracers_bare_name_pair(self.tr2, self.tr1)
         else:
             trs = self.data.get_tracers_bare_name_pair(self.tr1, self.tr2)
-        if 'bpw_edges' in self.data.data['cls'][trs].keys():
+        if ((trs in self.data.data['cls']) and
+                ('bpw_edges' in self.data.data['cls'][trs].keys())):
             bpw_edges = np.array(self.data.data['cls'][trs]['bpw_edges'])
         else:
             bpw_edges = np.array(self.data.data['bpw_edges'])

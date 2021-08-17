@@ -104,7 +104,7 @@ class Mapper2MPZ(MapperBase):
                                            'W1MCORR', 'W2MCORR',
                                            'BCALCORR', 'RCALCORR', 'ICALCORR'],
                                           zflag='ZSPEC',
-                                          zrange=[0, 1.],
+                                          zrange=[0, 0.4],
                                           nz=100,
                                           njk=self.config.get('n_jk_dir', 100))
                 zm = 0.5*(z[1:] + z[:-1])

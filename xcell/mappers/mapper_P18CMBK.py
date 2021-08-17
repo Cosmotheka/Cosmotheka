@@ -27,6 +27,7 @@ class MapperP18CMBK(MapperBase):
         self.noise = None
 
         # Galactic-to-celestial coordinate rotator
+        self.rotate = config.get('coordinates', 'C') != 'G'
         self.r = hp.Rotator(coord=['G', 'C'])
 
         # Defaults
@@ -50,7 +51,8 @@ class MapperP18CMBK(MapperBase):
         if self.signal_map is None:
             # Read alms
             self.klm = hp.read_alm(self.config['file_klm'])
-            self.klm = self.r.rotate_alm(self.klm)
+            if self.rotate:
+                self.klm = self.r.rotate_alm(self.klm)
             self.signal_map = hp.alm2map(self.klm, self.nside,
                                          verbose=False)
         return [self.signal_map]
@@ -63,10 +65,11 @@ class MapperP18CMBK(MapperBase):
             else:
                 self.mask = hp.read_map(self.config['file_mask'],
                                         verbose=False)
-                self.mask = self.r.rotate_map_pixel(self.mask)
-                # Binerize
-                self.mask[self.mask < 0.5] = 0
-                self.mask[self.mask >= 0.5] = 1.
+                if self.rotate:
+                    self.mask = self.r.rotate_map_pixel(self.mask)
+                    # Binarize
+                    self.mask[self.mask < 0.5] = 0
+                    self.mask[self.mask >= 0.5] = 1.
                 # Apodize
                 self.mask = nmt.mask_apodization(self.mask, self.mask_aposize,
                                                  self.mask_apotype)

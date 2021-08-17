@@ -141,8 +141,8 @@ class MapperWIxSC(MapperBase):
                 z, nz, nz_jk = get_DIR_Nz(c_s, c_p,
                                           ['W1c', 'W2c', 'Bcc', 'Rcc'],
                                           zflag='Zspec',
-                                          zrange=[0, 1.],
-                                          nz=100,
+                                          zrange=[0, 0.6],
+                                          nz=150,
                                           bands_photo=['W1MCORR', 'W2MCORR',
                                                        'BCALCORR', 'RCALCORR'],
                                           njk=self.config.get('n_jk_dir', 100))
