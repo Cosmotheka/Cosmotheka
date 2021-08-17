@@ -50,21 +50,27 @@ class MapperP18CMBK(MapperBase):
     def get_signal_map(self):
         if self.signal_map is None:
             # Read alms
-            self.klm = hp.read_alm(self.config['file_klm'])
+            self.klm, lmax = hp.read_alm(self.config['file_klm'],
+                                         return_mmax=True)
             if self.rotate:
                 self.klm = self.r.rotate_alm(self.klm)
-            self.signal_map = hp.alm2map(self.klm, self.nside,
-                                         verbose=False)
-        return [self.signal_map]
+            # Filter if lmax is too large
+            if lmax > 3*self.nside-1:
+                fl = np.ones(lmax+1)
+                fl[3*self.nside:] = 0
+                self.klm = hp.almxfl(self.klm, fl, inplace=True)
+            self.signal_map = [hp.alm2map(self.klm, self.nside,
+                                          verbose=False)]
+        return self.signal_map
 
     def get_mask(self):
         if self.mask is None:
             read_lite, fname = self._check_mask_exists()
             if read_lite:
-                self.mask = hp.read_map(fname)
+                self.mask = hp.read_map(fname, dtype=float)
             else:
                 self.mask = hp.read_map(self.config['file_mask'],
-                                        verbose=False)
+                                        verbose=False, dtype=float)
                 if self.rotate:
                     self.mask = self.r.rotate_map_pixel(self.mask)
                     # Binarize
@@ -77,7 +83,8 @@ class MapperP18CMBK(MapperBase):
                                         nside_out=self.nside)
                 # Save
                 if fname:
-                    hp.write_map(fname, self.mask, overwrite=True)
+                    hp.write_map(fname, self.mask, overwrite=True,
+                                 dtype=float)
         return self.mask
 
     def get_nl_coupled(self):

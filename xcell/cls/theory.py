@@ -38,8 +38,7 @@ class Theory():
     def __init__(self, data):
         self.config = data['cov']['fiducial']
         self.cosmo = None
-        self.get_cosmo_ccl()
-        self.hm_par = self.get_halomodel_params()
+        self.hm_par = None
 
     def get_cosmo_ccl(self):
         if self.cosmo is None:
@@ -47,8 +46,10 @@ class Theory():
         return self.cosmo
 
     def get_halomodel_params(self):
-        if self.cosmo is None:
-            self.get_cosmo_ccl()
+        if self.hm_par is not None:
+            return self.hm_par
+
+        self.get_cosmo_ccl()
 
         if 'halo_model' not in self.config:
             self.config['halo_model'] = {}
@@ -89,16 +90,19 @@ class Theory():
         # Small-k damping
         klow = hmp.get('k_suppress', 0.01)
 
-        return {'mass_def': md,
-                'mass_func': mf,
-                'halo_bias': hb,
-                'cM': cm,
-                'prof_NFW': pNFW,
-                'calculator': hmc,
-                'alpha': (lambda a: alpha),
-                'k_suppress': (lambda a: klow)}
+        self.hm_par = {'mass_def': md,
+                       'mass_func': mf,
+                       'halo_bias': hb,
+                       'cM': cm,
+                       'prof_NFW': pNFW,
+                       'calculator': hmc,
+                       'alpha': (lambda a: alpha),
+                       'k_suppress': (lambda a: klow)}
 
     def compute_tracer_ccl(self, name, tracer, mapper):
+        self.get_cosmo_ccl()
+        self.get_halomodel_params()
+
         dtype = mapper.get_dtype()
         ccl_pr = self.hm_par['prof_NFW']
         ccl_pr_2pt = None
@@ -158,6 +162,8 @@ class Theory():
             raise NotImplementedError(f"Non-Gaussian term {kind} "
                                       "not supported.")
 
+        self.get_cosmo_ccl()
+
         pA1 = ccl_trA1['ccl_pr']
         pA2 = ccl_trA2['ccl_pr']
         if ccl_trA1['name'] == ccl_trA2['name']:
@@ -189,6 +195,9 @@ class Theory():
         return tkk
 
     def get_ccl_pk(self, ccl_tr1, ccl_tr2):
+        self.get_cosmo_ccl()
+        self.get_halomodel_params()
+
         if ccl_tr1['with_hm'] or ccl_tr2['with_hm']:
             p1 = ccl_tr1['ccl_pr']
             p2 = ccl_tr2['ccl_pr']
@@ -216,6 +225,8 @@ class Theory():
         return pk
 
     def get_ccl_cl(self, ccl_tr1, ccl_tr2, ell):
+        self.get_cosmo_ccl()
+
         pk = self.get_ccl_pk(ccl_tr1, ccl_tr2)
         return ccl.angular_cl(self.cosmo,
                               ccl_tr1['ccl_tr'],
@@ -225,6 +236,8 @@ class Theory():
     def get_ccl_cl_covNG(self, ccl_trA1, ccl_trA2, ellA,
                          ccl_trB1, ccl_trB2, ellB, fsky,
                          kind='1h'):
+        self.get_cosmo_ccl()
+
         tkk = self.get_ccl_tkka(ccl_trA1, ccl_trA2,
                                 ccl_trB1, ccl_trB2,
                                 kind=kind)
