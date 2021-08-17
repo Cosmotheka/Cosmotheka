@@ -121,6 +121,7 @@ class Theory():
 
     def get_ccl_tkka(self, ccl_trA1, ccl_trA2, ccl_trB1, ccl_trB2,
                      kind='1h'):
+        # Returns trispectrum for one of the non-Gaussian covariance terms.
         if kind not in ['1h']:
             raise NotImplementedError(f"Non-Gaussian term {kind} "
                                       "not supported.")

@@ -28,6 +28,9 @@ class Data():
         self.cl_tracers = {'wsp': None, 'no_wsp': None}
         self.cov_tracers = {'wsp': None, 'no_wsp': None}
 
+    def get_bias(self, name):
+        return self.data['tracers'][name].get('bias', 1.)
+
     def _check_yml_in_outdir(self, override=False):
         outdir = self.data['output']
         fname = os.path.join(outdir, '*.yml')
