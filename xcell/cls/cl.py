@@ -346,8 +346,8 @@ class ClFid(ClBase):
         if not os.path.isfile(fname):
             ccl_tr1, ccl_tr2 = self.get_tracers_ccl()
             cl = self.th.get_ccl_cl(ccl_tr1, ccl_tr2, ell)
-            b1 = self.data.data['tracers'][self.tr1].get('bias', 1.)
-            b2 = self.data.data['tracers'][self.tr2].get('bias', 1.)
+            b1 = self.data.get_bias(self.tr1)
+            b2 = self.data.get_bias(self.tr2)
             cl *= b1*b2
             tracers = self.data.data['tracers']
             fiducial = self.data.data['cov']['fiducial']

@@ -119,10 +119,50 @@ class Theory():
                 'with_hm': with_hm,
                 'normed': normed_profile}
 
+    def get_ccl_tkka(self, ccl_trA1, ccl_trA2, ccl_trB1, ccl_trB2,
+                     kind='1h'):
+        # Returns trispectrum for one of the non-Gaussian covariance terms.
+        if kind not in ['1h']:
+            raise NotImplementedError(f"Non-Gaussian term {kind} "
+                                      "not supported.")
+
+        pA1 = ccl_trA1['ccl_pr']
+        pA2 = ccl_trA2['ccl_pr']
+        if ccl_trA1['name'] == ccl_trA2['name']:
+            pr2ptA = ccl_trA1['ccl_pr_2pt']
+            pA2 = pA1
+        else:
+            pr2ptA = None
+        pB1 = ccl_trB1['ccl_pr']
+        pB2 = ccl_trB2['ccl_pr']
+        if ccl_trB1['name'] == ccl_trB2['name']:
+            pr2ptB = ccl_trB1['ccl_pr_2pt']
+            pB2 = pB1
+        else:
+            pr2ptB = None
+
+        k_s = np.geomspace(1E-4, 1E2, 512)
+        lk_s = np.log(k_s)
+        a_s = 1./(1+np.linspace(0., 6., 30)[::-1])
+        tkk = ccl.halos.halomod_Tk3D_1h(self.cosmo, self.hm_par['calculator'],
+                                        prof1=pA1, prof2=pA2,
+                                        prof12_2pt=pr2ptA,
+                                        prof3=pB1, prof4=pB2,
+                                        prof34_2pt=pr2ptB,
+                                        normprof1=ccl_trA1['normed'],
+                                        normprof2=ccl_trA2['normed'],
+                                        normprof3=ccl_trB1['normed'],
+                                        normprof4=ccl_trB2['normed'],
+                                        a_arr=a_s, lk_arr=lk_s)
+        return tkk
+
     def get_ccl_pk(self, ccl_tr1, ccl_tr2):
         if ccl_tr1['with_hm'] or ccl_tr2['with_hm']:
+            p1 = ccl_tr1['ccl_pr']
+            p2 = ccl_tr2['ccl_pr']
             if ccl_tr1['name'] == ccl_tr2['name']:
                 pr2pt = ccl_tr1['ccl_pr_2pt']
+                p2 = p1
             else:
                 pr2pt = None
             k_s = np.geomspace(1E-4, 1E2, 512)
@@ -131,9 +171,7 @@ class Theory():
 
             pk = ccl.halos.halomod_Pk2D(self.cosmo,
                                         self.hm_par['calculator'],
-                                        ccl_tr1['ccl_pr'],
-                                        prof_2pt=pr2pt,
-                                        prof2=ccl_tr2['ccl_pr'],
+                                        p1, prof_2pt=pr2pt, prof2=p2,
                                         normprof1=ccl_tr1['normed'],
                                         normprof2=ccl_tr2['normed'],
                                         lk_arr=lk_s, a_arr=a_s)
@@ -151,3 +189,18 @@ class Theory():
                               ccl_tr1['ccl_tr'],
                               ccl_tr2['ccl_tr'],
                               ell, p_of_k_a=pk)
+
+    def get_ccl_cl_covNG(self, ccl_trA1, ccl_trA2, ellA,
+                         ccl_trB1, ccl_trB2, ellB, fsky,
+                         kind='1h'):
+        tkk = self.get_ccl_tkka(ccl_trA1, ccl_trA2,
+                                ccl_trB1, ccl_trB2,
+                                kind=kind)
+        return ccl.angular_cl_cov_cNG(self.cosmo,
+                                      cltracer1=ccl_trA1['ccl_tr'],
+                                      cltracer2=ccl_trA2['ccl_tr'],
+                                      ell=ellA,
+                                      tkka=tkk, fsky=fsky,
+                                      cltracer3=ccl_trB1['ccl_tr'],
+                                      cltracer4=ccl_trB2['ccl_tr'],
+                                      ell2=ellB)
