@@ -81,6 +81,7 @@ class Theory():
                                                         'Duffy08'))
         cm = cmc(mdef=md)
         pNFW = ccl.halos.HaloProfileNFW(cm)
+        p2pt = ccl.halos.Profile2pt()
 
         # Halo model calculator
         hmc = ccl.halos.HMCalculator(self.cosmo, mf, hb, md)
@@ -95,6 +96,7 @@ class Theory():
                        'halo_bias': hb,
                        'cM': cm,
                        'prof_NFW': pNFW,
+                       'prof_2pt': p2pt,
                        'calculator': hmc,
                        'alpha': (lambda a: alpha),
                        'k_suppress': (lambda a: klow)}
@@ -105,7 +107,7 @@ class Theory():
 
         dtype = mapper.get_dtype()
         ccl_pr = self.hm_par['prof_NFW']
-        ccl_pr_2pt = None
+        ccl_pr_2pt = self.hm_par['prof_2pt']
         with_hm = tracer.get('use_halo_model', False)
         normed_profile = True
         # Get Tracers
@@ -170,15 +172,14 @@ class Theory():
             pr2ptA = ccl_trA1['ccl_pr_2pt']
             pA2 = pA1
         else:
-            pr2ptA = None
+            pr2ptA = self.hm_par['prof_2pt']
         pB1 = ccl_trB1['ccl_pr']
         pB2 = ccl_trB2['ccl_pr']
         if ccl_trB1['name'] == ccl_trB2['name']:
             pr2ptB = ccl_trB1['ccl_pr_2pt']
             pB2 = pB1
         else:
-            pr2ptB = None
-
+            pr2ptB = self.hm_par['prof_2pt']
         k_s = np.geomspace(1E-4, 1E2, 512)
         lk_s = np.log(k_s)
         a_s = 1./(1+np.linspace(0., 6., 30)[::-1])
@@ -248,4 +249,4 @@ class Theory():
                                       tkka=tkk, fsky=fsky,
                                       cltracer3=ccl_trB1['ccl_tr'],
                                       cltracer4=ccl_trB2['ccl_tr'],
-                                      ell2=ellB)
+                                      ell2=ellB, integration_method='spline')
