@@ -3,10 +3,7 @@ import healpy as hp
 import os
 
 nside = 1024
-mask1 = hp.ud_grade(hp.read_map("../data/WISExSCOSmask.fits.gz"), nside_out=nside)
-mask2 = hp.ud_grade(hp.read_map("../data/mask_y_galactic_HFI_PS_fsky0p60.fits.gz"), nside_out=nside)
-mask3 = hp.ud_grade(hp.read_map("../data/mask_kappa.fits.gz"), nside_out=nside)
-mask = mask1*mask2*mask3
+mask = hp.ud_grade(hp.read_map("../data/WISExSCOSmask.fits.gz"), nside_out=nside)
 
 nside_jk = 8
 npix_jk = hp.nside2npix(nside_jk)
@@ -27,7 +24,7 @@ for i, jk in enumerate(np.arange(npix_jk, dtype=int)[fracs > threshold]):
     os.system(f'sed -i "s#mask: \'../data/WISExSCOSmask.fits.gz\'#mask: \'{fname_mask}\'#g" {fname_yml}')
     os.system(f'sed -i "s#output: \'../data/1024_yxgxk_covmix/\'#output: \'{dirname}\'#g" {fname_yml}')
 
-    msk = mask1.copy()
+    msk = mask.copy()
     msk[jk_id == jk] = 0
     hp.write_map(fname_mask, msk, dtype=float, overwrite=True)
 
@@ -43,5 +40,4 @@ for i, jk in enumerate(np.arange(npix_jk, dtype=int)[fracs > threshold]):
     f.write(out)
     f.close()
     os.system(f'chmod 755 {dirname}/script.sh')
-    if i == 0:
-        break
+    os.system(f'addqueue -q cmb -s -c "JK{i}" -n 1x12 -m 2 {dirname}/script.sh')
