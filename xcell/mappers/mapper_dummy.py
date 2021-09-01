@@ -2,6 +2,7 @@ from .mapper_base import MapperBase
 import numpy as np
 import healpy as hp
 import pyccl as ccl
+import pymaster as nmt
 
 
 class MapperDummy(MapperBase):
@@ -53,8 +54,11 @@ class MapperDummy(MapperBase):
         self.nmaps = 1
         if self.spin:
             self.nmaps = 2
-
+        self.custom_auto = self.config.get('custom_auto', False)
+        self.custom_offset = self.config.get('custom_offset', 0.)
         self.signal_map = None
+        self.cl_coupled = None
+        self.cls_cov = None
         self.nl_coupled = None
         self.mask = None
         self.dndz = None
@@ -64,16 +68,17 @@ class MapperDummy(MapperBase):
         self.aposize = self.config.get('aposize', 1.)
 
     def _check_dtype(self):
-        dtypes = ['galaxy_density', 'galaxy_shear', 'cmb_convergence']
+        dtypes = ['galaxy_density', 'galaxy_shear',
+                  'cmb_convergence', 'cmb_tSZ', 'generic']
         if self.dtype not in dtypes:
-            raise ValueError(f'Tracer type {self.dtype} not implemented.')
+            raise NotImplementedError("Tracer type " + self.dtype +
+                                      " not implemented.")
 
     def _get_spin_from_dtype(self, dtype):
-        if dtype in ['galaxy_density', 'cmb_convergence']:
-            spin = 0
-        elif dtype == 'galaxy_shear':
-            spin = 2
-        return spin
+        if dtype == 'galaxy_shear':
+            return 2
+        else:
+            return 0
 
     def get_nz(self, dz=0):
         if self.dndz is None:
@@ -83,7 +88,7 @@ class MapperDummy(MapperBase):
             elif self.dtype == 'galaxy_shear':
                 z, nz = np.loadtxt('xcell/tests/data/Nz_DIR_z0.1t0.3.asc',
                                    usecols=(0, 1), unpack=True)
-            elif self.dtype == 'cmb_convergence':
+            else:
                 return None
 
             self.dndz = np.array([z, nz])
@@ -94,22 +99,32 @@ class MapperDummy(MapperBase):
 
         return np.array([z_dz[sel], nz[sel]])
 
+    def _get_cl_ccl(self, dtype):
+        ls = np.arange(3 * self.nside)
+        if dtype == 'galaxy_density':
+            z, nz = self.get_nz()
+            b = np.ones_like(z)
+            tracer = ccl.NumberCountsTracer(self.cosmo, has_rsd=False,
+                                            dndz=(z, nz), bias=(z, b))
+        elif dtype == 'galaxy_shear':
+            z, nz = self.get_nz()
+            tracer = ccl.WeakLensingTracer(self.cosmo, dndz=(z, nz))
+        elif dtype == 'cmb_convergence':
+            tracer = ccl.CMBLensingTracer(self.cosmo, z_source=1100)
+        elif dtype == 'cmb_tSZ':
+            # Note that the tSZ power spectrum implemented here is wrong
+            # But it's not worth for now adding all the halo model stuff.
+            tracer = ccl.tSZTracer(self.cosmo, z_max=3.)
+
+        return ccl.angular_cl(self.cosmo, tracer, tracer, ls)
+
     def get_cl(self):
         if self.cl is None:
-            ls = np.arange(3 * self.nside)
             dtype = self.get_dtype()
-            if dtype == 'galaxy_density':
-                z, nz = self.get_nz()
-                b = np.ones_like(z)
-                tracer = ccl.NumberCountsTracer(self.cosmo, has_rsd=False,
-                                                dndz=(z, nz), bias=(z, b))
-            elif dtype == 'galaxy_shear':
-                z, nz = self.get_nz()
-                tracer = ccl.WeakLensingTracer(self.cosmo, dndz=(z, nz))
-            elif dtype == 'cmb_convergence':
-                tracer = ccl.CMBLensingTracer(self.cosmo, z_source=1100)
-
-            self.cl = ccl.angular_cl(self.cosmo, tracer, tracer, ls)
+            if dtype == 'generic':
+                self.cl = np.ones(3 * self.nside)
+            else:
+                self.cl = self._get_cl_ccl(dtype)
 
         return self.cl
 
@@ -167,6 +182,22 @@ class MapperDummy(MapperBase):
             if self.nmaps == 2:
                 self.nl_coupled[-1] += self.noise_level
         return self.nl_coupled
+
+    def get_cl_coupled(self):
+        if self.cl_coupled is None:
+            fld = self.get_nmt_field()
+            self.cl_coupled = nmt.compute_coupled_cell(fld, fld)
+            self.cl_coupled += self.custom_offset
+        return self.cl_coupled
+
+    def get_cls_covar_coupled(self):
+        if self.cls_cov is None:
+            clc = self.get_cl_coupled()
+            self.cls_cov = {'cross': clc-self.custom_offset,
+                            'auto_11': clc,
+                            'auto_12': clc-self.custom_offset,
+                            'auto_22': clc}
+        return self.cls_cov
 
     def get_dtype(self):
         return self.dtype

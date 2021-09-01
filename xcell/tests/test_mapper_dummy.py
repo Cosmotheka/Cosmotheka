@@ -29,6 +29,9 @@ def get_cl(dtype):
     cosmo_pars = config['cosmo']
     cosmo = ccl.Cosmology(**cosmo_pars)
 
+    if config['dtype'] == 'generic':
+        return np.ones(3*config['nside'])
+
     if config['dtype'] == 'galaxy_density':
         z, nz = np.loadtxt('xcell/tests/data/DESY1gc_dndz_bin0.txt',
                            usecols=(1, 3), unpack=True)
@@ -41,6 +44,8 @@ def get_cl(dtype):
         tracer = ccl.WeakLensingTracer(cosmo, dndz=(z, nz))
     elif config['dtype'] == 'cmb_convergence':
         tracer = ccl.CMBLensingTracer(cosmo, z_source=1100)
+    elif config['dtype'] == 'cmb_tSZ':
+        tracer = ccl.tSZTracer(cosmo, z_max=3.)
 
     cl = ccl.angular_cl(cosmo, tracer, tracer, np.arange(3 * config['nside']))
     return cl
@@ -61,23 +66,29 @@ def test_get_mask():
     # d = m.get_mask(fsky=0.5)
 
 
-def test_get_cl():
-    for dtype in ['galaxy_density', 'galaxy_shear', 'cmb_convergence']:
-        m = get_mapper(dtype)
-        cl_m = m.get_cl()
+@pytest.mark.parametrize('dtyp', ['galaxy_density',
+                                  'galaxy_shear',
+                                  'cmb_convergence',
+                                  'cmb_tSZ',
+                                  'generic'])
+def test_get_cl(dtyp):
+    m = get_mapper(dtyp)
+    cl_m = m.get_cl()
 
-        cl = get_cl(dtype)
-        rdev = np.fabs(cl[cl != 0] / cl_m[cl_m != 0] - 1)
-        assert np.max(rdev) < 1E-5
+    cl = get_cl(dtyp)
+    rdev = np.fabs(cl[cl != 0] / cl_m[cl_m != 0] - 1)
+    assert np.max(rdev) < 1E-5
 
 
 @pytest.mark.parametrize('dtyp', ['galaxy_density',
                                   'galaxy_shear',
-                                  'cmb_convergence'])
+                                  'cmb_convergence',
+                                  'cmb_tSZ',
+                                  'generic'])
 def test_get_nz(dtyp):
     m = get_mapper(dtype=dtyp)
     nz = m.get_nz()
-    if dtyp == 'cmb_convergence':
+    if dtyp in ['cmb_convergence', 'cmb_tSZ', 'generic']:
         assert nz is None
     else:
         assert len(nz) == 2
@@ -117,9 +128,47 @@ def test_get_dtype():
 
 
 def test_get_spin():
-    for dtype in ['galaxy_density', 'galaxy_shear', 'cmb_convergence']:
+    for dtype in ['galaxy_density', 'galaxy_shear',
+                  'cmb_convergence', 'cmb_tSZ']:
         m = get_mapper(dtype)
-        if dtype in ['galaxy_density', 'cmb_convergence']:
-            assert m.get_spin() == 0
-        else:
+        if dtype == 'galaxy_shear':
             assert m.get_spin() == 2
+        else:
+            assert m.get_spin() == 0
+
+
+def test_cl_coupled():
+    config = get_config()
+    config['custom_auto'] = True
+    config['custom_offset'] = np.log(2.)*0.001
+    m = xc.mappers.MapperDummy(config)
+    cl1 = m.get_cl_coupled()[0]
+
+    mp = m.get_signal_map()
+    msk = m.get_mask()
+    cl2 = hp.anafast(mp*msk, iter=0)
+
+    assert np.allclose(cl1-np.log(2.)*0.001, cl2,
+                       atol=0, rtol=1E-10)
+
+
+def test_cls_covar_coupled():
+    offset = np.pi*0.002
+    config = get_config()
+    config['custom_auto'] = True
+    config['custom_offset'] = offset
+    m = xc.mappers.MapperDummy(config)
+    cl1 = m.get_cls_covar_coupled()
+
+    mp = m.get_signal_map()
+    msk = m.get_mask()
+    cl2 = hp.anafast(mp*msk, iter=0)
+
+    assert np.allclose(cl1['cross'][0], cl2,
+                       atol=0, rtol=1E-10)
+    assert np.allclose(cl1['auto_11'][0]-offset, cl2,
+                       atol=0, rtol=1E-10)
+    assert np.allclose(cl1['auto_12'][0], cl2,
+                       atol=0, rtol=1E-10)
+    assert np.allclose(cl1['auto_11'][0]-offset, cl2,
+                       atol=0, rtol=1E-10)

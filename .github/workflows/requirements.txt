@@ -1,7 +1,6 @@
-# Install wheel to avoid recompiling pymaster, pyccl, camb, etc.
-wheel
 numpy
 scipy
+scikit-learn
 flake8
 pytest
 pytest-cov

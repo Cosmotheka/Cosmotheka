@@ -45,7 +45,7 @@ def get_config(fsky0=0.2, fsky1=0.3, dtype0='galaxy_density',
 
     return {'tracers': {'Dummy__0': dummy0, 'Dummy__1': dummy1},
             'cls': {'Dummy-Dummy': {'compute': 'all'}},
-            'cov': {'fiducial': {'cosmo': cosmo, 'gc_bias':  False, 'wl_m':
+            'cov': {'fiducial': {'cosmo': cosmo, 'wl_m':
                                  False, 'wl_ia': False}},
             'bpw_edges': bpw_edges,
             'healpy': {'n_iter_sht': 0, 'n_iter_mcm': 3, 'n_iter_cmcm': 3,
@@ -212,14 +212,17 @@ def test_covariance_G(m_marg):
                         assert ~np.any(scov)
 
 
-def test_covariance_NG():
-    # Generate a config file with NG covariance
+def test_covariance_extra():
+    # Generate a config file with extra covariance
     config = get_config().copy()
-    config['cov'].update({'ng': {'path': os.path.join(tmpdir, 'dummy_cov.npy'),
-                                 'order': ['Dummy-Dummy', 'Dummy-DummyWL',
-                                           'Dummy-DummyCV', 'DummyWL-DummyWL',
-                                           'DummyWL-DummyCV', 'DummyCV-DummyCV'
-                                           ]}})
+    config['cov'].update({'extra': {'path': os.path.join(tmpdir,
+                                                         'dummy_cov.npy'),
+                                    'order': ['Dummy-Dummy',
+                                              'Dummy-DummyWL',
+                                              'Dummy-DummyCV',
+                                              'DummyWL-DummyWL',
+                                              'DummyWL-DummyCV',
+                                              'DummyCV-DummyCV']}})
 
     config['cls'].update({'Dummy-Dummy': {'compute': 'all'},
                           'Dummy-DummyWL': {'compute': 'all'},
@@ -237,20 +240,20 @@ def test_covariance_NG():
     data = Data(data=config, override=True)
     datafile = os.path.join(data.data['output'], 'data.yml')
 
-    # Populate a sacc file with cls and covG. This will be used as NG
+    # Populate a sacc file with cls and covG. This will be used as extra
     # covariance later. Note that the tracers are in different order than in
     # the config file when reading the yml file.
     s = ClSack(datafile, 'cls_cov_dummy.fits', 'cls')
 
     covmat = s.s.covariance.covmat
-    # Set B-modes to 0 as they are set to 0 when reading the NG covariance
+    # Set B-modes to 0 as they are set to 0 when reading the extra covariance
     for dt in s.s.get_data_types():
         if 'b' in dt:
             ix = s.s.indices(data_type=dt)
             covmat[ix] = 0
             covmat[:, ix] = 0
 
-    # Prepare the "NG" covariance. So far NG covs with B-modes are not
+    # Prepare the "extra" covariance. So far extra covs with B-modes are not
     # implemented Keep only spin-0 and E-modes
     # Not done in previous loop because the indices vary for the sacc file and
     # not longer correspond to those in covmat
@@ -265,16 +268,16 @@ def test_covariance_NG():
         ix_reorder_d[key].extend(s.s.indices(tracers=trs))
 
     ix_reorder = []
-    for key in s.data.data['cov']['ng']['order']:
+    for key in s.data.data['cov']['extra']['order']:
         if key not in ix_reorder_d:
             key = '-'.join(key.split('-')[::-1])
         ix_reorder.extend(ix_reorder_d[key])
 
     # Save the reordered covariance
-    np.save(config['cov']['ng']['path'],
+    np.save(config['cov']['extra']['path'],
             s.s.covariance.covmat[ix_reorder][:, ix_reorder])
 
-    # Populate a sacc file with nls and covNG (read previous cov)
+    # Populate a sacc file with nls and cov extra (read previous cov)
     s2 = ClSack(datafile, 'cls_cov_dummy.fits', 'nl')
     covmat2 = s2.s.covariance.covmat
 

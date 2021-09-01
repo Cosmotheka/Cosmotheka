@@ -48,6 +48,84 @@ def remove_outdir(config):
         os.rmdir(outdir)
 
 
+def get_tracer_pair_iterator(data):
+    tlist = list(data.data['tracers'].keys())
+    for t1 in tlist:
+        for t2 in tlist:
+            yield t1, t2
+
+
+def test_will_be_computed():
+    d = get_data()
+    n1 = d.will_pair_be_computed('DESwl__0', 'DESwl__1')
+    n2 = d.will_pair_be_computed('DESwl__1', 'DESwl__0')
+    n3 = d.will_pair_be_computed('DESwl__0', 'eBOSS__0')
+    assert n1 == ('DESwl__0', 'DESwl__1')
+    assert n2 == ('DESwl__0', 'DESwl__1')
+    assert not n3
+
+
+def test_get_tracer_matrix():
+    # No cls from data
+    c = get_config_dict()
+    data = Data(data=c)
+    m = data.get_tracer_matrix()
+    for t1, t2 in get_tracer_pair_iterator(data):
+        assert not m[(t1, t2)]['clcov_from_data']
+    remove_yml_file(c)
+
+    # All cls from data
+    c = get_config_dict()
+    c['cov']['cls_from_data'] = 'all'
+    data = Data(data=c)
+    m = data.get_tracer_matrix()
+    for t1, t2 in get_tracer_pair_iterator(data):
+        assert m[(t1, t2)]['clcov_from_data']
+    remove_yml_file(c)
+
+    # Group cls from data (all)
+    c = get_config_dict()
+    c['cov']['cls_from_data'] = {'DESgc-DESgc': {'compute': 'all'}}
+    data = Data(data=c)
+    m = data.get_tracer_matrix()
+    for t1, t2 in get_tracer_pair_iterator(data):
+        tpair = data.get_tracers_bare_name_pair(t1, t2)
+        if tpair == 'DESgc-DESgc':
+            assert m[(t1, t2)]['clcov_from_data']
+        else:
+            assert not m[(t1, t2)]['clcov_from_data']
+    remove_yml_file(c)
+
+    # Group cls from data (auto)
+    c = get_config_dict()
+    c['cov']['cls_from_data'] = {'DESgc-DESgc': {'compute': 'auto'}}
+    data = Data(data=c)
+    m = data.get_tracer_matrix()
+    for t1, t2 in get_tracer_pair_iterator(data):
+        tpair = data.get_tracers_bare_name_pair(t1, t2)
+        if tpair == 'DESgc-DESgc' and t1 == t2:
+            assert m[(t1, t2)]['clcov_from_data']
+        else:
+            assert not m[(t1, t2)]['clcov_from_data']
+    remove_yml_file(c)
+
+    # Some cls from data
+    c = get_config_dict()
+    c['cov']['cls_from_data'] = ['DESgc__0-DESgc__0', 'DESgc__1-DESwl__1']
+    data = Data(data=c)
+    m = data.get_tracer_matrix()
+    for t1, t2 in get_tracer_pair_iterator(data):
+        if t1 == 'DESgc__0' and t2 == 'DESgc__0':
+            assert m[(t1, t2)]['clcov_from_data']
+        elif t1 == 'DESgc__1' and t2 == 'DESwl__1':
+            assert m[(t1, t2)]['clcov_from_data']
+        elif t1 == 'DESwl__1' and t2 == 'DESgc__1':
+            assert m[(t1, t2)]['clcov_from_data']
+        else:
+            assert not m[(t1, t2)]['clcov_from_data']
+    remove_yml_file(c)
+
+
 def test_initizalization():
     input_file = get_input_file()
     config = read_yaml_file(input_file)
@@ -151,13 +229,13 @@ def test_get_cov_trs_name(wsp):
     remove_yml_file(data.data)
 
 
-def test_get_cov_ng_cl_tracers():
+def test_get_cov_extra_cl_tracers():
     data = get_data()
     config = data.data
     cl_trs = data.get_cl_trs_names()
 
     d = {}
-    for trs in config['cov']['ng']['order']:
+    for trs in config['cov']['extra']['order']:
         d[trs] = []
 
     for trs in cl_trs:
@@ -174,10 +252,10 @@ def test_get_cov_ng_cl_tracers():
     d['DESwl-DESgc'].sort(key=lambda x: x[1])
 
     cl_trs_cov = []
-    for trs in config['cov']['ng']['order']:
+    for trs in config['cov']['extra']['order']:
         cl_trs_cov.extend(d[trs])
 
-    assert cl_trs_cov == data.get_cov_ng_cl_tracers()
+    assert cl_trs_cov == data.get_cov_extra_cl_tracers()
     remove_yml_file(config)
 
 

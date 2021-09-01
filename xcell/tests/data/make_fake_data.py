@@ -3,18 +3,39 @@ import healpy as hp
 from astropy.io import fits
 from astropy.table import Table
 import wget
+import os
 
 
 nside = 32
 npix = hp.nside2npix(nside)
 
-# Fake map
-m = np.ones(npix)
-hp.write_map("map.fits", m, overwrite=True)
-
 # Fake alm
+m = np.ones(npix)
 alm = hp.map2alm(m)
 hp.write_alm("alm.fits", alm, overwrite=True)
+
+# Fake masks
+mask1 = np.ones(npix)
+mask1[int(npix*(3/4)):] = 0
+hp.write_map("mask1.fits", mask1, overwrite=True)
+mask2 = np.ones(npix)
+mask2[:-int(npix*(3/4))] = 0
+hp.write_map("mask2.fits", mask2, overwrite=True)
+
+# Fake hm1 map
+hm1 = np.repeat(np.array([np.arange(4)])-2, npix//4,
+                axis=0).flatten() + np.random.randn(npix)
+hp.write_map("hm1_map.fits", hm1, overwrite=True)
+
+# Fake hm2 map
+hm2 = np.repeat(np.array([np.arange(4)])-2, npix//4,
+                axis=0).flatten() + np.random.randn(npix)
+hp.write_map("hm2_map.fits", hm2, overwrite=True)
+
+# Fake map
+m = np.ones(npix)
+hp.write_map("map.fits", [m, hm1, hm2], overwrite=True)
+hp.write_map("map_auto_test.fits", [hm1, hm1, hm2], overwrite=True)
 
 # Noise file
 np.savetxt("nl.txt",
@@ -93,9 +114,59 @@ cols = fits.ColDefs([fits.Column(name='zbin_mcal', format='D', array=on),
 hdu = fits.BinTableHDU.from_columns(cols)
 hdu.writeto("cat_zbin.fits", overwrite=True)
 
+
 with fits.open("catalog.fits") as f:
     t = Table.read(f)
     t['SG_FLAG'][:] = 0
-    t.write('catalog_stars.fits')
+    t.write('catalog_stars.fits', overwrite=True)
 
-wget.download("http://desdr-server.ncsa.illinois.edu/despublic/y1a1_files/chains/2pt_NG_mcal_1110.fits")  # noqa
+if not os.path.isfile("2pt_NG_mcal_1110.fits"):
+    wget.download("http://desdr-server.ncsa.illinois.edu/despublic/y1a1_files/chains/2pt_NG_mcal_1110.fits")  # noqa
+
+
+zs = np.random.randn(npix)*0.05+0.15
+zs[zs < 0] = 0
+mags = np.arange(npix)
+cols = fits.ColDefs([fits.Column(name='SUPRA', format='D',
+                                 array=ra),
+                     fits.Column(name='SUPDEC', format='D',
+                                 array=dec),
+                     fits.Column(name='RA', format='D',
+                                 array=np.radians(ra)),
+                     fits.Column(name='DEC', format='D',
+                                 array=np.radians(dec)),
+                     fits.Column(name='ZPHOTO', format='D',
+                                 array=zs),
+                     fits.Column(name='ZPHOTO_CORR', format='D',
+                                 array=zs),
+                     fits.Column(name='ZSPEC', format='D',
+                                 array=zs),
+                     fits.Column(name='JCORR', format='D',
+                                 array=mags),
+                     fits.Column(name='KCORR', format='D',
+                                 array=mags),
+                     fits.Column(name='HCORR', format='D',
+                                 array=mags),
+                     fits.Column(name='W1MCORR', format='D',
+                                 array=mags),
+                     fits.Column(name='W2MCORR', format='D',
+                                 array=mags),
+                     fits.Column(name='BCALCORR', format='D',
+                                 array=mags),
+                     fits.Column(name='RCALCORR', format='D',
+                                 array=mags),
+                     fits.Column(name='ICALCORR', format='D',
+                                 array=mags)])
+hdu = fits.BinTableHDU.from_columns(cols)
+hdu.writeto("catalog_2mpz.fits", overwrite=True)
+
+tab = Table()
+tab['zCorr'] = zs
+tab['Zspec'] = zs
+tab['ra_WISE'] = ra
+tab['dec_WISE'] = dec
+tab['W1c'] = mags.astype(float)
+tab['W2c'] = mags.astype(float)
+tab['Bcc'] = mags.astype(float)
+tab['Rcc'] = mags.astype(float)
+tab.write('catalog_spec_2mpz.csv', format='csv', overwrite=True)

@@ -20,7 +20,8 @@ if os.path.isdir(tmpdir2):
 
 def get_config(fsky=0.2, fsky2=0.3,
                dtype0='galaxy_density',
-               dtype1='galaxy_density'):
+               dtype1='galaxy_density',
+               inc_hm=False):
     nside = 32
     # Set only the necessary entries. Leave the others to their default value.
     cosmo = {
@@ -38,15 +39,15 @@ def get_config(fsky=0.2, fsky2=0.3,
     }
     dummy0 = {'mask_name': 'mask_dummy0', 'mapper_class': 'MapperDummy',
               'cosmo': cosmo, 'nside': nside, 'fsky': fsky, 'seed': 0,
-              'dtype': dtype0}
+              'dtype': dtype0, 'use_halo_model': inc_hm}
     dummy1 = {'mask_name': 'mask_dummy1', 'mapper_class': 'MapperDummy',
               'cosmo': cosmo, 'nside': nside, 'fsky': fsky2, 'seed': 100,
-              'dtype': dtype1}
+              'dtype': dtype1, 'use_halo_model': inc_hm}
     bpw_edges = list(range(0, 3 * nside, 4))
 
     return {'tracers': {'Dummy__0': dummy0, 'Dummy__1': dummy1},
             'cls': {'Dummy-Dummy': {'compute': 'all'}},
-            'cov': {'fiducial': {'cosmo': cosmo, 'gc_bias':  False,
+            'cov': {'fiducial': {'cosmo': cosmo,
                                  'wl_m': False, 'wl_ia': False}},
             'bpw_edges': bpw_edges,
             'healpy': {'n_iter_sht': 0,
@@ -109,6 +110,91 @@ def test_cov_nlmarg():
     shutil.rmtree(tmpdir2)
 
 
+def test_cov_ng_error():
+    data = get_config(fsky=0.2)
+    covc = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
+    with pytest.raises(NotImplementedError):
+        covc.get_covariance_ng_halomodel(0, 0, 0, 0, 0.2, kind='3h')
+    shutil.rmtree(tmpdir1)
+
+
+def test_cov_ng_1h():
+    # From CCL directly
+    data = get_config(fsky=0.2)
+    clc = Cl(data, 'Dummy__0', 'Dummy__0')
+    ells = clc.b.get_effective_ells()
+    shutil.rmtree(tmpdir1)
+    cosmo = ccl.Cosmology(**data['cov']['fiducial']['cosmo'])
+    md = ccl.halos.MassDef200m()
+    mf = ccl.halos.MassFuncTinker10(cosmo, mass_def=md)
+    hb = ccl.halos.HaloBiasTinker10(cosmo, mass_def=md)
+    cm = ccl.halos.ConcentrationDuffy08(mdef=md)
+    hmc = ccl.halos.HMCalculator(cosmo, mf, hb, md)
+    pr = ccl.halos.HaloProfileHOD(cm, lMmin_0=12.1,
+                                  lM1_p=0.1, bg_0=1.2)
+    prof2pt = ccl.halos.Profile2ptHOD()
+    z, nz = np.loadtxt('xcell/tests/data/DESY1gc_dndz_bin0.txt',
+                       usecols=(1, 3), unpack=True)
+    tr = ccl.NumberCountsTracer(cosmo, False, dndz=(z, nz),
+                                bias=(z, np.ones_like(z)))
+    k_arr = np.geomspace(1E-4, 1E2, 256)
+    a_arr = 1./(1+np.linspace(0, 3, 15)[::-1])
+    tkk = ccl.halos.halomod_Tk3D_1h(cosmo, hmc,
+                                    prof1=pr, prof2=pr, prof12_2pt=prof2pt,
+                                    prof3=pr, prof4=pr, prof34_2pt=prof2pt,
+                                    normprof1=True, normprof2=True,
+                                    normprof3=True, normprof4=True,
+                                    a_arr=a_arr, lk_arr=np.log(k_arr))
+    covNG0 = ccl.angular_cl_cov_cNG(cosmo,
+                                    cltracer1=tr, cltracer2=tr,
+                                    ell=ells, tkka=tkk, fsky=1.,
+                                    cltracer3=tr, cltracer4=tr, ell2=ells)
+
+    # Gaussian only
+    data = get_config(fsky=0.2, inc_hm=True)
+    data['tracers']['Dummy__0']['hod_params'] = {'lMmin_0': 12.1,
+                                                 'lM1_p': 0.1,
+                                                 'bg_0': 1.2}
+    covcG = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
+    covG = covcG.get_covariance()
+    shutil.rmtree(tmpdir1)
+
+    # Gaussian + non-Gaussian
+    data = get_config(fsky=0.2, inc_hm=True)
+    data['cov']['non_Gaussian'] = True
+    data['cov']['NG_terms'] = ['1h']
+    data['tracers']['Dummy__0']['hod_params'] = {'lMmin_0': 12.1,
+                                                 'lM1_p': 0.1,
+                                                 'bg_0': 1.2}
+    covc1 = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
+    mapper = MapperDummy(data['tracers']['Dummy__0'])
+    fsky = np.mean((mapper.get_mask() > 0))
+    covNG1 = covc1.get_covariance_ng_halomodel(0, 0, 0, 0, fsky)
+    cov1 = covc1.get_covariance()
+    shutil.rmtree(tmpdir1)
+
+    # fsky on input
+    data = get_config(fsky=0.2, inc_hm=True)
+    data['cov']['non_Gaussian'] = True
+    data['cov']['NG_terms'] = ['1h']
+    data['cov']['fsky_NG'] = 0.1
+    data['tracers']['Dummy__0']['hod_params'] = {'lMmin_0': 12.1,
+                                                 'lM1_p': 0.1,
+                                                 'bg_0': 1.2}
+    covc2 = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
+    covNG2 = covc2.get_covariance()-covG
+    shutil.rmtree(tmpdir1)
+
+    # Tests
+    # Compare result of NG method with G+NG-G
+    assert np.allclose(covNG1, cov1-covG, atol=0)
+    # Compare with CCL prediction
+    # (interpolation errors are ~1E-4)
+    assert np.allclose(covNG0, covNG1*fsky, atol=0, rtol=1E-3)
+    # fsky scaling
+    assert np.allclose(covNG2, covNG1*fsky/0.1, atol=0)
+
+
 def test_file_inconsistent_errors():
     clo = get_cl_class()
     ell, cl = clo.get_ell_cl()
@@ -149,9 +235,77 @@ def test_get_ell_cl():
     assert np.all(cl_class.wins == w.get_bandpower_windows())
 
 
-def test_get_covariance():
+def test_custom_auto():
+    # No custom auto
+    data = get_config()
+    clc1 = Cl(data, 'Dummy__0', 'Dummy__0')
+    l1, cl1 = clc1.get_ell_cl_cp()
+    shutil.rmtree(tmpdir1)
+
+    # With custom auto
+    data = get_config()
+    data['tracers']['Dummy__0']['custom_auto'] = True
+    data['tracers']['Dummy__0']['custom_offset'] = np.pi*1E-5
+    clc2 = Cl(data, 'Dummy__0', 'Dummy__0')
+    l2, cl2 = clc2.get_ell_cl_cp()
+    shutil.rmtree(tmpdir1)
+
+    assert np.allclose(cl1, cl2-np.pi*1E-5, rtol=1E-4, atol=0)
+
+    # Covariance custom cross
+    data = get_config()
+    data['tracers']['Dummy__0']['custom_auto'] = True
+    data['tracers']['Dummy__0']['custom_offset'] = np.pi*1E-5
+    clc3 = Cl(data, 'Dummy__0', 'Dummy__0')
+    l2, cl3 = clc3.get_ell_cl_cp_cov()
+    shutil.rmtree(tmpdir1)
+
+    assert np.allclose(cl1, cl3, rtol=1E-4, atol=0)
+
+
+def test_get_ell_cl_cp():
+    # Get cl from map
+    cl_class = get_cl_class()
+    ell, cl = cl_class.get_ell_cl()
+    ell, cl_cp = cl_class.get_ell_cl_cp()
+
+    w = cl_class.get_workspace()
+    cl2 = w.decouple_cell(cl_cp)
+    shutil.rmtree(tmpdir1)
+    assert np.all(np.fabs(cl / cl2 - 1) < 1e-10)
+
+
+def test_covar_from_data():
+    config = get_config(dtype0='generic')
+    # Can't compute covariance unless we allow doing it from data
+    with pytest.raises(NotImplementedError):
+        Cov(config, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
+    shutil.rmtree(tmpdir1)
+
+    # Allow falling back to data
+    config = get_config(dtype0='generic')
+    config['cov']['data_fallback'] = True
+    cov_obj = Cov(config, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
+    cov1 = cov_obj.get_covariance()
+    shutil.rmtree(tmpdir1)
+
+    # Compute from data on purpose
+    config = get_config(dtype0='generic')
+    config['cov']['cls_from_data'] = "all"
+    cov_obj = Cov(config, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
+    cov2 = cov_obj.get_covariance()
+    shutil.rmtree(tmpdir1)
+
+    assert np.allclose(cov1, cov2, atol=1E-10, rtol=0)
+
+
+@pytest.mark.parametrize('cldata', ['all', 'none'])
+def test_get_covariance(cldata):
     # Get cl from randomnly generated map ("data")
-    cl_class = get_cl_class(fsky=1)
+    config = get_config(fsky=1)
+    config['cov']['cls_from_data'] = cldata
+
+    cl_class = Cl(config, 'Dummy__0', 'Dummy__0')
     ell, cl_data = cl_class.get_ell_cl()
 
     # Get cl from mapper (the true one)
@@ -166,12 +320,11 @@ def test_get_covariance():
     # assert np.max(np.abs(rdev) < 1e-5)
 
     # Compute covariance
-    cov_class = get_cov_class()
+    cov_class = Cov(config, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
     cov = cov_class.get_covariance()
 
-    cov_m = np.zeros_like(cov)
-    diag = (2 * cl_m1 ** 2) / (2 * ell + 1) / 4
-    np.fill_diagonal(cov_m, diag)
+    diag = (2 * cl_m1[0]**2) / (2 * ell + 1) / 4
+    cov_m = np.diag(diag)
 
     icov = np.linalg.inv(cov)
     icov_m = np.linalg.inv(cov_m)
@@ -180,8 +333,8 @@ def test_get_covariance():
     chi2 = dCl.dot(icov).dot(dCl)
     chi2_m = dCl.dot(icov_m).dot(dCl)
 
-    assert np.fabs(chi2/chi2_m) - 1 < 0.01
     shutil.rmtree(tmpdir1)
+    assert np.fabs(chi2/chi2_m-1) < 0.03
 
 
 def test_cls_vs_namaster():
@@ -190,6 +343,11 @@ def test_cls_vs_namaster():
     cl_class = get_cl_class()
     ell, cl_data = cl_class.get_ell_cl()
     b = cl_class.get_NmtBin()
+    win = cl_class.get_bandpower_windows()
+    # Read output
+    clfile = np.load(os.path.join(tmpdir1,
+                                  'Dummy_Dummy',
+                                  'cl_Dummy__0_Dummy__0.npz'))
     shutil.rmtree(tmpdir1)
 
     # Compute covariance
@@ -215,8 +373,7 @@ def test_cls_vs_namaster():
     wsp.compute_coupling_matrix(f, f, bins=b, n_iter=n_iter_mcm)
     cl_data_nmt_cp = nmt.compute_coupled_cell(f, f)
     cl_data_nmt = wsp.decouple_cell(cl_data_nmt_cp)
-    rdev = cl_data / cl_data_nmt - 1
-    assert np.max(np.abs(rdev)) < 1e-5
+
     # Couple true Cl
     cl_m_cp = wsp.couple_cell([cl_m])
     cl_m = wsp.decouple_cell(cl_m_cp)
@@ -227,27 +384,45 @@ def test_cls_vs_namaster():
     cl_cov = cl_m_cp / np.mean(mask * mask)
     cov_nmt = nmt.gaussian_covariance(cwsp, spin, spin, spin, spin, cl_cov,
                                       cl_cov, cl_cov, cl_cov, wsp)
-
-    icov = np.linalg.inv(cov)
-    icov_nmt = np.linalg.inv(cov_nmt)
-    dCl = (cl_data - cl_m)[0]
-
-    chi2 = dCl.dot(icov).dot(dCl)
-    chi2_m = dCl.dot(icov_nmt).dot(dCl)
-    assert np.fabs(chi2/chi2_m) - 1 < 1e-5
-
-    # Compute bandpower windows
-    win = cl_class.get_bandpower_windows()
     bpwin = wsp.get_bandpower_windows()
-    assert np.all(win == bpwin)
+    icov_nmt = np.linalg.inv(cov_nmt)
+
+    def compare(cl, cv, wn, tol=1E-5):
+        rdev = cl / cl_data_nmt - 1
+        assert np.max(np.abs(rdev)) < tol
+
+        # Compare cl and covariance
+        icov = np.linalg.inv(cv)
+        dCl = (cl - cl_m)[0]
+        chi2 = dCl.dot(icov).dot(dCl)
+        chi2_m = dCl.dot(icov_nmt).dot(dCl)
+        assert np.fabs(chi2/chi2_m-1) < tol
+
+        # Compare bandpower windows
+        assert np.all(win == bpwin)
+
+    compare(cl_data, cov, win)
+    compare(clfile['cl'], cov, clfile['wins'])
+    assert np.allclose(clfile['cl_cp'], cl_data_nmt_cp, atol=0)
+    assert np.allclose(clfile['cl_cov_cp'], cl_data_nmt_cp, atol=0)
+    assert np.allclose(clfile['cl_cov_11_cp'], cl_data_nmt_cp, atol=0)
+    assert np.allclose(clfile['cl_cov_12_cp'], cl_data_nmt_cp, atol=0)
+    assert np.allclose(clfile['cl_cov_22_cp'], cl_data_nmt_cp, atol=0)
 
 
 def test_symmetric():
     data = get_config()
+    # Request only 'auto' to test if read_symmetric works in the case you have
+    # 'auto but you need the cross for the covariance
+    data['cls']['Dummy-Dummy']['compute'] = 'auto'
     cl_class01 = Cl(data, 'Dummy__0', 'Dummy__1')
     os.remove(os.path.join(tmpdir1, 'data.yml'))
     cl_class10 = Cl(data, 'Dummy__1', 'Dummy__0')
 
+    fname = os.path.join(cl_class10.outdir, 'cl_Dummy__1_Dummy__0.npz')
+    assert not os.path.isfile(fname)
+    fname = os.path.join(cl_class10.outdir, 'w__mask_dummy1_mask_dummy0.fits')
+    assert not os.path.isfile(fname)
     assert np.all(np.array(cl_class01.get_masks()) ==
                   np.array(cl_class10.get_masks()[::-1]))
     assert np.all(cl_class01.get_ell_cl()[1] == cl_class10.get_ell_cl()[1])
@@ -257,11 +432,24 @@ def test_symmetric():
     shutil.rmtree(tmpdir1)
 
 
+def test_unsupported_quantity():
+    data = get_config(dtype0='generic')
+    with pytest.raises(NotImplementedError):
+        ClFid(data, 'Dummy__0', 'Dummy__1')
+    shutil.rmtree(tmpdir1)
+
+
 def test_symmetric_fid():
     data = get_config()
+    # Request only 'auto' to test if read_symmetric works in the case you have
+    # 'auto but you need the cross for the covariance
+    data['cls']['Dummy-Dummy']['compute'] = 'auto'
     cl_class01 = ClFid(data, 'Dummy__0', 'Dummy__1')
     os.remove(os.path.join(tmpdir1, 'data.yml'))
     cl_class10 = ClFid(data, 'Dummy__1', 'Dummy__0')
+
+    fname = os.path.join(cl_class10.outdir, 'cl_Dummy__1_Dummy__0.npz')
+    assert not os.path.isfile(fname)
     assert np.all(cl_class01.get_ell_cl()[1] == cl_class10.get_ell_cl()[1])
     shutil.rmtree(tmpdir1)
 
@@ -358,6 +546,38 @@ def test_cov_spin0(perm):
             assert np.all(r[i::ncls1][1:] < 1E-5)
 
 
+def test_clfid_halomod_settings():
+    data = get_config()
+
+    # Empty halo model parameters (default values)
+    clf = ClFid(data, 'Dummy__0', 'Dummy__1')
+    assert np.fabs(clf.th.hm_par['mass_def'].get_Delta(clf.th.cosmo, 1.)
+                   - 200) < 1E-3
+    assert clf.th.hm_par['mass_def'].rho_type == 'matter'
+    assert clf.th.hm_par['mass_func'].name == 'Tinker10'
+    assert clf.th.hm_par['halo_bias'].name == 'Tinker10'
+    assert clf.th.hm_par['cM'].name == 'Duffy08'
+    shutil.rmtree(tmpdir1)
+
+    # Custom halo model parameters
+    md = '200c'
+    mf = 'Tinker08'
+    hb = 'Tinker10'
+    cM = 'Bhattacharya13'
+    data['cov']['fiducial']['halo_model'] = {'mass_def': md,
+                                             'mass_function': mf,
+                                             'halo_bias': hb,
+                                             'concentration': cM}
+    clf = ClFid(data, 'Dummy__0', 'Dummy__1')
+    assert np.fabs(clf.th.hm_par['mass_def'].get_Delta(clf.th.cosmo, 1.)
+                   - 200) < 1E-3
+    assert clf.th.hm_par['mass_def'].rho_type == 'critical'
+    assert clf.th.hm_par['mass_func'].name == mf
+    assert clf.th.hm_par['halo_bias'].name == hb
+    assert clf.th.hm_par['cM'].name == cM
+    shutil.rmtree(tmpdir1)
+
+
 @pytest.mark.parametrize('tr1,tr2', [('galaxy_density', 'galaxy_density'),
                                      ('galaxy_density', 'galaxy_shear'),
                                      ('galaxy_density', 'cmb_convergence'),
@@ -399,3 +619,68 @@ def test_clfid_against_ccl(tr1, tr2):
     clb = ccl.angular_cl(cosmo, t1, t2, d['ell'])
 
     assert np.all(np.fabs(clb[2:]/d['cl'][0][2:]-1) < 1E-5)
+
+
+@pytest.mark.parametrize('tr1,tr2', [('galaxy_shear', 'galaxy_shear'),
+                                     ('galaxy_density', 'galaxy_shear'),
+                                     ('cmb_tSZ', 'galaxy_shear'),
+                                     ('cmb_tSZ', 'cmb_convergence')])
+def test_clfid_halomod(tr1, tr2):
+    data = get_config(dtype0=tr1, dtype1=tr2, inc_hm=True)
+
+    cosmo = ccl.Cosmology(**data['cov']['fiducial']['cosmo'])
+    md = ccl.halos.MassDef200m()
+    mf = ccl.halos.MassFuncTinker10(cosmo, mass_def=md)
+    hb = ccl.halos.HaloBiasTinker10(cosmo, mass_def=md)
+    cm = ccl.halos.ConcentrationDuffy08(mdef=md)
+    hmc = ccl.halos.HMCalculator(cosmo, mf, hb, md)
+    pNFW = ccl.halos.HaloProfileNFW(cm)
+    profs = {}
+    ccltr = {}
+    normed = {}
+    for tr, lab in [(tr1, 'Dummy__0'), (tr2, 'Dummy__1')]:
+        if tr == 'galaxy_density':
+            data['tracers'][lab]['hod_params'] = {'lMmin_0': 12.1,
+                                                  'lM1_p': 0.1,
+                                                  'bg_0': 1.2}
+            profs[tr] = ccl.halos.HaloProfileHOD(cm, lMmin_0=12.1,
+                                                 lM1_p=0.1, bg_0=1.2)
+            z, nz = np.loadtxt('xcell/tests/data/DESY1gc_dndz_bin0.txt',
+                               usecols=(1, 3), unpack=True)
+            ccltr[tr] = ccl.NumberCountsTracer(cosmo, False, dndz=(z, nz),
+                                               bias=(z, np.ones_like(z)))
+            normed[tr] = True
+        elif tr == 'cmb_tSZ':
+            data['tracers'][lab]['gnfw_params'] = {'mass_bias': 0.9}
+            profs[tr] = ccl.halos.HaloProfilePressureGNFW(mass_bias=0.9)
+            ccltr[tr] = ccl.tSZTracer(cosmo, z_max=3.)
+            normed[tr] = False
+        elif tr == 'galaxy_shear':
+            profs[tr] = pNFW
+            z, nz = np.loadtxt('xcell/tests/data/Nz_DIR_z0.1t0.3.asc',
+                               usecols=(0, 1), unpack=True)
+            ccltr[tr] = ccl.WeakLensingTracer(cosmo, dndz=(z, nz))
+            normed[tr] = True
+        elif tr == 'cmb_convergence':
+            profs[tr] = pNFW
+            ccltr[tr] = ccl.CMBLensingTracer(cosmo, z_source=1100.)
+            normed[tr] = True
+
+    clf = ClFid(data, 'Dummy__0', 'Dummy__1')
+    d = clf.get_cl_file()
+    shutil.rmtree(tmpdir1)
+
+    k_arr = np.geomspace(1E-4, 1E2, 512)
+    a_arr = 1./(1+np.linspace(0, 3, 15)[::-1])
+    pk = ccl.halos.halomod_Pk2D(cosmo, hmc, profs[tr1],
+                                prof2=profs[tr2],
+                                normprof1=normed[tr1],
+                                normprof2=normed[tr2],
+                                lk_arr=np.log(k_arr),
+                                a_arr=a_arr)
+    # Commented out until these features are pushed to the pip release of CCL
+    # smooth_transition=(lambda a: 0.7),
+    # supress_1h=(lambda a: 0.01))
+    clb = ccl.angular_cl(cosmo, ccltr[tr1], ccltr[tr2], d['ell'], p_of_k_a=pk)
+
+    assert np.all(np.fabs(clb[2:]/d['cl'][0][2:]-1) < 1E-4)
