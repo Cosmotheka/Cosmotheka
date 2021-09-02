@@ -12,3 +12,4 @@ pyccl
 camb
 coveralls
 sacc
+fitsio
