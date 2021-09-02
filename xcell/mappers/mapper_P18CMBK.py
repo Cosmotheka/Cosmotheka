@@ -27,6 +27,7 @@ class MapperP18CMBK(MapperBase):
         self.noise = None
 
         # Galactic-to-celestial coordinate rotator
+        self.rotate = config.get('coordinates', 'C') != 'G'
         self.r = hp.Rotator(coord=['G', 'C'])
 
         # Defaults
@@ -49,24 +50,32 @@ class MapperP18CMBK(MapperBase):
     def get_signal_map(self):
         if self.signal_map is None:
             # Read alms
-            self.klm = hp.read_alm(self.config['file_klm'])
-            self.klm = self.r.rotate_alm(self.klm)
-            self.signal_map = hp.alm2map(self.klm, self.nside,
-                                         verbose=False)
-        return [self.signal_map]
+            self.klm, lmax = hp.read_alm(self.config['file_klm'],
+                                         return_mmax=True)
+            if self.rotate:
+                self.klm = self.r.rotate_alm(self.klm)
+            # Filter if lmax is too large
+            if lmax > 3*self.nside-1:
+                fl = np.ones(lmax+1)
+                fl[3*self.nside:] = 0
+                self.klm = hp.almxfl(self.klm, fl, inplace=True)
+            self.signal_map = [hp.alm2map(self.klm, self.nside,
+                                          verbose=False)]
+        return self.signal_map
 
     def get_mask(self):
         if self.mask is None:
             read_lite, fname = self._check_mask_exists()
             if read_lite:
-                self.mask = hp.read_map(fname)
+                self.mask = hp.read_map(fname, dtype=float)
             else:
                 self.mask = hp.read_map(self.config['file_mask'],
-                                        verbose=False)
-                self.mask = self.r.rotate_map_pixel(self.mask)
-                # Binerize
-                self.mask[self.mask < 0.5] = 0
-                self.mask[self.mask >= 0.5] = 1.
+                                        verbose=False, dtype=float)
+                if self.rotate:
+                    self.mask = self.r.rotate_map_pixel(self.mask)
+                    # Binarize
+                    self.mask[self.mask < 0.5] = 0
+                    self.mask[self.mask >= 0.5] = 1.
                 # Apodize
                 self.mask = nmt.mask_apodization(self.mask, self.mask_aposize,
                                                  self.mask_apotype)
@@ -74,7 +83,8 @@ class MapperP18CMBK(MapperBase):
                                         nside_out=self.nside)
                 # Save
                 if fname:
-                    hp.write_map(fname, self.mask, overwrite=True)
+                    hp.write_map(fname, self.mask, overwrite=True,
+                                 dtype=float)
         return self.mask
 
     def get_nl_coupled(self):
@@ -108,9 +118,6 @@ class MapperP18CMBK(MapperBase):
             self.noise = np.loadtxt(self.config['file_noise'], unpack=True)
 
         return self.noise
-
-    def get_ell(self):
-        return np.arange(3 * self.nside)
 
     def get_dtype(self):
         return 'cmb_convergence'

@@ -24,3 +24,7 @@ class MappereBOSS(MapperSDSS):
             w_noz = np.array(cat['WEIGHT_NOZ'])
             self.ws[mod] = w_systot*w_cp*w_noz  # FKP left out
         return self.ws[mod]
+
+    def _get_random_cols(self):
+        return ['RA', 'DEC', 'Z', 'WEIGHT_SYSTOT',
+                'WEIGHT_CP', 'WEIGHT_NOZ']

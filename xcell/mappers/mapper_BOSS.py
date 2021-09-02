@@ -29,3 +29,6 @@ class MapperBOSS(MapperSDSS):
                 w = np.ones_like(cat['RA'])
             self.ws[mod] = w
         return self.ws[mod]
+
+    def _get_random_cols(self):
+        return ['RA', 'DEC', 'Z']
