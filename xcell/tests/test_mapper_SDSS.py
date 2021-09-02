@@ -12,6 +12,7 @@ def get_config():
          'z_edges': [0, 1.5], 'nside': 32, 'mask_name': 'mask'}
     c['nside_nl_threshold'] = 1
     c['lmin_nl_from_data'] = 10
+    c['SDSS_name'] = 'dummy'
     return c
 
 

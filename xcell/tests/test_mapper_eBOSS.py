@@ -8,7 +8,8 @@ def get_config():
                               'xcell/tests/data/catalog.fits'],
             'random_catalogs': ['xcell/tests/data/catalog.fits',
                                 'xcell/tests/data/catalog.fits'],
-            'z_edges': [0, 1.5], 'nside': 32, 'mask_name': 'mask'}
+            'z_edges': [0, 1.5], 'nside': 32, 'mask_name': 'mask',
+            'SDSS_name': 'dummy'}
 
 
 def get_mapper(c=None):
