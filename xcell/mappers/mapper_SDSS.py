@@ -9,7 +9,7 @@ from .mapper_base import MapperBase
 
 class MapperSDSS(MapperBase):
     def __init__(self, config):
-        self._get_SDSS_defaults(config)
+        raise NotImplementedError("Do not use base class")
 
     def _get_SDSS_defaults(self, config):
         self._get_defaults(config)
@@ -157,9 +157,6 @@ class MapperSDSS(MapperBase):
     def _bin_z(self, cat):
         return cat[(cat['Z'] >= self.z_edges[0]) &
                    (cat['Z'] < self.z_edges[1])]
-
-    def _get_w(self, mod='data'):
-        raise NotImplementedError("Do not use base class")
 
     def get_dtype(self):
         return 'galaxy_density'
