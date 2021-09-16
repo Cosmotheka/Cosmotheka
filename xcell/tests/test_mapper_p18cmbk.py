@@ -1,5 +1,6 @@
 import xcell as xc
 import numpy as np
+import healpy as hp
 import shutil
 
 
@@ -16,6 +17,20 @@ def get_config():
 def get_mapper():
     config = get_config()
     return xc.mappers.MapperP18CMBK(config)
+
+
+def test_alm_cut():
+    # Tests alm filtering for CMB kappa alms on low resolution pixels.
+    config = get_config()
+    config['nside'] = 16
+    m = xc.mappers.MapperP18CMBK(config)
+    m.get_signal_map()
+    alm_all, lmax = hp.read_alm(config['file_klm'], return_mmax=True)
+    alm_all = m.r.rotate_alm(alm_all)
+    fl = np.ones(lmax+1)
+    fl[3*16:] = 0
+    alm_cut = hp.almxfl(alm_all, fl, inplace=True)
+    assert np.all(np.real(m.klm - alm_cut) == 0.)
 
 
 def test_smoke():

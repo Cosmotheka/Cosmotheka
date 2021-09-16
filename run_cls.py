@@ -58,10 +58,12 @@ def launch_cls(data, queue, njobs, nc, mem, wsp=False, fiducial=False, onlogin=F
     outdir = data.data['output']
     if fiducial:
         outdir = os.path.join(outdir, 'fiducial')
-    try:
+
+    if os.uname[1] == 'glamdring':
         qjobs = get_queued_jobs()
-    except:
+    else:
         qjobs = ''
+
     c = 0
     for tr1, tr2 in cl_tracers:
         comment = 'cl_{}_{}'.format(tr1, tr2)
@@ -98,10 +100,12 @@ def launch_cov(data, queue, njobs, nc, mem, wsp=False, onlogin=False, skip=[]):
     #
     cov_tracers = data.get_cov_trs_names(wsp)
     outdir = data.data['output']
-    try:
+
+    if os.uname[1] == 'glamdring':
         qjobs = get_queued_jobs()
-    except:
+    else:
         qjobs = ''
+
     c = 0
     for trs in cov_tracers:
         comment = 'cov_{}_{}_{}_{}'.format(*trs)
@@ -147,11 +151,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Compute Cls and cov from data.yml file")
     parser.add_argument('INPUT', type=str, help='Input YAML data file')
     parser.add_argument('compute', type=str, help='Compute: cls, cov or to_sacc.')
-    parser.add_argument('--nc', type=int, default=28, help='Number of cores to use')
-    parser.add_argument('--mem', type=int, default=7., help='Memory (in GB) per core to use')
-    parser.add_argument('--queue', type=str, default='berg', help='SLURM queue to use')
-    parser.add_argument('--njobs', type=int, default=100000, help='Maximum number of jobs to launch')
-    parser.add_argument('--wsp', default=False, action='store_true',
+    parser.add_argument('-n', '--nc', type=int, default=28, help='Number of cores to use')
+    parser.add_argument('-m', '--mem', type=int, default=7., help='Memory (in GB) per core to use')
+    parser.add_argument('-q', '--queue', type=str, default='berg', help='SLURM queue to use')
+    parser.add_argument('-j', '--njobs', type=int, default=100000, help='Maximum number of jobs to launch')
+    parser.add_argument('-w', '--wsp', default=False, action='store_true',
                         help='Set if you want to compute the different workspaces first')
     parser.add_argument('--to_sacc_name', type=str, default='cls_cov.fits', help='Sacc file name')
     parser.add_argument('--to_sacc_use_nl', default=False, action='store_true',
