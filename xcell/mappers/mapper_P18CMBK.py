@@ -74,8 +74,9 @@ class MapperP18CMBK(MapperBase):
                 if self.rotate:
                     self.mask = self.r.rotate_map_pixel(self.mask)
                     # Binarize
-                    self.mask[self.mask < 0.5] = 0
-                    self.mask[self.mask >= 0.5] = 1.
+                    thr = self.config.get('mask_threshold', 0.5)
+                    self.mask[self.mask < thr] = 0
+                    self.mask[self.mask >= thr] = 1.
                 # Apodize
                 self.mask = nmt.mask_apodization(self.mask, self.mask_aposize,
                                                  self.mask_apotype)

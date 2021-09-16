@@ -58,10 +58,12 @@ def launch_cls(data, queue, njobs, nc, mem, wsp=False, fiducial=False, onlogin=F
     outdir = data.data['output']
     if fiducial:
         outdir = os.path.join(outdir, 'fiducial')
-    try:
+
+    if os.uname[1] == 'glamdring':
         qjobs = get_queued_jobs()
-    except:
+    else:
         qjobs = ''
+
     c = 0
     for tr1, tr2 in cl_tracers:
         comment = 'cl_{}_{}'.format(tr1, tr2)
@@ -98,10 +100,12 @@ def launch_cov(data, queue, njobs, nc, mem, wsp=False, onlogin=False, skip=[]):
     #
     cov_tracers = data.get_cov_trs_names(wsp)
     outdir = data.data['output']
-    try:
+
+    if os.uname[1] == 'glamdring':
         qjobs = get_queued_jobs()
-    except:
+    else:
         qjobs = ''
+
     c = 0
     for trs in cov_tracers:
         comment = 'cov_{}_{}_{}_{}'.format(*trs)
