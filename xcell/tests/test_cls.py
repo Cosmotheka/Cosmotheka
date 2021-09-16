@@ -551,6 +551,8 @@ def test_clfid_halomod_settings():
 
     # Empty halo model parameters (default values)
     clf = ClFid(data, 'Dummy__0', 'Dummy__1')
+    clf.th.get_cosmo_ccl()
+    clf.th.get_halomodel_params()
     assert np.fabs(clf.th.hm_par['mass_def'].get_Delta(clf.th.cosmo, 1.)
                    - 200) < 1E-3
     assert clf.th.hm_par['mass_def'].rho_type == 'matter'
@@ -569,6 +571,8 @@ def test_clfid_halomod_settings():
                                              'halo_bias': hb,
                                              'concentration': cM}
     clf = ClFid(data, 'Dummy__0', 'Dummy__1')
+    clf.th.get_cosmo_ccl()
+    clf.th.get_halomodel_params()
     assert np.fabs(clf.th.hm_par['mass_def'].get_Delta(clf.th.cosmo, 1.)
                    - 200) < 1E-3
     assert clf.th.hm_par['mass_def'].rho_type == 'critical'

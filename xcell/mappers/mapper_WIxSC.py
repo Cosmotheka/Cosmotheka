@@ -59,7 +59,7 @@ class MapperWIxSC(MapperBase):
         elif self.coords == 'C':  # Celestial/Equatorial
             self.ra_name = 'RA'
             self.dec_name = 'DEC'
-            self.in_rad = False
+            self.in_rad = True
         else:
             raise NotImplementedError(f"Unknown coordinates {self.coords}")
 

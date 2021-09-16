@@ -9,6 +9,7 @@ def get_config():
             'mask': 'xcell/tests/data/map.fits',
             'z_edges': [-1E-10, 0.5],
             'path_rerun': '.',
+            'coordinates': 'C',
             'nside': 32, 'mask_name': 'mask'}
 
 
@@ -35,7 +36,7 @@ def test_get_nz():
     m.get_catalog()
     z, nz = m.get_nz()
     h, b = np.histogram(m.cat_data['ZSPEC'],
-                        range=[0.0, 1.0], bins=100,
+                        range=[0.0, 0.4], bins=100,
                         density=True)
     z_arr = 0.5 * (b[:-1] + b[1:])
     assert np.all(np.fabs(z-z_arr) < 1E-5)
