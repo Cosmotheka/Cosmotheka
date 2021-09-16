@@ -1,4 +1,5 @@
 import pymaster as nmt
+import numpy as np
 
 
 class MapperBase(object):
@@ -29,6 +30,9 @@ class MapperBase(object):
 
     def get_nl_covariance(self):
         raise NotImplementedError("Do not use base class")
+
+    def get_ell(self):
+        return np.arange(3 * self.nside)
 
     def _get_nmt_field(self, signal=None, **kwargs):
         if signal is None:
