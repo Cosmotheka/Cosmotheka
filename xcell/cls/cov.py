@@ -419,8 +419,12 @@ class Cov():
                                            self.trA2)]['clcov_from_data']
         # If so, get these C_ells
         if aa_data:
+            mean_mamb = np.mean(m_a1**2)
             _, cla1b1, cla1b2, cla2b2 = self.clA1B1.get_ell_cls_cp_cov_auto()
-            cla2b1 = cla1b2
+            cla2b2 = cla2b2 / mean_mamb
+            cla2b1 = cla1b2 / mean_mamb
+            cla1b2 = cla1b2 / mean_mamb
+            cla1b1 = cla1b1 / mean_mamb
         else:
             cla1b1 = self._get_cl_for_cov(self.clA1B1, self.clfid_A1B1,
                                           m_a1, m_b1)
