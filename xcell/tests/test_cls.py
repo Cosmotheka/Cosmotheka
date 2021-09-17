@@ -1,6 +1,7 @@
 import shutil
 import os
 import numpy as np
+from xcell.cls.theory import ConcentrationDuffy08M500c
 from xcell.cls.cl import Cl, ClFid
 from xcell.cls.cov import Cov
 import pymaster as nmt
@@ -686,5 +687,44 @@ def test_clfid_halomod(tr1, tr2):
     # smooth_transition=(lambda a: 0.7),
     # supress_1h=(lambda a: 0.01))
     clb = ccl.angular_cl(cosmo, ccltr[tr1], ccltr[tr2], d['ell'], p_of_k_a=pk)
+
+    assert np.all(np.fabs(clb[2:]/d['cl'][0][2:]-1) < 1E-4)
+
+
+def test_clfid_halomod_M500c():
+    tr1 = 'cmb_tSZ'
+    tr2 = 'cmb_convergence'
+    data = get_config(dtype0=tr1, dtype1=tr2, inc_hm=True)
+    data['cov']['fiducial']['halo_model'] = {'mass_def': '500c',
+                                             'concentration': 'Duffy08M500c'}
+    data['tracers']['Dummy__0']['gnfw_params'] = {'mass_bias': 0.9}
+
+    cosmo = ccl.Cosmology(**data['cov']['fiducial']['cosmo'])
+    md = ccl.halos.MassDef(500, 'critical')
+    mf = ccl.halos.MassFuncTinker10(cosmo, mass_def=md)
+    hb = ccl.halos.HaloBiasTinker10(cosmo, mass_def=md)
+    cm = ConcentrationDuffy08M500c(mdef=md)
+    hmc = ccl.halos.HMCalculator(cosmo, mf, hb, md)
+    prof1 = ccl.halos.HaloProfilePressureGNFW(mass_bias=0.9)
+    ccltr1 = ccl.tSZTracer(cosmo, z_max=3.)
+    prof2 = ccl.halos.HaloProfileNFW(cm)
+    ccltr2 = ccl.CMBLensingTracer(cosmo, z_source=1100.)
+
+    clf = ClFid(data, 'Dummy__0', 'Dummy__1')
+    d = clf.get_cl_file()
+    shutil.rmtree(tmpdir1)
+
+    k_arr = np.geomspace(1E-4, 1E2, 512)
+    a_arr = 1./(1+np.linspace(0, 6., 30)[::-1])
+    pk = ccl.halos.halomod_Pk2D(cosmo, hmc, prof1,
+                                prof2=prof2,
+                                normprof1=False,
+                                normprof2=True,
+                                lk_arr=np.log(k_arr),
+                                a_arr=a_arr)
+    # Commented out until these features are pushed to the pip release of CCL
+    # smooth_transition=(lambda a: 0.7),
+    # supress_1h=(lambda a: 0.01))
+    clb = ccl.angular_cl(cosmo, ccltr1, ccltr2, d['ell'], p_of_k_a=pk)
 
     assert np.all(np.fabs(clb[2:]/d['cl'][0][2:]-1) < 1E-4)

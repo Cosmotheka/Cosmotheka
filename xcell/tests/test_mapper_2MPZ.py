@@ -2,6 +2,7 @@ import numpy as np
 import xcell as xc
 import healpy as hp
 import os
+import pytest
 
 
 def get_config():
@@ -50,9 +51,12 @@ def test_get_nz():
     assert np.all(np.fabs(nz2-nz) < 1E-5)
 
 
-def test_get_signal_map():
+@pytest.mark.parametrize('coord', ['G', 'C'])
+def test_get_signal_map(coord):
     cleanup_rerun()
-    m = get_mapper()
+    c = get_config()
+    c['coordinates'] = coord
+    m = xc.mappers.Mapper2MPZ(c)
     d = m.get_signal_map()
     d = np.array(d)
     assert d.shape == (1, hp.nside2npix(m.nside))
