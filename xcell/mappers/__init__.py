@@ -12,6 +12,7 @@ from .mapper_P18CMBK import MapperP18CMBK
 from .mapper_P15tSZ import MapperP15tSZ
 from .mapper_P18SMICA import MapperP18SMICA
 from .mapper_P15CIB import MapperP15CIB
+from .mapper_SPT import MapperSPT
 from .mapper_DELS import MapperDELS
 from .mapper_2MPZ import Mapper2MPZ
 from .mapper_WIxSC import MapperWIxSC

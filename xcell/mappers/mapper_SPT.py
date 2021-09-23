@@ -1,5 +1,6 @@
 from .mapper_Planck_base import MapperPlanckBase
 import healpy as hp
+import numpy as np
 
 
 class MapperSPT(MapperPlanckBase):
@@ -13,8 +14,8 @@ class MapperSPT(MapperPlanckBase):
         """
         self._get_Planck_defaults(config)
         # Do we have beam in SPT?
-        #self.beam = None
-        #self.beam_info = None
+        # self.beam = None
+        # self.beam_info = None
 
     def _get_hm_maps(self):
         if self.hm1_map is None:
