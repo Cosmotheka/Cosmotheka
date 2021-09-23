@@ -2,7 +2,7 @@ import os
 import numpy as np
 import healpy as hp
 import pymaster as nmt
-import fitsio
+#import fitsio
 from .utils import get_map_from_points
 from .mapper_base import MapperBase
 

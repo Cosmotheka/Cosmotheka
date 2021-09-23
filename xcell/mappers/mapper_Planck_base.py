@@ -14,6 +14,7 @@ class MapperPlanckBase(MapperBase):
         self.file_hm1 = config.get('file_hm1', None)
         self.file_hm2 = config.get('file_hm2', None)
         self.file_mask = config.get('file_mask', None)
+        self.file_dust_mask = config.get('file_gp_mask', None)
         self.file_gp_mask = config.get('file_gp_mask', None)
         self.file_sp_mask = config.get('file_sp_mask', None)
         self.signal_map = None

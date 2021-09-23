@@ -9,6 +9,7 @@ def get_config(wbeam=True):
          'file_hm1': 'xcell/tests/data/hm1_map.fits',
          'file_hm2': 'xcell/tests/data/hm2_map.fits',
          'file_mask': 'xcell/tests/data/map.fits',
+         'file_dust_mask': 'xcell/tests/data/mask1.fits',
          'file_gp_mask': 'xcell/tests/data/mask1.fits',
          'file_sp_mask': 'xcell/tests/data/mask2.fits',
          'gal_mask_mode': '0.2',
@@ -33,7 +34,8 @@ def test_get_signal_map():
 
 @pytest.mark.parametrize('m', [xc.mappers.MapperP15tSZ(get_config()),
                                xc.mappers.MapperP18SMICA(get_config()),
-                               xc.mappers.MapperP15CIB(get_config())])
+                               xc.mappers.MapperP15CIB(get_config(),
+                               xc.mappers.MapperSPT(get_config()))])
 def test_get_nl_coupled(m):
     nl = m.get_nl_coupled()
     assert np.mean(nl) < 0.001
@@ -57,7 +59,8 @@ def test_get_beam():
 
 @pytest.mark.parametrize('cls', [xc.mappers.MapperP15tSZ,
                                  xc.mappers.MapperP18SMICA,
-                                 xc.mappers.MapperP15CIB])
+                                 xc.mappers.MapperP15CIB,
+                                 xc.mappers.MapperSPT])
 def test_get_cl_coupled(cls):
     conf = get_config()
     conf['file_map'] = 'xcell/tests/data/map_auto_test.fits'
@@ -80,7 +83,8 @@ def test_get_cl_coupled(cls):
 
 @pytest.mark.parametrize('cls', [xc.mappers.MapperP15tSZ,
                                  xc.mappers.MapperP18SMICA,
-                                 xc.mappers.MapperP15CIB])
+                                 xc.mappers.MapperP15CIB,
+                                 xc.mappers.MapperSPT])
 def test_get_cls_covar_coupled(cls):
     conf = get_config()
     conf['file_map'] = 'xcell/tests/data/map_auto_test.fits'
@@ -104,7 +108,8 @@ def test_get_cls_covar_coupled(cls):
 
 @pytest.mark.parametrize('cls', [xc.mappers.MapperP15tSZ,
                                  xc.mappers.MapperP18SMICA,
-                                 xc.mappers.MapperP15CIB])
+                                 xc.mappers.MapperP15CIB,
+                                 xc.mappers.MapperSPT])
 def test_get_hm_maps(cls):
     conf = get_config()
     m = cls(conf)
@@ -117,7 +122,8 @@ def test_get_hm_maps(cls):
 
 @pytest.mark.parametrize('cls,frac', [(xc.mappers.MapperP15tSZ, 1),
                                       (xc.mappers.MapperP15CIB, 1),
-                                      (xc.mappers.MapperP18SMICA, 0.5)])
+                                      (xc.mappers.MapperP18SMICA, 0.5),
+                                      (xc.mappers.MapperSPT, 1)])
 def test_get_mask(cls, frac):
     m = cls(get_config())
     npix = hp.nside2npix(m.nside)
@@ -130,7 +136,9 @@ def test_get_mask(cls, frac):
                                      (xc.mappers.MapperP15CIB,
                                       'generic'),
                                      (xc.mappers.MapperP18SMICA,
-                                      'cmb_temperature')])
+                                      'cmb_temperature'),
+                                     (xc.mappers.MapperSPT,
+                                      'cmb_tSZ')])
 def test_get_dtype(cls, typ):
     m = cls(get_config())
     assert m.get_dtype() == typ
