@@ -1,7 +1,6 @@
 from .mapper_base import MapperBase
 from .utils import get_map_from_points, get_DIR_Nz
-from astropy.io import fits
-from astropy.table import Table
+import fitsio
 import numpy as np
 import healpy as hp
 import os
@@ -20,6 +19,7 @@ class Mapper2MPZ(MapperBase):
         """
         self._get_defaults(config)
         self.z_edges = config.get('z_edges', [0, 0.5])
+        self.ra_name, self.dec_name = self._get_coords(config)
 
         self.cat_data = None
         self.npix = hp.nside2npix(self.nside)
@@ -32,13 +32,21 @@ class Mapper2MPZ(MapperBase):
         self.nl_coupled = None
         self.mask = None
 
+    def _get_coords(self, config):
+        coords = config.get('coordinates', 'G')
+        if coords == 'G':  # Galactic
+            return 'L', 'B'
+        elif coords == 'C':  # Celestial/Equatorial
+            return 'SUPRA', 'SUPDEC'
+        else:
+            raise NotImplementedError(f"Unknown coordinates {coords}")
+
     def get_catalog(self):
         if self.cat_data is None:
             file_data = self.config['data_catalog']
             if not os.path.isfile(file_data):
                 raise ValueError(f"File {file_data} not found")
-            with fits.open(file_data) as f:
-                self.cat_data = Table.read(f)
+            self.cat_data = fitsio.read(file_data)
             self.cat_data = self._bin_z(self.cat_data)
             self.cat_data = self._mask_catalog(self.cat_data)
 
@@ -54,8 +62,8 @@ class Mapper2MPZ(MapperBase):
 
     def _mask_catalog(self, cat):
         self.mask = self.get_mask()
-        ipix = hp.ang2pix(self.nside, cat['SUPRA'],
-                          cat['SUPDEC'], lonlat=True)
+        ipix = hp.ang2pix(self.nside, cat[self.ra_name],
+                          cat[self.dec_name], lonlat=True)
         # Mask is binary, so 0.1 or 0.00001 doesn't really matter.
         return cat[self.mask[ipix] > 0.1]
 
@@ -82,8 +90,10 @@ class Mapper2MPZ(MapperBase):
                 # Sort spec sample by nested pixel index so jackknife
                 # samples are spatially correlated.
                 ip_s = hp.ring2nest(self.nside,
-                                    hp.ang2pix(self.nside, c_s['SUPRA'],
-                                               c_s['SUPDEC'], lonlat=True))
+                                    hp.ang2pix(self.nside,
+                                               c_s[self.ra_name],
+                                               c_s[self.dec_name],
+                                               lonlat=True))
                 idsort = np.argsort(ip_s)
                 c_s = c_s[idsort]
                 # Compute DIR N(z)
@@ -92,7 +102,7 @@ class Mapper2MPZ(MapperBase):
                                            'W1MCORR', 'W2MCORR',
                                            'BCALCORR', 'RCALCORR', 'ICALCORR'],
                                           zflag='ZSPEC',
-                                          zrange=[0, 1.],
+                                          zrange=[0, 0.4],
                                           nz=100,
                                           njk=self.config.get('n_jk_dir', 100))
                 zm = 0.5*(z[1:] + z[:-1])
@@ -116,8 +126,8 @@ class Mapper2MPZ(MapperBase):
             self.cat_data = self.get_catalog()
             self.mask = self.get_mask()
             nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            ra_name='SUPRA',
-                                            dec_name='SUPDEC')
+                                            ra_name=self.ra_name,
+                                            dec_name=self.dec_name)
             mean_n = np.average(nmap_data, weights=self.mask)
             goodpix = self.mask > 0
             # Division by mask not really necessary, since it's binary.
@@ -137,8 +147,8 @@ class Mapper2MPZ(MapperBase):
             self.cat_data = self.get_catalog()
             self.mask = self.get_mask()
             nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            ra_name='SUPRA',
-                                            dec_name='SUPDEC')
+                                            ra_name=self.ra_name,
+                                            dec_name=self.dec_name)
             N_mean = np.average(nmap_data, weights=self.mask)
             N_mean_srad = N_mean * self.npix / (4 * np.pi)
             N_ell = np.mean(self.mask) / N_mean_srad
