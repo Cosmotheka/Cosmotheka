@@ -19,7 +19,7 @@ class Mapper2MPZ(MapperBase):
         """
         self._get_defaults(config)
         self.z_edges = config.get('z_edges', [0, 0.5])
-        self._get_coords(config)
+        self.ra_name, self.dec_name = self._get_coords(config)
 
         self.cat_data = None
         self.npix = hp.nside2npix(self.nside)
@@ -35,11 +35,9 @@ class Mapper2MPZ(MapperBase):
     def _get_coords(self, config):
         coords = config.get('coordinates', 'G')
         if coords == 'G':  # Galactic
-            self.ra_name = 'L'
-            self.dec_name = 'B'
+            return 'L', 'B'
         elif coords == 'C':  # Celestial/Equatorial
-            self.ra_name = 'SUPRA'
-            self.dec_name = 'SUPDEC'
+            return 'SUPRA', 'SUPDEC'
         else:
             raise NotImplementedError(f"Unknown coordinates {coords}")
 

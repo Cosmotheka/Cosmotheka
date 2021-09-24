@@ -24,7 +24,7 @@ class MapperWIxSC(MapperBase):
         """
         self._get_defaults(config)
         self.z_edges = config.get('z_edges', [0, 0.5])
-        self._get_coords(config)
+        self.ra_name, self.dec_name, self.in_rad = self._get_coords(config)
 
         self.cat_data = None
         self.npix = hp.nside2npix(self.nside)
@@ -44,24 +44,20 @@ class MapperWIxSC(MapperBase):
                                             2000)
 
     def get_radec(self, cat):
-        if self.coords == 'G':
-            return cat[self.ra_name], cat[self.dec_name]
-        else:
+        if self.in_rad:
             return (np.degrees(cat[self.ra_name]),
                     np.degrees(cat[self.dec_name]))
+        else:
+            return cat[self.ra_name], cat[self.dec_name]
 
     def _get_coords(self, config):
-        self.coords = config.get('coordinates', 'G')
-        if self.coords == 'G':  # Galactic
-            self.ra_name = 'L'
-            self.dec_name = 'B'
-            self.in_rad = False
-        elif self.coords == 'C':  # Celestial/Equatorial
-            self.ra_name = 'RA'
-            self.dec_name = 'DEC'
-            self.in_rad = True
+        coords = config.get('coordinates', 'G')
+        if coords == 'G':  # Galactic
+            return 'L', 'B', False
+        elif coords == 'C':  # Celestial/Equatorial
+            return 'RA', 'DEC', True
         else:
-            raise NotImplementedError(f"Unknown coordinates {self.coords}")
+            raise NotImplementedError(f"Unknown coordinates {coords}")
 
     def get_catalog(self):
         if self.cat_data is None:
