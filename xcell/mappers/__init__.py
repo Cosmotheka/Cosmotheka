@@ -15,6 +15,7 @@ from .mapper_P15CIB import MapperP15CIB
 from .mapper_DELS import MapperDELS
 from .mapper_2MPZ import Mapper2MPZ
 from .mapper_WIxSC import MapperWIxSC
+from .mapper_HSC_DR1wl import MapperHSCDR1wl
 from .mapper_dummy import MapperDummy
 from .utils import get_map_from_points, get_DIR_Nz
 
