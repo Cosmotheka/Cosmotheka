@@ -7,7 +7,7 @@ import pymaster as nmt
 import os
 
 
-class MapperACTDR4Lensing(MapperACTDR4Base):
+class MapperACTDR4tSZ(MapperACTDR4Base):
     def __init__(self, config):
         """
         config - dict

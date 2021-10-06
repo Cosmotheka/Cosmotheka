@@ -12,6 +12,10 @@ class MapperACTDR4Base(MapperBase):
         self._get_ACTDR4_defaults(config)
         
     def _get_ACTDR4_defaults(self, config):
+        self._get_defaults(config)
+        self.file_map = config['file_map']
+        self.file_mask = config['file_mask']
+        self.lmax = config.get('lmax', 6000)
         self.signal_map = None
         self.mask = None
         self.noise = None
@@ -21,9 +25,9 @@ class MapperACTDR4Base(MapperBase):
     def get_signal_map(self):
         if self.signal_map is None:
             self.signal_map = enmap.read_map(self.file_map)
-            self.signal_map = reproject.healpix_from_enmap(self.signal_map,
+            self.signal_map = [reproject.healpix_from_enmap(self.signal_map,
                                                            lmax = self.lmax,
-                                                           nside = self.nside)
+                                                           nside = self.nside)]
         return self.signal_map
 
     def get_mask(self):
