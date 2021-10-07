@@ -30,7 +30,7 @@ jobs:
         #    # Based on: https://medium.com/ai2-blog/python-caching-in-github-actions-e9452698e98d
         #    path: ${{ env.pythonLocation }}
         #    # Use hashFiles to regenerate cache when adding new dependencies
-        #    key: ${{ runner.os }}-cache-${{ hashFiles('.github/workflows/requirements.txt') }}
+        #    key: ${{ runner.os }}-cache-${{ hashFiles('requirements.txt') }}
 
         - name: Install GSL, FFTW (linux)
           run: |
@@ -41,12 +41,14 @@ jobs:
             python -m pip install -U pip
             # Install wheel to avoid recompiling pymaster, pyccl, camb, etc.
             pip install -U wheel
-            # pip install -U -r .github/workflows/requirements.txt
+            # Install other CI dependencies
+            pip install -U pytest pytest-cov coveralls
+            # pip install -U -r requirements.txt
             # Use a for loop to avoid NaMaster to be compiled
             # before installing its dependencies
             # (https://github.com/LSSTDESC/NaMaster/issues/138)
             set -e
-            for i in `cat .github/workflows/requirements.txt`; do
+            for i in `cat requirements.txt`; do
                pip install -U $i;
             done
 
