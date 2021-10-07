@@ -12,7 +12,7 @@ setup(
     name="xCell",
     version="dev",
     description=("Pipeline to compute the Nx2pt angular power spectra and their covariances."),
-    license="GPL3",
+    license="GPLv2",
     keywords="angular power spectra covariances Nx2pt",
     url="https://github.com/xC-ell/xCell",
     packages=['xcell'],
