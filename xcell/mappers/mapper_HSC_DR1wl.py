@@ -14,7 +14,9 @@ class MapperHSCDR1wl(MapperBase):
         self.z_edges = config.get('z_edges', [0, 0.5])
         self.bn = self.config['bin_name']
         self.w_name = 'ishape_hsm_regauss_derived_shape_weight'
+        self.npix = hp.nside2npix(self.nside)
 
+        self.nl_coupled = None
         self.dndz = None
         self.cat = None
         self.mask = None
@@ -218,7 +220,7 @@ class MapperHSCDR1wl(MapperBase):
             w2s2 = hp.read_map(fname_lite)
         else:
             cat = self.get_catalog()
-            w2s2 = get_map_from_points(cat, self.side,
+            w2s2 = get_map_from_points(cat, self.nside,
                                        w=(0.5*(cat['e1']**2 + cat['e2']**2) *
                                           cat[self.w_name]**2),
                                        ra_name='ra', dec_name='dec')
