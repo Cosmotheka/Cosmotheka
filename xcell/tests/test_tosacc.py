@@ -71,14 +71,19 @@ def get_ClSack(use='cls', m_marg=False, fsky0=0.2, fsky1=0.3,
 
 @pytest.mark.parametrize('use', ['cls', 'nl', 'fiducial', 'potato'])
 def test_init(use):
-    outdir = get_config()['output']
+    config = get_config()
+    outdir = config['output']
+    config['bpw_edges'] = [0, 10]
     if use != 'potato':
         get_ClSack(use)
         ClSack_path = os.path.join(outdir, 'cls_cov_dummy.fits')
         assert os.path.isfile(ClSack_path)
+        clsack = ClSack(data=config, 'cls_cov_dummy.fits', use, m_marg,
+                        ignore_existing_yml=True)
     else:
         with pytest.raises(ValueError):
             get_ClSack(use)
+
 
 
 @pytest.mark.parametrize('dt1, dt2', [('galaxy_density', 'galaxy_shear'),

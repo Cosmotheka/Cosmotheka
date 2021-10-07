@@ -9,10 +9,8 @@ import os
 
 
 class ClSack():
-    def __init__(self, datafile, output, use='cls', m_marg=False,
-                 ignore_existing_yml=False):
-        self.data = Data(data_path=datafile,
-                         ignore_existing_yml=ignore_existing_yml)
+    def __init__(self, datafile, output, use='cls', m_marg=False):
+        self.data = Data(data_path=datafile)
         self.outdir = self.data.data['output']
         self.use_nl = False
         self.use_fiducial = False
