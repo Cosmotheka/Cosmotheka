@@ -8,7 +8,8 @@ import shutil
 
 
 class Data():
-    def __init__(self, data_path='', data={}, override=False):
+    def __init__(self, data_path='', data={}, override=False,
+                 ignore_existing_yml=False):
         if (data_path) and (data):
             raise ValueError('Only one of data_path or data must be given. \
                              Both set.')
@@ -23,7 +24,7 @@ class Data():
                              None set.')
 
         os.makedirs(self.data['output'], exist_ok=True)
-        self._check_yml_in_outdir(override)
+        self._check_yml_in_outdir(override, ignore_existing_yml)
         self.tr_matrix = None
         self.cl_tracers = {'wsp': None, 'no_wsp': None}
         self.cov_tracers = {'wsp': None, 'no_wsp': None}
@@ -31,15 +32,18 @@ class Data():
     def get_bias(self, name):
         return self.data['tracers'][name].get('bias', 1.)
 
-    def _check_yml_in_outdir(self, override=False):
+    def _check_yml_in_outdir(self, override=False, ignore_existing_yml=False):
         outdir = self.data['output']
         fname = os.path.join(outdir, '*.yml')
         files = glob(fname)
-        if (len(files) == 1) and (not override):
-            warn(f'A YML file was found in outdir: {outdir}. Using it \
-                 instead of input config.')
-            self.data_path = files[0]
-            self.data = self.read_data(files[0])
+        if (len(files) == 1):
+            if ignore_existing_yml:
+                pass
+            elif not override:
+                warn(f'A YML file was found in outdir: {outdir}. Using it \
+                     instead of input config.')
+                self.data_path = files[0]
+                self.data = self.read_data(files[0])
         elif len(files) > 1:
             raise ValueError(f'More than 1 YML file in outdir: {outdir}.')
         elif ((len(files) == 0) or override) and self.data_path:
