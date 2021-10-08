@@ -36,22 +36,36 @@ class Data():
         outdir = self.data['output']
         fname = os.path.join(outdir, '*.yml')
         files = glob(fname)
-        if (len(files) == 1):
-            if ignore_existing_yml:
-                pass
-            elif not override:
-                warn(f'A YML file was found in outdir: {outdir}. Using it \
-                     instead of input config.')
-                self.data_path = files[0]
-                self.data = self.read_data(files[0])
+        # Start if-else with sanity checks
+        if override and ignore_existing_yml:
+            raise ValueError('Only one of override or ignore_existing_yml can '
+                             + 'be set.')
         elif len(files) > 1:
             raise ValueError(f'More than 1 YML file in outdir: {outdir}.')
-        elif ((len(files) == 0) or override) and self.data_path:
+        elif override:
+            if len(files):
+                warn(f'Overriding configuration')
+            if self.data_path:
+                shutil.copy(self.data_path, outdir)
+            else:
+                self._dump_data()
+        elif ignore_existing_yml:
+            pass
+        elif len(files) == 1:
+            warn(f'A YML file was found in outdir: {outdir}. Using it \
+                 instead of input config.')
+            self.data_path = files[0]
+            self.data = self.read_data(files[0])
+        elif (len(files) == 0) and self.data_path:
             shutil.copy(self.data_path, outdir)
         else:
-            fname = os.path.join(outdir, 'data.yml')
-            with open(fname, 'w') as f:
-                yaml.dump(self.data, f)
+            self._dump_data()
+
+    def _dump_data(self):
+        outdir = self.data['output']
+        fname = os.path.join(outdir, 'data.yml')
+        with open(fname, 'w') as f:
+            yaml.dump(self.data, f)
 
     def read_data(self, data_path):
         with open(data_path) as f:

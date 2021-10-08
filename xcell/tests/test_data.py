@@ -146,6 +146,10 @@ def test_initizalization():
     assert data2.data['bpw_edges'] != data.data['bpw_edges']
     remove_yml_file(config)
 
+    # Check error is rised when override and ignore_existing_yml are True
+    with pytest.raises(ValueError):
+        data2 = Data(data=config, ignore_existing_yml=True, override=True)
+
 
 def test_read_data():
     data = get_data()
