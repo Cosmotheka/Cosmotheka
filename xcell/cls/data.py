@@ -44,7 +44,7 @@ class Data():
             raise ValueError(f'More than 1 YML file in outdir: {outdir}.')
         elif override:
             if len(files):
-                warn(f'Overriding configuration')
+                warn('Overriding configuration')
             if self.data_path:
                 shutil.copy(self.data_path, outdir)
             else:
