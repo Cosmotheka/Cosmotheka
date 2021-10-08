@@ -250,7 +250,7 @@ class Data():
     def get_mapper(self, tr):
         config = self.data['tracers'][tr]
         if 'nside' not in config:
-            config['nside'] = self.data['healpy']['nside']
+            config['nside'] = self.data['sphere']['nside']
         mapper_class = config['mapper_class']
         return mapper_from_name(mapper_class)(config)
 
