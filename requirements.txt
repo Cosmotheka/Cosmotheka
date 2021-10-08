@@ -2,14 +2,11 @@ numpy
 scipy
 scikit-learn
 flake8
-pytest
-pytest-cov
 astropy
 healpy
 pandas
 pymaster
 pyccl
 camb
-coveralls
 sacc
 fitsio
