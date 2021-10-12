@@ -68,6 +68,7 @@ tracers:
     file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/shear_catalog/y1_redshift_distributions_v1.fits'
     nside: 4096
     zbin: 0
+    sigma_m: 0.023
     path_lite: '/mnt/extraspace/gravityls_3/S8z/data/DES/'
     mask_name: 'mask_DESwl0'
     mapper_class: 'MapperDESY1wl'
@@ -78,6 +79,7 @@ tracers:
     file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/shear_catalog/y1_redshift_distributions_v1.fits'
     nside: 4096
     zbin: 1
+    sigma_m: 0.023
     path_lite: '/mnt/extraspace/gravityls_3/S8z/data/DES/'
     mask_name: 'mask_DESwl1'
     mapper_class: 'MapperDESY1wl'
@@ -88,6 +90,7 @@ tracers:
     file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/shear_catalog/y1_redshift_distributions_v1.fits'
     nside: 4096
     zbin: 2
+    sigma_m: 0.023
     path_lite: '/mnt/extraspace/gravityls_3/S8z/data/DES/'
     mask_name: 'mask_DESwl2'
     mapper_class: 'MapperDESY1wl'
@@ -98,6 +101,7 @@ tracers:
     file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/shear_catalog/y1_redshift_distributions_v1.fits'
     nside: 4096
     zbin: 3
+    sigma_m: 0.023
     path_lite: '/mnt/extraspace/gravityls_3/S8z/data/DES/'
     mask_name: 'mask_DESwl3'
     mapper_class: 'MapperDESY1wl'
@@ -112,7 +116,8 @@ tracers:
     z_edges: [0, 1.5]
     nside: 4096
     mask_name: 'mask_QSO_0'
-    mapper_class: 'MappereBOSSQSO'
+    SDSS_name: 'QSO'
+    mapper_class: 'MappereBOSS'
     # bias obtained fitting the fiducial Cl between kmin = 0.02, kmax = 0.15
     bias: 2.1
     nl_marginalize: True
@@ -128,7 +133,8 @@ tracers:
     z_edges: [1.5, 4]
     nside: 4096
     mask_name: 'mask_QSO_1'
-    mapper_class: 'MappereBOSSQSO'
+    SDSS_name: 'QSO'
+    mapper_class: 'MappereBOSS'
     # bias obtained fitting the fiducial Cl between kmin = 0.02, kmax = 0.15
     bias: 2.5
     nl_marginalize: True
