@@ -301,12 +301,13 @@ def test_get_mapper():
 
     for tr, val in config['tracers'].items():
         class_name = val['mapper_class']
-        m = data.get_mapper(tr)
         if tr == 'DESgc__0':
-            assert m.nside == 512
+            with pytest.raises(ValueError):
+                m = data.get_mapper(tr)
         else:
+            m = data.get_mapper(tr)
             assert m.nside == 4096
-        assert isinstance(m, mapper_from_name(class_name))
+            assert isinstance(m, mapper_from_name(class_name))
 
     remove_yml_file(config)
 
