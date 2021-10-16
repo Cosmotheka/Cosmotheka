@@ -258,12 +258,12 @@ class MapperHSCDR1wl(MapperBase):
                                       bins=self.config.get('nbin_nz', 100),
                                       range=self.config.get('zlim_nz',
                                                             [0., 4.]),
-                                      weights=w)
-                nz = (hz+0.) / np.sum(hz)
+                                      weights=w, density=True)
+                dndz = hz*len(cosmos_masked)
                 zm = 0.5*(bz[1:] + bz[:-1])
                 if fname_lite is not None:
-                    np.savez(fname_lite, z=zm, nz=nz)
-                self.dndz = [zm, nz]
+                    np.savez(fname_lite, z=zm, nz=dndz)
+                self.dndz = [zm, dndz]
 
         z, nz = self.dndz
         z_dz = z + dz
