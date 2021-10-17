@@ -44,12 +44,13 @@ class MapperHSCDR1wl(MapperBase):
                 cat = self._clean_raw_catalog(f)
 
                 # Shear cut
+                shear_mod_thr = self.config.get('shear_mod_thr', 2)
                 isn = 'ishape_hsm_regauss'
                 ishape_flags_mask = ~cat[f'{isn}_flags']
                 ishape_sigma_mask = ~np.isnan(cat[f'{isn}_sigma'])
                 ishape_res_mask = cat[f'{isn}_resolution'] >= 0.3
                 ishape_shear_mod_mask = (cat[f'{isn}_e1']**2 +
-                                         cat[f'{isn}_e2']**2) < 2
+                                         cat[f'{isn}_e2']**2) < shear_mod_thr
                 ishape_sigma_mask *= ((cat[f'{isn}_sigma'] >= 0.) *
                                       (cat[f'{isn}_sigma'] <= 0.4))
                 # Remove masked objects
@@ -96,7 +97,6 @@ class MapperHSCDR1wl(MapperBase):
             if not os.path.isfile(fname):
                 raise ValueError(f"File {fname} not found")
             c = Table.read(fname)
-            print(len(c))
             sel = np.ones(len(c), dtype=bool)
             isnull_names = []
             for key in c.keys():
@@ -111,7 +111,6 @@ class MapperHSCDR1wl(MapperBase):
                         sel[np.isnan(c[key])] = 0
             c.remove_columns(isnull_names)
             c.remove_rows(~sel)
-            print(len(c))
 
             # Collect sample cuts
             sel_area = c['wl_fulldepth_fullcolor']
@@ -151,7 +150,6 @@ class MapperHSCDR1wl(MapperBase):
             sel_gals[c['iclassification_extendedness'] < 0.99] = 0
             sel = ~(sel_clean*sel_maglim*sel_gals*sel_fluxcut*sel_blended)
             c.remove_rows(sel)
-            print(len(c))
             cats.append(c)
         return vstack(cats)
 
