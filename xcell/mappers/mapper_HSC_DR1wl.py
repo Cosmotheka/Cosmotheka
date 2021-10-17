@@ -217,6 +217,7 @@ class MapperHSCDR1wl(MapperBase):
             print(f'Loading lite w2s2 {fname}')
             w2s2 = hp.read_map(fname_lite)
         else:
+            print('Computing noise bias')
             cat = self.get_catalog()
             w2s2 = get_map_from_points(cat, self.nside,
                                        w=(0.5*(cat['e1']**2 + cat['e2']**2) *
@@ -235,9 +236,11 @@ class MapperHSCDR1wl(MapperBase):
             fname = f'HSCDR1wl_{self.bn}_nz.npz'
             read_lite, fname_lite = self._check_lite_exists(fname)
             if read_lite:
+                print(f'Loading lite nz {fname_lite}')
                 d = np.load(fname_lite)
                 self.dndz = [d['z'], d['nz']]
             else:
+                print('Computing nz')
                 cat_cosmos = Table.read(self.config['fname_cosmos'])
                 cat_photo = vstack([Table.read(n)
                                     for n in self.config['fnames_cosmos_ph']])
