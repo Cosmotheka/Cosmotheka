@@ -18,6 +18,7 @@ class MapperACTDR4Base(MapperBase):
         self.lmax = config.get('lmax', 6000)
         self.signal_map = None
         self.mask = None
+        self.pixell_mask = None
         self.noise = None
         self.cross_noise = None
         self.weights = None
@@ -32,14 +33,14 @@ class MapperACTDR4Base(MapperBase):
 
     def get_mask(self):
         if self.mask is None:
-            self.mask = enmap.read_map(self.file_mask)
-            self.mask = reproject.healpix_from_enmap(self.mask,
+            self.pixell_mask = enmap.read_map(self.file_mask)
+            self.mask = reproject.healpix_from_enmap(self.pixell_mask,
                                                      lmax = self.lmax,
                                                      nside = self.nside)
         return self.mask
 
     def get_noise(self):
-        if self.mask is None:
+        if self.pixell_mask is None:
             self.mask = enmap.read_map(self.file_mask)
             self.mask = reproject.healpix_from_enmap(self.mask,
                                                      lmax = self.lmax,

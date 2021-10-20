@@ -12,6 +12,10 @@ class MapperBase(object):
         self.nside = config['nside']
         self.nmt_field = None
         self.custom_auto = False
+        # Option introduced to modify the Mode Coupling Matrix
+        # In case the map has an implicit mask applied
+        # See ACTk case for an example
+        self.mask_power = 1
 
     def get_signal_map(self):
         raise NotImplementedError("Do not use base class")
