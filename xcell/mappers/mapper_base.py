@@ -15,7 +15,7 @@ class MapperBase(object):
         # Option introduced to modify the Mode Coupling Matrix
         # In case the map has an implicit mask applied
         # See ACTk case for an example
-        self.mask_power = 1
+        self.mask_power = config.get('mask_power', 1)
 
     def get_signal_map(self):
         raise NotImplementedError("Do not use base class")
