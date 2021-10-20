@@ -18,7 +18,22 @@ class MapperACTDR4Lensing(MapperACTDR4Base):
          'lmax': 6000}
         """
         self._get_ACTDR4_defaults(config)
-    
+ 
+    def get_signal_map(self):
+        if self.signal_map is None:
+            self.signal_map = enmap.read_map(self.file_map)
+            self.signal_map = [reproject.healpix_from_enmap(self.signal_map,
+                                                           lmax = self.lmax,
+                                                           nside = self.nside)]
+        return self.signal_map
+
+    def get_mask(self):
+        if self.mask is None:
+            self.pixell_mask = enmap.read_map(self.file_mask)
+            self.mask = reproject.healpix_from_enmap(self.pixell_mask,
+                                                     lmax = self.lmax,
+                                                     nside = self.nside)
+        return self.mask
     def get_dtype(self):
         return 'weak_lensing'
 

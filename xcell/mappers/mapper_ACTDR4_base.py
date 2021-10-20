@@ -22,22 +22,13 @@ class MapperACTDR4Base(MapperBase):
         self.noise = None
         self.cross_noise = None
         self.weights = None
+        self.beam_info = None
 
     def get_signal_map(self):
-        if self.signal_map is None:
-            self.signal_map = enmap.read_map(self.file_map)
-            self.signal_map = [reproject.healpix_from_enmap(self.signal_map,
-                                                           lmax = self.lmax,
-                                                           nside = self.nside)]
-        return self.signal_map
+        return NotImplementedError("Do not use base class")
 
     def get_mask(self):
-        if self.mask is None:
-            self.pixell_mask = enmap.read_map(self.file_mask)
-            self.mask = reproject.healpix_from_enmap(self.pixell_mask,
-                                                     lmax = self.lmax,
-                                                     nside = self.nside)
-        return self.mask
+        return NotImplementedError("Do not use base class")
 
     def get_noise(self):
         if self.pixell_mask is None:
@@ -62,4 +53,17 @@ class MapperACTDR4Base(MapperBase):
                                                      lmax = self.lmax,
                                                      nside = self.nside)
         return self.mask
+    
+    def _beam_gaussian(self, ell, fwhm_amin):
+        sigma_rad = np.radians(fwhm_amin / 2.355 / 60)
+        return np.exp(-0.5 * ell * (ell + 1) * sigma_rad**2)
+
+    def get_beam(self):
+        if self.beam is None:
+            if self.beam_info is None:  # No beam
+                self.beam = np.ones(3*self.nside)
+            else:
+                ell = np.arange(3*self.nside)
+                self.beam = self._beam_gaussian(ell, self.beam_info)
+        return self.beam
 

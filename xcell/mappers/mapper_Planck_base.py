@@ -99,6 +99,7 @@ class MapperPlanckBase(MapperBase):
             else:
                 ell = np.arange(3*self.nside)
                 self.beam = self._beam_gaussian(ell, self.beam_info)
+                self.beam /= self.beam[0] #Apparently you have to normalize it
         return self.beam
 
     def get_spin(self):
