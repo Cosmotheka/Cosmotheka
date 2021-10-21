@@ -20,37 +20,62 @@ class MapperACTDR4CMB(MapperACTDR4Base):
         self._get_ACTDR4_defaults(config)
         self.file_psmask = config.get('file_psmask', None)
         self.file_ivar = config.get('file_ivar', None)
+        self.file_scmap = config.get('file_scmap', None)
+        # Additional mask components
+        self.pixell_psmask = None 
+        self.pixell_ivar = None
+        #
+        self.mask_shape = None 
+        self.mask_wcs = None
         
     def get_signal_map(self):
         if self.signal_map is None:
-            for mapp in self.
-    
-    # read source-free map from disk and preprocess (i.e. k-space filter and pixwin)
-    maps = enmap.read_map(path + f"{mapname_head}{i}_map_srcfree.fits")[0]
-    maps = enmap.extract(maps,shape,wcs)
-    map_I = nw.preprocess_fourier(maps, shape, wcs)
-    del maps
-    
-    # add in the sources
-    source_map = enmap.read_map(path + f"{mapname_head}{i}_srcs.fits")[0]
-    source_map = enmap.extract(source_map,shape,wcs)
-    map_I = map_I + source_map
-    del source_map
+            # read source-free map from disk and preprocess (i.e. k-space filter and pixwin)
+            self.signal_map = enmap.read_map(self.file_map)[0]
+            # Get mask dimensions
+            if self.mask_shape is None or self.mask_wcs is None:
+                self.get_mask()
+            self.signal_map = enmap.extract(self.signal_map,
+                                            self.mask_shape,
+                                            self.mask_wcs)
+            # what does this do exactly?
+            self.signal_map = nw.preprocess_fourier(self.signal_map,
+                                                    self.mask_shape,
+                                                    self.mask_wcs)
+
+            # add in the sources
+            if self.file_scmap is not None:
+                self.source_map = enmap.read_map(self.file_scmap)[0]
+                self.source_map = enmap.extract(self.source_map,
+                                                self.mask_shape,
+                                                self.mask_wcs)
+                self.signal_map += self.source_map
+            
+            self.pixell_signal_map = self.signal_map
+            self.signal_map = reproject.healpix_from_enmap(self.signal_map,
+                                                     lmax = self.lmax,
+                                                     nside = self.nside)
         return self.signal_map
 
     def get_mask(self):
         if self.mask is None:
-            footprint = enmap.read_map(self.file_mask)
-            shape,wcs = footprint.shape, footprint.wcs
+            self.pixell_mask = enmap.read_map(self.file_mask)
+            # Save dimensions of footprint
+            self.mask_shape, self.mask_wcs = footprint.shape, footprint.wcs
 
             # read in the point source mask, make sure it has the correct shape, and apodize
-            psmask = enmap.extract(enmap.read_map(self.file_psmask), shape, wcs)
-            psmask = nw.apod_C2(psmask, 18./60.)
+            if self.file_psmask is not None:
+                self.pixell_psmask = enmap.extract(enmap.read_map(self.file_psmask), 
+                                                   self.mask_shape, self.mask_wcs)
+                self.pixell_psmask = nw.apod_C2(self.pixell_psmask, 18./60.)
+                self.pixell_mask *= self.pixell_psmask
 
             # read in the coadd inverse variance map and make sure it has the correct shape
-            ivar = enmap.extract(enmap.read_map(self.file_ivar), shape, wcs)
-
-            self.pixell_mask = footprint*psmask*ivar
+            if self.file_ivar is not None:
+                self.pixell_ivar = enmap.extract(enmap.read_map(self.file_ivar),
+                                                 self.mask_shape, self.mask_wcs)
+                self.pixell_mask *= self.pixell_ivar
+                
             self.mask = reproject.healpix_from_enmap(self.pixell_mask,
                                                      lmax = self.lmax,
                                                      nside = self.nside)
