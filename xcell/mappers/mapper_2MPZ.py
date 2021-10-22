@@ -26,8 +26,6 @@ class Mapper2MPZ(MapperBase):
 
         # Angular mask
         self.dndz = None
-        self.mask = None
-        self.dndz = None
         self.delta_map = None
         self.nl_coupled = None
         self.mask = None
