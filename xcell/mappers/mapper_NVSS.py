@@ -1,9 +1,8 @@
 from .mapper_base import MapperBase
-from .utils import get_map_from_points, get_DIR_Nz
+from .utils import get_map_from_points
 from astropy.table import Table
 import numpy as np
 import healpy as hp
-import os
 
 
 class MapperNVSS(MapperBase):
@@ -17,19 +16,13 @@ class MapperNVSS(MapperBase):
            'n_jk_dir': 100,
            'mask_name': 'mask_2MPZ'}
         """
-        
         self._get_defaults(config)
-        
-        
-        ## New
         self.file_sourcemask = config['mask_sources']
-        
         self.ra_name = 'RAJ2000'
         self.dec_name = 'DEJ2000'
-
         self.cat_data = None
-        self.npix = hp.nside2npix(self.nside)
 
+        self.npix = hp.nside2npix(self.nside)
         # Angular mask
         self.mask = None
         self.delta_map = None
@@ -38,29 +31,23 @@ class MapperNVSS(MapperBase):
     def get_catalog(self):
         if self.cat_data is None:
             file_data = self.config['data_catalog']
-    
             self.cat_data = Table.read(file_data)
-
             # Galactic coordinates
-            r = hp.Rotator(coord=['C','G']) 
-            GLON,GLAT = r(self.cat_data['RAJ2000'], self.cat_data['DEJ2000'],lonlat=True)
-            
+            r = hp.Rotator(coord=['C', 'G'])
+            GLON, GLAT = r(self.cat_data['RAJ2000'], self.cat_data['DEJ2000'],
+                           lonlat=True)
             self.cat_data['GLON'] = GLON
             self.cat_data['GLAT'] = GLAT
-            
-            # Angular and flux conditions    
+            # Angular and flux conditions
             self.cat_data = self.cat_data[(self.cat_data['DEJ2000'] > -40) &
-              (self.cat_data['S1_4'] > 10) & 
-              (self.cat_data['S1_4'] < 1000) & 
-              (np.fabs(self.cat_data['GLAT']) > 5)]
-
+                                          (self.cat_data['S1_4'] > 10) &
+                                          (self.cat_data['S1_4'] < 1000) &
+                                          (np.fabs(self.cat_data['GLAT']) > 5)]
         return self.cat_data
-    
-    
+
     # ill need this in the future
     def get_nz(self, dz=0, return_jk_error=False):
         pass
-       
 
     def get_signal_map(self, apply_galactic_correction=True):
         if self.delta_map is None:
@@ -74,33 +61,28 @@ class MapperNVSS(MapperBase):
             goodpix = self.mask > 0
             # Division by mask not really necessary, since it's binary.
             d[goodpix] = nmap_data[goodpix]/(mean_n*self.mask[goodpix])-1
-            self.delta_map = d   
+            self.delta_map = d
         return [self.delta_map]
 
     def get_mask(self):
         if self.mask is None:
-            
             self.mask = np.ones(self.npix)
-            
-            r = hp.Rotator(coord=['C','G']) 
-            
-            RApix, DEpix = hp.pix2ang(self.nside, np.arange(self.npix), lonlat=True)
+            r = hp.Rotator(coord=['C', 'G'])
+            RApix, DEpix = hp.pix2ang(self.nside, np.arange(self.npix),
+                                      lonlat=True)
             lpix, bpix = r(RApix, DEpix, lonlat=True)
-            
             # angular conditions
-            self.mask[ (DEpix < -40) | (np.fabs(bpix) < 5)] = 0
-            
-            # holes catalog 
-            RAmask, DEmask, radiusmask = np.loadtxt(self.file_sourcemask, unpack=True)
-            vecmask = hp.ang2vec(RAmask,DEmask, lonlat=True)
-        
+            self.mask[(DEpix < -40) | (np.fabs(bpix) < 5)] = 0
+            # holes catalog
+            RAmask, DEmask, radiusmask = np.loadtxt(self.file_sourcemask,
+                                                    unpack=True)
+            vecmask = hp.ang2vec(RAmask, DEmask, lonlat=True)
             for vec, radius in zip(vecmask, radiusmask):
-                ipix_hole = hp.query_disc(nside, vec, np.radians(radius), inclusive=True)
+                ipix_hole = hp.query_disc(self.nside, vec, np.radians(radius),
+                                          inclusive=True)
                 self.mask[ipix_hole] = 0
-            
         return self.mask
-    
-    
+
     # look at this function later
     def get_nl_coupled(self):
         if self.nl_coupled is None:
