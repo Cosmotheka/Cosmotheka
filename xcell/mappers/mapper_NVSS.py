@@ -5,7 +5,6 @@ import numpy as np
 import healpy as hp
 import os
 
-
 class MapperNVSS(MapperBase):
     def __init__(self, config):
         """
@@ -17,19 +16,12 @@ class MapperNVSS(MapperBase):
            'n_jk_dir': 100,
            'mask_name': 'mask_2MPZ'}
         """
-        
         self._get_defaults(config)
-        
-        
-        ## New
         self.file_sourcemask = config['mask_sources']
-        
         self.ra_name = 'RAJ2000'
         self.dec_name = 'DEJ2000'
-
         self.cat_data = None
         self.npix = hp.nside2npix(self.nside)
-
         # Angular mask
         self.mask = None
         self.delta_map = None
@@ -38,29 +30,22 @@ class MapperNVSS(MapperBase):
     def get_catalog(self):
         if self.cat_data is None:
             file_data = self.config['data_catalog']
-    
             self.cat_data = fitsio.read(file_data)
-            
             # Galactic coordinates
             r = hp.Rotator(coord=['C','G']) 
             GLON,GLAT = r(self.cat_data['RAJ2000'], self.cat_data['DEJ2000'],lonlat=True)
-            
             self.cat_data['GLON'] = GLON
-            self.cat_data['GLAT'] = GLAT
-            
+            self.cat_data['GLAT'] = GLAT      
             # Angular and flux conditions    
             self.cat_data = self.cat_data[(self.cat_data['DEJ2000'] > -40) &
               (self.cat_data['S1_4'] > 10) & 
               (self.cat_data['S1_4'] < 1000) & 
               (np.fabs(self.cat_data['GLAT']) > 5)]
-
         return self.cat_data
-    
-    
+
     # ill need this in the future
     def get_nz(self, dz=0, return_jk_error=False):
         pass
-       
 
     def get_signal_map(self, apply_galactic_correction=True):
         if self.delta_map is None:
@@ -79,31 +64,22 @@ class MapperNVSS(MapperBase):
 
     def get_mask(self):
         if self.mask is None:
-            
             self.mask = np.ones(self.npix)
-            
             r = hp.Rotator(coord=['C','G']) 
-            
             RApix, DEpix = hp.pix2ang(self.nside, np.arange(self.npix), lonlat=True)
             lpix, bpix = r(RApix, DEpix, lonlat=True)
-            
             # angular conditions
-            self.mask[ (DEpix < -40) | (np.fabs(bpix) < 5)] = 0
-            
+            self.mask[ (DEpix < -40) | (np.fabs(bpix) < 5)] = 0 
             # holes catalog 
             maskcat = np.loadtxt(self.file_sourcemask)
-            
             RAmask = maskcat[:,0]
             DEmask = maskcat[:,1]
             radiusmask = maskcat[:,2]
             vecmask = hp.ang2vec(RAmask,DEmask, lonlat=True)
-        
-            for vec, radius in zip(vecmask, radiusmask):
+        for vec, radius in zip(vecmask, radiusmask):
                 ipix_hole = hp.query_disc(nside, vec, np.radians(radius), inclusive=True)
                 self.mask[ipix_hole] = 0
-            
         return self.mask
-    
     
     # look at this function later
     def get_nl_coupled(self):
