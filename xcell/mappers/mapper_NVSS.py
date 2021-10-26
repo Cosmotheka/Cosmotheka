@@ -71,12 +71,9 @@ class MapperNVSS(MapperBase):
             # angular conditions
             self.mask[ (DEpix < -40) | (np.fabs(bpix) < 5)] = 0 
             # holes catalog 
-            maskcat = np.loadtxt(self.file_sourcemask)
-            RAmask = maskcat[:,0]
-            DEmask = maskcat[:,1]
-            radiusmask = maskcat[:,2]
+            RAmask, DEmask, radiusmask = np.loadtxt(self.file_sourcemask, unpack=True)
             vecmask = hp.ang2vec(RAmask,DEmask, lonlat=True)
-        for vec, radius in zip(vecmask, radiusmask):
+            for vec, radius in zip(vecmask, radiusmask):
                 ipix_hole = hp.query_disc(nside, vec, np.radians(radius), inclusive=True)
                 self.mask[ipix_hole] = 0
         return self.mask
