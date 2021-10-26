@@ -1,6 +1,6 @@
 from .mapper_base import MapperBase
 from .utils import get_map_from_points, get_DIR_Nz
-import fitsio
+from astropy.table import Table
 import numpy as np
 import healpy as hp
 import os
@@ -39,8 +39,8 @@ class MapperNVSS(MapperBase):
         if self.cat_data is None:
             file_data = self.config['data_catalog']
     
-            self.cat_data = fitsio.read(file_data)
-            
+            self.cat_data = Table.read(file_data)
+
             # Galactic coordinates
             r = hp.Rotator(coord=['C','G']) 
             GLON,GLAT = r(self.cat_data['RAJ2000'], self.cat_data['DEJ2000'],lonlat=True)
