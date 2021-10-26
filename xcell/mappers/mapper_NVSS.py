@@ -40,14 +40,14 @@ class MapperNVSS(MapperBase):
             self.cat_data['GLAT'] = GLAT
             # Angular and flux conditions
             self.cat_data = self.cat_data[(self.cat_data['DEJ2000'] > -40) &
-                                          (self.cat_data['S1_4'] > 10) &
-                                          (self.cat_data['S1_4'] < 1000) &
-                                          (np.fabs(self.cat_data['GLAT']) > 5)]
+                                          (self.cat_data['S1_4'] > self.config.get('flux_min_mJy', 10)) &
+                                          (self.cat_data['S1_4'] < self.config.get('flux_max_mJy', 1000)) &
+                                          (np.fabs(self.cat_data['GLAT']) > self.config.get('GLAT_max_deg', 5))]
         return self.cat_data
 
     # ill need this in the future
     def get_nz(self, dz=0, return_jk_error=False):
-        pass
+        raise NotImplementedError("N(z) not implemented yet")
 
     def get_signal_map(self, apply_galactic_correction=True):
         if self.delta_map is None:
@@ -72,7 +72,7 @@ class MapperNVSS(MapperBase):
                                       lonlat=True)
             lpix, bpix = r(RApix, DEpix, lonlat=True)
             # angular conditions
-            self.mask[(DEpix < -40) | (np.fabs(bpix) < 5)] = 0
+            self.mask[(DEpix < -40) | (np.fabs(bpix) < self.config.get('GLAT_max_deg', 5))] = 0
             # holes catalog
             RAmask, DEmask, radiusmask = np.loadtxt(self.file_sourcemask,
                                                     unpack=True)
