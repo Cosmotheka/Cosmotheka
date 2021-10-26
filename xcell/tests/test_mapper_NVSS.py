@@ -31,5 +31,5 @@ def test_basic():
     config = get_config()
     m = xc.mappers.MapperNVSS(config)
     c = m.get_catalog()
-    assert len(c) > hp.nside2npix(32)
+    assert len(c) < hp.nside2npix(32)
     clean_fake_data()
