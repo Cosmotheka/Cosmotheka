@@ -27,7 +27,7 @@ class MapperPlanckBase(MapperBase):
         self.mask = None
         self.beam = None
         self.beam_info = None
-        self.gal_mask_mode = config.get('gal_mask_mode', '0.6')
+        self.gal_mask_mode = config.get('gal_mask_mode', '0.7')
         self.gal_mask_modes = {'0.2': 0,
                                '0.4': 1,
                                '0.6': 2,
