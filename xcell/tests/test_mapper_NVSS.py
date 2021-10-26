@@ -7,7 +7,7 @@ from astropy.table import Table
 
 def get_config():
     return {'data_catalog': 'xcell/tests/data/catalog_nvss.fits',
-            'mask_sources': 'xcell/tests/data/source_mask_nvss.txt',
+            'mask_sources': 'xcell/tests/data/source_masks_nvss.txt',
             'nside': 32, 'mask_name': 'mask'}
 
 
@@ -21,8 +21,10 @@ def make_fake_data():
                'S1_4': flux})
     c.write("xcell/tests/data/catalog_nvss.fits", overwrite=True)
 
+
 def clean_fake_data():
     os.remove("xcell/tests/data/catalog_nvss.fits")
+
 
 def test_basic():
     make_fake_data()
@@ -31,26 +33,36 @@ def test_basic():
     c = m.get_catalog()
     assert len(c) < hp.nside2npix(32)
     clean_fake_data()
-    
+
+
 def test_get_mask():
     config = get_config()
+    config['DEC_min_deg'] = -90.
+    config['GLAT_max_deg'] = 0.
+    config.pop('mask_sources')
     m = xc.mappers.MapperNVSS(config)
     d = m.get_mask()
     assert np.all(np.fabs(d-1) < 1E-5)
 
-def test_get_signal_map(coord):
+
+def test_get_signal_map():
+    make_fake_data()
     config = get_config()
     m = xc.mappers.MapperNVSS(config)
     d = m.get_signal_map()
     d = np.array(d)
+    clean_fake_data()
     assert d.shape == (1, hp.nside2npix(m.nside))
     assert np.all(np.fabs(d) < 1E-15)
 
+
 def test_get_dtype():
-    m = get_mapper()
+    config = get_config()
+    m = xc.mappers.MapperNVSS(config)
     assert m.get_dtype() == 'galaxy_density'
 
 
 def test_get_spin():
-    m = get_mapper()
+    config = get_config()
+    m = xc.mappers.MapperNVSS(config)
     assert m.get_spin() == 0

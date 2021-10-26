@@ -9,15 +9,15 @@ class MapperNVSS(MapperBase):
     def __init__(self, config):
         """
         config - dict
-          {'data_catalog': 'Legacy_Survey_BASS-MZLS_galaxies-selection.fits',
+          {'data_catalog': 'nvss.fits',
            'mask': 'mask.fits',
            'z_edges': [0, 0.5],
            'path_rerun': '.',
            'n_jk_dir': 100,
-           'mask_name': 'mask_2MPZ'}
+           'mask_name': 'mask_NVSS'}
         """
         self._get_defaults(config)
-        self.file_sourcemask = config['mask_sources']
+        self.file_sourcemask = config.get('mask_sources', None)
         self.ra_name = 'RAJ2000'
         self.dec_name = 'DEJ2000'
         self.cat_data = None
@@ -39,10 +39,15 @@ class MapperNVSS(MapperBase):
             self.cat_data['GLON'] = GLON
             self.cat_data['GLAT'] = GLAT
             # Angular and flux conditions
-            self.cat_data = self.cat_data[(self.cat_data['DEJ2000'] > -40) &
-                                          (self.cat_data['S1_4'] > self.config.get('flux_min_mJy', 10)) &
-                                          (self.cat_data['S1_4'] < self.config.get('flux_max_mJy', 1000)) &
-                                          (np.fabs(self.cat_data['GLAT']) > self.config.get('GLAT_max_deg', 5))]
+            self.cat_data = self.cat_data[
+                (self.cat_data['DEJ2000'] >
+                 self.config.get('DEC_min_deg', -40)) &
+                (self.cat_data['S1_4'] >
+                 self.config.get('flux_min_mJy', 10)) &
+                (self.cat_data['S1_4'] <
+                 self.config.get('flux_max_mJy', 1000)) &
+                (np.fabs(self.cat_data['GLAT']) >
+                 self.config.get('GLAT_max_deg', 5))]
         return self.cat_data
 
     # ill need this in the future
@@ -72,15 +77,18 @@ class MapperNVSS(MapperBase):
                                       lonlat=True)
             lpix, bpix = r(RApix, DEpix, lonlat=True)
             # angular conditions
-            self.mask[(DEpix < -40) | (np.fabs(bpix) < self.config.get('GLAT_max_deg', 5))] = 0
-            # holes catalog
-            RAmask, DEmask, radiusmask = np.loadtxt(self.file_sourcemask,
-                                                    unpack=True)
-            vecmask = hp.ang2vec(RAmask, DEmask, lonlat=True)
-            for vec, radius in zip(vecmask, radiusmask):
-                ipix_hole = hp.query_disc(self.nside, vec, np.radians(radius),
-                                          inclusive=True)
-                self.mask[ipix_hole] = 0
+            self.mask[(DEpix < self.config.get('DEC_min_deg', -40)) |
+                      (np.fabs(bpix) < self.config.get('GLAT_max_deg', 5))] = 0
+            if self.file_sourcemask is not None:
+                # holes catalog
+                RAmask, DEmask, radiusmask = np.loadtxt(self.file_sourcemask,
+                                                        unpack=True)
+                vecmask = hp.ang2vec(RAmask, DEmask, lonlat=True)
+                for vec, radius in zip(vecmask, radiusmask):
+                    ipix_hole = hp.query_disc(self.nside, vec,
+                                              np.radians(radius),
+                                              inclusive=True)
+                    self.mask[ipix_hole] = 0
         return self.mask
 
     # look at this function later
