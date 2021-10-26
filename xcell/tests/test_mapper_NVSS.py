@@ -29,14 +29,28 @@ def test_basic():
     config = get_config()
     m = xc.mappers.MapperNVSS(config)
     c = m.get_catalog()
-    
-    
-    mask = m.get_mask()
-    signal = m.get_signal_map()
-    
-    
     assert len(c) < hp.nside2npix(32)
-    assert len(mask) < hp.nside2npix(32)
-    assert len(signal) < hp.nside2npix(32)
-    
     clean_fake_data()
+    
+def test_get_mask():
+    config = get_config()
+    m = xc.mappers.MapperNVSS(config)
+    d = m.get_mask()
+    assert np.all(np.fabs(d-1) < 1E-5)
+
+def test_get_signal_map(coord):
+    config = get_config()
+    m = xc.mappers.MapperNVSS(config)
+    d = m.get_signal_map()
+    d = np.array(d)
+    assert d.shape == (1, hp.nside2npix(m.nside))
+    assert np.all(np.fabs(d) < 1E-15)
+
+def test_get_dtype():
+    m = get_mapper()
+    assert m.get_dtype() == 'galaxy_density'
+
+
+def test_get_spin():
+    m = get_mapper()
+    assert m.get_spin() == 0
