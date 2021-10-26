@@ -52,7 +52,7 @@ class MapperROSATXray(MapperBase):
         if self.mask is None:
             self.mask = np.ones(self.npix)
             xpmap = self.get_expmap()
-            self.mask[xpmap < self.explimit] = 0
+            self.mask[xpmap <= self.explimit] = 0
             if self.mask_external is not None:
                 msk = hp.ud_grade(hp.read_map(self.mask_external),
                                   nside_out=self.nside)
