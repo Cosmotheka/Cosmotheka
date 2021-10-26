@@ -21,12 +21,6 @@ class MapperACTDR4CMB(MapperACTDR4Base):
         self.file_psmask = config.get('file_psmask', None)
         self.file_ivar = config.get('file_ivar', None)
         self.file_scmap = config.get('file_scmap', None)
-        # Additional mask components
-        self.pixell_psmask = None 
-        self.pixell_ivar = None
-        #
-        self.mask_shape = None 
-        self.mask_wcs = None
         
     def get_signal_map(self):
         if self.signal_map is None:
