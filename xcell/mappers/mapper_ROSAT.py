@@ -6,6 +6,29 @@ import healpy as hp
 
 
 class MapperROSATXray(MapperBase):
+    """ Implements X-ray count rate maps from ROSAT.
+
+    A few details so we can document this properly in the future:
+
+    Photon list was obtained from:
+    http://dc.zah.uni-heidelberg.de/tableinfo/rosat.photons
+
+    Exposure maps were obtained from e.g.:
+    https://heasarc.gsfc.nasa.gov/FTP/rosat/data/\
+    pspc/processed_data/rass/release/rs931844n00/
+
+    The signal map in this case is the count rate density in
+    units of counts/second/sr^-1. The model for this would
+    need the effective instrument area. For ROSAT this is an
+    energy-dependent quantity which includes a transfer function
+    for E_true vs. E_channel. These can be found in
+    https://heasarc.gsfc.nasa.gov/docs/rosat/pspc_matrices.html
+    but we don't need them and won't provide them here.
+
+    The mask is constructed by thresholding the exposure map
+    and combining it with any other externa map (e.g. aiming
+    to remove Galactic emission).
+    """
     def __init__(self, config):
         self._get_defaults(config)
         self.fname_expmap = config['exposure_map']
