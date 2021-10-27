@@ -55,6 +55,7 @@ def test_get_signal_map():
     assert np.all(np.fabs(d) < 1E-15)
     clean_fake_data()
 
+
 def test_get_dtype():
     config = get_config()
     m = xc.mappers.MapperNVSS(config)
