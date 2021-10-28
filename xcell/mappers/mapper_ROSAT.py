@@ -42,6 +42,7 @@ class MapperROSATXray(MapperBase):
         self.pholist = None
         self.countrate_map = None
         self.mask = None
+        self.nl_coupled = None
 
     def get_pholist(self):
         if self.pholist is None:
@@ -81,12 +82,27 @@ class MapperROSATXray(MapperBase):
             if self.mask_external is not None:
                 msk = hp.ud_grade(hp.read_map(self.mask_external),
                                   nside_out=self.nside)
-                self.mask[msk <= 0] = 0
+                self.mask *= msk
         return self.mask
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
-            self.nl_coupled = np.zeros([1, 3*self.nside])
+            cat = self.get_pholist()
+            xpmap = self.get_expmap()
+            mask = self.get_mask()
+            count_map = get_map_from_points(cat, self.nside,
+                                            ra_name='raj2000',
+                                            dec_name='dej2000')
+            goodpix = mask > 0.0
+            # Mean count rate
+            # CR_mean = \sum n_p / \sum exp_p
+            cr_mean = np.sum(count_map[goodpix])/np.sum(xpmap[goodpix])
+            # <mask^2/exposure>
+            m2_ie = np.sum(mask[goodpix]**2/xpmap[goodpix]) / self.npix
+            # Pixel area
+            pixA = hp.nside2pixarea(self.nside)
+            N_mean = cr_mean * m2_ie / pixA
+            self.nl_coupled = N_mean * np.ones([1, 3*self.nside])
         return self.nl_coupled
 
     def get_dtype(self):
