@@ -125,8 +125,8 @@ class MapperNVSS(MapperBase):
             cat_redshift = self.get_catalog_redshift()
             bins = np.arange(min(cat_redshift['redshift']),
                              max(cat_redshift['redshift'])+0.1, 0.1)
-            nz, dz = np.histogram(cat_redshift['redshift'], bins)
-            zz = 0.5*(dz[1:]+dz[:-1])
+            nz, bins = np.histogram(cat_redshift['redshift'], bins)
+            zz = 0.5*(bins[1:]+bins[:-1])
             self.dndz = (zz, nz)
 
         z, nz = self.dndz
