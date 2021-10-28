@@ -70,7 +70,7 @@ def test_map_sanity():
     clean_rosat_data()
 
 
-def test_ener_cut():
+def test_pholist():
     c = get_config()
     nside = c['nside']
     npix = hp.nside2npix(nside)
