@@ -11,10 +11,8 @@ class MapperNVSS(MapperBase):
         config - dict
           {'data_catalog': 'nvss.fits',
            'mask': 'mask.fits',
-           'z_edges': [0, 0.5],
-           'path_rerun': '.',
-           'n_jk_dir': 100,
-           'mask_name': 'mask_NVSS'}
+           'mask_name': 'mask_NVSS'
+           'redshift_catalog':'100sqdeg_1uJy_s1400.fits'}
         """
         self._get_defaults(config)
         self.file_sourcemask = config.get('mask_sources', None)
@@ -27,7 +25,10 @@ class MapperNVSS(MapperBase):
         self.mask = None
         self.delta_map = None
         self.nl_coupled = None
+        self.dndz = None
+        self.cat_redshift = None
 
+    # Redshift Distribution Catalog
     def get_catalog(self):
         if self.cat_data is None:
             file_data = self.config['data_catalog']
@@ -50,10 +51,22 @@ class MapperNVSS(MapperBase):
                  self.config.get('GLAT_max_deg', 5))]
         return self.cat_data
 
-    # ill need this in the future
-    def get_nz(self, dz=0, return_jk_error=False):
-        raise NotImplementedError("N(z) not implemented yet")
+    # Redshift Distribution Catalog
+    def get_catalog_redshift(self):
+        if self.cat_redshift is None:
+            file_data = self.config['redshift_catalog']
+            self.cat_redshift = Table.read(file_data)
+            # flux_mJy = 10.**(3+cat['itot_1400'])
+            flux_mJy = 10.**(3+self.cat_redshift['itot_1400'])
+            self.cat_redshift['flux_mJy'] = flux_mJy
+            # Flux conditions
+            self.cat_redshift = self.cat_redshift[
+                (self.cat_redshift['flux_mJy'] > 10) &
+                (self.cat_redshift['flux_mJy'] < 1000) &
+                (self.cat_redshift['redshift'] <= 5)]
+        return self.cat_redshift
 
+    # Density Map
     def get_signal_map(self, apply_galactic_correction=True):
         if self.delta_map is None:
             d = np.zeros(self.npix)
@@ -69,6 +82,7 @@ class MapperNVSS(MapperBase):
             self.delta_map = d
         return [self.delta_map]
 
+    # Mask
     def get_mask(self):
         if self.mask is None:
             self.mask = np.ones(self.npix)
@@ -105,9 +119,25 @@ class MapperNVSS(MapperBase):
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
 
-    # for all mappers
+    # Redshift Distribution
+    def get_nz(self, dz=0):
+        if self.dndz is None:
+            cat_redshift = self.get_catalog_redshift()
+            bins = np.arange(min(cat_redshift['redshift']),
+                             max(cat_redshift['redshift'])+0.1, 0.1)
+            nz, dz = np.histogram(cat_redshift['redshift'], bins)
+            zz = 0.5*(dz[1:]+dz[:-1])
+            self.dndz = (zz, nz)
+
+        z, nz = self.dndz
+        z_dz = z + dz
+        sel = z_dz >= 0
+        return np.array([z_dz[sel], nz[sel]])
+
+    # Type
     def get_dtype(self):
         return 'galaxy_density'
 
+    # Spin
     def get_spin(self):
         return 0
