@@ -6,9 +6,10 @@ from astropy.table import Table
 
 
 def get_config():
-    return {'data_catalog': 'xcell/tests/data/catalog_nvss.fits',
+    return {'data_catalog': 'xcell/tests/data/nvss.fits',
             'mask_sources': 'xcell/tests/data/source_masks_nvss.txt',
-            'nside': 32, 'mask_name': 'mask'}
+            'nside': 32, 'mask_name': 'mask',
+            'redshift_catalog': '100sqdeg_1uJy_s1400.fits'}
 
 
 def make_fake_data():
@@ -55,6 +56,20 @@ def test_get_signal_map():
     assert np.all(np.fabs(d) < 1E-15)
     clean_fake_data()
 
+#test for get_nz  
+def test_get_nz():
+    config = get_config()
+    m = xc.mappers.MapperNVSS(config)
+    cat_redshift = m.get_catalog_redshift()
+    z, nz = m.get_nz()
+    bins = np.arange(min(cat_redshift['redshift']),
+                             max(cat_redshift['redshift'])+0.1, 0.1)
+    h, b = np.histogram(cat_redshift['redshift'],bins)
+    z_arr = 0.5 * (b[:-1] + b[1:])
+    assert np.all(np.fabs(z-z_arr) < 1E-5)
+    assert np.all(np.fabs((nz-h)/np.amax(nz)) < 1E-3)
+    
+    assert np.all(np.fabs(d-1) < 1E-5)
 
 def test_get_dtype():
     config = get_config()
