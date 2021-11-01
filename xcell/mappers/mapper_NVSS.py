@@ -141,5 +141,3 @@ class MapperNVSS(MapperBase):
     # Spin
     def get_spin(self):
         return 0
-
-
