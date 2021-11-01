@@ -28,7 +28,6 @@ class MapperNVSS(MapperBase):
         self.dndz = None
         self.cat_redshift = None
 
-    # Redshift Distribution Catalog
     def get_catalog(self):
         if self.cat_data is None:
             file_data = self.config['data_catalog']
@@ -122,10 +121,11 @@ class MapperNVSS(MapperBase):
     # Redshift Distribution
     def get_nz(self, dz=0):
         if self.dndz is None:
-            cat_redshift = self.get_catalog_redshift()
-            bins = np.arange(min(cat_redshift['redshift']),
-                             max(cat_redshift['redshift'])+0.1, 0.1)
-            nz, bins = np.histogram(cat_redshift['redshift'], bins)
+            self.cat_redshift = self.get_catalog_redshift()
+            # max_redshift = max(self.cat_redshift['redshift'])
+            max_redshift = 5
+            bins = np.arange(0, max_redshift+0.1, 0.1)
+            nz, bins = np.histogram(self.cat_redshift['redshift'], bins)
             zz = 0.5*(bins[1:]+bins[:-1])
             self.dndz = (zz, nz)
 
@@ -141,3 +141,5 @@ class MapperNVSS(MapperBase):
     # Spin
     def get_spin(self):
         return 0
+
+

@@ -6,10 +6,10 @@ from astropy.table import Table
 
 
 def get_config():
-    return {'data_catalog': 'xcell/tests/data/nvss.fits',
+    return {'data_catalog': 'xcell/tests/data/catalog_nvss.fits',
             'mask_sources': 'xcell/tests/data/source_masks_nvss.txt',
             'nside': 32, 'mask_name': 'mask',
-            'redshift_catalog': '100sqdeg_1uJy_s1400.fits'}
+            'redshift_catalog': 'xcell/tests/data/redshift_catalog_nvss.fits'}
 
 
 def make_fake_data():
@@ -20,11 +20,22 @@ def make_fake_data():
     c = Table({'RAJ2000': ra,
                'DEJ2000': dec,
                'S1_4': flux})
-    c.write("xcell/tests/data/catalog_nvss.fits", overwrite=True)
+    c.write('xcell/tests/data/catalog_nvss.fits', overwrite=True)
+
+    sources = 1500
+    max_redshift = 5
+    redshift = max_redshift*np.random.rand(sources)
+    # The flux condition 10mJy<Flux<1000mJy can be translated
+    # into -2<'itot_1400'<0 since mJy = 10***(3+'itot_1400')
+    flux_redshift = -2+2*np.random.rand(sources)
+    b = Table({'redshift': redshift,
+              'itot_1400': flux_redshift})
+    b.write('xcell/tests/data/redshift_catalog_nvss.fits', overwrite=True)
 
 
 def clean_fake_data():
-    os.remove("xcell/tests/data/catalog_nvss.fits")
+    os.remove('xcell/tests/data/catalog_nvss.fits')
+    os.remove('xcell/tests/data/redshift_catalog_nvss.fits')
 
 
 def test_basic():
@@ -56,20 +67,18 @@ def test_get_signal_map():
     assert np.all(np.fabs(d) < 1E-15)
     clean_fake_data()
 
-#test for get_nz  
+
+# test for get_nz
 def test_get_nz():
+    sources = 1500
+    make_fake_data()
     config = get_config()
     m = xc.mappers.MapperNVSS(config)
-    cat_redshift = m.get_catalog_redshift()
     z, nz = m.get_nz()
-    bins = np.arange(min(cat_redshift['redshift']),
-                             max(cat_redshift['redshift'])+0.1, 0.1)
-    h, b = np.histogram(cat_redshift['redshift'],bins)
-    z_arr = 0.5 * (b[:-1] + b[1:])
-    assert np.all(np.fabs(z-z_arr) < 1E-5)
-    assert np.all(np.fabs((nz-h)/np.amax(nz)) < 1E-3)
-    
-    assert np.all(np.fabs(d-1) < 1E-5)
+    total = np.sum(nz)
+    assert total == sources
+    clean_fake_data()
+
 
 def test_get_dtype():
     config = get_config()
