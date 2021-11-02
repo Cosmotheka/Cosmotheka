@@ -28,6 +28,7 @@ class MapperNVSS(MapperBase):
         self.dndz = None
         self.cat_redshift = None
 
+    # NVSS catalog
     def get_catalog(self):
         if self.cat_data is None:
             file_data = self.config['data_catalog']
@@ -93,7 +94,7 @@ class MapperNVSS(MapperBase):
             self.mask[(DEpix < self.config.get('DEC_min_deg', -40)) |
                       (np.fabs(bpix) < self.config.get('GLAT_max_deg', 5))] = 0
             if self.file_sourcemask is not None:
-                # holes catalog
+                # Holes catalog
                 RAmask, DEmask, radiusmask = np.loadtxt(self.file_sourcemask,
                                                         unpack=True)
                 vecmask = hp.ang2vec(RAmask, DEmask, lonlat=True)
@@ -104,7 +105,7 @@ class MapperNVSS(MapperBase):
                     self.mask[ipix_hole] = 0
         return self.mask
 
-    # look at this function later
+    # Shot noise
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             self.cat_data = self.get_catalog()
@@ -122,9 +123,7 @@ class MapperNVSS(MapperBase):
     def get_nz(self, dz=0):
         if self.dndz is None:
             self.cat_redshift = self.get_catalog_redshift()
-            # max_redshift = max(self.cat_redshift['redshift'])
-            max_redshift = 5
-            bins = np.arange(0, max_redshift+0.1, 0.1)
+            bins = np.arange(0, max(self.cat_redshift['redshift'])+0.1, 0.1)
             nz, bins = np.histogram(self.cat_redshift['redshift'], bins)
             zz = 0.5*(bins[1:]+bins[:-1])
             self.dndz = (zz, nz)

@@ -43,7 +43,10 @@ def test_basic():
     config = get_config()
     m = xc.mappers.MapperNVSS(config)
     c = m.get_catalog()
-    assert len(c) < hp.nside2npix(32)
+    # The sentence below is testing that sky fraction covered by NVSS
+    # is fsky ≃ 0.75  following the angular and flux conditions
+    # on ArXiv 1901.08357
+    assert (0.75 < len(c)/hp.nside2npix(32) < 0.76)
     clean_fake_data()
 
 
@@ -54,12 +57,15 @@ def test_get_mask():
     config.pop('mask_sources')
     m = xc.mappers.MapperNVSS(config)
     d = m.get_mask()
-    assert np.all(np.fabs(d-1) < 1E-5)
+    assert np.all(np.fabs(d-1) == 0)
 
 
 def test_get_signal_map():
     make_fake_data()
     config = get_config()
+    config['DEC_min_deg'] = -90.
+    config['GLAT_max_deg'] = 0.
+    config.pop('mask_sources')
     m = xc.mappers.MapperNVSS(config)
     d = m.get_signal_map()
     d = np.array(d)
@@ -68,7 +74,6 @@ def test_get_signal_map():
     clean_fake_data()
 
 
-# test for get_nz
 def test_get_nz():
     sources = 1500
     make_fake_data()
@@ -77,6 +82,23 @@ def test_get_nz():
     z, nz = m.get_nz()
     total = np.sum(nz)
     assert total == sources
+    clean_fake_data()
+
+
+def test_get_nl_coupled():
+    make_fake_data()
+    config = get_config()
+    config['DEC_min_deg'] = -90.
+    config['GLAT_max_deg'] = 0.
+    config.pop('mask_sources')
+    m = xc.mappers.MapperNVSS(config)
+    nl = m.get_nl_coupled()
+    nl = np.array(nl)
+    pix_area = 4*np.pi/hp.nside2npix(m.nside)
+    nl_pred = hp.nside2npix(32)
+    nl_pred *= pix_area**2/(4*np.pi)
+    assert nl.shape == (1, 3*m.nside)
+    assert np.all(np.fabs(nl/nl_pred-1) < 1E-10)
     clean_fake_data()
 
 
