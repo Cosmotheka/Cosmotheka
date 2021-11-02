@@ -1,6 +1,6 @@
 from .mapper_Planck_base import MapperPlanckBase
 import healpy as hp
-
+import numpy as np
 
 class MapperP15CIB(MapperPlanckBase):
     def __init__(self, config):
