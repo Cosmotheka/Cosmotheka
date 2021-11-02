@@ -2,7 +2,6 @@
 from .mapper_base import MapperBase
 from .mapper_ACT_base import MapperACTBase
 from .mapper_ACTk import MapperACTk
-from .mapper_ACTCMB import MapperACTCMB
 from .mapper_ACTtSZ import MapperACTtSZ
 from .mapper_SDSS import MapperSDSS
 from .mapper_Planck_base import MapperPlanckBase

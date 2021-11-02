@@ -228,16 +228,15 @@ class Cl(ClBase):
             # bias from `cl_cp`, `cl_cov_cp` still includes it.
             correction = None
             if (mapper1.mask_power > 1) or (mapper2.mask_power > 1):
-                # Applies correction factor if masks have been 
-                # implicitly applied to the maps 
+                # Applies correction factor if masks have been
+                # implicitly applied to the maps
                 # See ACTk for reference
-                n_a = mapper_a.mask_power
-                n_b = mapper_b.mask_power
-                w_a = mapper_a.get_mask()
-                w_b = mapper_b.get_mask()
+                n_a = mapper1.mask_power
+                n_b = mapper2.mask_power
+                w_a = mapper1.get_mask()
+                w_b = mapper2.get_mask()
                 # Currently this first step is done with the pixell masks
-                correction = np.mean(w_a**(n_a-1))*np.mean(w_b**(n_b-1))
-                correction *= np.mean(w_a*w_b)/np.mean(w_a**n_a*w_b**n_b)
+                correction = np.mean(w_a*w_b)/np.mean(w_a**n_a*w_b**n_b)
                 # Apply correction to all Cl's
                 cl *= correction
                 cl_cp *= correction

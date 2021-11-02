@@ -1,27 +1,35 @@
 import xcell as xc
 import numpy as np
 import pytest
-import healpy as hp
 
 
 def get_config(wbeam=True):
-    c = {'file_map': 'xcell/tests/data/act_dr4.01_s14s15_D56_lensing_mask.fits',
-         'file_mask': 'xcell/tests/data/act_dr4.01_s14s15_D56_lensing_mask.fits',
-         'file_noise': 'xcell/tests/data/act_dr4.01_s14s15_D56_lensing_mask.fits',
-         'file_cross_noise': 'xcell/tests/data/act_dr4.01_s14s15_D56_lensing_mask.fits',
-         'file_weights': 'xcell/tests/data/act_dr4.01_s14s15_D56_lensing_mask.fits',
-         'file_beam': 'xcell/tests/data/mask2.fits',
+    path = 'xcell/tests/data/'
+    c = {'file_map':
+         path+'act_dr4.01_s14s15_D56_lensing_mask.fits',
+         'file_mask':
+         path+'act_dr4.01_s14s15_D56_lensing_mask.fits',
+         'file_noise':
+         path+'act_dr4.01_s14s15_D56_lensing_mask.fits',
+         'file_cross_noise':
+         path+'act_dr4.01_s14s15_D56_lensing_mask.fits',
+         'file_weights':
+         path+'act_dr4.01_s14s15_D56_lensing_mask.fits',
+         'file_beam':
+         path+'mask2.fits',
          'nside': 32}
     if wbeam:
         c['beam_fwhm_arcmin'] = 0.
     return c
+
+
 @pytest.mark.parametrize('cls,spin', [(xc.mappers.MapperACTtSZ,
                                       '0'),
-                                     (xc.mappers.MapperACTk,
+                                      (xc.mappers.MapperACTk,
                                       '2')])
 def test_get_spin(cls, spin):
     m = cls(get_config())
-    assert m.get_spin() == spin
+    assert m.get_spin() == int(spin)
 
 
 @pytest.mark.parametrize('cls,typ', [(xc.mappers.MapperACTtSZ,
@@ -56,8 +64,10 @@ def test_get_beam():
     assert np.allclose(beam, bls, atol=0, rtol=1E-3)
 
 
-def test_get_signal_map():
-    m = xc.mappers.MapperACTBase(get_config())
+@pytest.mark.parametrize('cls', [(xc.mappers.MapperACTtSZ),
+                                 (xc.mappers.MapperACTk)])
+def test_get_signal_map(cls):
+    m = cls(get_config())
     assert (len(m.get_signal_map()[0])/12)**(1/2) == 32
 
 
@@ -79,4 +89,3 @@ def test_get_cross_noise():
 def test_get_weights():
     m = xc.mappers.MapperACTBase(get_config())
     assert (len(m.get_weights())/12)**(1/2) == 32
-
