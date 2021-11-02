@@ -58,25 +58,25 @@ def test_get_beam():
 
 def test_get_signal_map():
     m = xc.mappers.MapperACTBase(get_config())
-    assert (len(m.get_signal_map()[0])/12)**(1/2)
+    assert (len(m.get_signal_map()[0])/12)**(1/2) == 32
 
 
 def test_get_mask():
     m = xc.mappers.MapperACTBase(get_config())
-    assert (len(m.get_mask())/12)**(1/2)
+    assert (len(m.get_mask())/12)**(1/2) == 32
 
 
 def test_get_noise():
     m = xc.mappers.MapperACTBase(get_config())
-    assert (len(m.get_noise())/12)**(1/2)
+    assert (len(m.get_noise())/12)**(1/2) == 32
 
 
 def test_get_cross_noise():
     m = xc.mappers.MapperACTBase(get_config())
-    assert (len(m.get_cross_noise())/12)**(1/2)
+    assert (len(m.get_cross_noise())/12)**(1/2) == 32
 
 
 def test_get_weights():
     m = xc.mappers.MapperACTBase(get_config())
-    assert (len(m.get_weights())/12)**(1/2)
+    assert (len(m.get_weights())/12)**(1/2) == 32
 
