@@ -13,6 +13,15 @@ class MapperP15CIB(MapperPlanckBase):
         """
         self._get_Planck_defaults(config)
         self.beam_info = config.get('beam_fwhm_arcmin', 5.)
+        self.gal_mask_mode = config.get('gal_mask_mode', '0.6')
+        self.gal_mask_modes = {'0.2': 0,
+                               '0.4': 1,
+                               '0.6': 2,
+                               '0.7': 3,
+                               '0.8': 4,
+                               '0.9': 5,
+                               '0.97': 6,
+                               '0.99': 7}
 
     def _get_hm_maps(self):
         if self.hm1_map is None:

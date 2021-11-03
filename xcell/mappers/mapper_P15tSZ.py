@@ -13,6 +13,12 @@ class MapperP15tSZ(MapperPlanckBase):
         """
         self._get_Planck_defaults(config)
         self.beam_info = config.get('beam_fwhm_arcmin', 10.)
+        self.gal_mask_mode = config.get('gal_mask_mode', '1')
+        #What are the % of these modes
+        self.gal_mask_modes = {'0': 0,
+                               '1': 1,
+                               '2': 2,
+                               '3': 3}
 
     def _get_hm_maps(self):
         if self.hm1_map is None:
@@ -27,7 +33,10 @@ class MapperP15tSZ(MapperPlanckBase):
 
     def get_mask(self):
         if self.mask is None:
-            mask = hp.read_map(self.file_mask)
+            field = self.gal_mask_modes[self.gal_mask_mode]
+            gal_mask = hp.read_map(self.file_mask, field)
+            sp_mask = hp.read_map(self.file_mask, 4)
+            mask = gal_mask*sp_mask
             mask = hp.ud_grade(mask,
                                nside_out=self.nside)
             self.mask = mask
