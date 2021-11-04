@@ -22,6 +22,13 @@ class MapperP15CIB(MapperPlanckBase):
                                '0.9': 5,
                                '0.97': 6,
                                '0.99': 7}
+        self.sp_mask_mode = config.get('sp_mask_mode', '545')
+        self.sp_mask_modes = {'100': 0,
+                              '143': 1,
+                              '217': 2,
+                              '353': 3,
+                              '545': 4,
+                              '857': 5}
 
     def _get_hm_maps(self):
         if self.hm1_map is None:
@@ -39,15 +46,14 @@ class MapperP15CIB(MapperPlanckBase):
             self.mask = np.ones(12*self.nside**2)
             if self.file_gp_mask is not None:
                 field = self.gal_mask_modes[self.gal_mask_mode]
-                mask = hp.read_map(self.file_gp_mask, field)
-                mask = hp.ud_grade(mask,
+                gal_mask = hp.read_map(self.file_gp_mask, field)
+                gal_mask = hp.ud_grade(gal_mask,
                                    nside_out=self.nside)
-                self.mask *= mask
+                self.mask *= gal_mask
             if self.file_sp_mask is not None:
-                mask = hp.read_map(self.file_sp_mask)
-                mask = hp.ud_grade(mask,
-                                   nside_out=self.nside)
-                self.mask *= mask
+                field = self.sp_mask_modes[self.sp_mask_mode]
+                sp_mask = hp.read_map(self.file_sp_mask, field)
+                self.mask *= sp_mask
         return self.mask
 
     def get_dtype(self):

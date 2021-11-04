@@ -12,15 +12,14 @@ class MapperP15tSZ(MapperPlanckBase):
          'nside':512}
         """
         self._get_Planck_defaults(config)
-        self.file_hm1 = config.get('hm1_file', self.file_map)
-        self.file_hm2 = config.get('hm2_file', self.file_map)
+        self.file_hm1 = config.get('file_hm1', self.file_map)
+        self.file_hm2 = config.get('file_hm2', self.file_map)
         self.beam_info = config.get('beam_fwhm_arcmin', 10.)
-        self.gal_mask_mode = config.get('gal_mask_mode', '1')
-        #What are the % of these modes
-        self.gal_mask_modes = {'0': 0,
-                               '1': 1,
-                               '2': 2,
-                               '3': 3}
+        self.gal_mask_mode = config.get('gal_mask_mode', '0.5')
+        self.gal_mask_modes = {'0.4': 0,
+                               '0.5': 1,
+                               '0.6': 2,
+                               '0.7': 3}
 
     def _get_hm_maps(self):
         if self.hm1_map is None:
