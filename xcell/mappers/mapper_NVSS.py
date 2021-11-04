@@ -28,7 +28,7 @@ class MapperNVSS(MapperBase):
         self.dndz = None
         self.cat_redshift = None
 
-    # Redshift Distribution Catalog
+    # NVSS catalog
     def get_catalog(self):
         if self.cat_data is None:
             file_data = self.config['data_catalog']
@@ -85,6 +85,7 @@ class MapperNVSS(MapperBase):
     # Mask
     def get_mask(self):
         if self.mask is None:
+
             if self.config.get('mask_file', None) is not None:
                 self.mask = hp.ud_grade(hp.read_map(self.config['mask_file']),
                                         nside_out=self.nside)
@@ -96,20 +97,21 @@ class MapperNVSS(MapperBase):
                 lpix, bpix = r(RApix, DEpix, lonlat=True)
                 # angular conditions
                 self.mask[(DEpix < self.config.get('DEC_min_deg', -40)) |
-                          (np.fabs(bpix) < self.config.get('GLAT_max_deg', 5))] = 0
+                          (np.fabs(bpix) < self.config.get('GLAT_max_deg',
+                                                           5))] = 0
                 if self.file_sourcemask is not None:
                     # holes catalog
-                    RAmask, DEmask, radiusmask = np.loadtxt(self.file_sourcemask,
-                                                            unpack=True)
+                    RAmask, DEmask, radmask = np.loadtxt(self.file_sourcemask,
+                                                         unpack=True)
                     vecmask = hp.ang2vec(RAmask, DEmask, lonlat=True)
-                    for vec, radius in zip(vecmask, radiusmask):
+                    for vec, radius in zip(vecmask, radmask):
                         ipix_hole = hp.query_disc(self.nside, vec,
                                                   np.radians(radius),
                                                   inclusive=True)
                         self.mask[ipix_hole] = 0
         return self.mask
 
-    # look at this function later
+    # Shot noise
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             self.cat_data = self.get_catalog()
@@ -126,10 +128,9 @@ class MapperNVSS(MapperBase):
     # Redshift Distribution
     def get_nz(self, dz=0):
         if self.dndz is None:
-            cat_redshift = self.get_catalog_redshift()
-            bins = np.arange(min(cat_redshift['redshift']),
-                             max(cat_redshift['redshift'])+0.1, 0.1)
-            nz, bins = np.histogram(cat_redshift['redshift'], bins)
+            self.cat_redshift = self.get_catalog_redshift()
+            bins = np.arange(0, max(self.cat_redshift['redshift'])+0.1, 0.1)
+            nz, bins = np.histogram(self.cat_redshift['redshift'], bins)
             zz = 0.5*(bins[1:]+bins[:-1])
             self.dndz = (zz, nz)
 
