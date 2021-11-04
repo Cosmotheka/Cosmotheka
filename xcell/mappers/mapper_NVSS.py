@@ -85,24 +85,28 @@ class MapperNVSS(MapperBase):
     # Mask
     def get_mask(self):
         if self.mask is None:
-            self.mask = np.ones(self.npix)
-            r = hp.Rotator(coord=['C', 'G'])
-            RApix, DEpix = hp.pix2ang(self.nside, np.arange(self.npix),
-                                      lonlat=True)
-            lpix, bpix = r(RApix, DEpix, lonlat=True)
-            # angular conditions
-            self.mask[(DEpix < self.config.get('DEC_min_deg', -40)) |
-                      (np.fabs(bpix) < self.config.get('GLAT_max_deg', 5))] = 0
-            if self.file_sourcemask is not None:
-                # holes catalog
-                RAmask, DEmask, radiusmask = np.loadtxt(self.file_sourcemask,
-                                                        unpack=True)
-                vecmask = hp.ang2vec(RAmask, DEmask, lonlat=True)
-                for vec, radius in zip(vecmask, radiusmask):
-                    ipix_hole = hp.query_disc(self.nside, vec,
-                                              np.radians(radius),
-                                              inclusive=True)
-                    self.mask[ipix_hole] = 0
+            if self.config.get('mask_file', None) is not None:
+                self.mask = hp.ud_grade(hp.read_map(self.config['mask_file']),
+                                        nside_out=self.nside)
+            else:
+                self.mask = np.ones(self.npix)
+                r = hp.Rotator(coord=['C', 'G'])
+                RApix, DEpix = hp.pix2ang(self.nside, np.arange(self.npix),
+                                          lonlat=True)
+                lpix, bpix = r(RApix, DEpix, lonlat=True)
+                # angular conditions
+                self.mask[(DEpix < self.config.get('DEC_min_deg', -40)) |
+                          (np.fabs(bpix) < self.config.get('GLAT_max_deg', 5))] = 0
+                if self.file_sourcemask is not None:
+                    # holes catalog
+                    RAmask, DEmask, radiusmask = np.loadtxt(self.file_sourcemask,
+                                                            unpack=True)
+                    vecmask = hp.ang2vec(RAmask, DEmask, lonlat=True)
+                    for vec, radius in zip(vecmask, radiusmask):
+                        ipix_hole = hp.query_disc(self.nside, vec,
+                                                  np.radians(radius),
+                                                  inclusive=True)
+                        self.mask[ipix_hole] = 0
         return self.mask
 
     # look at this function later
