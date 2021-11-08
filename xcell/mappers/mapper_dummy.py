@@ -133,11 +133,10 @@ class MapperDummy(MapperBase):
             np.random.seed(self.seed)
             cl = self.get_cl()
             if self.spin == 0:
-                self.signal_map = [hp.synfast(cl, self.nside, verbose=False)]
+                self.signal_map = [hp.synfast(cl, self.nside)]
             elif self.spin == 2:
                 _, mq, mu = hp.synfast([0*cl, cl, 0*cl, 0*cl],
-                                       self.nside, new=True,
-                                       verbose=False)
+                                       self.nside, new=True)
                 self.signal_map = [mq, mu]
         return self.signal_map
 
