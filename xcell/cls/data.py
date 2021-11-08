@@ -249,6 +249,12 @@ class Data():
 
     def get_mapper(self, tr):
         config = self.data['tracers'][tr]
+        nside = self.data['sphere']['nside']
+        if 'nside' not in config:
+            config['nside'] = nside
+        elif config['nside'] != nside:
+            raise ValueError(f"Nside missmatch in tracer {tr} and " +
+                             f"'sphere': {config['nside']} vs {nside}")
         mapper_class = config['mapper_class']
         return mapper_from_name(mapper_class)(config)
 
