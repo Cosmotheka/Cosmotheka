@@ -433,6 +433,28 @@ def test_symmetric():
     shutil.rmtree(tmpdir1)
 
 
+def test_ignore_existing_yml():
+    # Test for Cls
+    cl_class = get_cl_class()
+    data = cl_class.data.data
+    # Now, data['cls']['Dummy-Dummy']['compute'] = 'all'. We change it to
+    # 'auto' and check that is read when ignore_existing_yml=True
+    data['cls']['Dummy-Dummy']['compute'] = 'auto'
+    cl_class01 = Cl(data, 'Dummy__0', 'Dummy__1', ignore_existing_yml=True)
+    assert cl_class01.data.data['cls']['Dummy-Dummy']['compute'] == 'auto'
+    cl_class01 = Cl(data, 'Dummy__0', 'Dummy__1', ignore_existing_yml=False)
+    assert cl_class01.data.data['cls']['Dummy-Dummy']['compute'] == 'all'
+
+    # Test for Cov
+    cov_class = Cov(data, 'Dummy__0', 'Dummy__1', 'Dummy__0', 'Dummy__1',
+                    ignore_existing_yml=True)
+    assert cov_class.data.data['cls']['Dummy-Dummy']['compute'] == 'auto'
+    cov_class = Cov(data, 'Dummy__0', 'Dummy__1', 'Dummy__0', 'Dummy__1',
+                    ignore_existing_yml=False)
+    assert cov_class.data.data['cls']['Dummy-Dummy']['compute'] == 'all'
+    shutil.rmtree(tmpdir1)
+
+
 def test_unsupported_quantity():
     data = get_config(dtype0='generic')
     with pytest.raises(NotImplementedError):

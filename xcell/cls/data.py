@@ -8,7 +8,8 @@ import shutil
 
 
 class Data():
-    def __init__(self, data_path='', data={}, override=False):
+    def __init__(self, data_path='', data={}, override=False,
+                 ignore_existing_yml=False):
         if (data_path) and (data):
             raise ValueError('Only one of data_path or data must be given. \
                              Both set.')
@@ -23,7 +24,7 @@ class Data():
                              None set.')
 
         os.makedirs(self.data['output'], exist_ok=True)
-        self._check_yml_in_outdir(override)
+        self._check_yml_in_outdir(override, ignore_existing_yml)
         self.tr_matrix = None
         self.cl_tracers = {'wsp': None, 'no_wsp': None}
         self.cov_tracers = {'wsp': None, 'no_wsp': None}
@@ -31,23 +32,40 @@ class Data():
     def get_bias(self, name):
         return self.data['tracers'][name].get('bias', 1.)
 
-    def _check_yml_in_outdir(self, override=False):
+    def _check_yml_in_outdir(self, override=False, ignore_existing_yml=False):
         outdir = self.data['output']
         fname = os.path.join(outdir, '*.yml')
         files = glob(fname)
-        if (len(files) == 1) and (not override):
+        # Start if-else with sanity checks
+        if override and ignore_existing_yml:
+            raise ValueError('Only one of override or ignore_existing_yml can '
+                             + 'be set.')
+        elif len(files) > 1:
+            raise ValueError(f'More than 1 YML file in outdir: {outdir}.')
+        elif override:
+            if len(files):
+                warn('Overriding configuration')
+            if self.data_path:
+                shutil.copy(self.data_path, outdir)
+            else:
+                self._dump_data()
+        elif ignore_existing_yml:
+            pass
+        elif len(files) == 1:
             warn(f'A YML file was found in outdir: {outdir}. Using it \
                  instead of input config.')
             self.data_path = files[0]
             self.data = self.read_data(files[0])
-        elif len(files) > 1:
-            raise ValueError(f'More than 1 YML file in outdir: {outdir}.')
-        elif ((len(files) == 0) or override) and self.data_path:
+        elif (len(files) == 0) and self.data_path:
             shutil.copy(self.data_path, outdir)
         else:
-            fname = os.path.join(outdir, 'data.yml')
-            with open(fname, 'w') as f:
-                yaml.dump(self.data, f)
+            self._dump_data()
+
+    def _dump_data(self):
+        outdir = self.data['output']
+        fname = os.path.join(outdir, 'data.yml')
+        with open(fname, 'w') as f:
+            yaml.dump(self.data, f)
 
     def read_data(self, data_path):
         with open(data_path) as f:

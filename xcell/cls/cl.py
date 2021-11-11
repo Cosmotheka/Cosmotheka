@@ -8,8 +8,8 @@ import warnings
 
 
 class ClBase():
-    def __init__(self, data, tr1, tr2):
-        self.data = Data(data=data)
+    def __init__(self, data, tr1, tr2, ignore_existing_yml=False):
+        self.data = Data(data=data, ignore_existing_yml=ignore_existing_yml)
         self.tr1 = tr1
         self.tr2 = tr2
         self._read_symmetric = self.data.read_symmetric(tr1, tr2)
@@ -68,8 +68,8 @@ class ClBase():
 
 
 class Cl(ClBase):
-    def __init__(self, data, tr1, tr2):
-        super().__init__(data, tr1, tr2)
+    def __init__(self, data, tr1, tr2, ignore_existing_yml=False):
+        super().__init__(data, tr1, tr2, ignore_existing_yml)
         self.outdir = self.get_outdir()
         os.makedirs(self.outdir, exist_ok=True)
         self.nside = self.data.data['sphere']['nside']
@@ -305,8 +305,8 @@ class Cl(ClBase):
 
 
 class ClFid(ClBase):
-    def __init__(self, data, tr1, tr2):
-        super().__init__(data, tr1, tr2)
+    def __init__(self, data, tr1, tr2, ignore_existing_yml=False):
+        super().__init__(data, tr1, tr2, ignore_existing_yml)
         self.supported_dtypes = ['galaxy_density',
                                  'galaxy_shear',
                                  'cmb_tSZ',

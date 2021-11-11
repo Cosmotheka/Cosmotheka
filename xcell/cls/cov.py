@@ -8,8 +8,9 @@ import pymaster as nmt
 
 
 class Cov():
-    def __init__(self, data, trA1, trA2, trB1, trB2):
-        self.data = Data(data=data)
+    def __init__(self, data, trA1, trA2, trB1, trB2,
+                 ignore_existing_yml=False):
+        self.data = Data(data=data, ignore_existing_yml=ignore_existing_yml)
         self.tmat = self.data.get_tracer_matrix()
         self.outdir = self.get_outdir()
         os.makedirs(self.outdir, exist_ok=True)
@@ -58,7 +59,7 @@ class Cov():
         cl_dic = {}
         for trs in trs_comb:
             if trs not in cl_dic.keys():
-                cl_dic[trs] = Cl(data, *trs)
+                cl_dic[trs] = Cl(data, *trs, ignore_existing_yml=True)
 
         # Load fiducial Cls
         clfid_dic = {}
@@ -70,7 +71,7 @@ class Cov():
                 else:
                     # Try to compute the fiducial Cl
                     try:
-                        cl = ClFid(data, *trs)
+                        cl = ClFid(data, *trs, ignore_existing_yml=True)
                     except NotImplementedError as e:
                         if self.data.data['cov'].get('data_fallback', False):
                             # If that fails (e.g. unknown data type)
