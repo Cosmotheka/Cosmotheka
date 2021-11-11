@@ -1,7 +1,7 @@
 # xCell
 [![Coverage Status](https://coveralls.io/repos/github/xC-ell/xCell/badge.svg?branch=master)](https://coveralls.io/github/xC-ell/xCell?branch=master)
 
-Pipeline to compute the Nx2pt angular power spectra and their covariances.
+Pipeline to compute Nx2pt angular power spectra and their covariances.
 
 # Usage
 In order to run the code use `python3 run_cls.py input/kv450_1024.yml cls`.

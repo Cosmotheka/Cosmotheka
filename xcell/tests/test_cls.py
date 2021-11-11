@@ -51,7 +51,7 @@ def get_config(fsky=0.2, fsky2=0.3,
             'cov': {'fiducial': {'cosmo': cosmo,
                                  'wl_m': False, 'wl_ia': False}},
             'bpw_edges': bpw_edges,
-            'healpy': {'n_iter_sht': 0,
+            'sphere': {'n_iter_sht': 0,
                        'n_iter_mcm': 3,
                        'n_iter_cmcm': 3,
                        'nside': nside},
@@ -365,9 +365,9 @@ def test_cls_vs_namaster():
     spin = m.get_spin()
     mask = m.get_mask()
     signal_map = m.get_signal_map()
-    n_iter_sht = config['healpy']['n_iter_sht']
-    n_iter_mcm = config['healpy']['n_iter_mcm']
-    n_iter_cmcm = config['healpy']['n_iter_cmcm']
+    n_iter_sht = config['sphere']['n_iter_sht']
+    n_iter_mcm = config['sphere']['n_iter_mcm']
+    n_iter_cmcm = config['sphere']['n_iter_cmcm']
     # Compute Cl from map
     f = nmt.NmtField(mask, signal_map, spin=spin, n_iter=n_iter_sht)
     wsp = nmt.NmtWorkspace()

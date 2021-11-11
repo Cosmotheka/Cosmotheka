@@ -162,7 +162,7 @@ class ClSack():
             raise ValueError(f'Tracer type {quantity} not implemented')
 
     def add_ell_cl(self, tr1, tr2):
-        ells_nobin = np.arange(3 * self.data.data['healpy']['nside'])
+        ells_nobin = np.arange(3 * self.data.data['sphere']['nside'])
         cl = Cl(self.data.data, tr1, tr2, ignore_existing_yml=True)
         ells_eff = cl.b.get_effective_ells()
 

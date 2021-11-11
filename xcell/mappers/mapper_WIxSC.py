@@ -180,16 +180,14 @@ class MapperWIxSC(MapperBase):
 
     def get_mask(self):
         if self.mask is None:
-            self.mask = hp.ud_grade(hp.read_map(self.config['mask'],
-                                                verbose=False),
+            self.mask = hp.ud_grade(hp.read_map(self.config['mask']),
                                     nside_out=self.nside)
         return self.mask
 
     def _get_stars(self):
         if self.stars is None:
             # Power = -2 makes sure the total number of stars is conserved
-            self.stars = hp.ud_grade(hp.read_map(self.config['star_map'],
-                                                 verbose=False),
+            self.stars = hp.ud_grade(hp.read_map(self.config['star_map']),
                                      nside_out=self.nside, power=-2)
             # Convert to stars per deg^2
             pix_srad = 4*np.pi/self.npix
