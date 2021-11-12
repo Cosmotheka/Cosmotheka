@@ -36,7 +36,12 @@ class MapperP18SMICA(MapperPlanckBase):
 
     def get_mask(self):
         if self.mask is None:
-            self.mask = np.ones(12*self.nside**2)
+            if self.file_mask is not None:
+                self.mask = hp.read_map(self.file_mask)
+                self.mask = hp.ud_grade(self.mask,
+                                        nside_out=self.nside)
+            else:
+                self.mask = np.ones(12*self.nside**2)
             if self.file_gp_mask is not None:
                 field = self.gal_mask_modes[self.gal_mask_mode]
                 mask = hp.read_map(self.file_gp_mask, field)

@@ -34,13 +34,23 @@ class MapperP15tSZ(MapperPlanckBase):
 
     def get_mask(self):
         if self.mask is None:
-            field = self.gal_mask_modes[self.gal_mask_mode]
-            gal_mask = hp.read_map(self.file_mask, field)
-            sp_mask = hp.read_map(self.file_mask, 4)
-            mask = gal_mask*sp_mask
-            mask = hp.ud_grade(mask,
-                               nside_out=self.nside)
-            self.mask = mask
+            if self.file_mask is not None:
+                self.mask = hp.read_map(self.file_mask)
+                self.mask = hp.ud_grade(self.mask,
+                                        nside_out=self.nside)
+            else:
+                self.mask = np.ones(12*self.nside**2)
+            if self.file_gp_mask is not None:
+                field = self.gal_mask_modes[self.gal_mask_mode]
+                gal_mask = hp.read_map(self.file_mask, field)
+                gal_mask = hp.ud_grade(gal_mask,
+                                       nside_out=self.nside)
+                self.mask *= gal_mask
+            if self.file_sp_mask is not None:
+                sp_mask = hp.read_map(self.file_mask, 4)
+                sp_mask = hp.ud_grade(sp_mask,
+                                      nside_out=self.nside)
+                self.mask *= sp_mask
         return self.mask
 
     def get_dtype(self):
