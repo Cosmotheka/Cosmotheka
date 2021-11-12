@@ -8,6 +8,19 @@ import healpy as hp
 
 class MapperHSCDR1wl(MapperBase):
     def __init__(self, config):
+        """ Inputs:
+        {'path_lite': path to liteweight files
+         'depth_cut': i-band magnitude cut
+         'z_edges': photo-z bin edges
+         'bin_name': name for this redshift bin
+         'data_catalogs': list of lists of files (one list for each HSC field)
+         'shear_mod_thr': shear modulus threshold (2)
+         'fname_cosmos': name of the matched COSMOS catalog
+         'fname_cosmos_ph': list of names of the photo-z COSMOS files
+         'nbin_nz': number of intervals for redshift distribution (100)
+         'zlim_nz': redshift range of redshift distribution (0-4)
+        }
+        """
         self._get_defaults(config)
         self.path_lite = config.get('path_lite', None)
         self.icut = config.get('depth_cut', 24.5)
@@ -120,6 +133,7 @@ class MapperHSCDR1wl(MapperBase):
                        c['a_i'] > self.icut] = 0
             # Blending
             sel_blended = np.ones(len(c), dtype=bool)
+            # Shear sample cuts as defined in https://arxiv.org/abs/1705.06745
             # abs_flux<10^-0.375
             sel_blended[c['iblendedness_abs_flux'] >= 0.42169650342] = 0
             # S/N in i
@@ -254,6 +268,7 @@ class MapperHSCDR1wl(MapperBase):
                 msk = np.where((cat_photo['PHOTOZ_BEST'] <= zf) &
                                (cat_photo['PHOTOZ_BEST'] > z0))[0]
                 cosmos_masked = cat_cosmos[msk]
+                # We need to reweight cosmos by color space and shape weight
                 w = cosmos_masked['SOM_weight']*cosmos_masked['weight_source']
                 hz, bz = np.histogram(cosmos_masked['COSMOS_photoz'],
                                       bins=self.config.get('nbin_nz', 100),

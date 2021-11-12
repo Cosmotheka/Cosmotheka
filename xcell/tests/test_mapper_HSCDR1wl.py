@@ -134,7 +134,7 @@ def test_lite():
         fname_full = os.path.join(plite, "HSCDR1wl_" + fname)
         assert os.path.isfile(fname_full)
 
-    # Check we recover the same mas and catalog
+    # Check we recover the same mask and catalog
     # Non-exsisting fits files - read from lite
     c['data_catalogs'] = [['whatever']]
     m_lite = xc.mappers.MapperHSCDR1wl(c)
