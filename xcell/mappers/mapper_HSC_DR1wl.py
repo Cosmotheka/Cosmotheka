@@ -10,7 +10,7 @@ class MapperHSCDR1wl(MapperBase):
     def __init__(self, config):
         """ Inputs:
         {'path_lite': path to liteweight files
-         'depth_cut': i-band magnitude cut
+         'depth_cut': i-band magnitude cut (24.5)
          'z_edges': photo-z bin edges
          'bin_name': name for this redshift bin
          'data_catalogs': list of lists of files (one list for each HSC field)
@@ -24,7 +24,7 @@ class MapperHSCDR1wl(MapperBase):
         self._get_defaults(config)
         self.path_lite = config.get('path_lite', None)
         self.icut = config.get('depth_cut', 24.5)
-        self.z_edges = config.get('z_edges', [0, 0.5])
+        self.z_edges = config['z_edges']
         self.bn = self.config['bin_name']
         self.w_name = 'ishape_hsm_regauss_derived_shape_weight'
         self.npix = hp.nside2npix(self.nside)
