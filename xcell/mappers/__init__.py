@@ -1,9 +1,5 @@
 # flake8: noqa
 from .mapper_base import MapperBase
-from .mapper_ACTDR4_base import MapperACTDR4Base
-from .mapper_ACTDR4_lensing import MapperACTDR4Lensing
-from .mapper_ACTDR4_CMB import MapperACTDR4CMB
-from .mapper_ACTDR4_tSZ import MapperACTDR4tSZ
 from .mapper_SDSS import MapperSDSS
 from .mapper_Planck_base import MapperPlanckBase
 from .mapper_DESY1gc import MapperDESY1gc

@@ -33,7 +33,7 @@ class MapperPlanckBase(MapperBase):
             signal_map = hp.read_map(self.file_map)
             self.signal_map = [hp.ud_grade(signal_map,
                                            nside_out=self.nside)]
-            self.signal_map[0][self.signal_map[0]==hp.UNSEEN] = 0.0
+            self.signal_map[0][self.signal_map[0] == hp.UNSEEN] = 0.0
             self.signal_map[0][np.isnan(self.signal_map[0])] = 0.0
         return self.signal_map
 
@@ -92,7 +92,7 @@ class MapperPlanckBase(MapperBase):
             else:
                 ell = np.arange(3*self.nside)
                 self.beam = self._beam_gaussian(ell, self.beam_info)
-                self.beam /= self.beam[0] #Apparently you have to normalize it
+                self.beam /= self.beam[0]  # normalize it
         return self.beam
 
     def get_spin(self):
