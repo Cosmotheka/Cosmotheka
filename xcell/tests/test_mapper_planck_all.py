@@ -33,6 +33,8 @@ def get_config(mode, wbeam=True):
              'nside': 32}
     elif mode == 'base':
         c = {'file_map': 'xcell/tests/data/map.fits',
+             'file_hm1': 'xcell/tests/data/hm1_map.fits',
+             'file_hm2': 'xcell/tests/data/hm2_map.fits',
              'nside': 32}
     else:
         print('Mode not recognized')
@@ -83,13 +85,14 @@ def test_get_beam():
                                       (xc.mappers.MapperP15CIB, 'CIB')])
 def test_get_cl_coupled(cls, mode):
     conf = get_config(mode)
+    conf_ref = get_config('base')
     conf['file_map'] = 'xcell/tests/data/map_auto_test.fits'
     m = cls(conf)
     mask = m.get_mask()
     cl_cross = m.get_cl_coupled()[0]
     nl_diff = m.get_nl_coupled()[0]
-    m1 = hp.read_map(conf['file_hm1'], verbose=False)
-    m2 = hp.read_map(conf['file_hm2'], verbose=False)
+    m1 = hp.read_map(conf_ref['file_hm1'], verbose=False)
+    m2 = hp.read_map(conf_ref['file_hm2'], verbose=False)
     cl_cross_bm = hp.anafast(m1*mask, m2*mask, iter=0)
     nl_diff_bm = hp.anafast(0.5*(m1-m2)*mask, iter=0)
     # Typical C_ell value for comparison (~1E-3 in this case)
@@ -106,12 +109,13 @@ def test_get_cl_coupled(cls, mode):
                                       (xc.mappers.MapperP15CIB, 'CIB')])
 def test_get_cls_covar_coupled(cls, mode):
     conf = get_config(mode)
+    conf_ref = get_config('base')
     conf['file_map'] = 'xcell/tests/data/map_auto_test.fits'
     m = cls(conf)
     mask = m.get_mask()
     cls_cov = m.get_cls_covar_coupled()
-    m1 = hp.read_map(conf['file_hm1'], verbose=False)
-    m2 = hp.read_map(conf['file_hm2'], verbose=False)
+    m1 = hp.read_map(conf_ref['file_hm1'], verbose=False)
+    m2 = hp.read_map(conf_ref['file_hm2'], verbose=False)
     mc = hp.read_map(conf['file_map'], verbose=False)
     cls_bm = {'cross': hp.anafast(mc*mask, mc*mask, iter=0),
               'auto_11': hp.anafast(m1*mask, m1*mask, iter=0),
@@ -131,8 +135,9 @@ def test_get_cls_covar_coupled(cls, mode):
 def test_get_hm_maps(cls, mode):
     conf = get_config(mode)
     m = cls(conf)
-    m1b = hp.read_map(conf['file_hm1'], verbose=False)
-    m2b = hp.read_map(conf['file_hm2'], verbose=False)
+    conf_ref = get_config('base')
+    m1b = hp.read_map(conf_ref['file_hm1'], verbose=False)
+    m2b = hp.read_map(conf_ref['file_hm2'], verbose=False)
     m1, m2 = m._get_hm_maps()
     assert np.all(m1 == m1b)
     assert np.all(m2 == m2b)
