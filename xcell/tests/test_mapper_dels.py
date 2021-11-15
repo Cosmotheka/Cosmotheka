@@ -8,7 +8,7 @@ def get_config():
                               'xcell/tests/data/catalog.fits'],
             'completeness_map': 'xcell/tests/data/map.fits',
             'binary_mask': 'xcell/tests/data/map.fits',
-            'z_arr_dim': 500,
+            'num_z_bins': 500,
             'star_map': 'xcell/tests/data/map.fits',
             'zbin': 0, 'nside': 32, 'mask_name': 'mask'}
 
@@ -27,7 +27,7 @@ def test_get_nz():
     m = get_mapper()
     z, nz = m.get_nz()
     h, b = np.histogram(m.cat_data[m.pz][m.mskflag],
-                        range=[-0.3, 1], bins=m.z_arr_dim)
+                        range=[-0.3, 1], bins=m.num_z_bins)
     z_arr = 0.5 * (b[:-1] + b[1:])
     sel = z_arr > 0
     assert len(z) == len(z_arr[sel])

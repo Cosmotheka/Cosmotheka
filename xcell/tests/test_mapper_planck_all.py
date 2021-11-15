@@ -65,8 +65,8 @@ def test_get_cl_coupled(cls):
     mask = m.get_mask()
     cl_cross = m.get_cl_coupled()[0]
     nl_diff = m.get_nl_coupled()[0]
-    m1 = hp.read_map(conf['file_hm1'], verbose=False)
-    m2 = hp.read_map(conf['file_hm2'], verbose=False)
+    m1 = hp.read_map(conf['file_hm1'])
+    m2 = hp.read_map(conf['file_hm2'])
     cl_cross_bm = hp.anafast(m1*mask, m2*mask, iter=0)
     nl_diff_bm = hp.anafast(0.5*(m1-m2)*mask, iter=0)
     # Typical C_ell value for comparison (~1E-3 in this case)
@@ -87,9 +87,9 @@ def test_get_cls_covar_coupled(cls):
     m = cls(conf)
     mask = m.get_mask()
     cls_cov = m.get_cls_covar_coupled()
-    m1 = hp.read_map(conf['file_hm1'], verbose=False)
-    m2 = hp.read_map(conf['file_hm2'], verbose=False)
-    mc = hp.read_map(conf['file_map'], verbose=False)
+    m1 = hp.read_map(conf['file_hm1'])
+    m2 = hp.read_map(conf['file_hm2'])
+    mc = hp.read_map(conf['file_map'])
     cls_bm = {'cross': hp.anafast(mc*mask, mc*mask, iter=0),
               'auto_11': hp.anafast(m1*mask, m1*mask, iter=0),
               'auto_12': hp.anafast(m1*mask, m2*mask, iter=0),
@@ -108,8 +108,8 @@ def test_get_cls_covar_coupled(cls):
 def test_get_hm_maps(cls):
     conf = get_config()
     m = cls(conf)
-    m1b = hp.read_map(conf['file_hm1'], verbose=False)
-    m2b = hp.read_map(conf['file_hm2'], verbose=False)
+    m1b = hp.read_map(conf['file_hm1'])
+    m2b = hp.read_map(conf['file_hm2'])
     m1, m2 = m._get_hm_maps()
     assert np.all(m1 == m1b)
     assert np.all(m2 == m2b)

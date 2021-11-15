@@ -8,8 +8,8 @@ import warnings
 
 
 class ClBase():
-    def __init__(self, data, tr1, tr2):
-        self.data = Data(data=data)
+    def __init__(self, data, tr1, tr2, ignore_existing_yml=False):
+        self.data = Data(data=data, ignore_existing_yml=ignore_existing_yml)
         self.tr1 = tr1
         self.tr2 = tr2
         self._read_symmetric = self.data.read_symmetric(tr1, tr2)
@@ -68,11 +68,11 @@ class ClBase():
 
 
 class Cl(ClBase):
-    def __init__(self, data, tr1, tr2):
-        super().__init__(data, tr1, tr2)
+    def __init__(self, data, tr1, tr2, ignore_existing_yml=False):
+        super().__init__(data, tr1, tr2, ignore_existing_yml)
         self.outdir = self.get_outdir()
         os.makedirs(self.outdir, exist_ok=True)
-        self.nside = self.data.data['healpy']['nside']
+        self.nside = self.data.data['sphere']['nside']
         self.b = self.get_NmtBin()
         self.recompute_cls = self.data.data['recompute']['cls']
         self.recompute_mcm = self.data.data['recompute']['mcm']
@@ -140,7 +140,7 @@ class Cl(ClBase):
             fname = os.path.join(self.outdir, f'w__{mask1}__{mask2}.fits')
         w = nmt.NmtWorkspace()
         if self.recompute_mcm or (not os.path.isfile(fname)):
-            n_iter = self.data.data['healpy']['n_iter_mcm']
+            n_iter = self.data.data['sphere']['n_iter_mcm']
             l_toeplitz, l_exact, dl_band = self.data.check_toeplitz('cls')
             if spin0:
                 m1, m2 = self.get_mappers()
@@ -324,8 +324,8 @@ class Cl(ClBase):
 
 
 class ClFid(ClBase):
-    def __init__(self, data, tr1, tr2):
-        super().__init__(data, tr1, tr2)
+    def __init__(self, data, tr1, tr2, ignore_existing_yml=False):
+        super().__init__(data, tr1, tr2, ignore_existing_yml)
         self.supported_dtypes = ['galaxy_density',
                                  'galaxy_shear',
                                  'cmb_tSZ',
@@ -357,7 +357,7 @@ class ClFid(ClBase):
         return self._ccl_tr1, self._ccl_tr2
 
     def get_cl_file(self):
-        nside = self.data.data['healpy']['nside']
+        nside = self.data.data['sphere']['nside']
         if self._read_symmetric:
             fname = os.path.join(self.outdir, f'cl_{self.tr2}_{self.tr1}.npz')
         else:
