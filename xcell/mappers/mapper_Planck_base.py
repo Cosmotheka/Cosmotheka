@@ -54,7 +54,7 @@ class MapperPlanckBase(MapperBase):
                 print(field)
                 gp_mask = hp.read_map(self.file_gp_mask, field)
                 gp_mask = hp.ud_grade(gp_mask,
-                                       nside_out=self.nside)
+                                      nside_out=self.nside)
                 self.mask *= gp_mask
             if self.file_ps_mask is not None:
                 for mode in self.ps_mask_mode:
@@ -64,6 +64,7 @@ class MapperPlanckBase(MapperBase):
                                           nside_out=self.nside)
                     self.mask *= ps_mask
         return self.mask
+
     def _get_hm_maps(self):
         return NotImplementedError("Do not use base class")
 
