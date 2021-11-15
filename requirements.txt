@@ -1,5 +1,4 @@
-numpy
-scipy
+cipy
 scikit-learn
 flake8
 astropy
@@ -10,3 +9,4 @@ pyccl
 camb
 sacc
 fitsio
+pixell
