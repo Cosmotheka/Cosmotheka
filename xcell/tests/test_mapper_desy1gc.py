@@ -4,7 +4,7 @@ import healpy as hp
 
 
 def get_config():
-    return {'data_catalogs': 'xcell/tests/data/catalog.fits',
+    return {'data_catalog': 'xcell/tests/data/catalog.fits',
             'file_mask': 'xcell/tests/data/map.fits',
             'file_nz': 'xcell/tests/data/2pt_NG_mcal_1110.fits',
             'zbin': 2, 'nside': 32, 'mask_name': 'mask'}

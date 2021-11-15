@@ -59,7 +59,7 @@ def launch_cls(data, queue, njobs, nc, mem, wsp=False, fiducial=False, onlogin=F
     if fiducial:
         outdir = os.path.join(outdir, 'fiducial')
 
-    if os.uname[1] == 'glamdring':
+    if os.uname()[1] == 'glamdring':
         qjobs = get_queued_jobs()
     else:
         qjobs = ''
@@ -101,7 +101,7 @@ def launch_cov(data, queue, njobs, nc, mem, wsp=False, onlogin=False, skip=[]):
     cov_tracers = data.get_cov_trs_names(wsp)
     outdir = data.data['output']
 
-    if os.uname[1] == 'glamdring':
+    if os.uname()[1] == 'glamdring':
         qjobs = get_queued_jobs()
     else:
         qjobs = ''

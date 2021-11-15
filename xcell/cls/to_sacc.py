@@ -103,7 +103,8 @@ class ClSack():
                 dtypes2 = self.get_datatypes_from_dof(dof2)
                 print(trs1, trs2)
 
-                cov_class = Cov(self.data.data, *trs1, *trs2)
+                cov_class = Cov(self.data.data, *trs1, *trs2,
+                                ignore_existing_yml=True)
                 if m_marg:
                     cov = cov_class.get_covariance_m_marg()
                 else:
@@ -161,14 +162,14 @@ class ClSack():
             raise ValueError(f'Tracer type {quantity} not implemented')
 
     def add_ell_cl(self, tr1, tr2):
-        ells_nobin = np.arange(3 * self.data.data['healpy']['nside'])
-        cl = Cl(self.data.data, tr1, tr2)
+        ells_nobin = np.arange(3 * self.data.data['sphere']['nside'])
+        cl = Cl(self.data.data, tr1, tr2, ignore_existing_yml=True)
         ells_eff = cl.b.get_effective_ells()
 
         if self.use_fiducial:
             # bpw = np.array(self.data.data['bpw_edges'])
             # ells_eff = bpw[:-1] + np.diff(bpw)/2.
-            cl = ClFid(self.data.data, tr1, tr2)
+            cl = ClFid(self.data.data, tr1, tr2, ignore_existing_yml=True)
             ws_bpw = np.zeros((ells_eff.size, ells_nobin.size))
             ws_bpw[np.arange(ells_eff.size), ells_eff.astype(int)] = 1
 
@@ -192,7 +193,8 @@ class ClSack():
             self.s.add_ell_cl(cl_type, tr1, tr2, ells_eff, cli, window=wins)
 
     def get_dof_tracers(self, tracers):
-        cl = Cl(self.data.data, tracers[0], tracers[1])
+        cl = Cl(self.data.data, tracers[0], tracers[1],
+                ignore_existing_yml=True)
         return cl.get_n_cls()
 
     def get_datatypes_from_dof(self, dof):

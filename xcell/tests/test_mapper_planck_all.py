@@ -138,6 +138,7 @@ def test_get_hm_maps(cls, mode):
     conf_ref = get_config('base')
     m1b = hp.read_map(conf_ref['file_hm1'])
     m2b = hp.read_map(conf_ref['file_hm2'])
+
     m1, m2 = m._get_hm_maps()
     assert np.all(m1 == m1b)
     assert np.all(m2 == m2b)
