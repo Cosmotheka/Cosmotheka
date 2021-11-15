@@ -15,7 +15,7 @@ class MapperPlanckBase(MapperBase):
         self.file_hm2 = config.get('file_hm2', None)
         self.file_mask = config.get('file_mask', None)
         self.file_gp_mask = config.get('file_gp_mask', None)
-        self.file_sp_mask = config.get('file_sp_mask', None)
+        self.file_ps_mask = config.get('file_ps_mask', None)
         self.signal_map = None
         self.hm1_map = None
         self.hm2_map = None
@@ -25,6 +25,8 @@ class MapperPlanckBase(MapperBase):
         self.cls_cov = None
         self.custom_auto = True
         self.mask = None
+        self.gal_mask = None
+        self.ps_mask = None
         self.beam = None
         self.beam_info = None
 
@@ -38,8 +40,30 @@ class MapperPlanckBase(MapperBase):
         return self.signal_map
 
     def get_mask(self):
-        return NotImplementedError("Do not use base class")
-
+        if self.mask is None:
+            if self.file_mask is not None:
+                self.mask = hp.read_map(self.file_mask)
+                self.mask = hp.ud_grade(self.mask,
+                                        nside_out=self.nside)
+            else:
+                self.mask = np.ones(12*self.nside**2)
+            if self.file_gp_mask is not None:
+                field = self.gp_mask_modes[self.gp_mask_mode]
+                print(self.gp_mask_modes)
+                print(self.gp_mask_mode)
+                print(field)
+                gp_mask = hp.read_map(self.file_gp_mask, field)
+                gp_mask = hp.ud_grade(gp_mask,
+                                       nside_out=self.nside)
+                self.mask *= gp_mask
+            if self.file_ps_mask is not None:
+                for mode in self.ps_mask_mode:
+                    field = self.ps_mask_modes[mode]
+                    ps_mask = hp.read_map(self.file_ps_mask, field)
+                    ps_mask = hp.ud_grade(ps_mask,
+                                          nside_out=self.nside)
+                    self.mask *= ps_mask
+        return self.mask
     def _get_hm_maps(self):
         return NotImplementedError("Do not use base class")
 

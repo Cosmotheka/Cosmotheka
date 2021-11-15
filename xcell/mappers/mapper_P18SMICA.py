@@ -13,8 +13,8 @@ class MapperP18SMICA(MapperPlanckBase):
         """
         self._get_Planck_defaults(config)
         self.beam_info = config.get('beam_fwhm_arcmin', 5.)
-        self.gal_mask_mode = config.get('gal_mask_mode', '0.6')
-        self.gal_mask_modes = {'0.2': 0,
+        self.gp_mask_mode = config.get('gp_mask_mode', '0.6')
+        self.gp_mask_modes = {'0.2': 0,
                                '0.4': 1,
                                '0.6': 2,
                                '0.7': 3,
@@ -33,27 +33,6 @@ class MapperP18SMICA(MapperPlanckBase):
             self.hm2_map = [hp.ud_grade(hm2_map,
                             nside_out=self.nside)]
         return self.hm1_map, self.hm2_map
-
-    def get_mask(self):
-        if self.mask is None:
-            if self.file_mask is not None:
-                self.mask = hp.read_map(self.file_mask)
-                self.mask = hp.ud_grade(self.mask,
-                                        nside_out=self.nside)
-            else:
-                self.mask = np.ones(12*self.nside**2)
-            if self.file_gp_mask is not None:
-                field = self.gal_mask_modes[self.gal_mask_mode]
-                mask = hp.read_map(self.file_gp_mask, field)
-                mask = hp.ud_grade(mask,
-                                   nside_out=self.nside)
-                self.mask *= mask
-            if self.file_sp_mask is not None:
-                mask = hp.read_map(self.file_sp_mask)
-                mask = hp.ud_grade(mask,
-                                   nside_out=self.nside)
-                self.mask *= mask
-        return self.mask
 
     def get_dtype(self):
         return 'cmb_temperature'

@@ -11,7 +11,7 @@ def get_config(mode, wbeam=True):
              'file_hm2': 'xcell/tests/data/hm2_map.fits',
              'file_mask': 'xcell/tests/data/map.fits',
              'file_gp_mask': 'xcell/tests/data/mask1.fits',
-             'gal_mask_mode': '0.2',
+             'gp_mask_mode': '0.2',
              'nside': 32}
     elif mode == 'tSZ':
         c = {'file_map': 'xcell/tests/data/map.fits',
@@ -19,7 +19,7 @@ def get_config(mode, wbeam=True):
              'file_hm2': 'xcell/tests/data/map.fits',
              'file_mask': 'xcell/tests/data/map.fits',
              'file_gp_mask': 'xcell/tests/data/mask1.fits',
-             'gal_mask_mode': '0.4',
+             'gp_mask_mode': '0.4',
              'nside': 32}
     elif mode == 'CIB':
         c = {'file_map': 'xcell/tests/data/map.fits',
@@ -27,9 +27,9 @@ def get_config(mode, wbeam=True):
              'file_hm2': 'xcell/tests/data/hm2_map.fits',
              'file_mask': 'xcell/tests/data/map.fits',
              'file_gp_mask': 'xcell/tests/data/mask1.fits',
-             'file_sp_mask': 'xcell/tests/data/mask2.fits',
-             'gal_mask_mode': '0.2',
-             'sp_mask_mode': '100',
+             'file_ps_mask': 'xcell/tests/data/mask2.fits',
+             'gp_mask_mode': '0.2',
+             'ps_mask_mode': ['100'],
              'nside': 32}
     elif mode == 'base':
         c = {'file_map': 'xcell/tests/data/map.fits',
@@ -144,7 +144,7 @@ def test_get_hm_maps(cls, mode):
 
 
 @pytest.mark.parametrize('cls,mode,frac', [(xc.mappers.MapperP15tSZ,
-                                            'tSZ', 1),
+                                            'tSZ', 0.75),
                                            (xc.mappers.MapperP15CIB,
                                             'CIB', 0.5),
                                            (xc.mappers.MapperP18SMICA,
