@@ -1,6 +1,7 @@
 from .mapper_Planck_base import MapperPlanckBase
 import healpy as hp
 
+
 class MapperP18SMICA(MapperPlanckBase):
     def __init__(self, config):
         """
