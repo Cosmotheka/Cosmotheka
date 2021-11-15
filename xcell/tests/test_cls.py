@@ -51,7 +51,7 @@ def get_config(fsky=0.2, fsky2=0.3,
             'cov': {'fiducial': {'cosmo': cosmo,
                                  'wl_m': False, 'wl_ia': False}},
             'bpw_edges': bpw_edges,
-            'healpy': {'n_iter_sht': 0,
+            'sphere': {'n_iter_sht': 0,
                        'n_iter_mcm': 3,
                        'n_iter_cmcm': 3,
                        'nside': nside},
@@ -365,9 +365,9 @@ def test_cls_vs_namaster():
     spin = m.get_spin()
     mask = m.get_mask()
     signal_map = m.get_signal_map()
-    n_iter_sht = config['healpy']['n_iter_sht']
-    n_iter_mcm = config['healpy']['n_iter_mcm']
-    n_iter_cmcm = config['healpy']['n_iter_cmcm']
+    n_iter_sht = config['sphere']['n_iter_sht']
+    n_iter_mcm = config['sphere']['n_iter_mcm']
+    n_iter_cmcm = config['sphere']['n_iter_cmcm']
     # Compute Cl from map
     f = nmt.NmtField(mask, signal_map, spin=spin, n_iter=n_iter_sht)
     wsp = nmt.NmtWorkspace()
@@ -430,6 +430,28 @@ def test_symmetric():
     assert np.all(cl_class01.get_ell_nl()[1] == cl_class10.get_ell_nl()[1])
     assert np.all(cl_class01.get_ell_nl_cp()[1] ==
                   cl_class10.get_ell_nl_cp()[1])
+    shutil.rmtree(tmpdir1)
+
+
+def test_ignore_existing_yml():
+    # Test for Cls
+    cl_class = get_cl_class()
+    data = cl_class.data.data
+    # Now, data['cls']['Dummy-Dummy']['compute'] = 'all'. We change it to
+    # 'auto' and check that is read when ignore_existing_yml=True
+    data['cls']['Dummy-Dummy']['compute'] = 'auto'
+    cl_class01 = Cl(data, 'Dummy__0', 'Dummy__1', ignore_existing_yml=True)
+    assert cl_class01.data.data['cls']['Dummy-Dummy']['compute'] == 'auto'
+    cl_class01 = Cl(data, 'Dummy__0', 'Dummy__1', ignore_existing_yml=False)
+    assert cl_class01.data.data['cls']['Dummy-Dummy']['compute'] == 'all'
+
+    # Test for Cov
+    cov_class = Cov(data, 'Dummy__0', 'Dummy__1', 'Dummy__0', 'Dummy__1',
+                    ignore_existing_yml=True)
+    assert cov_class.data.data['cls']['Dummy-Dummy']['compute'] == 'auto'
+    cov_class = Cov(data, 'Dummy__0', 'Dummy__1', 'Dummy__0', 'Dummy__1',
+                    ignore_existing_yml=False)
+    assert cov_class.data.data['cls']['Dummy-Dummy']['compute'] == 'all'
     shutil.rmtree(tmpdir1)
 
 

@@ -135,8 +135,7 @@ class Mapper2MPZ(MapperBase):
 
     def get_mask(self):
         if self.mask is None:
-            self.mask = hp.ud_grade(hp.read_map(self.config['mask'],
-                                                verbose=False),
+            self.mask = hp.ud_grade(hp.read_map(self.config['mask']),
                                     nside_out=self.nside)
         return self.mask
 
