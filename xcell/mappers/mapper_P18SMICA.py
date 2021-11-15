@@ -1,7 +1,5 @@
 from .mapper_Planck_base import MapperPlanckBase
 import healpy as hp
-import numpy as np
-
 
 class MapperP18SMICA(MapperPlanckBase):
     def __init__(self, config):
@@ -15,13 +13,13 @@ class MapperP18SMICA(MapperPlanckBase):
         self.beam_info = config.get('beam_fwhm_arcmin', 5.)
         self.gp_mask_mode = config.get('gp_mask_mode', '0.6')
         self.gp_mask_modes = {'0.2': 0,
-                               '0.4': 1,
-                               '0.6': 2,
-                               '0.7': 3,
-                               '0.8': 4,
-                               '0.9': 5,
-                               '0.97': 6,
-                               '0.99': 7}
+                              '0.4': 1,
+                              '0.6': 2,
+                              '0.7': 3,
+                              '0.8': 4,
+                              '0.9': 5,
+                              '0.97': 6,
+                              '0.99': 7}
 
     def _get_hm_maps(self):
         if self.hm1_map is None:

@@ -1,6 +1,5 @@
 from .mapper_Planck_base import MapperPlanckBase
 import healpy as hp
-import numpy as np
 
 
 class MapperP15CIB(MapperPlanckBase):
@@ -16,13 +15,13 @@ class MapperP15CIB(MapperPlanckBase):
         self.beam_info = config.get('beam_fwhm_arcmin', 5.)
         self.gp_mask_mode = config.get('gp_mask_mode', '0.6')
         self.gp_mask_modes = {'0.2': 0,
-                               '0.4': 1,
-                               '0.6': 2,
-                               '0.7': 3,
-                               '0.8': 4,
-                               '0.9': 5,
-                               '0.97': 6,
-                               '0.99': 7}
+                              '0.4': 1,
+                              '0.6': 2,
+                              '0.7': 3,
+                              '0.8': 4,
+                              '0.9': 5,
+                              '0.97': 6,
+                              '0.99': 7}
         self.ps_mask_mode = config.get('ps_mask_mode', ['545'])
         self.ps_mask_modes = {'100': 0,
                               '143': 1,
