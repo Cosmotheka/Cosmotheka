@@ -16,9 +16,6 @@ class MapperCatWISE(MapperBase):
         """
         self._get_defaults(config)
         self.file_sourcemask = config.get('mask_sources', None)
-        self.ra_name = 'ra'
-        self.dec_name = 'dec'
-        self.radius_name = 'radius'
         self.cat_data = None
 
         self.npix = hp.nside2npix(self.nside)
@@ -43,9 +40,7 @@ class MapperCatWISE(MapperBase):
             # Angular and flux conditions
             self.cat_data = self.cat_data[
                 (self.cat_data['w1'] <
-                 self.config.get('flux_max_W1', 16.4)) &
-                (np.fabs(self.cat_data['GLAT']) >
-                 self.config.get('GLAT_max_deg', 30))]
+                 self.config.get('flux_max_W1', 16.4))]
         return self.cat_data
 
     # Density Map
@@ -55,8 +50,8 @@ class MapperCatWISE(MapperBase):
             self.cat_data = self.get_catalog()
             self.mask = self.get_mask()
             nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            ra_name=self.ra_name,
-                                            dec_name=self.dec_name)
+                                            ra_name='ra',
+                                            dec_name='dec')
             mean_n = np.average(nmap_data, weights=self.mask)
             goodpix = self.mask > 0
             # Division by mask not really necessary, since it's binary.
@@ -83,11 +78,11 @@ class MapperCatWISE(MapperBase):
                 if self.file_sourcemask is not None:
                     # holes catalog
                     mask_holes = Table.read(self.file_sourcemask)
-                    vecmask = hp.ang2vec(mask_holes[self.ra_name],
-                                         mask_holes[self.dec_name],
+                    vecmask = hp.ang2vec(mask_holes['ra'],
+                                         mask_holes['dec'],
                                          lonlat=True)
                     for vec, radius in zip(vecmask,
-                                           mask_holes[self.radius_name]):
+                                           mask_holes['radius']):
                         ipix_hole = hp.query_disc(self.nside, vec,
                                                   np.radians(radius),
                                                   inclusive=True)
@@ -100,8 +95,8 @@ class MapperCatWISE(MapperBase):
             self.cat_data = self.get_catalog()
             self.mask = self.get_mask()
             nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            ra_name=self.ra_name,
-                                            dec_name=self.dec_name)
+                                            ra_name='ra',
+                                            dec_name='dec')
             N_mean = np.average(nmap_data, weights=self.mask)
             N_mean_srad = N_mean * self.npix / (4 * np.pi)
             N_ell = np.mean(self.mask) / N_mean_srad
