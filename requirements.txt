@@ -1,4 +1,5 @@
-cipy
+numpy
+scipy
 scikit-learn
 flake8
 astropy
