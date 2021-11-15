@@ -116,7 +116,7 @@ def test_get_hm_maps(cls):
 
 
 @pytest.mark.parametrize('cls,frac', [(xc.mappers.MapperP15tSZ, 1),
-                                      (xc.mappers.MapperP15CIB, 1),
+                                      (xc.mappers.MapperP15CIB, 0.5),
                                       (xc.mappers.MapperP18SMICA, 0.5)])
 def test_get_mask(cls, frac):
     m = cls(get_config())
