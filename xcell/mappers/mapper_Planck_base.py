@@ -104,19 +104,5 @@ class MapperPlanckBase(MapperBase):
                             'auto_22': cl_22}
         return self.cls_cov
 
-    def _beam_gaussian(self, ell, fwhm_amin):
-        sigma_rad = np.radians(fwhm_amin / 2.355 / 60)
-        return np.exp(-0.5 * ell * (ell + 1) * sigma_rad**2)
-
-    def get_beam(self):
-        if self.beam is None:
-            if self.beam_info is None:  # No beam
-                self.beam = np.ones(3*self.nside)
-            else:
-                ell = np.arange(3*self.nside)
-                self.beam = self._beam_gaussian(ell, self.beam_info)
-                self.beam /= self.beam[0]  # normalize it
-        return self.beam
-
     def get_spin(self):
         return 0

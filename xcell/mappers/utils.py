@@ -60,3 +60,18 @@ def get_DIR_Nz(cat_spec, cat_photo, bands, zflag,
         dndz_jk.append(n)
     dndz_jk = np.array(dndz_jk)
     return zz, dndz, dndz_jk
+
+
+def _beam_gaussian(ell, fwhm_amin):
+    sigma_rad = np.radians(fwhm_amin / 2.355 / 60)
+    return np.exp(-0.5 * ell * (ell + 1) * sigma_rad**2)
+
+
+def get_beam(nside, beam_info):
+    if beam_info is None:  # No beam
+        beam = np.ones(3*nside)
+    else:
+        ell = np.arange(3*nside)
+        beam = _beam_gaussian(ell, beam_info)
+        beam /= beam[0]  # normalize it
+    return beam
