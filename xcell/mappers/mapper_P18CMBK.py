@@ -59,7 +59,8 @@ class MapperP18CMBK(MapperBase):
                 fl = np.ones(lmax+1)
                 fl[3*self.nside:] = 0
                 self.klm = hp.almxfl(self.klm, fl, inplace=True)
-            self.signal_map = [hp.alm2map(self.klm, self.nside)]
+            self.signal_map = [hp.alm2map(self.klm, self.nside,
+                                          verbose=False)]
         return self.signal_map
 
     def get_mask(self):
@@ -69,7 +70,7 @@ class MapperP18CMBK(MapperBase):
                 self.mask = hp.read_map(fname, dtype=float)
             else:
                 self.mask = hp.read_map(self.config['file_mask'],
-                                        dtype=float)
+                                        verbose=False, dtype=float)
                 if self.rotate:
                     self.mask = self.r.rotate_map_pixel(self.mask)
                     # Binarize

@@ -12,26 +12,28 @@ class MapperP15tSZ(MapperPlanckBase):
          'nside':512}
         """
         self._get_Planck_defaults(config)
+        self.file_hm1 = config.get('file_hm1', self.file_map)
+        self.file_hm2 = config.get('file_hm2', self.file_map)
         self.beam_info = config.get('beam_fwhm_arcmin', 10.)
+        self.gp_mask_mode = config.get('gp_mask_mode', '0.5')
+        self.gp_mask_modes = {'0.4': 0,
+                              '0.5': 1,
+                              '0.6': 2,
+                              '0.7': 3}
+        self.ps_mask_mode = config.get('ps_mask_mode', ['default'])
+        self.ps_mask_modes = {'test': 0,
+                              'default': 4}
 
     def _get_hm_maps(self):
         if self.hm1_map is None:
-            hm1_map = hp.read_map(self.file_map, 1)
+            hm1_map = hp.read_map(self.file_hm1, 1)
             self.hm1_map = [hp.ud_grade(hm1_map,
                             nside_out=self.nside)]
         if self.hm2_map is None:
-            hm2_map = hp.read_map(self.file_map, 2)
+            hm2_map = hp.read_map(self.file_hm2, 2)
             self.hm2_map = [hp.ud_grade(hm2_map,
                             nside_out=self.nside)]
         return self.hm1_map, self.hm2_map
-
-    def get_mask(self):
-        if self.mask is None:
-            mask = hp.read_map(self.file_mask)
-            mask = hp.ud_grade(mask,
-                               nside_out=self.nside)
-            self.mask = mask
-        return self.mask
 
     def get_dtype(self):
         return 'cmb_tSZ'
