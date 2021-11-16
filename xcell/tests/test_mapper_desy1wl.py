@@ -93,9 +93,9 @@ def test_lite():
                   f'PSF_w2s2_zbin{zbin}_ns{nside}.fits.gz']:
         assert os.path.isfile(os.path.join(plite, "DESwlMETACAL_" + fname))
 
-    # Check we recover the same mas and catalog
+    # Check we recover the same mask and catalog
     # Non-exsisting fits files - read from lite
-    config['data_catalogs'] = 'whatever'
+    config['data_cat'] = 'whatever'
     m_lite = xc.mappers.MapperDESY1wl(config)
     cat_from_lite = m_lite.get_catalog()
     s_from_lite = m_lite.get_signal_map()

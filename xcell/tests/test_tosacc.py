@@ -48,7 +48,7 @@ def get_config(fsky0=0.2, fsky1=0.3, dtype0='galaxy_density',
             'cov': {'fiducial': {'cosmo': cosmo, 'wl_m':
                                  False, 'wl_ia': False}},
             'bpw_edges': bpw_edges,
-            'healpy': {'n_iter_sht': 0, 'n_iter_mcm': 3, 'n_iter_cmcm': 3,
+            'sphere': {'n_iter_sht': 0, 'n_iter_mcm': 3, 'n_iter_cmcm': 3,
                        'nside': nside},
             'recompute': {'cls': False, 'cov': False, 'mcm': False, 'cmcm':
                           False},

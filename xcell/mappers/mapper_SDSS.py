@@ -16,7 +16,7 @@ class MapperSDSS(MapperBase):
         self.SDSS_name = config['SDSS_name']
         self.path_lite = config.get('path_lite', None)
         self.cats = {'data': None, 'random': None}
-        self.z_arr_dim = config.get('z_arr_dim', 50)
+        self.num_z_bins = config.get('num_z_bins', 50)
         self.nside_mask = config.get('nside_mask', 512)
         self.npix = hp.nside2npix(self.nside)
         self.ws = {'data': None, 'random': None}
@@ -52,7 +52,7 @@ class MapperSDSS(MapperBase):
         if self.dndz is None:
             cat_data = self.get_catalog(mod='data')
             w_data = self._get_w(mod='data')
-            h, b = np.histogram(cat_data['Z'], bins=self.z_arr_dim,
+            h, b = np.histogram(cat_data['Z'], bins=self.num_z_bins,
                                 weights=w_data, range=self.z_edges)
             self.dndz = np.array([0.5 * (b[:-1] + b[1:]), h])
         z, nz = self.dndz

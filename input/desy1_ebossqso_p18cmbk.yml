@@ -204,7 +204,7 @@ toeplitz:
     l_exact: -1
     dl_band: -1
 
-healpy:
+sphere:
   n_iter_sht: 0
   n_iter_mcm: 3
   n_iter_cmcm: 3
