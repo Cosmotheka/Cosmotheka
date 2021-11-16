@@ -226,7 +226,6 @@ class Cl(ClBase):
                 cl -= nl
             # Note that while we have subtracted the noise
             # bias from `cl_cp`, `cl_cov_cp` still includes it.
-            correction = None
             if (mapper1.mask_power > 1) or (mapper2.mask_power > 1):
                 # Applies correction factor if masks have been
                 # implicitly applied to the maps
@@ -235,7 +234,6 @@ class Cl(ClBase):
                 n_b = mapper2.mask_power
                 w_a = mapper1.get_mask()
                 w_b = mapper2.get_mask()
-                # Currently this first step is done with the pixell masks
                 correction = np.mean(w_a*w_b)/np.mean(w_a**n_a*w_b**n_b)
                 # Apply correction to all Cl's
                 cl *= correction
@@ -250,7 +248,7 @@ class Cl(ClBase):
                      cl_cov_11_cp=cl_cov_11_cp,
                      cl_cov_12_cp=cl_cov_12_cp,
                      cl_cov_22_cp=cl_cov_22_cp,
-                     wins=wins, correction=correction)
+                     wins=wins)
             self.recompute_cls = False
 
         cl_file = np.load(fname)
