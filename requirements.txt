@@ -10,3 +10,4 @@ pyccl
 camb
 sacc
 fitsio
+pixell
