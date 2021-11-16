@@ -14,33 +14,38 @@ class MapperP15CIB(MapperPlanckBase):
         """
         self._get_Planck_defaults(config)
         self.beam_info = config.get('beam_fwhm_arcmin', 5.)
+        self.gp_mask_mode = config.get('gp_mask_mode', '0.6')
+        self.gp_mask_modes = {'0.2': 0,
+                              '0.4': 1,
+                              '0.6': 2,
+                              '0.7': 3,
+                              '0.8': 4,
+                              '0.9': 5,
+                              '0.97': 6,
+                              '0.99': 7}
+        self.ps_mask_mode = config.get('ps_mask_mode', ['545'])
+        self.ps_mask_modes = {'100': 0,
+                              '143': 1,
+                              '217': 2,
+                              '353': 3,
+                              '545': 4,
+                              '857': 5}
 
     def _get_hm_maps(self):
         if self.hm1_map is None:
             hm1_map = hp.read_map(self.file_hm1)
             self.hm1_map = [hp.ud_grade(hm1_map,
                             nside_out=self.nside)]
+            self.hm1_map[0][self.hm1_map[0] == hp.UNSEEN] = 0.0
+            self.hm1_map[0][np.isnan(self.hm1_map[0])] = 0.0
         if self.hm2_map is None:
             hm2_map = hp.read_map(self.file_hm2)
             self.hm2_map = [hp.ud_grade(hm2_map,
                             nside_out=self.nside)]
-        return self.hm1_map, self.hm2_map
+            self.hm2_map[0][self.hm2_map[0] == hp.UNSEEN] = 0.0
+            self.hm2_map[0][np.isnan(self.hm2_map[0])] = 0.0
 
-    def get_mask(self):
-        if self.mask is None:
-            self.mask = np.ones(12*self.nside**2)
-            if self.file_gp_mask is not None:
-                field = self.gal_mask_modes[self.gal_mask_mode]
-                mask = hp.read_map(self.file_gp_mask, field)
-                mask = hp.ud_grade(mask,
-                                   nside_out=self.nside)
-                self.mask *= mask
-            if self.file_sp_mask is not None:
-                mask = hp.read_map(self.file_sp_mask)
-                mask = hp.ud_grade(mask,
-                                   nside_out=self.nside)
-                self.mask *= mask
-        return self.mask
+        return self.hm1_map, self.hm2_map
 
     def get_dtype(self):
         return 'generic'
