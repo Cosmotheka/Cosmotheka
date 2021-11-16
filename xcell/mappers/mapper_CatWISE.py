@@ -31,13 +31,7 @@ class MapperCatWISE(MapperBase):
         if self.cat_data is None:
             file_data = self.config['data_catalog']
             self.cat_data = Table.read(file_data)
-            # Galactic coordinates
-            r = hp.Rotator(coord=['C', 'G'])
-            GLON, GLAT = r(self.cat_data['ra'], self.cat_data['dec'],
-                           lonlat=True)
-            self.cat_data['GLON'] = GLON
-            self.cat_data['GLAT'] = GLAT
-            # Angular and flux conditions
+            # Flux condition
             self.cat_data = self.cat_data[
                 (self.cat_data['w1'] <
                  self.config.get('flux_max_W1', 16.4))]
@@ -102,6 +96,9 @@ class MapperCatWISE(MapperBase):
             N_ell = np.mean(self.mask) / N_mean_srad
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
+
+    def get_nz(self, dz=0):
+        raise NotImplementedError("No dNdz for CatWISE yet")
 
     # Type
     def get_dtype(self):
