@@ -26,7 +26,7 @@ class MapperACTk(MapperACTBase):
         return self.signal_map
 
     def get_dtype(self):
-        return 'weak_lensing'
+        return 'cmb_convergence'
 
     def get_spin(self):
-        return 2
+        return 0
