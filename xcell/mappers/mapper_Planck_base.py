@@ -25,8 +25,6 @@ class MapperPlanckBase(MapperBase):
         self.cls_cov = None
         self.custom_auto = True
         self.mask = None
-        self.gal_mask = None
-        self.ps_mask = None
         self.beam = None
         self.beam_info = None
 
