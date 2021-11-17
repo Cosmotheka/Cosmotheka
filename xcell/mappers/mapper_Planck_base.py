@@ -25,8 +25,6 @@ class MapperPlanckBase(MapperBase):
         self.cls_cov = None
         self.custom_auto = True
         self.mask = None
-        self.beam = None
-        self.beam_info = None
 
     def get_signal_map(self):
         if self.signal_map is None:
