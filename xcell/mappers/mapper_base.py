@@ -9,6 +9,7 @@ class MapperBase(object):
     def _get_defaults(self, config):
         self.config = config
         self.mask_name = config.get('mask_name', None)
+        self.mask_power = config.get('mask_power', 1)
         self.nside = config['nside']
         self.nmt_field = None
         self.custom_auto = False

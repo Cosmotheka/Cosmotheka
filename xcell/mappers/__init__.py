@@ -1,5 +1,7 @@
 # flake8: noqa
 from .mapper_base import MapperBase
+from .mapper_ACT_base import MapperACTBase
+from .mapper_ACTk import MapperACTk
 from .mapper_SDSS import MapperSDSS
 from .mapper_Planck_base import MapperPlanckBase
 from .mapper_DESY1gc import MapperDESY1gc

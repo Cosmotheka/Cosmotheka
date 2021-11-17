@@ -44,9 +44,13 @@ def get_config(fsky=0.2, fsky2=0.3,
     dummy1 = {'mask_name': 'mask_dummy1', 'mapper_class': 'MapperDummy',
               'cosmo': cosmo, 'nside': nside, 'fsky': fsky2, 'seed': 100,
               'dtype': dtype1, 'use_halo_model': inc_hm}
+    dummy2 = {'mask_name': 'mask_dummy2', 'mapper_class': 'MapperDummy',
+              'cosmo': cosmo, 'nside': nside, 'fsky': fsky2, 'seed': 100,
+              'dtype': dtype1, 'use_halo_model': inc_hm, 'mask_power': 2}
     bpw_edges = list(range(0, 3 * nside, 4))
 
-    return {'tracers': {'Dummy__0': dummy0, 'Dummy__1': dummy1},
+    return {'tracers': {'Dummy__0': dummy0, 'Dummy__1': dummy1,
+                        'Dummy__2': dummy2},
             'cls': {'Dummy-Dummy': {'compute': 'all'}},
             'cov': {'fiducial': {'cosmo': cosmo,
                                  'wl_m': False, 'wl_ia': False}},
@@ -76,6 +80,21 @@ def test_smoke():
     get_cl_class()
     get_cov_class()
     shutil.rmtree(tmpdir1)
+
+
+def test_cl_correction():
+    data = get_config()
+    cl_class = Cl(data, 'Dummy__2', 'Dummy__2')
+    cl_file = cl_class.get_cl_file()
+    correct = cl_file['correction']
+    dummy = MapperDummy(data['tracers']['Dummy__2'])
+    w_a = dummy.get_mask()
+    w_b = dummy.get_mask()
+    n_a = dummy.mask_power
+    n_b = dummy.mask_power
+    correct_b = np.mean(w_a*w_b)/np.mean(w_a**n_a*w_b**n_b)
+    assert correct != 1
+    assert correct == correct_b
 
 
 def test_get_nmtbin():
