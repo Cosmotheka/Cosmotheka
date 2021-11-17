@@ -7,11 +7,11 @@ class MapperACTk(MapperACTBase):
     def __init__(self, config):
         """
         config - dict
-        {'file_map':'act_planck_dr4.01_s14s15_D56_lensing_kappa_baseline.fits',
-         'file_mask':'act_dr4.01_s14s15_D56_lensing_mask.fits',
-         'mask_name': 'mask_ACTK',
-         'nside': 1024,
-         'lmax': 6000}
+        {'file_map':path_ACT+'act_planck_dr4.01_s14s15_D56_lensing_kappa_baseline.fits',
+        'file_mask':path_ACT+'act_dr4.01_s14s15_D56_lensing_mask.fits',
+        'mask_name': 'mask_CMBK',
+        'nside': nside,
+        'mask_power': 2}
         """
         self._get_ACT_defaults(config)
 

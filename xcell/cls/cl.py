@@ -226,6 +226,7 @@ class Cl(ClBase):
                 cl -= nl
             # Note that while we have subtracted the noise
             # bias from `cl_cp`, `cl_cov_cp` still includes it.
+            correction = 1
             if (mapper1.mask_power > 1) or (mapper2.mask_power > 1):
                 # Applies correction factor if masks have been
                 # implicitly applied to the maps
@@ -248,7 +249,7 @@ class Cl(ClBase):
                      cl_cov_11_cp=cl_cov_11_cp,
                      cl_cov_12_cp=cl_cov_12_cp,
                      cl_cov_22_cp=cl_cov_22_cp,
-                     wins=wins)
+                     wins=wins, correction=correction)
             self.recompute_cls = False
 
         cl_file = np.load(fname)
