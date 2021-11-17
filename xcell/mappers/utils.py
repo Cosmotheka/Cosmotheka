@@ -70,8 +70,10 @@ def _beam_gaussian(ell, fwhm_amin):
 def get_beam(nside, beam_info):
     if beam_info is None:  # No beam
         beam = np.ones(3*nside)
-    else:
+    elif beam_info['type'] == 'Gaussian':  # Gaussian beam
         ell = np.arange(3*nside)
-        beam = _beam_gaussian(ell, beam_info)
+        beam = _beam_gaussian(ell, beam_info['FWHM_arcmin'])
         beam /= beam[0]  # normalize it
+    else:
+        raise NotImplementedError("Unknown beam type.")
     return beam
