@@ -11,4 +11,6 @@ class MapperLenzCIB(MapperP15CIB):
          'nside':512}
         """
         self._get_Planck_defaults(config)
-        self.beam_info = config.get('beam_fwhm_arcmin', 5.)
+        self.beam_info = config.get('beam_info',
+                                    {'type': 'Gaussian',
+                                     'FWHM_arcmin': 5.0})

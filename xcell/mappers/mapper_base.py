@@ -1,5 +1,6 @@
 import pymaster as nmt
 import numpy as np
+from .utils import get_beam
 
 
 class MapperBase(object):
@@ -9,18 +10,17 @@ class MapperBase(object):
     def _get_defaults(self, config):
         self.config = config
         self.mask_name = config.get('mask_name', None)
+        self.beam_info = config.get('beam_info', None)
         self.mask_power = config.get('mask_power', 1)
         self.nside = config['nside']
         self.nmt_field = None
+        self.beam = None
         self.custom_auto = False
 
     def get_signal_map(self):
         raise NotImplementedError("Do not use base class")
 
     def get_contaminants(self):
-        return None
-
-    def get_beam(self):
         return None
 
     def get_mask(self):
@@ -35,12 +35,17 @@ class MapperBase(object):
     def get_ell(self):
         return np.arange(3 * self.nside)
 
+    def get_beam(self):
+        if self.beam is None:
+            self.beam = get_beam(self.nside, self.beam_info)
+        return self.beam
+
     def _get_nmt_field(self, signal=None, **kwargs):
         if signal is None:
             signal = self.get_signal_map(**kwargs)
         mask = self.get_mask(**kwargs)
         cont = self.get_contaminants(**kwargs)
-        beam = self.get_beam(**kwargs)
+        beam = self.get_beam()
         n_iter = kwargs.get('n_iter', 0)
         return nmt.NmtField(mask, signal, beam=beam,
                             templates=cont, n_iter=n_iter)

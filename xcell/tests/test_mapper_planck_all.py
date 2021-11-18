@@ -45,7 +45,8 @@ def get_config(mode, wbeam=True):
     else:
         print('Mode not recognized')
     if wbeam:
-        c['beam_fwhm_arcmin'] = 0.
+        c['beam_info'] = {'type': 'Gaussian',
+                          'FWHM_arcmin': 0.5}
     return c
 
 
@@ -70,22 +71,6 @@ def test_get_signal_map():
 def test_get_nl_coupled(m):
     nl = m.get_nl_coupled()
     assert np.mean(nl) < 0.001
-
-
-def test_get_beam():
-    # No beam
-    m = xc.mappers.MapperPlanckBase(get_config('base'))
-    beam = m.get_beam()
-    assert np.all(beam == 1.0)
-
-    # 15-arcmin beam
-    fwhm = 15.
-    m = xc.mappers.MapperPlanckBase(get_config('base'))
-    m.beam_info = fwhm
-    beam = m.get_beam()
-    ls = np.arange(3*m.nside)
-    bls = np.exp(-0.5*ls*(ls+1)*(fwhm*np.pi/180/60/2.355)**2)
-    assert np.allclose(beam, bls, atol=0, rtol=1E-3)
 
 
 @pytest.mark.parametrize('cls,mode', [(xc.mappers.MapperP15tSZ, 'tSZ'),
@@ -192,4 +177,4 @@ def test_get_dtype(cls, mode, typ):
                                             'SMICA', 5.)])
 def test_get_fwhm(cls, mode, fwhm):
     m = cls(get_config(mode, wbeam=False))
-    assert m.beam_info == fwhm
+    assert m.beam_info['FWHM_arcmin'] == fwhm

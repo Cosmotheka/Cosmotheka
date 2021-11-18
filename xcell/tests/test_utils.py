@@ -34,3 +34,19 @@ def test_get_DIR_Nz():
 
     nzz, ze = np.histogram(cat['z'], range=[-3, 3], bins=10, density=True)
     assert np.all((nzz-nz)/np.amax(nzz) < 1E-10)
+
+
+def test_get_beam():
+    ell = np.arange(3*32)
+    beam_infos = {'default': None,
+                  'Gaussian': {'type': 'Gaussian',
+                               'FWHM_arcmin': 0.5}}
+    beam_outputs = {'default':
+                    np.ones(3*32),
+                    'Gaussian':
+                    np.exp(-1.907e-09*ell*(ell+1))}
+    for mode in beam_infos.keys():
+        beam_info = beam_infos[mode]
+        beamm = beam_outputs[mode]
+        beam = xc.mappers.get_beam(32, beam_info)
+        assert ((beam - beamm) < 1e-05).all
