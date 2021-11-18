@@ -153,9 +153,6 @@ class ClSack():
             ell = mapper.get_ell()
             nl = mapper.get_nl_coupled()[0]
             beam = mapper.get_beam()
-            if beam is None:
-                beam = np.ones_like(ell)
-
             self.s.add_tracer('Map', tr, quantity=quantity, spin=spin,
                               ell=ell, beam=beam, beam_extra={'nl': nl})
         else:

@@ -165,3 +165,16 @@ def test_get_mask(cls, mode, frac):
 def test_get_dtype(cls, mode, typ):
     m = cls(get_config(mode))
     assert m.get_dtype() == typ
+
+
+@pytest.mark.parametrize('cls,mode,fwhm', [(xc.mappers.MapperP15tSZ,
+                                            'tSZ', 10.),
+                                           (xc.mappers.MapperP15CIB,
+                                            'P15CIB', 5.),
+                                           (xc.mappers.MapperLenzCIB,
+                                            'LenzCIB', 5.),
+                                           (xc.mappers.MapperP18SMICA,
+                                            'SMICA', 5.)])
+def test_get_fwhm(cls, mode, fwhm):
+    m = cls(get_config(mode, wbeam=False))
+    assert m.beam_info['FWHM_arcmin'] == fwhm
