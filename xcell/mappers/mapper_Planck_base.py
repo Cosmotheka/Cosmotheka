@@ -45,9 +45,6 @@ class MapperPlanckBase(MapperBase):
                 self.mask = np.ones(12*self.nside**2)
             if self.file_gp_mask is not None:
                 field = self.gp_mask_modes[self.gp_mask_mode]
-                print(self.gp_mask_modes)
-                print(self.gp_mask_mode)
-                print(field)
                 gp_mask = hp.read_map(self.file_gp_mask, field)
                 gp_mask = hp.ud_grade(gp_mask,
                                       nside_out=self.nside)

@@ -20,11 +20,11 @@ class MapperSPT(MapperPlanckBase):
 
     def _get_hm_maps(self):
         if self.hm1_map is None:
-            hm1_map = hp.read_map(self.file_hm1_map)
+            hm1_map = hp.read_map(self.file_hm1)
             self.hm1_map = [hp.ud_grade(hm1_map,
                             nside_out=self.nside)]
         if self.hm2_map is None:
-            hm2_map = hp.read_map(self.file_hm2_map)
+            hm2_map = hp.read_map(self.file_hm2)
             self.hm2_map = [hp.ud_grade(hm2_map,
                             nside_out=self.nside)]
         return self.hm1_map, self.hm2_map
