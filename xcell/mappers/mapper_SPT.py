@@ -1,6 +1,5 @@
 from .mapper_Planck_base import MapperPlanckBase
 import healpy as hp
-import numpy as np
 
 
 class MapperSPT(MapperPlanckBase):
