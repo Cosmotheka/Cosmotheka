@@ -16,7 +16,7 @@ class MapperSPT(MapperPlanckBase):
         self.gp_mask_modes = {'default': 0}
         self.gp_mask_mode = config.get('gp_mask_mode', 'default')
         self.ps_mask_modes = {'default': 0}
-        self.ps_mask_mode = config.get('ps_mask_mode', 'default')
+        self.ps_mask_mode = config.get('ps_mask_mode', ['default'])
 
     def _get_hm_maps(self):
         if self.hm1_map is None:
