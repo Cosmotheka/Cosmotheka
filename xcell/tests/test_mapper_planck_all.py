@@ -69,7 +69,6 @@ def test_get_signal_map():
                           xc.mappers.MapperP15CIB(get_config('P15CIB')),
                           xc.mappers.MapperLenzCIB(get_config('LenzCIB'))])
 def test_get_nl_coupled(m):
-    print(m.beam_info)
     nl = m.get_nl_coupled()
     assert np.mean(nl) < 0.001
 
