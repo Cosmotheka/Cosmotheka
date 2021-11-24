@@ -1,6 +1,5 @@
 from .mapper_base import MapperBase
-from .utils import (get_map_from_points, get_DIR_Nz,
-                    get_rerun_data, save_rerun_data)
+from .utils import get_map_from_points, get_DIR_Nz
 import fitsio
 from astropy.table import Table
 import pymaster as nmt
@@ -60,28 +59,28 @@ class MapperWIxSC(MapperBase):
         else:
             raise NotImplementedError(f"Unknown coordinates {coords}")
 
+    def _get_catalog(self):
+        file_data = self.config['data_catalog']
+        if not os.path.isfile(file_data):
+            raise ValueError(f"File {file_data} not found")
+        # Read catalog
+        cat = fitsio.read(file_data,
+                          columns=[self.ra_name,
+                                   self.dec_name,
+                                   'W1MCORR', 'W2MCORR',
+                                   'RCALCORR', 'BCALCORR',
+                                   'ZPHOTO_CORR'])
+        # Bin in redshift
+        cat = self._bin_z(cat)
+        # Sky mask
+        cat = self._mask_catalog(cat)
+        return cat
+
     def get_catalog(self):
         if self.cat_data is None:
             fn = 'WIxSC_rerun_bin' + self.bn + '.fits'
-            # Check if rerun catalog exists
-            self.cat_data = get_rerun_data(self, fn, 'FITSTable')
-            if self.cat_data is None:
-                file_data = self.config['data_catalog']
-                if not os.path.isfile(file_data):
-                    raise ValueError(f"File {file_data} not found")
-                # Read catalog
-                self.cat_data = fitsio.read(file_data,
-                                            columns=[self.ra_name,
-                                                     self.dec_name,
-                                                     'W1MCORR', 'W2MCORR',
-                                                     'RCALCORR', 'BCALCORR',
-                                                     'ZPHOTO_CORR'])
-                # Bin in redshift
-                self.cat_data = self._bin_z(self.cat_data)
-                # Sky mask
-                self.cat_data = self._mask_catalog(self.cat_data)
-                # Save lite if needed
-                save_rerun_data(self, fn, 'FITSTable', self.cat_data)
+            self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
+                                                   self._get_catalog)
         return self.cat_data
 
     def _mask_catalog(self, cat):
@@ -103,38 +102,33 @@ class MapperWIxSC(MapperBase):
                (ds['zCorr'] >= self.z_edges[0]))
         return ds[msk]
 
+    def _get_nz(self):
+        c_p = self.get_catalog()
+        c_s = self._get_specsample(c_p)
+        # Sort spec sample by nested pixel index so jackknife
+        # samples are spatially correlated.
+        ip_s = hp.ring2nest(self.nside,
+                            hp.ang2pix(self.nside, c_s['ra_WISE'],
+                                       c_s['dec_WISE'], lonlat=True))
+        idsort = np.argsort(ip_s)
+        c_s = c_s[idsort]
+        # Compute DIR N(z)
+        z, nz, nz_jk = get_DIR_Nz(c_s, c_p,
+                                  ['W1c', 'W2c', 'Bcc', 'Rcc'],
+                                  zflag='Zspec',
+                                  zrange=[0, 0.6],
+                                  nz=150,
+                                  bands_photo=['W1MCORR', 'W2MCORR',
+                                               'BCALCORR', 'RCALCORR'],
+                                  njk=self.config.get('n_jk_dir', 100))
+        zm = 0.5*(z[1:] + z[:-1])
+        return {'z_mid': zm, 'nz': nz, 'nz_jk': nz_jk}
+
     def get_nz(self, dz=0, return_jk_error=False):
         if self.dndz is None:
             fn = 'nz_WIxSC_bin' + self.bn + '.npz'
-            d = get_rerun_data(self, fn, 'NPZ')
-            # Read from file if it exists
-            if d is not None:
-                zm = d['z_mid']
-                nz = d['nz']
-                nz_jk = d['nz_jk']
-            else:  # Else compute DIR N(z) and jackknife resamples
-                c_p = self.get_catalog()
-                c_s = self._get_specsample(c_p)
-                # Sort spec sample by nested pixel index so jackknife
-                # samples are spatially correlated.
-                ip_s = hp.ring2nest(self.nside,
-                                    hp.ang2pix(self.nside, c_s['ra_WISE'],
-                                               c_s['dec_WISE'], lonlat=True))
-                idsort = np.argsort(ip_s)
-                c_s = c_s[idsort]
-                # Compute DIR N(z)
-                z, nz, nz_jk = get_DIR_Nz(c_s, c_p,
-                                          ['W1c', 'W2c', 'Bcc', 'Rcc'],
-                                          zflag='Zspec',
-                                          zrange=[0, 0.6],
-                                          nz=150,
-                                          bands_photo=['W1MCORR', 'W2MCORR',
-                                                       'BCALCORR', 'RCALCORR'],
-                                          njk=self.config.get('n_jk_dir', 100))
-                zm = 0.5*(z[1:] + z[:-1])
-                save_rerun_data(self, fn, 'NPZ',
-                                {'z_mid': zm, 'nz': nz, 'nz_jk': nz_jk})
-            self.dndz = (zm, nz, nz_jk)
+            d = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
+            self.dndz = (d['z_mid'], d['nz'], d['nz_jk'])
 
         z, nz, nz_jk = self.dndz
         z_dz = z + dz

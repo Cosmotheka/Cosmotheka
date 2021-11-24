@@ -1,5 +1,4 @@
 from .mapper_base import MapperBase
-from .utils import get_rerun_data, save_rerun_data
 from pixell import enmap, reproject
 
 
@@ -24,14 +23,15 @@ class MapperACTBase(MapperBase):
             self.pixell_mask = enmap.read_map(self.file_mask)
         return self.pixell_mask
 
+    def _get_mask(self):
+        self.pixell_mask = self._get_pixell_mask()
+        msk = reproject.healpix_from_enmap(self.pixell_mask,
+                                           lmax=self.lmax,
+                                           nside=self.nside)
+        return msk
+
     def get_mask(self):
         if self.mask is None:
             fn = f'ACT_{self.map_name}_mask.fits.gz'
-            self.mask = get_rerun_data(self, fn, 'FITSMap')
-            if self.mask is None:
-                self.pixell_mask = self._get_pixell_mask()
-                self.mask = reproject.healpix_from_enmap(self.pixell_mask,
-                                                         lmax=self.lmax,
-                                                         nside=self.nside)
-                save_rerun_data(self, fn, 'FITSMap', self.mask)
+            self.mask = self._rerun_read_cycle(fn, 'FITSMap', self._get_mask)
         return self.mask

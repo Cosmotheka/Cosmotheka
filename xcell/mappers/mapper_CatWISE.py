@@ -56,7 +56,6 @@ class MapperCatWISE(MapperBase):
     # Mask
     def get_mask(self):
         if self.mask is None:
-
             if self.config.get('mask_file', None) is not None:
                 self.mask = hp.ud_grade(hp.read_map(self.config['mask_file']),
                                         nside_out=self.nside)

@@ -10,6 +10,8 @@ def _build_rerun_fname(mpr, fname):
     if path is None:
         return None, False
 
+    os.makedirs(path, exist_ok=True)
+
     # Check if file exists
     fname_full = os.path.join(path, fname)
     return fname_full, os.path.isfile(fname_full)
@@ -22,7 +24,6 @@ def get_rerun_data(mpr, fname, ftype, section=None, read=True):
         return None
 
     fname_full, exists = _build_rerun_fname(mpr, fname)
-    print(fname_full, exists)
 
     # Check if we want to save rerun data
     if fname_full is None:

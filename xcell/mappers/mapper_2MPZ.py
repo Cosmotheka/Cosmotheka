@@ -1,6 +1,5 @@
 from .mapper_base import MapperBase
-from .utils import (get_map_from_points, get_DIR_Nz,
-                    get_rerun_data, save_rerun_data)
+from .utils import get_map_from_points, get_DIR_Nz
 import fitsio
 import numpy as np
 import healpy as hp
@@ -14,7 +13,6 @@ class Mapper2MPZ(MapperBase):
           {'data_catalog': 'Legacy_Survey_BASS-MZLS_galaxies-selection.fits',
            'mask': 'mask.fits',
            'z_edges': [0, 0.5],
-           'path_rerun': '.',
            'n_jk_dir': 100,
            'mask_name': 'mask_2MPZ'}
         """
@@ -66,39 +64,35 @@ class Mapper2MPZ(MapperBase):
         ids = cat['ZSPEC'] > -1
         return cat[ids]
 
+    def _get_nz(self):
+        c_p = self.get_catalog()
+        c_s = self._get_specsample(c_p)
+        # Sort spec sample by nested pixel index so jackknife
+        # samples are spatially correlated.
+        ip_s = hp.ring2nest(self.nside,
+                            hp.ang2pix(self.nside,
+                                       c_s[self.ra_name],
+                                       c_s[self.dec_name],
+                                       lonlat=True))
+        idsort = np.argsort(ip_s)
+        c_s = c_s[idsort]
+        # Compute DIR N(z)
+        z, nz, nz_jk = get_DIR_Nz(c_s, c_p,
+                                  ['JCORR', 'KCORR', 'HCORR',
+                                   'W1MCORR', 'W2MCORR',
+                                   'BCALCORR', 'RCALCORR', 'ICALCORR'],
+                                  zflag='ZSPEC',
+                                  zrange=[0, 0.4],
+                                  nz=100,
+                                  njk=self.config.get('n_jk_dir', 100))
+        zm = 0.5*(z[1:] + z[:-1])
+        return {'z_mid': zm, 'nz': nz, 'nz_jk': nz_jk}
+
     def get_nz(self, dz=0, return_jk_error=False):
         if self.dndz is None:
-            d = get_rerun_data(self, 'nz_2MPZ.npz', 'NPZ')
-            # Read from file if it exists
-            if d is not None:
-                zm = d['z_mid']
-                nz = d['nz']
-                nz_jk = d['nz_jk']
-            else:  # Else compute DIR N(z) and jackknife resamples
-                c_p = self.get_catalog()
-                c_s = self._get_specsample(c_p)
-                # Sort spec sample by nested pixel index so jackknife
-                # samples are spatially correlated.
-                ip_s = hp.ring2nest(self.nside,
-                                    hp.ang2pix(self.nside,
-                                               c_s[self.ra_name],
-                                               c_s[self.dec_name],
-                                               lonlat=True))
-                idsort = np.argsort(ip_s)
-                c_s = c_s[idsort]
-                # Compute DIR N(z)
-                z, nz, nz_jk = get_DIR_Nz(c_s, c_p,
-                                          ['JCORR', 'KCORR', 'HCORR',
-                                           'W1MCORR', 'W2MCORR',
-                                           'BCALCORR', 'RCALCORR', 'ICALCORR'],
-                                          zflag='ZSPEC',
-                                          zrange=[0, 0.4],
-                                          nz=100,
-                                          njk=self.config.get('n_jk_dir', 100))
-                zm = 0.5*(z[1:] + z[:-1])
-                save_rerun_data(self, 'nz_2MPZ.npz', 'NPZ',
-                                {'z_mid': zm, 'nz': nz, 'nz_jk': nz_jk})
-            self.dndz = (zm, nz, nz_jk)
+            fn = 'nz_2MPZ.npz'
+            d = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
+            self.dndz = (d['z_mid'], d['nz'], d['nz_jk'])
 
         z, nz, nz_jk = self.dndz
         z_dz = z + dz
