@@ -1,4 +1,5 @@
 from .mapper_ACT_base import MapperACTBase
+from .utils import get_rerun_data, save_rerun_data
 from pixell import enmap, reproject
 import numpy as np
 
@@ -17,12 +18,17 @@ class MapperACTk(MapperACTBase):
 
     def get_signal_map(self):
         if self.signal_map is None:
-            self.pixell_mask = self._get_pixell_mask()
-            self.signal_map = enmap.read_map(self.file_map)
-            self.signal_map = [reproject.healpix_from_enmap(self.signal_map,
-                                                            lmax=self.lmax,
-                                                            nside=self.nside)]
-            self.signal_map *= np.mean(self.pixell_mask**2)
+            fn = f'ACT_{self.map_name}_signal.fits.gz'
+            mp = get_rerun_data(self, fn, 'FITSMap')
+            if mp is None:
+                self.pixell_mask = self._get_pixell_mask()
+                mp = enmap.read_map(self.file_map)
+                mp = reproject.healpix_from_enmap(mp,
+                                                  lmax=self.lmax,
+                                                  nside=self.nside)
+                mp *= np.mean(self.pixell_mask**2)
+                save_rerun_data(self, fn, 'FITSMap', mp)
+            self.signal_map = [mp]
         return self.signal_map
 
     def get_dtype(self):

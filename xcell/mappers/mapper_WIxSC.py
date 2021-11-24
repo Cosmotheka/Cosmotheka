@@ -1,5 +1,6 @@
 from .mapper_base import MapperBase
-from .utils import get_map_from_points, get_DIR_Nz
+from .utils import (get_map_from_points, get_DIR_Nz,
+                    get_rerun_data, save_rerun_data)
 import fitsio
 from astropy.table import Table
 import pymaster as nmt
@@ -61,12 +62,10 @@ class MapperWIxSC(MapperBase):
 
     def get_catalog(self):
         if self.cat_data is None:
-            fn = 'WIxSC_lite_bin' + self.bn + '.fits'
-            f_exists, fname_lite = self._check_rerun_file_exists(fn)
-            # Check if lite catalog exists
-            if f_exists:
-                self.cat_data = fitsio.read(fname_lite)
-            else:
+            fn = 'WIxSC_rerun_bin' + self.bn + '.fits'
+            # Check if rerun catalog exists
+            self.cat_data = get_rerun_data(self, fn, 'FITSTable')
+            if self.cat_data is None:
                 file_data = self.config['data_catalog']
                 if not os.path.isfile(file_data):
                     raise ValueError(f"File {file_data} not found")
@@ -82,17 +81,8 @@ class MapperWIxSC(MapperBase):
                 # Sky mask
                 self.cat_data = self._mask_catalog(self.cat_data)
                 # Save lite if needed
-                if fname_lite is not None:
-                    fitsio.write(fname_lite, self.cat_data)
+                save_rerun_data(self, fn, 'FITSTable', self.cat_data)
         return self.cat_data
-
-    def _check_rerun_file_exists(self, fname):
-        path_i = self.config.get('path_rerun', None)
-        if path_i is None:
-            return False, None
-        else:
-            fname_full = os.path.join(path_i, fname)
-            return os.path.isfile(fname_full), fname_full
 
     def _mask_catalog(self, cat):
         self.mask = self.get_mask()
@@ -116,10 +106,9 @@ class MapperWIxSC(MapperBase):
     def get_nz(self, dz=0, return_jk_error=False):
         if self.dndz is None:
             fn = 'nz_WIxSC_bin' + self.bn + '.npz'
-            f_exists, f_name = self._check_rerun_file_exists(fn)
+            d = get_rerun_data(self, fn, 'NPZ')
             # Read from file if it exists
-            if f_exists:
-                d = np.load(f_name)
+            if d is not None:
                 zm = d['z_mid']
                 nz = d['nz']
                 nz_jk = d['nz_jk']
@@ -143,8 +132,8 @@ class MapperWIxSC(MapperBase):
                                                        'BCALCORR', 'RCALCORR'],
                                           njk=self.config.get('n_jk_dir', 100))
                 zm = 0.5*(z[1:] + z[:-1])
-                if f_name is not None:
-                    np.savez(f_name, z_mid=zm, nz=nz, nz_jk=nz_jk)
+                save_rerun_data(self, fn, 'NPZ',
+                                {'z_mid': zm, 'nz': nz, 'nz_jk': nz_jk})
             self.dndz = (zm, nz, nz_jk)
 
         z, nz, nz_jk = self.dndz

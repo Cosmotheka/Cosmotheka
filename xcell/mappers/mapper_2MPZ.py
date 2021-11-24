@@ -1,5 +1,6 @@
 from .mapper_base import MapperBase
-from .utils import get_map_from_points, get_DIR_Nz
+from .utils import (get_map_from_points, get_DIR_Nz,
+                    get_rerun_data, save_rerun_data)
 import fitsio
 import numpy as np
 import healpy as hp
@@ -50,14 +51,6 @@ class Mapper2MPZ(MapperBase):
 
         return self.cat_data
 
-    def _check_rerun_file_exists(self, fname):
-        path_i = self.config.get('path_rerun', None)
-        if path_i is None:
-            return False, None
-        else:
-            fname_full = os.path.join(path_i, fname)
-            return os.path.isfile(fname_full), fname_full
-
     def _mask_catalog(self, cat):
         self.mask = self.get_mask()
         ipix = hp.ang2pix(self.nside, cat[self.ra_name],
@@ -75,10 +68,9 @@ class Mapper2MPZ(MapperBase):
 
     def get_nz(self, dz=0, return_jk_error=False):
         if self.dndz is None:
-            f_exists, f_name = self._check_rerun_file_exists('nz_2MPZ.npz')
+            d = get_rerun_data(self, 'nz_2MPZ.npz', 'NPZ')
             # Read from file if it exists
-            if f_exists:
-                d = np.load(f_name)
+            if d is not None:
                 zm = d['z_mid']
                 nz = d['nz']
                 nz_jk = d['nz_jk']
@@ -104,8 +96,8 @@ class Mapper2MPZ(MapperBase):
                                           nz=100,
                                           njk=self.config.get('n_jk_dir', 100))
                 zm = 0.5*(z[1:] + z[:-1])
-                if f_name is not None:
-                    np.savez(f_name, z_mid=zm, nz=nz, nz_jk=nz_jk)
+                save_rerun_data(self, 'nz_2MPZ.npz', 'NPZ',
+                                {'z_mid': zm, 'nz': nz, 'nz_jk': nz_jk})
             self.dndz = (zm, nz, nz_jk)
 
         z, nz, nz_jk = self.dndz

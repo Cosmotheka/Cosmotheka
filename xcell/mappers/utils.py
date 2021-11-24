@@ -1,5 +1,70 @@
 import numpy as np
 import healpy as hp
+import fitsio
+import os
+
+
+def _build_rerun_fname(mpr, fname):
+    # Check if we want to save rerun data
+    path = mpr.config.get('path_rerun', None)
+    if path is None:
+        return None, False
+
+    # Check if file exists
+    fname_full = os.path.join(path, fname)
+    return fname_full, os.path.isfile(fname_full)
+
+
+def get_rerun_data(mpr, fname, ftype, section=None, read=True):
+    # Ignore rerun file if required
+    ignore = mpr.config.get('ignore_rerun', False)
+    if ignore:
+        return None
+
+    fname_full, exists = _build_rerun_fname(mpr, fname)
+    print(fname_full, exists)
+
+    # Check if we want to save rerun data
+    if fname_full is None:
+        return None
+
+    # If just checking for existence, return True/False
+    if not read:
+        return exists
+
+    # If it doesn't exist, just return False
+    if not exists:
+        return None
+
+    # Read
+    if ftype == 'FITSTable':
+        return fitsio.read(fname_full, ext=section)
+    elif ftype == 'FITSMap':
+        return hp.read_map(fname_full, field=section)
+    elif ftype == 'ASCII':
+        return np.loadtxt(fname_full, unpack=True)
+    elif ftype == 'NPZ':
+        return np.load(fname_full)
+    else:
+        raise ValueError(f"Unknown file format {ftype}")
+
+
+def save_rerun_data(mpr, fname, ftype, data):
+    fname_full, _ = _build_rerun_fname(mpr, fname)
+
+    if fname_full is None:
+        return
+
+    if ftype == 'FITSTable':
+        fitsio.write(fname_full, data, clobber=True)
+    elif ftype == 'FITSMap':
+        hp.write_map(fname_full, data, overwrite=True)
+    elif ftype == 'ASCII':
+        np.savetxt(fname_full, data)
+    elif ftype == 'NPZ':
+        np.savez(fname_full, **data)
+    else:
+        raise ValueError(f"Unknown file format {ftype}")
 
 
 def get_map_from_points(cat, nside, w=None,
