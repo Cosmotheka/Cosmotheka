@@ -19,7 +19,7 @@ def get_mapper():
 
 def test_smoke():
     m = get_mapper()
-    m.get_catalogs()
+    m.get_catalog()
     assert len(m.cat_data) == 2*hp.nside2npix(32)
 
 
