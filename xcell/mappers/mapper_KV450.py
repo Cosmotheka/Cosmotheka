@@ -17,8 +17,7 @@ class MapperKV450(MapperBase):
           'file_nz': Nz_DIR_z0.1t0.3.asc,
           'zbin':0,
           'nside':nside,
-          'mask_name': 'mask_KV450_0',
-          'path_lite': path}
+          'mask_name': 'mask_KV450_0'}
         """
 
         self._get_defaults(config)
