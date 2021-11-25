@@ -58,9 +58,9 @@ def test_get_nl_coupled_data(m):
     assert np.all(nl == 0)
 
 
-def test_lite():
-    fname_msk = 'xcell/tests/data/SDSS_dummy_mask__ns32.fits.gz'
-    fname_map = 'xcell/tests/data/SDSS_dummy_signal__ns32.fits.gz'
+def test_rerun():
+    fname_msk = 'xcell/tests/data/SDSS_dummy_mask_ns32.fits.gz'
+    fname_map = 'xcell/tests/data/SDSS_dummy_signal_ns32.fits.gz'
 
     # Cleanup just in case
     if os.path.isfile(fname_msk):
@@ -69,7 +69,7 @@ def test_lite():
         os.remove(fname_map)
 
     c = get_config()
-    c['path_lite'] = 'xcell/tests/data/'
+    c['path_rerun'] = 'xcell/tests/data/'
     m1 = xc.mappers.MapperBOSS(c)
     msk1 = m1.get_mask()
     map1 = m1.get_signal_map()[0]
