@@ -41,7 +41,7 @@ def get_rerun_data(mpr, fname, ftype, section=None, read=True):
     if ftype == 'FITSTable':
         return fitsio.read(fname_full, ext=section)
     elif ftype == 'FITSMap':
-        return hp.read_map(fname_full, field=section)
+        return np.array(hp.read_map(fname_full, field=section))
     elif ftype == 'ASCII':
         return np.loadtxt(fname_full, unpack=True)
     elif ftype == 'NPZ':

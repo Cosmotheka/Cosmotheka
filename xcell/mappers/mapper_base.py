@@ -32,8 +32,10 @@ class MapperBase(object):
     def get_nl_covariance(self):
         raise NotImplementedError("Do not use base class")
 
-    def _rerun_read_cycle(self, fname, ftype, func):
-        d = get_rerun_data(self, fname, ftype)
+    def _rerun_read_cycle(self, fname, ftype, func,
+                          section=None):
+        d = get_rerun_data(self, fname, ftype,
+                           section=section)
         if d is None:
             d = func()
             save_rerun_data(self, fname, ftype, d)

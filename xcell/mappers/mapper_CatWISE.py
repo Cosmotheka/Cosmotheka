@@ -83,7 +83,8 @@ class MapperCatWISE(MapperBase):
                                         nside_out=self.nside)
             else:
                 fn = f'CatWise_cutout_mask_ns{self.nside}.fits.gz'
-                self.mask = self._rerun_read_cycle(fn, 'FITSMap', self._cut_mask)
+                self.mask = self._rerun_read_cycle(fn, 'FITSMap',
+                                                   self._cut_mask)
         return self.mask
 
     # Shot noise

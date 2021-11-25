@@ -17,9 +17,9 @@ def get_mapper():
     return xc.mappers.MapperDESY1wl(get_config())
 
 
-def remove_lite(plite):
-    flite = glob.glob(plite + 'DESwlMETACAL*lite*.fits')
-    for f in flite:
+def remove_rerun(prerun):
+    frerun = glob.glob(prerun + 'DESY1wl*.fits*')
+    for f in frerun:
         os.remove(f)
 
 
@@ -63,11 +63,11 @@ def test_load_catalog():
     assert(np.all(cat_data == cat))
 
 
-def test_lite():
+def test_rerun():
     config = get_config()
-    plite = 'xcell/tests/data/'
-    config['path_lite'] = plite
-    remove_lite(plite)
+    prerun = 'xcell/tests/data/'
+    config['path_rerun'] = prerun
+    remove_rerun(prerun)
     # Initialize mapper
     m = xc.mappers.MapperDESY1wl(config)
     # Get maps and catalog
@@ -78,40 +78,37 @@ def test_lite():
     nl_cp = m.get_nl_coupled()
     nl_cp_psf = m.get_nl_coupled('PSF')
 
-    # Check lite files have been created
+    # Check rerun files have been created
     zbin = config['zbin']
     nside = config['nside']
 
-    for fname in [f'catalog_lite_zbin{zbin}.fits',
-                  f'signal_map_shear_e1_zbin{zbin}_ns{nside}.fits.gz',
-                  f'signal_map_shear_e2_zbin{zbin}_ns{nside}.fits.gz',
-                  f'signal_map_PSF_e1_zbin{zbin}_ns{nside}.fits.gz',
-                  f'signal_map_PSF_e2_zbin{zbin}_ns{nside}.fits.gz',
-                  f'signal_map_PSF_e2_zbin{zbin}_ns{nside}.fits.gz',
-                  f'mask_zbin{zbin}_ns{nside}.fits.gz',
-                  f'shear_w2s2_zbin{zbin}_ns{nside}.fits.gz',
-                  f'PSF_w2s2_zbin{zbin}_ns{nside}.fits.gz']:
-        assert os.path.isfile(os.path.join(plite, "DESwlMETACAL_" + fname))
+    for fname in [f'catalog_rerun_bin{zbin}.fits',
+                  f'signal_map_shear_bin{zbin}_ns{nside}.fits.gz',
+                  f'signal_map_PSF_bin{zbin}_ns{nside}.fits.gz',
+                  f'mask_bin{zbin}_ns{nside}.fits.gz',
+                  f'shear_w2s2_bin{zbin}_ns{nside}.fits.gz',
+                  f'PSF_w2s2_bin{zbin}_ns{nside}.fits.gz']:
+        assert os.path.isfile(os.path.join(prerun, "DESY1wl_" + fname))
 
     # Check we recover the same mask and catalog
-    # Non-exsisting fits files - read from lite
+    # Non-exsisting fits files - read from rerun
     config['data_cat'] = 'whatever'
-    m_lite = xc.mappers.MapperDESY1wl(config)
-    cat_from_lite = m_lite.get_catalog()
-    s_from_lite = m_lite.get_signal_map()
-    psf_from_lite = m_lite.get_signal_map('PSF')
-    mask_from_lite = m_lite.get_mask()
-    nl_cp_from_lite = m_lite.get_nl_coupled()
-    nl_cp_psf_from_lite = m_lite.get_nl_coupled('PSF')
-    assert np.all(cat == cat_from_lite)
-    assert np.all(np.array(s) == np.array(s_from_lite))
-    assert np.all(np.array(psf) == np.array(psf_from_lite))
-    assert np.all(mask == mask_from_lite)
-    assert np.all(nl_cp == nl_cp_from_lite)
-    assert np.all(nl_cp_psf == nl_cp_psf_from_lite)
+    m_rerun = xc.mappers.MapperDESY1wl(config)
+    cat_from_rerun = m_rerun.get_catalog()
+    s_from_rerun = m_rerun.get_signal_map()
+    psf_from_rerun = m_rerun.get_signal_map('PSF')
+    mask_from_rerun = m_rerun.get_mask()
+    nl_cp_from_rerun = m_rerun.get_nl_coupled()
+    nl_cp_psf_from_rerun = m_rerun.get_nl_coupled('PSF')
+    assert np.all(cat == cat_from_rerun)
+    assert np.all(np.array(s) == np.array(s_from_rerun))
+    assert np.all(np.array(psf) == np.array(psf_from_rerun))
+    assert np.all(mask == mask_from_rerun)
+    assert np.all(nl_cp == nl_cp_from_rerun)
+    assert np.all(nl_cp_psf == nl_cp_psf_from_rerun)
 
-    # Clean lite
-    remove_lite(plite)
+    # Clean rerun
+    remove_rerun(prerun)
 
 
 def test_get_signal_map():
