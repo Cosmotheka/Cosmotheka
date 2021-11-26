@@ -10,6 +10,7 @@ class MapperACTBase(MapperBase):
         self._get_defaults(config)
         self.file_map = config['file_map']
         self.file_mask = config['file_mask']
+        self.map_name = config['map_name']
         self.lmax = config.get('lmax', 6000)
         self.signal_map = None
         self.mask = None
