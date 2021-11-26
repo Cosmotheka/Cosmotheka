@@ -89,8 +89,9 @@ class MapperDELS(MapperBase):
         return 1./(1+((zz[:, None]-zz[None, :]-m)/s)**2/(2*a))**a
 
     def _get_nz(self):
+        cat_data = self.get_catalog()
         mskflag = self._get_angmask()
-        h, b = np.histogram(self.cat_data[self.pz][mskflag],
+        h, b = np.histogram(cat_data[self.pz][mskflag],
                             range=[-0.3, 1], bins=self.num_z_bins)
         z_arr = 0.5 * (b[:-1] + b[1:])
         kernel = self._get_lorentzian(z_arr)
