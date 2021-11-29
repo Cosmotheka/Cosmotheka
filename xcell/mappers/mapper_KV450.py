@@ -1,5 +1,5 @@
 from .mapper_base import MapperBase
-from .utils import get_map_from_points
+from .utils import get_map_from_points, save_rerun_data
 from astropy.table import Table, vstack
 import numpy as np
 import healpy as hp
@@ -61,24 +61,31 @@ class MapperKV450(MapperBase):
         if self.cat_data is None:
             fn = f'KV450_cat_bin{self.zbin}.fits'
             self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
-                                                   self._load_catalog)
+                                                   self._load_catalog,
+                                                   already_saved=True)
         return self.cat_data
 
     def _load_catalog(self):
-        cat = []
+        nzbins = self.zbin_edges.shape[0]
+        cat_bins = [Table() for i in range(nzbins)]
+
         for file_data in self.config['data_catalogs']:
-            cat_i = Table.read(file_data, format='fits')[self.column_names]
+            cat_field = Table.read(file_data, format='fits')[self.column_names]
             # GAAP cut
-            goodgaap = cat_i['GAAP_Flag_ugriZYJHKs'] == 0
-            cat_i = cat_i[goodgaap]
+            goodgaap = cat_field['GAAP_Flag_ugriZYJHKs'] == 0
+            cat_field = cat_field[goodgaap]
             # Binning
-            sel = self._bin_z(cat_i, self.zbin)
-            cat_i = cat_i[sel]
-            self._remove_additive_bias(cat_i)
-            cat.append(cat_i)
-        cat = vstack(cat)
-        self._remove_multiplicative_bias(cat, self.zbin)
-        return cat.as_array()
+            for ibin in range(nzbins):
+                sel = self._bin_z(cat_field, ibin)
+                cat_field_bin = cat_field[sel]
+                self._remove_additive_bias(cat_field_bin)
+                cat_bins[ibin] = vstack([cat_bins[ibin], cat_field_bin])
+
+        for ibin, cat in enumerate(cat_bins):
+            self._remove_multiplicative_bias(cat, ibin)
+            fn = f'KV450_cat_bin{ibin}.fits'
+            save_rerun_data(self, fn, 'FITSTable', cat.as_array())
+        return cat_bins[self.zbin].as_array()
 
     def _set_mode(self, mode=None):
         if mode is None:

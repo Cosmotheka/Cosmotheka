@@ -1,5 +1,5 @@
 from .mapper_base import MapperBase
-from .utils import get_map_from_points
+from .utils import get_map_from_points, save_rerun_data
 from astropy.table import Table
 import numpy as np
 import healpy as hp
@@ -56,17 +56,25 @@ class MapperKiDS1000(MapperBase):
         if self.cat_data is None:
             fn = f'KiDS1000_cat_bin{self.zbin}.fits'
             self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
-                                                   self._load_catalog)
+                                                   self._load_catalog,
+                                                   already_saved=True)
         return self.cat_data
 
     def _load_catalog(self):
-        cat = Table.read(self.config['data_catalog'],
-                         format='fits')[self.column_names]
-        sel = self._bin_z(cat, self.zbin)
-        cat = cat[sel]
-        self._remove_additive_bias(cat)
-        self._remove_multiplicative_bias(cat, self.zbin)
-        return cat.as_array()
+        nzbins = self.zbin_edges.shape[0]
+        cats = []
+        cat_full = Table.read(self.config['data_catalog'],
+                              format='fits')[self.column_names]
+        for ibin in range(nzbins):
+            sel = self._bin_z(cat_full, ibin)
+            cat = cat_full[sel]
+            self._remove_additive_bias(cat)
+            self._remove_multiplicative_bias(cat, ibin)
+            cat = cat.as_array()
+            fn = f'KiDS1000_cat_bin{ibin}.fits'
+            save_rerun_data(self, fn, 'FITSTable', cat)
+            cats.append(cat)
+        return cats[self.zbin]
 
     def _set_mode(self, mode=None):
         if mode is None:
