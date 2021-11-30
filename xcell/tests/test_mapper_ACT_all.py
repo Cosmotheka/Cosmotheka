@@ -1,5 +1,7 @@
 import xcell as xc
 from pixell import enmap, reproject
+import healpy as hp
+import os
 import pytest
 
 
@@ -33,7 +35,8 @@ def test_get_dtype(cls, typ):
 @pytest.mark.parametrize('cls', [(xc.mappers.MapperACTk)])
 def test_get_signal_map(cls):
     conf = get_config()
-    m = cls(get_config())
+    conf['path_rerun'] = 'xcell/tests/data/'
+    m = cls(conf)
     mb_pxll = enmap.read_map(conf['file_map'])
     mb = [reproject.healpix_from_enmap(mb_pxll,
                                        lmax=6000,
@@ -41,10 +44,15 @@ def test_get_signal_map(cls):
     mm = m.get_signal_map()[0]
     assert (len(mm)/12)**(1/2) == 32
     assert (mb == mm).all()
+    fn = 'xcell/tests/data/ACT_test_signal.fits.gz'
+    mrerun = hp.read_map(fn)
+    assert (mrerun == mb).all()
+    os.remove(fn)
 
 
 def test_get_mask():
     conf = get_config()
+    conf['path_rerun'] = 'xcell/tests/data/'
     m = xc.mappers.MapperACTBase(conf)
     mb_pxll = enmap.read_map(conf['file_mask'])
     mb = [reproject.healpix_from_enmap(mb_pxll,
@@ -53,3 +61,7 @@ def test_get_mask():
     mm = m.get_mask()
     assert (len(mm)/12)**(1/2) == 32
     assert (mb == mm).all()
+    fn = 'xcell/tests/data/ACT_test_mask.fits.gz'
+    mrerun = hp.read_map(fn)
+    assert (mrerun == mb).all()
+    os.remove(fn)
