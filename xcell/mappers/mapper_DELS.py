@@ -56,6 +56,7 @@ class MapperDELS(MapperBase):
                 cat.append(Table.read(f))
         cat = vstack(cat)
         cat = self._bin_z(cat)
+        cat.keep_columns(['RA', 'DEC', self.pz])
         return cat.as_array()
 
     def get_catalog(self):
