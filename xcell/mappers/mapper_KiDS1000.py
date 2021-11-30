@@ -62,7 +62,7 @@ class MapperKiDS1000(MapperBase):
 
     def _load_catalog(self):
         nzbins = self.zbin_edges.shape[0]
-        cats = []
+        cat_out = None
         cat_full = Table.read(self.config['data_catalog'],
                               format='fits')[self.column_names]
         for ibin in range(nzbins):
@@ -73,8 +73,9 @@ class MapperKiDS1000(MapperBase):
             cat = cat.as_array()
             fn = f'KiDS1000_cat_bin{ibin}.fits'
             save_rerun_data(self, fn, 'FITSTable', cat)
-            cats.append(cat)
-        return cats[self.zbin]
+            if ibin == self.zbin:
+                cat_out = cat
+        return cat_out
 
     def _set_mode(self, mode=None):
         if mode is None:
