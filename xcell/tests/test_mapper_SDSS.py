@@ -61,6 +61,7 @@ def test_get_nl_coupled_data(m):
 def test_rerun():
     fname_msk = 'xcell/tests/data/SDSS_dummy_mask_ns32.fits.gz'
     fname_map = 'xcell/tests/data/SDSS_dummy_signal_ns32.fits.gz'
+    fname_nls = 'xcell/tests/data/SDSS_dummy_Nell_ns32.npz'
 
     # Cleanup just in case
     if os.path.isfile(fname_msk):
@@ -73,20 +74,25 @@ def test_rerun():
     m1 = xc.mappers.MapperBOSS(c)
     msk1 = m1.get_mask()
     map1 = m1.get_signal_map()[0]
+    nl1 = m1.get_nl_coupled()
 
     # Check maps exist
     assert os.path.isfile(fname_msk)
     assert os.path.isfile(fname_map)
+    assert os.path.isfile(fname_nls)
 
     # Now they will be read from file
     m2 = xc.mappers.MapperBOSS(c)
     msk2 = m2.get_mask()
     map2 = m2.get_signal_map()[0]
+    nl2 = m2.get_nl_coupled()
 
     # Check the maps are the same
     assert np.all(map1-map2 == 0.0)
     assert np.all(msk1-msk2 == 0.0)
+    assert np.all(nl1-nl2 == 0.0)
 
     # Final cleanup
     os.remove(fname_msk)
     os.remove(fname_map)
+    os.remove(fname_nls)

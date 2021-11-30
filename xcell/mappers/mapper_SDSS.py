@@ -146,14 +146,15 @@ class MapperSDSS(MapperBase):
             cl = nmt.compute_coupled_cell(f, f)[0]
             N_ell = np.mean(cl[self.lmin_nl_from_data:2*self.nside])
             nl_coupled = N_ell * np.ones((1, 3*self.nside))
-        return nl_coupled
+        return {'nls': nl_coupled}
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             fn = '_'.join([f'SDSS_{self.SDSS_name}_Nell',
                            f'ns{self.nside}.npz'])
-            self.nl_coupled = self._rerun_read_cycle(fn, 'NPZ',
-                                                     self._get_nl_coupled)
+            d = self._rerun_read_cycle(fn, 'NPZ',
+                                       self._get_nl_coupled)
+            self.nl_coupled = d['nls']
         return self.nl_coupled
 
     def _bin_z(self, cat):
