@@ -62,7 +62,7 @@ class MapperKV450(MapperBase):
             fn = f'KV450_cat_bin{self.zbin}.fits'
             self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
                                                    self._load_catalog,
-                                                   already_saved=True)
+                                                   saved_by_func=True)
         return self.cat_data
 
     def _load_catalog(self):

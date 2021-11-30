@@ -18,7 +18,6 @@ class MapperWIxSC(MapperBase):
            'spec_sample': 'zSpec-comp-WIxSC.csv',
            'bin_name': '0',
            'z_edges': [0, 0.5],
-           'path_rerun': '.',
            'n_jk_dir': 100,
            'mask_name': 'mask_WIxSC'}
         """

@@ -9,8 +9,7 @@ import healpy as hp
 class MapperHSCDR1wl(MapperBase):
     def __init__(self, config):
         """ Inputs:
-        {'path_rerun': path to lightweight files
-         'depth_cut': i-band magnitude cut (24.5)
+        {'depth_cut': i-band magnitude cut (24.5)
          'z_edges': photo-z bin edges
          'bin_name': name for this redshift bin
          'data_catalogs': list of lists of files (one list for each HSC field)
