@@ -86,3 +86,15 @@ def test_get_spin():
     config = get_config()
     m = xc.mappers.MapperCatWISE(config)
     assert m.get_spin() == 0
+
+
+def test_rerun():
+    config = get_config()
+    config['path_rerun'] = 'xcell/tests/data/'
+    config.pop('mask_sources')
+    m = xc.mappers.MapperCatWISE(config)
+    msk = m.get_mask()
+    fn = 'xcell/tests/data/CatWise_cutout_mask_ns32.fits.gz'
+    mskb = hp.read_map(fn)
+    assert (msk == mskb).all()
+    os.remove(fn)

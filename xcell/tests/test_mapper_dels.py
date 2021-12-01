@@ -1,6 +1,8 @@
 import numpy as np
 import xcell as xc
 import healpy as hp
+from astropy.table import Table
+import os
 
 
 def get_config():
@@ -19,8 +21,26 @@ def get_mapper():
 
 def test_smoke():
     m = get_mapper()
-    m.get_catalogs()
+    m.get_catalog()
     assert len(m.cat_data) == 2*hp.nside2npix(32)
+
+
+def test_rerun():
+    conf = get_config()
+    conf['path_rerun'] = 'xcell/tests/data/'
+    m = xc.mappers.MapperDELS(conf)
+    cat = m.get_catalog()
+    fn = 'xcell/tests/data/DELS_cat_bin0.fits'
+    catb = Table.read(fn)
+    assert len(catb) == len(cat)
+    os.remove(fn)
+
+    dndz = m.get_nz()
+    fn = 'xcell/tests/data/DELS_dndz_bin0.npz'
+    d = np.load(fn)
+    assert (dndz[0] == d['z_mid'][d['z_mid'] >= 0]).all()
+    assert (dndz[1] == d['nz'][d['z_mid'] >= 0]).all()
+    os.remove(fn)
 
 
 def test_get_nz():

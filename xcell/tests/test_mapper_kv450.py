@@ -25,18 +25,23 @@ def get_es():
                      axis=0).flatten()
 
 
-def test_lite():
+def test_rerun():
     config = get_config()
-    config['path_lite'] = 'xcell/tests/data/'
+    config['path_rerun'] = 'xcell/tests/data/'
     ifile = 0
-    while os.path.isfile(f'xcell/tests/data/KV450_lite_cat_zbin{ifile}.fits'):
-        os.remove(f'xcell/tests/data/KV450_lite_cat_zbin{ifile}.fits')
+    while os.path.isfile(f'xcell/tests/data/KV450_cat_bin{ifile}.fits'):
+        os.remove(f'xcell/tests/data/KV450_cat_bin{ifile}.fits')
         ifile += 1
     m = xc.mappers.MapperKV450(config)
     m.get_catalog()
-    assert os.path.isfile('xcell/tests/data/KV450_lite_cat_zbin0.fits')
+    assert os.path.isfile('xcell/tests/data/KV450_cat_bin0.fits')
+    ifile = 0
+    # Cleanup
+    while os.path.isfile(f'xcell/tests/data/KV450_cat_bin{ifile}.fits'):
+        os.remove(f'xcell/tests/data/KV450_cat_bin{ifile}.fits')
+        ifile += 1
 
-    # Non-exsisting fits files - read from lite
+    # Non-exsisting fits files - read from rerun
     config['data_catalogs'] = ['whatever', 'whatever']
     xc.mappers.MapperKV450(config)
 

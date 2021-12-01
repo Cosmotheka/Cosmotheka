@@ -3,7 +3,6 @@ from scipy.interpolate import interp1d
 import numpy as np
 import healpy as hp
 import pymaster as nmt
-import os
 
 
 class MapperP18CMBK(MapperBase):
@@ -13,7 +12,6 @@ class MapperP18CMBK(MapperBase):
         {'file_klm':'COM_Lensing_4096_R3.00/MV/dat_klm.fits',
          'file_mask':'COM_Lensing_4096_R3.00/mask.fits.gz',
          'file_noise':'COM_Lensing_4096_R3.00/MV/nlkk.dat',
-         'path_lite': './path/lite'
          'mask_aposize': 0.2,
          'mask_apotype': 'C1',
          'mask_name': 'mask_CMBK',
@@ -22,7 +20,6 @@ class MapperP18CMBK(MapperBase):
         self._get_defaults(config)
         self.mask_apotype = config.get('mask_apotype', 'C1')
         self.mask_aposize = config.get('mask_aposize', 0.2)
-        self.path_lite = config.get('path_lite', None)
 
         self.noise = None
 
@@ -36,17 +33,6 @@ class MapperP18CMBK(MapperBase):
         self.mask = None
         self.cl_fid = None
 
-    def _check_mask_exists(self):
-        if self.path_lite is None:
-            return False, None
-        else:
-            file_name = '_'.join([f'P18CMBK_mask_{self.mask_aposize}',
-                                  f'{self.mask_apotype}',
-                                  f'ns{self.nside}.fits.gz'])
-            fname_lite = os.path.join(self.path_lite, file_name)
-            os.makedirs(self.path_lite, exist_ok=True)
-            return os.path.isfile(fname_lite), fname_lite
-
     def get_signal_map(self):
         if self.signal_map is None:
             # Read alms
@@ -59,33 +45,30 @@ class MapperP18CMBK(MapperBase):
                 fl = np.ones(lmax+1)
                 fl[3*self.nside:] = 0
                 self.klm = hp.almxfl(self.klm, fl, inplace=True)
-            self.signal_map = [hp.alm2map(self.klm, self.nside,
-                                          verbose=False)]
+            self.signal_map = [hp.alm2map(self.klm, self.nside)]
         return self.signal_map
+
+    def _get_mask(self):
+        msk = hp.read_map(self.config['file_mask'],
+                          dtype=float)
+        if self.rotate:
+            msk = self.r.rotate_map_pixel(msk)
+            # Binarize
+            thr = self.config.get('mask_threshold', 0.5)
+            msk[msk < thr] = 0
+            msk[msk >= thr] = 1.
+        # Apodize
+        msk = nmt.mask_apodization(msk, self.mask_aposize,
+                                   self.mask_apotype)
+        msk = hp.ud_grade(msk, nside_out=self.nside)
+        return msk
 
     def get_mask(self):
         if self.mask is None:
-            read_lite, fname = self._check_mask_exists()
-            if read_lite:
-                self.mask = hp.read_map(fname, dtype=float)
-            else:
-                self.mask = hp.read_map(self.config['file_mask'],
-                                        verbose=False, dtype=float)
-                if self.rotate:
-                    self.mask = self.r.rotate_map_pixel(self.mask)
-                    # Binarize
-                    thr = self.config.get('mask_threshold', 0.5)
-                    self.mask[self.mask < thr] = 0
-                    self.mask[self.mask >= thr] = 1.
-                # Apodize
-                self.mask = nmt.mask_apodization(self.mask, self.mask_aposize,
-                                                 self.mask_apotype)
-                self.mask = hp.ud_grade(self.mask,
-                                        nside_out=self.nside)
-                # Save
-                if fname:
-                    hp.write_map(fname, self.mask, overwrite=True,
-                                 dtype=float)
+            fn = '_'.join([f'P18CMBK_mask_{self.mask_aposize}',
+                           f'{self.mask_apotype}',
+                           f'ns{self.nside}.fits.gz'])
+            self.mask = self._rerun_read_cycle(fn, 'FITSMap', self._get_mask)
         return self.mask
 
     def get_nl_coupled(self):
@@ -99,7 +82,7 @@ class MapperP18CMBK(MapperBase):
             # The Nl in the file is decoupled. To "couple" it, multiply by the
             # mean of the squared mask. This will account for the factor that
             # will be divided for the coviariance.
-            nl *= np.mean(self.get_mask() ** 2.)
+            nl *= np.mean(self.get_mask()**2.)
             self.nl_coupled = np.array([nl])
         return self.nl_coupled
 

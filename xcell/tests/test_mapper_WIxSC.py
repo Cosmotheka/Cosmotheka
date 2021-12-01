@@ -21,7 +21,7 @@ def get_config():
 
 
 def cleanup_rerun():
-    for fname in ['nz_WIxSC_bin0.npz', 'WIxSC_lite_bin0.fits']:
+    for fname in ['nz_WIxSC_bin0.npz', 'WIxSC_rerun_bin0.fits']:
         if os.path.isfile(fname):
             os.remove(fname)
 
@@ -33,10 +33,12 @@ def get_mapper():
 def test_smoke():
     cleanup_rerun()
     m = get_mapper()
-    m.get_catalog()
+    cat = m.get_catalog()
     assert len(m.cat_data) == hp.nside2npix(32)
-    # Check that the lite field has been created
-    assert os.path.isfile('./WIxSC_lite_bin0.fits')
+    # Check that the rerun catalog has been created
+    assert os.path.isfile('./WIxSC_rerun_bin0.fits')
+    t = Table.read('./WIxSC_rerun_bin0.fits')
+    assert (cat['RA'] == t['RA']).all()
 
 
 def test_get_nz():

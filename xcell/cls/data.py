@@ -273,6 +273,8 @@ class Data():
         elif config['nside'] != nside:
             raise ValueError(f"Nside missmatch in tracer {tr} and " +
                              f"'sphere': {config['nside']} vs {nside}")
+        if 'path_rerun' not in config:
+            config['path_rerun'] = self.data.get('path_rerun', None)
         mapper_class = config['mapper_class']
         return mapper_from_name(mapper_class)(config)
 
