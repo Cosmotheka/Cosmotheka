@@ -1,6 +1,5 @@
 from .mapper_base import MapperBase
 from .utils import get_map_from_points
-from astropy.io import fits
 from astropy.table import Table, vstack
 from scipy.integrate import simps
 import numpy as np
@@ -52,11 +51,11 @@ class MapperDELS(MapperBase):
         for file_data in self.config['data_catalogs']:
             if not os.path.isfile(file_data):
                 raise ValueError(f"File {file_data} not found")
-            with fits.open(file_data) as f:
-                cat.append(Table.read(f))
+            c = Table.read(file_data, format='fits')
+            c.keep_columns(['RA', 'DEC', self.pz])
+            cat.append(c)
         cat = vstack(cat)
         cat = self._bin_z(cat)
-        cat.keep_columns(['RA', 'DEC', self.pz])
         return cat.as_array()
 
     def get_catalog(self):
@@ -104,13 +103,8 @@ class MapperDELS(MapperBase):
     def get_nz(self, dz=0):
         if self.dndz is None:
             fn = f'DELS_dndz_bin{self.zbin}.npz'
-            d = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
-            self.dndz = np.array([d['z_mid'], d['nz']])
-
-        z, nz = self.dndz
-        z_dz = z + dz
-        sel = z_dz >= 0
-        return np.array([z_dz[sel], nz[sel]])
+            self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
+        return self._get_shifted_nz(dz)
 
     def get_signal_map(self, apply_galactic_correction=True):
         if self.delta_map is None:

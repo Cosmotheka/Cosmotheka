@@ -132,12 +132,8 @@ class MapperNVSS(MapperBase):
             bins = np.arange(0, max(self.cat_redshift['redshift'])+0.1, 0.1)
             nz, bins = np.histogram(self.cat_redshift['redshift'], bins)
             zz = 0.5*(bins[1:]+bins[:-1])
-            self.dndz = (zz, nz)
-
-        z, nz = self.dndz
-        z_dz = z + dz
-        sel = z_dz >= 0
-        return np.array([z_dz[sel], nz[sel]])
+            self.dndz = {'z_mid': zz, 'nz': nz}
+        return self._get_shifted_nz(dz)
 
     # Type
     def get_dtype(self):

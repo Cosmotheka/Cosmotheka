@@ -188,17 +188,11 @@ class MapperDESY1wl(MapperBase):
 
     def get_nz(self, dz=0):
         if self.dndz is None:
-            file_nz = Table.read(self.config['file_nz'], format='fits',
-                                 hdu=1)['Z_MID', 'BIN{}'.format(self.zbin + 1)]
-            z = file_nz['Z_MID']
-            nz = file_nz['BIN{}'.format(self.zbin + 1)]
-            self.dndz = np.array([z, nz])
-
-        z, nz = self.dndz
-        z_dz = z + dz
-        sel = z_dz >= 0
-
-        return np.array([z_dz[sel], nz[sel]])
+            f = Table.read(self.config['file_nz'], format='fits',
+                           hdu=1)['Z_MID', 'BIN{}'.format(self.zbin + 1)]
+            self.dndz = {'z_mid': f['Z_MID'],
+                         'nz': f['BIN{}'.format(self.zbin + 1)]}
+        return self._get_shifted_nz(dz)
 
     def _get_mask(self):
         cat_data = self.get_catalog()

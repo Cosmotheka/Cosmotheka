@@ -247,13 +247,8 @@ class MapperHSCDR1wl(MapperBase):
     def get_nz(self, dz=0):
         if self.dndz is None:
             fname = f'HSCDR1wl_nz_{self.bn}.npz'
-            d = self._rerun_read_cycle(fname, 'NPZ', self._get_nz)
-            self.dndz = [d['z_mid'], d['nz']]
-
-        z, nz = self.dndz
-        z_dz = z + dz
-        sel = z_dz >= 0
-        return np.array([z_dz[sel], nz[sel]])
+            self.dndz = self._rerun_read_cycle(fname, 'NPZ', self._get_nz)
+        return self._get_shifted_nz(dz)
 
     def get_dtype(self):
         return 'galaxy_shear'

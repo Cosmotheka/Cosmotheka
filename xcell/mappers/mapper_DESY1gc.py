@@ -66,14 +66,9 @@ class MapperDESY1gc(MapperBase):
     def get_nz(self, dz=0):
         if self.dndz is None:
             f = fits.open(self.config['file_nz'])[7].data
-            z = f['Z_MID']
-            nz = f['BIN%d' % (self.zbin+1)]
-            self.dndz = np.array([z, nz])
-        # Shift distribution by dz and remove z + dz < 0
-        z, nz = self.dndz
-        z_dz = z + dz
-        sel = z_dz >= 0
-        return np.array([z_dz[sel], nz[sel]])
+            self.dndz = {'z_mid': f['Z_MID'],
+                         'nz': f['BIN%d' % (self.zbin+1)]}
+        return self._get_shifted_nz(dz)
 
     def get_signal_map(self):
         if self.delta_map is None:

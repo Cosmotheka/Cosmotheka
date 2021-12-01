@@ -45,7 +45,7 @@ class MapperKV450(MapperBase):
         self.w2s2 = None
         self.w2s2s = {'PSF': None, 'shear': None, 'stars': None}
 
-        self.dndz = np.loadtxt(self.config['file_nz'], unpack=True)
+        self.dndz = None
         self.sel = {'galaxies': 1, 'stars': 0}
 
         self.signal_map = None
@@ -221,14 +221,10 @@ class MapperKV450(MapperBase):
         return self.nl_coupled
 
     def get_nz(self, dz=0):
-        if not dz:
-            return self.dndz
-
-        z, nz = self.dndz
-        z_dz = z + dz
-        sel = z_dz >= 0
-
-        return np.array([z_dz[sel], nz[sel]])
+        if self.dndz is None:
+            z, nz = np.loadtxt(self.config['file_nz'], unpack=True)
+            self.dndz = {'z_mid': z, 'nz': nz}
+        return self._get_shifted_nz(dz)
 
     def get_dtype(self):
         return 'galaxy_shear'

@@ -91,13 +91,8 @@ class MapperDummy(MapperBase):
             else:
                 return None
 
-            self.dndz = np.array([z, nz])
-
-        z, nz = self.dndz
-        z_dz = z + dz
-        sel = z_dz >= 0
-
-        return np.array([z_dz[sel], nz[sel]])
+            self.dndz = {'z_mid': z, 'nz': nz}
+        return self._get_shifted_nz(dz)
 
     def _get_cl_ccl(self, dtype):
         ls = np.arange(3 * self.nside)

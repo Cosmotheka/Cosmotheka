@@ -91,18 +91,8 @@ class Mapper2MPZ(MapperBase):
     def get_nz(self, dz=0, return_jk_error=False):
         if self.dndz is None:
             fn = 'nz_2MPZ.npz'
-            d = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
-            self.dndz = (d['z_mid'], d['nz'], d['nz_jk'])
-
-        z, nz, nz_jk = self.dndz
-        z_dz = z + dz
-        sel = z_dz >= 0
-        if return_jk_error:
-            njk = len(nz_jk)
-            enz = np.std(nz_jk, axis=0)*np.sqrt((njk-1)**2/njk)
-            return np.array([z_dz[sel], nz[sel], enz[sel]])
-        else:
-            return np.array([z_dz[sel], nz[sel]])
+            self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
+        return self._get_shifted_nz(dz, return_jk_error=return_jk_error)
 
     def get_signal_map(self, apply_galactic_correction=True):
         if self.delta_map is None:

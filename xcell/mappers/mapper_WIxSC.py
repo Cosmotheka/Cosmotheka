@@ -33,10 +33,8 @@ class MapperWIxSC(MapperBase):
         self.dndz = None
         self.mask = None
         self.stars = None
-        self.dndz = None
         self.delta_map = None
         self.nl_coupled = None
-        self.mask = None
         self.nside_nl_threshold = config.get('nside_nl_threshold',
                                              4096)
         self.lmin_nl_from_data = config.get('lmin_nl_from_data',
@@ -126,18 +124,8 @@ class MapperWIxSC(MapperBase):
     def get_nz(self, dz=0, return_jk_error=False):
         if self.dndz is None:
             fn = 'nz_WIxSC_bin' + self.bn + '.npz'
-            d = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
-            self.dndz = (d['z_mid'], d['nz'], d['nz_jk'])
-
-        z, nz, nz_jk = self.dndz
-        z_dz = z + dz
-        sel = z_dz >= 0
-        if return_jk_error:
-            njk = len(nz_jk)
-            enz = np.std(nz_jk, axis=0)*np.sqrt((njk-1)**2/njk)
-            return np.array([z_dz[sel], nz[sel], enz[sel]])
-        else:
-            return np.array([z_dz[sel], nz[sel]])
+            self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
+        return self._get_shifted_nz(dz, return_jk_error=return_jk_error)
 
     def get_signal_map(self):
         if self.delta_map is None:

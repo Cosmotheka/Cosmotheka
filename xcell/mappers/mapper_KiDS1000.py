@@ -211,16 +211,9 @@ class MapperKiDS1000(MapperBase):
 
     def get_nz(self, dz=0):
         if self.dndz is None:
-            self.dndz = np.loadtxt(self.config['file_nz'], unpack=True)[:2]
-
-        if not dz:
-            return self.dndz
-
-        z, nz = self.dndz
-        z_dz = z + dz
-        sel = z_dz >= 0
-
-        return np.array([z_dz[sel], nz[sel]])
+            z, nz = np.loadtxt(self.config['file_nz'], unpack=True)[:2]
+            self.dndz = {'z_mid': z, 'nz': nz}
+        return self._get_shifted_nz(dz)
 
     def get_dtype(self):
         return 'galaxy_shear'

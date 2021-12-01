@@ -45,7 +45,8 @@ def get_rerun_data(mpr, fname, ftype, section=None, read=True):
     elif ftype == 'ASCII':
         return np.loadtxt(fname_full, unpack=True)
     elif ftype == 'NPZ':
-        return np.load(fname_full)
+        d = np.load(fname_full)
+        return dict(d)
     else:
         raise ValueError(f"Unknown file format {ftype}")
 

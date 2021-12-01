@@ -42,6 +42,19 @@ class MapperBase(object):
                 save_rerun_data(self, fname, ftype, d)
         return d
 
+    def _get_shifted_nz(self, dz, return_jk_error=False):
+        z = self.dndz['z_mid']
+        nz = self.dndz['nz']
+        z_dz = z + dz
+        sel = z_dz >= 0
+        if return_jk_error:
+            nz_jk = self.dndz['nz_jk']
+            njk = len(nz_jk)
+            enz = np.std(nz_jk, axis=0)*np.sqrt((njk-1)**2/njk)
+            return np.array([z_dz[sel], nz[sel], enz[sel]])
+        else:
+            return np.array([z_dz[sel], nz[sel]])
+
     def get_ell(self):
         return np.arange(3 * self.nside)
 
