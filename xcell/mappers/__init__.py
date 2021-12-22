@@ -23,6 +23,8 @@ from .mapper_NVSS import MapperNVSS
 from .mapper_CatWISE import MapperCatWISE
 from .mapper_ROSAT import MapperROSATXray
 from .mapper_dummy import MapperDummy
+from .mapper_mwhite_LRGgc import MapperMWhiteLRGgc
+from .mapper_mwhite_P18CMBK import MapperMWhiteP18CMBK
 from .utils import (get_map_from_points, get_DIR_Nz, get_beam,
                     get_rerun_data, save_rerun_data)
 
