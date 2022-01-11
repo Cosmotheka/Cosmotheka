@@ -46,7 +46,6 @@ class MapperBase(object):
         mask = self.get_mask(**kwargs)
         cont = self.get_contaminants(**kwargs)
         beam = self.get_beam()
-        print(beam)
         n_iter = kwargs.get('n_iter', 0)
         return nmt.NmtField(mask, signal, beam=beam,
                             templates=cont, n_iter=n_iter)
