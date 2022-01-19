@@ -16,6 +16,7 @@ class MapperPlanckBase(MapperBase):
         self.file_mask = config.get('file_mask', None)
         self.file_gp_mask = config.get('file_gp_mask', None)
         self.file_ps_mask = config.get('file_ps_mask', None)
+        self.file_wind_func = config.get('window_function', None)
         self.signal_map = None
         self.hm1_map = None
         self.hm2_map = None
@@ -25,14 +26,15 @@ class MapperPlanckBase(MapperBase):
         self.cls_cov = None
         self.custom_auto = True
         self.mask = None
+        self.wind_func = None
 
     def get_signal_map(self):
         if self.signal_map is None:
             signal_map = hp.read_map(self.file_map)
+            signal_map[0][signal_map[0] == hp.UNSEEN] = 0.0
+            signal_map[0][np.isnan(signal_map[0])] = 0.0
             self.signal_map = [hp.ud_grade(signal_map,
                                            nside_out=self.nside)]
-            self.signal_map[0][self.signal_map[0] == hp.UNSEEN] = 0.0
-            self.signal_map[0][np.isnan(self.signal_map[0])] = 0.0
         return self.signal_map
 
     def get_mask(self):
@@ -98,6 +100,15 @@ class MapperPlanckBase(MapperBase):
                             'auto_12': cl_12,
                             'auto_22': cl_22}
         return self.cls_cov
+    
+    def get_wind_func(self):
+        if self.wind_func is None:
+            windowfuncs = pd.read_csv(self.file_wind_func, comment='#')
+            winf_4096 = hp.sphtfunc.pixwin(4096)[[int(l) for l in windowfuncs['ell']]]
+            winf_nside = hp.sphtfunc.pixwin(self.nside)[[int(l) for l in windowfuncs['ell']]]
+            self.wind_func = interp1d(np.array(windowfuncs['ell']),
+                                      np.array(winf_nside*windowfuncs['Wl_eff']/winf_4096))
+        return self.wind_func
 
     def get_spin(self):
         return 0
