@@ -245,7 +245,7 @@ class Cl(ClBase):
                 cl_cov_22_cp *= correction
 
             if (mapper1.wf is not None) or (mapper2.wf is not None):
-                # Applies a given window function to 
+                # Applies a given window function to
                 # the cl's
                 wf_a = mapper1.wf(ell)
                 wf_b = mapper2.wf(ell)

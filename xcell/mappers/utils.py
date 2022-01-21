@@ -3,6 +3,7 @@ import healpy as hp
 import pandas as pd
 from scipy.interpolate import interp1d
 
+
 def get_map_from_points(cat, nside, w=None,
                         ra_name='RA', dec_name='DEC',
                         in_radians=False):
@@ -89,22 +90,24 @@ def _get_custom_wf(wf_info):
                   fill_value='extrapolate')
     return wf
 
+
 def _get_pixel_wf(wf_info):
     nside_native = wf_info['nside_native']
     nside_wanted = wf_info['nside_wanted']
     ell_native = np.arange(3*nside_native)
     ell_wanted = np.arange(3*nside_wanted)
-    wf_native = interp1d(ell_native, 
+    wf_native = interp1d(ell_native,
                          hp.sphtfunc.pixwin(nside_native)[ell_native],
                          fill_value='extrapolate')
-    wf_wanted = interp1d(ell_wanted, 
+    wf_wanted = interp1d(ell_wanted,
                          hp.sphtfunc.pixwin(nside_wanted)[ell_wanted],
                          fill_value='extrapolate')
     wf = interp1d(ell_wanted,
                   wf_native(ell_wanted)/wf_wanted(ell_wanted),
                   fill_value='extrapolate')
     return wf
-    
+
+
 def get_wf(nside, wf_infos):
     ell = np.arange(3*nside)
     wf = 1.0*np.ones_like(ell)
@@ -120,5 +123,5 @@ def get_wf(nside, wf_infos):
 
     wf = interp1d(ell, wf,
                   fill_value='extrapolate')
-      
+
     return wf

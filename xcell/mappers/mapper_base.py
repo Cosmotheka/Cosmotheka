@@ -41,7 +41,7 @@ class MapperBase(object):
         if self.beam is None:
             self.beam = get_beam(self.nside, self.beam_info)
         return self.beam
-    
+
     def get_wf(self):
         if self.wf is None:
             self.wf = get_wf(self.nside, self.wf_info)
