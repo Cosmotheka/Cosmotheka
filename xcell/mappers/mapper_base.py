@@ -1,6 +1,6 @@
 import pymaster as nmt
 import numpy as np
-from .utils import get_beam
+from .utils import get_beam, get_wf
 
 
 class MapperBase(object):
@@ -11,10 +11,12 @@ class MapperBase(object):
         self.config = config
         self.mask_name = config.get('mask_name', None)
         self.beam_info = config.get('beam_info', None)
+        self.wf_info = config.get('wf_info', None)
         self.mask_power = config.get('mask_power', 1)
         self.nside = config['nside']
         self.nmt_field = None
         self.beam = None
+        self.wf = None
         self.custom_auto = False
 
     def get_signal_map(self):
@@ -39,6 +41,11 @@ class MapperBase(object):
         if self.beam is None:
             self.beam = get_beam(self.nside, self.beam_info)
         return self.beam
+    
+    def get_wf(self):
+        if self.wf is None:
+            self.wf = get_wf(self.nside, self.wf_info)
+        return self.wf
 
     def _get_nmt_field(self, signal=None, **kwargs):
         if signal is None:

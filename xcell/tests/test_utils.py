@@ -50,3 +50,16 @@ def test_get_beam():
         beamm = beam_outputs[mode]
         beam = xc.mappers.get_beam(32, beam_info)
         assert ((beam - beamm) < 1e-05).all
+
+
+def test_get_wf():
+    ell = [1, 10, 100]
+    wf_infos = {'Pixel':{'type': 'Pixel',
+                'nside_native': 32,
+                'nside_wanted': 64}}
+    wf_outputs = {'Pixel': array([0.99993177, 0.99625241, 0.69503722])}
+    for mode in wf_infos.keys():
+        wf_info = wf_infos[mode]
+        wff = wf_outputs[mode]
+        wf = xc.mappers.get_wf(32, wf_info)(ell)
+        assert ((wf - wff) < 1e-05).all

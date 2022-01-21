@@ -1,6 +1,7 @@
 import numpy as np
 import healpy as hp
-
+import pandas as pd
+from scipy.interpolate import interp1d
 
 def get_map_from_points(cat, nside, w=None,
                         ra_name='RA', dec_name='DEC',
@@ -77,3 +78,47 @@ def get_beam(nside, beam_info):
     else:
         raise NotImplementedError("Unknown beam type.")
     return beam
+
+
+def _get_custom_wf(wf_info):
+    field = wf_info['field']
+    file = wf_info['file']
+    windowfuncs = pd.read_csv(file, comment='#')
+    wf = interp1d(np.array(windowfuncs['ell']),
+                  np.array(windowfuncs[field]),
+                  fill_value='extrapolate')
+    return wf
+
+def _get_pixel_wf(wf_info):
+    nside_native = wf_info['nside_native']
+    nside_wanted = wf_info['nside_wanted']
+    ell_native = np.arange(3*nside_native)
+    ell_wanted = np.arange(3*nside_wanted)
+    wf_native = interp1d(ell_native, 
+                         hp.sphtfunc.pixwin(nside_native)[ell_native],
+                         fill_value='extrapolate')
+    wf_wanted = interp1d(ell_wanted, 
+                         hp.sphtfunc.pixwin(nside_wanted)[ell_wanted],
+                         fill_value='extrapolate')
+    wf = interp1d(ell_wanted,
+                  wf_native(ell_wanted)/wf_wanted(ell_wanted),
+                  fill_value='extrapolate')
+    return wf
+    
+def get_wf(nside, wf_infos):
+    ell = np.arange(3*nside)
+    wf = 1.0*np.ones_like(ell)
+    for wf_info in wf_infos:
+        if wf_info is None:
+            raise NotImplementedError("No window function info")
+        elif wf_info['type'] == 'Pixel':
+            wf *= _get_pixel_wf(wf_info)(ell)
+        elif wf_info['type'] == 'Custom':
+            wf *= _get_custom_wf(wf_info)(ell)
+        else:
+            raise NotImplementedError("Unknown settings.")
+
+    wf = interp1d(ell, wf,
+                  fill_value='extrapolate')
+      
+    return wf
