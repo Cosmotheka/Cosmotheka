@@ -121,7 +121,7 @@ def test_get_cls_covar_coupled(cls, mode):
     cls_cov = m.get_cls_covar_coupled()
     m1 = hp.read_map(conf_ref['file_hm1'])
     m2 = hp.read_map(conf_ref['file_hm2'])
-    mc = hp.read_map(conf['file_map'], verbose=False)
+    mc = hp.read_map(conf['file_map'])
     cls_bm = {'cross': hp.anafast(mc*mask, mc*mask, iter=0),
               'auto_11': hp.anafast(m1*mask, m1*mask, iter=0),
               'auto_12': hp.anafast(m1*mask, m2*mask, iter=0),

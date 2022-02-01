@@ -1,6 +1,7 @@
 import pymaster as nmt
 import numpy as np
-from .utils import get_beam, get_wf
+from .utils import get_beam, get_wf, get_rerun_data, save_rerun_data
+
 
 
 class MapperBase(object):
@@ -33,6 +34,29 @@ class MapperBase(object):
 
     def get_nl_covariance(self):
         raise NotImplementedError("Do not use base class")
+
+    def _rerun_read_cycle(self, fname, ftype, func,
+                          section=None, saved_by_func=False):
+        d = get_rerun_data(self, fname, ftype,
+                           section=section)
+        if d is None:
+            d = func()
+            if not saved_by_func:
+                save_rerun_data(self, fname, ftype, d)
+        return d
+
+    def _get_shifted_nz(self, dz, return_jk_error=False):
+        z = self.dndz['z_mid']
+        nz = self.dndz['nz']
+        z_dz = z + dz
+        sel = z_dz >= 0
+        if return_jk_error:
+            nz_jk = self.dndz['nz_jk']
+            njk = len(nz_jk)
+            enz = np.std(nz_jk, axis=0)*np.sqrt((njk-1)**2/njk)
+            return np.array([z_dz[sel], nz[sel], enz[sel]])
+        else:
+            return np.array([z_dz[sel], nz[sel]])
 
     def get_ell(self):
         return np.arange(3 * self.nside)

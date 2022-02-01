@@ -78,7 +78,7 @@ def clean_hsc_data():
 
 def get_config():
     return {'data_catalogs': [['xcell/tests/data/hsc_catalog.fits']],
-            'path_lite': 'xcell/tests/data/',
+            'path_rerun': 'xcell/tests/data/',
             'depth_cut': 24.5,
             'z_edges': [0., 0.5],
             'shear_mod_thr': 10,
@@ -88,9 +88,9 @@ def get_config():
             'nside': 32, 'mask_name': 'mask'}
 
 
-def remove_lite(plite):
-    flite = glob.glob(plite + 'HSCDR1wl*')
-    for f in flite:
+def remove_rerun(prerun):
+    frerun = glob.glob(prerun + 'HSCDR1wl*')
+    for f in frerun:
         os.remove(f)
 
 
@@ -102,15 +102,15 @@ def test_smoke():
     m.get_signal_map()
     m.get_nl_coupled()
     clean_hsc_data()
-    remove_lite(c['path_lite'])
+    remove_rerun(c['path_rerun'])
 
 
-def test_lite():
+def test_rerun():
     make_hsc_data()
     make_hsc_nz_data()
     c = get_config()
-    plite = c['path_lite']
-    remove_lite(plite)
+    prerun = c['path_rerun']
+    remove_rerun(prerun)
 
     # Initialize mapper
     m = xc.mappers.MapperHSCDR1wl(c)
@@ -121,45 +121,44 @@ def test_lite():
     nl_cp = m.get_nl_coupled()
     zz, nzz = m.get_nz()
 
-    # Check lite files have been created
+    # Check rerun files have been created
     bn = c['bin_name']
     nside = c['nside']
 
     for fname in [f'{bn}.fits',
-                  f'{bn}_e1_ns{nside}.fits.gz',
-                  f'{bn}_e2_ns{nside}.fits.gz',
-                  f'{bn}_mask_ns{nside}.fits.gz',
-                  f'{bn}_w2s2_ns{nside}.fits.gz',
-                  f'{bn}_nz.npz']:
-        fname_full = os.path.join(plite, "HSCDR1wl_" + fname)
+                  f'signal_{bn}_ns{nside}.fits.gz',
+                  f'mask_{bn}_ns{nside}.fits.gz',
+                  f'w2s2_{bn}_ns{nside}.fits.gz',
+                  f'nz_{bn}.npz']:
+        fname_full = os.path.join(prerun, "HSCDR1wl_" + fname)
         assert os.path.isfile(fname_full)
 
     # Check we recover the same mask and catalog
-    # Non-exsisting fits files - read from lite
+    # Non-exsisting fits files - read from rerun
     c['data_catalogs'] = [['whatever']]
-    m_lite = xc.mappers.MapperHSCDR1wl(c)
-    cat_from_lite = m_lite.get_catalog()
-    s_from_lite = m_lite.get_signal_map()
-    mask_from_lite = m_lite.get_mask()
-    nl_cp_from_lite = m_lite.get_nl_coupled()
-    zz_from_lite, nzz_from_lite = m_lite.get_nz()
-    assert np.all(cat == cat_from_lite)
-    assert np.all(np.array(s) == np.array(s_from_lite))
-    assert np.all(mask == mask_from_lite)
-    assert np.all(nl_cp == nl_cp_from_lite)
-    assert np.all(zz == zz_from_lite)
-    assert np.all(nzz == nzz_from_lite)
+    m_rerun = xc.mappers.MapperHSCDR1wl(c)
+    cat_from_rerun = m_rerun.get_catalog()
+    s_from_rerun = m_rerun.get_signal_map()
+    mask_from_rerun = m_rerun.get_mask()
+    nl_cp_from_rerun = m_rerun.get_nl_coupled()
+    zz_from_rerun, nzz_from_rerun = m_rerun.get_nz()
+    assert np.all(cat == cat_from_rerun)
+    assert np.all(np.array(s) == np.array(s_from_rerun))
+    assert np.all(mask == mask_from_rerun)
+    assert np.all(nl_cp == nl_cp_from_rerun)
+    assert np.all(zz == zz_from_rerun)
+    assert np.all(nzz == nzz_from_rerun)
 
-    # Clean lite
+    # Clean rerun
     clean_hsc_data()
     clean_hsc_nz_data()
-    remove_lite(plite)
+    remove_rerun(prerun)
 
 
 def test_get_signal_map():
     make_hsc_data()
     c = get_config()
-    plite = c['path_lite']
+    prerun = c['path_rerun']
     m = xc.mappers.MapperHSCDR1wl(c)
     sh = np.array(m.get_signal_map())
     mask = m.get_mask()
@@ -168,13 +167,13 @@ def test_get_signal_map():
     assert np.all((sh[0]-1.0) < 1E-5)
     assert np.all((sh[1]+1.0) < 1E-5)
     clean_hsc_data()
-    remove_lite(plite)
+    remove_rerun(prerun)
 
 
 def test_get_nl_coupled():
     make_hsc_data()
     c = get_config()
-    plite = c['path_lite']
+    prerun = c['path_rerun']
     m = xc.mappers.MapperHSCDR1wl(c)
     nlc = m.get_nl_coupled()
     apix = hp.nside2pixarea(32)
@@ -184,7 +183,7 @@ def test_get_nl_coupled():
     assert np.all(np.fabs(nlc[2, 2:]) < 1E-5)
     assert np.all(np.fabs(nlc[3, 2:]-apix) < 1E-5)
     clean_hsc_data()
-    remove_lite(plite)
+    remove_rerun(prerun)
 
 
 def test_get_dtype_and_spin():
@@ -208,4 +207,4 @@ def test_get_nz():
     assert np.all(dndz == nz)
     assert np.all(zm == z)
     clean_hsc_nz_data()
-    remove_lite(c['path_lite'])
+    remove_rerun(c['path_rerun'])
