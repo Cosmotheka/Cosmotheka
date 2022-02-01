@@ -197,8 +197,9 @@ def test_get_fwhm(cls, mode, fwhm):
 
 def test_custom_wf():
     c = get_config('LenzCIB')
-    c['wf_info'] = {'Custom':{'file': 'xcell/tests/data/windowfunctions_test.csv'},
-                              'field': 'Wl_eff'}
+    c['wf_info'] = [{'type': 'Custom',
+                     'file': 'xcell/tests/data/windowfunctions_test.csv',
+                     'field': 'Wl_eff'}]
     m = xc.mappers.MapperLenzCIB(c)
     wf = m.get_wf()
     ell = np.arange(3*m.nside) 

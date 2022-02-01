@@ -148,10 +148,6 @@ def get_beam(nside, beam_info):
     return beam
 
 
-def _get_custom_wf(wf_info):
-    raise NotImplementedError("Do not use base class")
-
-
 def _get_pixel_wf(wf_info):
     nside_native = wf_info['nside_native']
     nside_wanted = wf_info['nside_wanted']
@@ -174,7 +170,7 @@ def get_wf(nside, wf_infos):
     wf = 1.0*np.ones_like(ell)
     for wf_info in wf_infos:
         if wf_info is None:
-            raise NotImplementedError("No window function info")
+            pass 
         elif wf_info['type'] == 'Pixel':
             wf *= _get_pixel_wf(wf_info)(ell)
         elif wf_info['type'] == 'Custom':
@@ -183,6 +179,6 @@ def get_wf(nside, wf_infos):
             raise NotImplementedError("Unknown settings.")
 
     wf = interp1d(ell, wf,
-                  fill_value='extrapolate')
+                  fill_value='extrapolate')(ell)
 
     return wf
