@@ -15,7 +15,7 @@ class MapperLenzCIB(MapperP15CIB):
                                     {'type': 'Gaussian',
                                      'FWHM_arcmin': 5.0})
 
-    def _get_custom_wf(wf_info):
+    def _get_custom_wf(self, wf_info):
         field = wf_info['field']
         file = wf_info['file']
         windowfuncs = pd.read_csv(file, comment='#')

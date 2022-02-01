@@ -193,3 +193,17 @@ def test_get_dtype(cls, mode, typ):
 def test_get_fwhm(cls, mode, fwhm):
     m = cls(get_config(mode, wbeam=False))
     assert m.beam_info['FWHM_arcmin'] == fwhm
+
+
+def test_custom_wf():
+    c = get_config('LenzCIB')
+    c['wf_info'] = {'Custom':{'file': 'xcell/tests/data/windowfunctions_test.csv'},
+                              'field': 'Wl_eff'}
+    m = xc.mappers.MapperLenzCIB(c)
+    wf = m.get_wf()
+    ell = np.arange(3*m.nside) 
+    windowfuncs = pd.read_csv('xcell/tests/data/windowfunctions_test.csv', comment='#')
+    wff = interp1d(np.array(windowfuncs['ell']),
+                  np.array(windowfuncs['Wl_eff']),
+                  fill_value='extrapolate')(ell)
+    assert np.all(wf == wff)
