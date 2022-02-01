@@ -252,11 +252,6 @@ class Cl(ClBase):
                 correction = wf_a*wf_b
                 # Apply correction to all Cl's
                 cl /= correction
-                cl_cp /= correction
-                cl_cov_cp /= correction
-                cl_cov_11_cp /= correction
-                cl_cov_12_cp /= correction
-                cl_cov_22_cp /= correction
 
             np.savez(fname, ell=ell, cl=cl, cl_cp=cl_cp, nl=nl,
                      nl_cp=nl_cp, cl_cov_cp=cl_cov_cp,
