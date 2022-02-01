@@ -244,15 +244,6 @@ class Cl(ClBase):
                 cl_cov_12_cp *= correction
                 cl_cov_22_cp *= correction
 
-            if (mapper1.wf is not None) or (mapper2.wf is not None):
-                # Applies a given window function to
-                # the cl's
-                wf_a = mapper1.wf(ell)
-                wf_b = mapper2.wf(ell)
-                correction = wf_a*wf_b
-                # Apply correction to all Cl's
-                cl /= correction
-
             np.savez(fname, ell=ell, cl=cl, cl_cp=cl_cp, nl=nl,
                      nl_cp=nl_cp, cl_cov_cp=cl_cov_cp,
                      cl_cov_11_cp=cl_cov_11_cp,

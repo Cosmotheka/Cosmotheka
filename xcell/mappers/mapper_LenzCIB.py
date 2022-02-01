@@ -14,3 +14,12 @@ class MapperLenzCIB(MapperP15CIB):
         self.beam_info = config.get('beam_info',
                                     {'type': 'Gaussian',
                                      'FWHM_arcmin': 5.0})
+
+    def _get_custom_wf(wf_info):
+        field = wf_info['field']
+        file = wf_info['file']
+        windowfuncs = pd.read_csv(file, comment='#')
+        wf = interp1d(np.array(windowfuncs['ell']),
+                      np.array(windowfuncs[field]),
+                      fill_value='extrapolate')
+        return wf

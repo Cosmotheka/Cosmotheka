@@ -82,13 +82,7 @@ def get_beam(nside, beam_info):
 
 
 def _get_custom_wf(wf_info):
-    field = wf_info['field']
-    file = wf_info['file']
-    windowfuncs = pd.read_csv(file, comment='#')
-    wf = interp1d(np.array(windowfuncs['ell']),
-                  np.array(windowfuncs[field]),
-                  fill_value='extrapolate')
-    return wf
+    raise NotImplementedError("Do not use base class")
 
 
 def _get_pixel_wf(wf_info):
