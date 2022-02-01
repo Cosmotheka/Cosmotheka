@@ -170,7 +170,7 @@ def get_wf(nside, wf_infos):
     wf = 1.0*np.ones_like(ell)
     for wf_info in wf_infos:
         if wf_info is None:
-            pass 
+            pass
         elif wf_info['type'] == 'Pixel':
             wf *= _get_pixel_wf(wf_info)(ell)
         elif wf_info['type'] == 'Custom':

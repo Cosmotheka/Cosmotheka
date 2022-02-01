@@ -12,7 +12,7 @@ class MapperBase(object):
         self.config = config
         self.mask_name = config.get('mask_name', None)
         self.beam_info = config.get('beam_info', None)
-        self.wf_info = config.get('wf_info', None)
+        self.wf_info = config.get('wf_info', [None])
         self.mask_power = config.get('mask_power', 1)
         self.nside = config['nside']
         self.nmt_field = None
