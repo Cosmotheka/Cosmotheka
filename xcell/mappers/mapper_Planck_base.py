@@ -29,7 +29,7 @@ class MapperPlanckBase(MapperBase):
     def get_signal_map(self):
         if self.signal_map is None:
             signal_map = hp.read_map(self.file_map)
-            # signal_map[signal_map == hp.UNSEEN] = 0.0
+            signal_map[signal_map == hp.UNSEEN] = 0.0
             signal_map[np.isnan(signal_map)] = 0.0
             self.signal_map = [hp.ud_grade(signal_map,
                                            nside_out=self.nside)]
