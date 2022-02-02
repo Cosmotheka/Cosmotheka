@@ -15,8 +15,8 @@ class MapperP15tSZ(MapperPlanckBase):
         self.file_hm1 = config.get('file_hm1', self.file_map)
         self.file_hm2 = config.get('file_hm2', self.file_map)
         self.beam_info = config.get('beam_info',
-                                    {'type': 'Gaussian',
-                                     'FWHM_arcmin': 10.0})
+                                    [{'type': 'Gaussian',
+                                     'FWHM_arcmin': 10.0}])
         self.gp_mask_mode = config.get('gp_mask_mode', '0.5')
         self.gp_mask_modes = {'0.4': 0,
                               '0.5': 1,

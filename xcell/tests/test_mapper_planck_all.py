@@ -2,6 +2,8 @@ import xcell as xc
 import numpy as np
 import pytest
 import healpy as hp
+import pandas as pd
+from scipy.interpolate import interp1d
 
 
 def get_config(mode, wbeam=True):
@@ -52,8 +54,8 @@ def get_config(mode, wbeam=True):
     else:
         print('Mode not recognized')
     if wbeam:
-        c['beam_info'] = {'type': 'Gaussian',
-                          'FWHM_arcmin': 0.5}
+        c['beam_info'] = [{'type': 'Gaussian',
+                          'FWHM_arcmin': 0.5}]
     return c
 
 
@@ -192,19 +194,23 @@ def test_get_dtype(cls, mode, typ):
                                             'SMICA', 5.)])
 def test_get_fwhm(cls, mode, fwhm):
     m = cls(get_config(mode, wbeam=False))
-    assert m.beam_info['FWHM_arcmin'] == fwhm
+    assert m.beam_info[0]['FWHM_arcmin'] == fwhm
 
 
-def test_custom_wf():
+def test_custom_beam():
     c = get_config('LenzCIB')
-    c['wf_info'] = [{'type': 'Custom',
-                     'file': 'xcell/tests/data/windowfunctions_test.csv',
-                     'field': 'Wl_eff'}]
+    c['beam_info'] = [{'type': 'Custom',
+                       'file': 'xcell/tests/data/windowfunctions_test.csv',
+                       'field': 'Wl_eff'}]
+
     m = xc.mappers.MapperLenzCIB(c)
-    wf = m.get_wf()
-    ell = np.arange(3*m.nside) 
-    windowfuncs = pd.read_csv('xcell/tests/data/windowfunctions_test.csv', comment='#')
-    wff = interp1d(np.array(windowfuncs['ell']),
-                  np.array(windowfuncs['Wl_eff']),
-                  fill_value='extrapolate')(ell)
+    assert m.beam_info[0]['type'] == 'Custom'
+    wf = m.get_beam()
+    ell = np.arange(3*m.nside)
+    windowfuncs = pd.read_csv('xcell/tests/data/windowfunctions_test.csv',
+                              comment='#')
+    pixwin = interp1d(np.array(windowfuncs['ell']),
+                      np.log(np.array(windowfuncs['Wl_eff'])),
+                      fill_value='extrapolate')
+    wff = np.exp(pixwin(ell))
     assert np.all(wf == wff)

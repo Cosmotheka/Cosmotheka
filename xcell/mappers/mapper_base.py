@@ -1,7 +1,7 @@
-import pymaster as nmt
 import numpy as np
-from scipy.interpolate import interp1d
 import healpy as hp
+import pymaster as nmt
+from scipy.interpolate import interp1d
 from .utils import get_rerun_data, save_rerun_data
 
 
@@ -12,7 +12,7 @@ class MapperBase(object):
     def _get_defaults(self, config):
         self.config = config
         self.mask_name = config.get('mask_name', None)
-        self.beam_info = config.get('beam_info', None)
+        self.beam_info = config.get('beam_info', [None])
         self.mask_power = config.get('mask_power', 1)
         self.nside = config['nside']
         self.nmt_field = None
@@ -71,7 +71,9 @@ class MapperBase(object):
         self.beam = np.ones(3*nside)
 
         for info in self.beam_info:
-            if info['type'] == 'Gaussian':
+            if info is None:
+                pass
+            elif info['type'] == 'Gaussian':
                 ell = np.arange(3*nside)
                 fwhm_amin = info['FWHM_arcmin']
                 sigma_rad = np.radians(fwhm_amin / 2.355 / 60)
