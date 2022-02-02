@@ -1,7 +1,5 @@
 import numpy as np
 import healpy as hp
-import pandas as pd
-from scipy.interpolate import interp1d
 import fitsio
 import os
 
@@ -129,56 +127,3 @@ def get_DIR_Nz(cat_spec, cat_photo, bands, zflag,
         dndz_jk.append(n)
     dndz_jk = np.array(dndz_jk)
     return zz, dndz, dndz_jk
-
-
-def _beam_gaussian(ell, fwhm_amin):
-    sigma_rad = np.radians(fwhm_amin / 2.355 / 60)
-    return np.exp(-0.5 * ell * (ell + 1) * sigma_rad**2)
-
-
-def get_beam(nside, beam_info):
-    if beam_info is None:  # No beam
-        beam = np.ones(3*nside)
-    elif beam_info['type'] == 'Gaussian':  # Gaussian beam
-        ell = np.arange(3*nside)
-        beam = _beam_gaussian(ell, beam_info['FWHM_arcmin'])
-        beam /= beam[0]  # normalize it
-    else:
-        raise NotImplementedError("Unknown beam type.")
-    return beam
-
-
-def _get_pixel_wf(wf_info):
-    nside_native = wf_info['nside_native']
-    nside_wanted = wf_info['nside_wanted']
-    ell_native = np.arange(3*nside_native)
-    ell_wanted = np.arange(3*nside_wanted)
-    wf_native = interp1d(ell_native,
-                         hp.sphtfunc.pixwin(nside_native)[ell_native],
-                         fill_value='extrapolate')
-    wf_wanted = interp1d(ell_wanted,
-                         hp.sphtfunc.pixwin(nside_wanted)[ell_wanted],
-                         fill_value='extrapolate')
-    wf = interp1d(ell_wanted,
-                  wf_native(ell_wanted)/wf_wanted(ell_wanted),
-                  fill_value='extrapolate')
-    return wf
-
-
-def get_wf(nside, wf_infos):
-    ell = np.arange(3*nside)
-    wf = 1.0*np.ones_like(ell)
-    for wf_info in wf_infos:
-        if wf_info is None:
-            pass
-        elif wf_info['type'] == 'Pixel':
-            wf *= _get_pixel_wf(wf_info)(ell)
-        elif wf_info['type'] == 'Custom':
-            wf *= _get_custom_wf(wf_info)(ell)
-        else:
-            raise NotImplementedError("Unknown settings.")
-
-    wf = interp1d(ell, wf,
-                  fill_value='extrapolate')(ell)
-
-    return wf

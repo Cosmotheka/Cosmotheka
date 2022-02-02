@@ -1,3 +1,6 @@
+import numpy as np
+from scipy.interpolate import interp1d
+import pandas as pd
 from .mapper_P15CIB import MapperP15CIB
 
 
@@ -15,11 +18,12 @@ class MapperLenzCIB(MapperP15CIB):
                                     {'type': 'Gaussian',
                                      'FWHM_arcmin': 5.0})
 
-    def _get_custom_wf(self, wf_info):
-        field = wf_info['field']
-        file = wf_info['file']
-        windowfuncs = pd.read_csv(file, comment='#')
-        wf = interp1d(np.array(windowfuncs['ell']),
-                      np.array(windowfuncs[field]),
-                      fill_value='extrapolate')
-        return wf
+    def _get_custom_beam(self, info):
+        fname = info['file']
+        field = info['field']
+        windowfuncs = pd.read_csv(fname, comment='#')
+        pixwin = interp1d(np.array(windowfuncs['ell']),
+                          np.log(np.array(windowfuncs[field])),
+                          fill_value='extrapolate')
+        ell = np.arange(3*self.nside)
+        return np.exp(pixwin(ell))
