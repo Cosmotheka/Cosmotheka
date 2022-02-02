@@ -5,6 +5,7 @@ from .theory import Theory
 import os
 import numpy as np
 import pymaster as nmt
+import time
 
 
 class Cov():
@@ -409,8 +410,11 @@ class Cov():
             return self.cov
 
         # Load all masks once
+        itime = time.time()
         m_a1, m_a2 = self.clA1A2.get_masks()
         m_b1, m_b2 = self.clB1B2.get_masks()
+        ftime = time.time()
+        print(f'Masks read. It took {(ftime - itime) / 60} min')
 
         # Compute weighted Cls
         # Check if it's the auto-covariance of an auto-correlation
@@ -419,6 +423,7 @@ class Cov():
         aa_data = auto_auto and self.tmat[(self.trA1,
                                            self.trA2)]['clcov_from_data']
         # If so, get these C_ells
+        itime = time.time()
         if aa_data:
             mean_mamb = np.mean(m_a1**2)
             _, cla1b1, cla1b2, cla2b2 = self.clA1B1.get_ell_cls_cp_cov_auto()
@@ -435,6 +440,8 @@ class Cov():
                                           m_a2, m_b1)
             cla2b2 = self._get_cl_for_cov(self.clA2B2, self.clfid_A2B2,
                                           m_a2, m_b2)
+        ftime = time.time()
+        print(f'Computed C_ells. It took {(ftime - itime) / 60} min')
 
         notnull = (np.any(cla1b1) or np.any(cla1b2) or
                    np.any(cla2b1) or np.any(cla2b2))
@@ -448,10 +455,18 @@ class Cov():
         cov_nlm = np.zeros((size1, size2))
         cov_mm = np.zeros((size1, size2))
         if notnull:
+            itime = time.time()
             wa = self.clA1A2.get_workspace_cov()
             wb = self.clB1B2.get_workspace_cov()
-            cw = self.get_covariance_workspace()
+            ftime = time.time()
+            print(f'Read workspaces. It took {(ftime - itime) / 60} min')
 
+            itime = time.time()
+            cw = self.get_covariance_workspace()
+            ftime = time.time()
+            print(f'Read covariance workspace. It took {(ftime - itime) / 60} min')
+
+            itime = time.time()
             if self.spin0 and (s_a1 + s_a2 + s_b1 + s_b2 != 0):
                 cov_G = self._get_covariance_spin0_approx(cw, s_a1, s_a2, s_b1,
                                                           s_b2, cla1b1, cla1b2,
@@ -462,12 +477,20 @@ class Cov():
                 cov_G = nmt.gaussian_covariance(cw, s_a1, s_a2, s_b1, s_b2,
                                                 cla1b1, cla1b2, cla2b1, cla2b2,
                                                 wa, wb)
+            ftime = time.time()
+            print(f'Computed Gaussian covariance. It took {(ftime - itime) / 60} min')
 
         if self.nl_marg and notnull:
+            itime = time.time()
             cov_nlm = self.get_covariance_nl_marg()
+            ftime = time.time()
+            print(f'Computed nl_marg. It took {(ftime - itime) / 60} min')
 
         if self.m_marg and notnull:
+            itime = time.time()
             cov_mm = self.get_covariance_m_marg()
+            ftime = time.time()
+            print(f'Computed m_marg. It took {(ftime - itime) / 60} min')
 
         if self.do_NG and notnull:
             fsky = self.data.data['cov'].get('fsky_NG', None)
@@ -481,9 +504,16 @@ class Cov():
                                                            s_b1, s_b2,
                                                            fsky, kind)
 
+        itime = time.time()
         self.cov = cov_G + cov_nlm + cov_mm + cov_NG
+        ftime = time.time()
+        print(f'Added all covariances terms. It took {(ftime - itime) / 60} min')
+
+        itime = time.time()
         np.savez_compressed(fname, cov=self.cov, cov_G=cov_G, cov_NG=cov_NG,
                             cov_nl_marg=cov_nlm, cov_m_marg=cov_mm)
+        ftime = time.time()
+        print(f'Saved cov npz file. It took {(ftime - itime) / 60} min')
         self.recompute_cov = False
         return self.cov
 
