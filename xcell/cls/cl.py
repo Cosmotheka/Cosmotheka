@@ -104,7 +104,27 @@ class Cl(ClBase):
         if 3*nside not in bpw_edges:
             bpw_edges = np.append(bpw_edges, 3*nside)
         b = nmt.NmtBin.from_edges(bpw_edges[:-1], bpw_edges[1:])
-        return b
+        return self.make_bins(50)
+
+    def make_bins(self, LperBin):
+        # The ell range is larger than we need to avoid aliasing
+        # and we drop low ell to avoid spurious power.
+        lmin    = 25
+        lmax    = 6000
+        ells    = np.arange(lmax,dtype='int32')
+        weights = np.ones_like(ells)/float(LperBin)
+        weights[ells<lmin] = 0 # Remove low ell.
+        # Now generate the bandpower indices, here by brute force.
+        # A -1 means that ell value is not included in any bandpower.
+        bpws = np.zeros_like(ells) - 1
+        ibin = 0
+        while LperBin*(ibin+1)+lmin<lmax:
+            bpws[LperBin*ibin+lmin:LperBin*(ibin+1)+lmin] = ibin
+            ibin += 1
+        # And tell NaMaster to set it up.
+        bins = nmt.NmtBin(self.nside,bpws=bpws,ells=ells,weights=weights)
+        print(bins.get_effective_ells())
+        return(bins)
 
     def get_nmt_fields(self):
         mapper1, mapper2 = self.get_mappers()
