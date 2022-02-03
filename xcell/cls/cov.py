@@ -414,7 +414,7 @@ class Cov():
         m_a1, m_a2 = self.clA1A2.get_masks()
         m_b1, m_b2 = self.clB1B2.get_masks()
         ftime = time.time()
-        print(f'Masks read. It took {(ftime - itime) / 60} min')
+        print(f'Masks read. It took {(ftime - itime) / 60} min', flush=True)
 
         # Compute weighted Cls
         # Check if it's the auto-covariance of an auto-correlation
@@ -441,7 +441,7 @@ class Cov():
             cla2b2 = self._get_cl_for_cov(self.clA2B2, self.clfid_A2B2,
                                           m_a2, m_b2)
         ftime = time.time()
-        print(f'Computed C_ells. It took {(ftime - itime) / 60} min')
+        print(f'Computed C_ells. It took {(ftime - itime) / 60} min', flush=True)
 
         notnull = (np.any(cla1b1) or np.any(cla1b2) or
                    np.any(cla2b1) or np.any(cla2b2))
@@ -459,12 +459,12 @@ class Cov():
             wa = self.clA1A2.get_workspace_cov()
             wb = self.clB1B2.get_workspace_cov()
             ftime = time.time()
-            print(f'Read workspaces. It took {(ftime - itime) / 60} min')
+            print(f'Read workspaces. It took {(ftime - itime) / 60} min', flush=True)
 
             itime = time.time()
             cw = self.get_covariance_workspace()
             ftime = time.time()
-            print(f'Read covariance workspace. It took {(ftime - itime) / 60} min')
+            print(f'Read covariance workspace. It took {(ftime - itime) / 60} min', flush=True)
 
             itime = time.time()
             if self.spin0 and (s_a1 + s_a2 + s_b1 + s_b2 != 0):
@@ -478,19 +478,19 @@ class Cov():
                                                 cla1b1, cla1b2, cla2b1, cla2b2,
                                                 wa, wb)
             ftime = time.time()
-            print(f'Computed Gaussian covariance. It took {(ftime - itime) / 60} min')
+            print(f'Computed Gaussian covariance. It took {(ftime - itime) / 60} min', flush=True)
 
         if self.nl_marg and notnull:
             itime = time.time()
             cov_nlm = self.get_covariance_nl_marg()
             ftime = time.time()
-            print(f'Computed nl_marg. It took {(ftime - itime) / 60} min')
+            print(f'Computed nl_marg. It took {(ftime - itime) / 60} min', flush=True)
 
         if self.m_marg and notnull:
             itime = time.time()
             cov_mm = self.get_covariance_m_marg()
             ftime = time.time()
-            print(f'Computed m_marg. It took {(ftime - itime) / 60} min')
+            print(f'Computed m_marg. It took {(ftime - itime) / 60} min', flush=True)
 
         if self.do_NG and notnull:
             fsky = self.data.data['cov'].get('fsky_NG', None)
@@ -507,13 +507,13 @@ class Cov():
         itime = time.time()
         self.cov = cov_G + cov_nlm + cov_mm + cov_NG
         ftime = time.time()
-        print(f'Added all covariances terms. It took {(ftime - itime) / 60} min')
+        print(f'Added all covariances terms. It took {(ftime - itime) / 60} min', flush=True)
 
         itime = time.time()
         np.savez_compressed(fname, cov=self.cov, cov_G=cov_G, cov_NG=cov_NG,
                             cov_nl_marg=cov_nlm, cov_m_marg=cov_mm)
         ftime = time.time()
-        print(f'Saved cov npz file. It took {(ftime - itime) / 60} min')
+        print(f'Saved cov npz file. It took {(ftime - itime) / 60} min', flush=True)
         self.recompute_cov = False
         return self.cov
 
