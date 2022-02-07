@@ -4,7 +4,7 @@ import pandas as pd
 from .mapper_P15CIB import MapperP15CIB
 
 
-class MapperLenzCIB(MapperP15CIB):
+class MapperCIBLenz(MapperP15CIB):
     def __init__(self, config):
         """
         config - dict
@@ -16,7 +16,7 @@ class MapperLenzCIB(MapperP15CIB):
         self._get_Planck_defaults(config)
         self.beam_info = config.get('beam_info',
                                     [{'type': 'Gaussian',
-                                     'FWHM_arcmin': 5.0}])
+                                      'FWHM_arcmin': 5.0}])
 
     def _get_custom_beam(self, info):
         fname = info['file']
