@@ -13,7 +13,7 @@ class MapperP18SMICA(MapperPlanckBase):
         self._get_Planck_defaults(config)
         self.beam_info = config.get('beam_info',
                                     [{'type': 'Gaussian',
-                                     'FWHM_arcmin': 5.0}])
+                                      'FWHM_arcmin': 5.0}])
         self.gp_mask_mode = config.get('gp_mask_mode', '0.6')
         self.gp_mask_modes = {'0.2': 0,
                               '0.4': 1,

@@ -178,7 +178,7 @@ def test_cls_covar_coupled():
 def test_get_beam():
     ell = np.arange(3*32)
     config = get_config()
-    beam_infos = {'default': [None],
+    beam_infos = {'default': [],
                   'Gaussian': [{'type': 'Gaussian',
                                'FWHM_arcmin': 0.5}],
                   'PixWin': [{'type': 'PixWin',
@@ -200,4 +200,4 @@ def test_get_beam():
         m = xc.mappers.MapperDummy(config)
         beamm = beam_outputs[mode]
         beam = m.get_beam()
-        assert ((beam - beamm) < 1e-05).all
+        assert ((beam - beamm) < 1e-30).all

@@ -12,7 +12,7 @@ class MapperBase(object):
     def _get_defaults(self, config):
         self.config = config
         self.mask_name = config.get('mask_name', None)
-        self.beam_info = config.get('beam_info', [None])
+        self.beam_info = config.get('beam_info', [])
         self.mask_power = config.get('mask_power', 1)
         self.nside = config['nside']
         self.nmt_field = None
@@ -71,9 +71,7 @@ class MapperBase(object):
         self.beam = np.ones(3*nside)
 
         for info in self.beam_info:
-            if info is None:
-                pass
-            elif info['type'] == 'Gaussian':
+            if info['type'] == 'Gaussian':
                 ell = np.arange(3*nside)
                 fwhm_amin = info['FWHM_arcmin']
                 sigma_rad = np.radians(fwhm_amin / 2.355 / 60)
@@ -94,7 +92,7 @@ class MapperBase(object):
                 self.beam *= b
             else:
                 raise NotImplementedError("Unknown beam type.")
-            return self.beam
+        return self.beam
 
     def _get_nmt_field(self, signal=None, **kwargs):
         if signal is None:

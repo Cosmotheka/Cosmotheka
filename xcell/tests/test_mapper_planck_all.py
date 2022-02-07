@@ -33,7 +33,7 @@ def get_config(mode, wbeam=True):
              'gp_mask_mode': '0.2',
              'ps_mask_mode': ['100'],
              'nside': 32}
-    elif mode == 'LenzCIB':
+    elif mode == 'CIBLenz':
         c = {'file_map': 'xcell/tests/data/map.fits',
              'file_hm1': 'xcell/tests/data/hm1_map.fits',
              'file_hm2': 'xcell/tests/data/hm2_map.fits',
@@ -55,7 +55,7 @@ def get_config(mode, wbeam=True):
         print('Mode not recognized')
     if wbeam:
         c['beam_info'] = [{'type': 'Gaussian',
-                          'FWHM_arcmin': 0.5}]
+                           'FWHM_arcmin': 0.5}]
     return c
 
 
@@ -76,7 +76,7 @@ def test_get_signal_map():
                          [xc.mappers.MapperP15tSZ(get_config('tSZ')),
                           xc.mappers.MapperP18SMICA(get_config('SMICA')),
                           xc.mappers.MapperP15CIB(get_config('P15CIB')),
-                          xc.mappers.MapperLenzCIB(get_config('LenzCIB')),
+                          xc.mappers.MapperCIBLenz(get_config('CIBLenz')),
                           xc.mappers.MapperSPT(get_config('SPT'))])
 def test_get_nl_coupled(m):
     nl = m.get_nl_coupled()
@@ -86,7 +86,7 @@ def test_get_nl_coupled(m):
 @pytest.mark.parametrize('cls,mode', [(xc.mappers.MapperP15tSZ, 'tSZ'),
                                       (xc.mappers.MapperP18SMICA, 'SMICA'),
                                       (xc.mappers.MapperP15CIB, 'P15CIB'),
-                                      (xc.mappers.MapperLenzCIB, 'LenzCIB'),
+                                      (xc.mappers.MapperCIBLenz, 'CIBLenz'),
                                       (xc.mappers.MapperSPT, 'SPT')])
 def test_get_cl_coupled(cls, mode):
     conf = get_config(mode)
@@ -112,7 +112,7 @@ def test_get_cl_coupled(cls, mode):
 @pytest.mark.parametrize('cls,mode', [(xc.mappers.MapperP15tSZ, 'tSZ'),
                                       (xc.mappers.MapperP18SMICA, 'SMICA'),
                                       (xc.mappers.MapperP15CIB, 'P15CIB'),
-                                      (xc.mappers.MapperLenzCIB, 'LenzCIB'),
+                                      (xc.mappers.MapperCIBLenz, 'CIBLenz'),
                                       (xc.mappers.MapperSPT, 'SPT')])
 def test_get_cls_covar_coupled(cls, mode):
     conf = get_config(mode)
@@ -139,7 +139,7 @@ def test_get_cls_covar_coupled(cls, mode):
 @pytest.mark.parametrize('cls,mode', [(xc.mappers.MapperP15tSZ, 'tSZ'),
                                       (xc.mappers.MapperP18SMICA, 'SMICA'),
                                       (xc.mappers.MapperP15CIB, 'P15CIB'),
-                                      (xc.mappers.MapperLenzCIB, 'LenzCIB'),
+                                      (xc.mappers.MapperCIBLenz, 'CIBLenz'),
                                       (xc.mappers.MapperSPT, 'SPT')])
 def test_get_hm_maps(cls, mode):
     conf = get_config(mode)
@@ -156,8 +156,8 @@ def test_get_hm_maps(cls, mode):
                                             'tSZ', 0.75),
                                            (xc.mappers.MapperP15CIB,
                                             'P15CIB', 0.5),
-                                           (xc.mappers.MapperLenzCIB,
-                                            'LenzCIB', 1),
+                                           (xc.mappers.MapperCIBLenz,
+                                            'CIBLenz', 1),
                                            (xc.mappers.MapperP18SMICA,
                                             'SMICA', 0.75),
                                            (xc.mappers.MapperSPT,
@@ -173,8 +173,8 @@ def test_get_mask(cls, mode, frac):
                                            'tSZ', 'cmb_tSZ'),
                                           (xc.mappers.MapperP15CIB,
                                            'P15CIB', 'generic'),
-                                          (xc.mappers.MapperLenzCIB,
-                                           'LenzCIB', 'generic'),
+                                          (xc.mappers.MapperCIBLenz,
+                                           'CIBLenz', 'generic'),
                                           (xc.mappers.MapperP18SMICA,
                                            'SMICA', 'cmb_temperature'),
                                           (xc.mappers.MapperSPT,
@@ -188,8 +188,8 @@ def test_get_dtype(cls, mode, typ):
                                             'tSZ', 10.),
                                            (xc.mappers.MapperP15CIB,
                                             'P15CIB', 5.),
-                                           (xc.mappers.MapperLenzCIB,
-                                            'LenzCIB', 5.),
+                                           (xc.mappers.MapperCIBLenz,
+                                            'CIBLenz', 5.),
                                            (xc.mappers.MapperP18SMICA,
                                             'SMICA', 5.)])
 def test_get_fwhm(cls, mode, fwhm):
@@ -198,12 +198,12 @@ def test_get_fwhm(cls, mode, fwhm):
 
 
 def test_custom_beam():
-    c = get_config('LenzCIB')
+    c = get_config('CIBLenz')
     c['beam_info'] = [{'type': 'Custom',
                        'file': 'xcell/tests/data/windowfunctions_test.csv',
                        'field': 'Wl_eff'}]
 
-    m = xc.mappers.MapperLenzCIB(c)
+    m = xc.mappers.MapperCIBLenz(c)
     assert m.beam_info[0]['type'] == 'Custom'
     wf = m.get_beam()
     ell = np.arange(3*m.nside)
