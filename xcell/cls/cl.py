@@ -121,22 +121,22 @@ class Cl(ClBase):
         f2 = mapper2.get_nmt_field()
         return f1, f2
 
-    def get_workspace(self):
+    def get_workspace(self, read_unbinned_MCM=True):
         if self._w is None:
-            self._w = self._compute_workspace()
+            self._w = self._compute_workspace(read_unbinned_MCM)
         return self._w
 
     def get_workspace_cov(self):
         if self._wcov is None:
             spin0 = self.data.data['cov'].get('spin0', False)
             if spin0 and (self.get_spins() != (0, 0)):
-                self._wcov = self._compute_workspace(spin0=spin0)
+                self._wcov = self._compute_workspace(spin0=spin0, read_unbinned_MCM=False)
             else:
-                self._wcov = self.get_workspace()
+                self._wcov = self.get_workspace(read_unbinned_MCM=False)
 
         return self._wcov
 
-    def _compute_workspace(self, spin0=False):
+    def _compute_workspace(self, spin0=False, read_unbinned_MCM=True):
         # Check if the fields are already of spin0 to avoid computing the
         # workspace twice
         spin0 = spin0 and (self.get_spins() != (0, 0))
@@ -165,7 +165,7 @@ class Cl(ClBase):
             w.write_to(fname)
             self.recompute_mcmc = False
         else:
-            w.read_from(fname)
+            w.read_from(fname, read_unbinned_MCM)
         return w
 
     def get_cl_file(self):
