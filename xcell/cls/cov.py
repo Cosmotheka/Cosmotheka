@@ -120,9 +120,7 @@ class Cov():
             cl_cp = np.zeros((clab.get_n_cls(), 3*clab.nside))
         else:
             if isinstance(clab_fid, ClFid):  # Compute from theory
-                w = clab.get_workspace()
-                cl_cp = w.couple_cell(clab_fid.get_ell_cl()[1])
-                cl_cp += clab.get_ell_nl_cp()[1]
+                cl_cp = clab_fid.get_ell_cl_cp()[1] + clab.get_ell_nl_cp()[1]
             else:  # Compute from data
                 # In this case we've requested to compute this
                 # C_ell from the data, so `clab_fid` is actually
