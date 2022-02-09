@@ -110,7 +110,7 @@ class Cov():
             cw.write_to(fname)
             self.recompute_cmcm = False
         else:
-            cw.read_from(fname)
+            cw.read_from(fname, read_unbinned_MCM=False)
 
         return cw
 
