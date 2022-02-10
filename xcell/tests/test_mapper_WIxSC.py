@@ -4,6 +4,7 @@ import healpy as hp
 import os
 from astropy.io import fits
 from astropy.table import Table
+import pytest
 
 
 def get_config():
@@ -14,12 +15,13 @@ def get_config():
             'z_edges': [-1E-10, 0.5],
             'bin_name': '0',
             'path_rerun': '.',
+            'coordinates': 'C',
             'apply_galactic_correction': False,
             'nside': 32, 'mask_name': 'mask'}
 
 
 def cleanup_rerun():
-    for fname in ['nz_WIxSC_bin0.npz', 'WIxSC_lite_bin0.fits']:
+    for fname in ['nz_WIxSC_bin0.npz', 'WIxSC_rerun_bin0.fits']:
         if os.path.isfile(fname):
             os.remove(fname)
 
@@ -31,10 +33,12 @@ def get_mapper():
 def test_smoke():
     cleanup_rerun()
     m = get_mapper()
-    m.get_catalog()
+    cat = m.get_catalog()
     assert len(m.cat_data) == hp.nside2npix(32)
-    # Check that the lite field has been created
-    assert os.path.isfile('./WIxSC_lite_bin0.fits')
+    # Check that the rerun catalog has been created
+    assert os.path.isfile('./WIxSC_rerun_bin0.fits')
+    t = Table.read('./WIxSC_rerun_bin0.fits')
+    assert (cat['RA'] == t['RA']).all()
 
 
 def test_get_nz():
@@ -45,7 +49,7 @@ def test_get_nz():
     with fits.open('xcell/tests/data/catalog_2mpz.fits') as f:
         cat = Table.read(f, format='fits', memmap=True)
     h, b = np.histogram(cat['ZPHOTO_CORR'],
-                        range=[0.0, 1.0], bins=100,
+                        range=[0.0, 0.6], bins=150,
                         density=True)
     z_arr = 0.5 * (b[:-1] + b[1:])
     assert np.all(np.fabs(z-z_arr) < 1E-5)
@@ -59,9 +63,12 @@ def test_get_nz():
     assert np.all(np.fabs(nz2-nz) < 1E-5)
 
 
-def test_get_signal_map():
+@pytest.mark.parametrize('coord', ['G', 'C'])
+def test_get_signal_map(coord):
     cleanup_rerun()
-    m = get_mapper()
+    c = get_config()
+    c['coordinates'] = coord
+    m = xc.mappers.MapperWIxSC(c)
     d = m.get_signal_map()
     d = np.array(d)
     assert d.shape == (1, hp.nside2npix(m.nside))

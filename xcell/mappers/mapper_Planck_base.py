@@ -15,7 +15,7 @@ class MapperPlanckBase(MapperBase):
         self.file_hm2 = config.get('file_hm2', None)
         self.file_mask = config.get('file_mask', None)
         self.file_gp_mask = config.get('file_gp_mask', None)
-        self.file_sp_mask = config.get('file_sp_mask', None)
+        self.file_ps_mask = config.get('file_ps_mask', None)
         self.signal_map = None
         self.hm1_map = None
         self.hm2_map = None
@@ -25,27 +25,38 @@ class MapperPlanckBase(MapperBase):
         self.cls_cov = None
         self.custom_auto = True
         self.mask = None
-        self.beam = None
-        self.beam_info = None
-        self.gal_mask_mode = config.get('gal_mask_mode', '0.7')
-        self.gal_mask_modes = {'0.2': 0,
-                               '0.4': 1,
-                               '0.6': 2,
-                               '0.7': 3,
-                               '0.8': 4,
-                               '0.9': 5,
-                               '0.97': 6,
-                               '0.99': 7}
 
     def get_signal_map(self):
         if self.signal_map is None:
             signal_map = hp.read_map(self.file_map)
+            signal_map[signal_map == hp.UNSEEN] = 0.0
+            signal_map[np.isnan(signal_map)] = 0.0
             self.signal_map = [hp.ud_grade(signal_map,
                                            nside_out=self.nside)]
         return self.signal_map
 
     def get_mask(self):
-        return NotImplementedError("Do not use base class")
+        if self.mask is None:
+            if self.file_mask is not None:
+                self.mask = hp.read_map(self.file_mask)
+                self.mask = hp.ud_grade(self.mask,
+                                        nside_out=self.nside)
+            else:
+                self.mask = np.ones(12*self.nside**2)
+            if self.file_gp_mask is not None:
+                field = self.gp_mask_modes[self.gp_mask_mode]
+                gp_mask = hp.read_map(self.file_gp_mask, field)
+                gp_mask = hp.ud_grade(gp_mask,
+                                      nside_out=self.nside)
+                self.mask *= gp_mask
+            if self.file_ps_mask is not None:
+                for mode in self.ps_mask_mode:
+                    field = self.ps_mask_modes[mode]
+                    ps_mask = hp.read_map(self.file_ps_mask, field)
+                    ps_mask = hp.ud_grade(ps_mask,
+                                          nside_out=self.nside)
+                    self.mask *= ps_mask
+        return self.mask
 
     def _get_hm_maps(self):
         return NotImplementedError("Do not use base class")
@@ -87,19 +98,6 @@ class MapperPlanckBase(MapperBase):
                             'auto_12': cl_12,
                             'auto_22': cl_22}
         return self.cls_cov
-
-    def _beam_gaussian(self, ell, fwhm_amin):
-        sigma_rad = np.radians(fwhm_amin / 2.355 / 60)
-        return np.exp(-0.5 * ell * (ell + 1) * sigma_rad**2)
-
-    def get_beam(self):
-        if self.beam is None:
-            if self.beam_info is None:  # No beam
-                self.beam = np.ones(3*self.nside)
-            else:
-                ell = np.arange(3*self.nside)
-                self.beam = self._beam_gaussian(ell, self.beam_info)
-        return self.beam
 
     def get_spin(self):
         return 0

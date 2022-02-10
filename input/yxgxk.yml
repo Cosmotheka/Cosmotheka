@@ -1,0 +1,234 @@
+tracers:
+  LOWZ__0:
+    data_catalog: '../data/2MPZ.fits'
+    mask: '../data/WISExSCOSmask.fits.gz'
+    z_edges: [0.0, 0.1]
+    path_rerun: 'data_yxgxk'
+    n_jk_dir: 100
+    mask_name: 'mask_LOWZ'
+    mapper_class: 'Mapper2MPZ'
+    nside: 1024
+    #    bias: 1.182
+    use_halo_model: True
+    coordinates: G
+    hod_params:
+      lMmin_0: 12.708493552845066
+      siglM_0: 0.345
+      lM0_0: 12.708493552845066
+      lM1_0: 14.260818060157721
+      alpha_0: 1.0
+      fc_0: 1.0
+
+  LOWZ__1:
+    data_catalog: '../data/WIxSC.fits'
+    mask: '../data/WISExSCOSmask.fits.gz'
+    star_map: '../data/allwise_total_galactic_1024.fits'
+    spec_sample: '../data/zSpec-comp-WIxSC.csv'
+    z_edges: [0.10, 0.15]
+    bin_name: 'z0p10_0p15'
+    path_rerun: 'data_yxgxk'
+    n_jk_dir: 100
+    mask_name: 'mask_LOWZ'
+    mapper_class: 'MapperWIxSC'
+    nside: 1024
+    #    bias: 1.086
+    nl_prior: 0.1
+    use_halo_model: True
+    coordinates: G
+    hod_params:
+      lMmin_0: 11.697270950691191
+      siglM_0: 0.345
+      lM0_0: 11.697270950691191
+      lM1_0: 13.034845796270286
+      alpha_0: 1.0
+      fc_0: 1.0
+
+  LOWZ__2:
+    data_catalog: '../data/WIxSC.fits'
+    mask: '../data/WISExSCOSmask.fits.gz'
+    star_map: '../data/allwise_total_galactic_1024.fits'
+    spec_sample: '../data/zSpec-comp-WIxSC.csv'
+    z_edges: [0.15, 0.20]
+    bin_name: 'z0p15_0p20'
+    path_rerun: 'data_yxgxk'
+    n_jk_dir: 100
+    mask_name: 'mask_LOWZ'
+    mapper_class: 'MapperWIxSC'
+    nside: 1024
+    #    bias: 1.126
+    nl_prior: 0.1
+    use_halo_model: True
+    coordinates: G
+    hod_params:
+      lMmin_0: 11.858942100329480
+      siglM_0: 0.345
+      lM0_0: 11.858942100329480
+      lM1_0: 13.145825663964885
+      alpha_0: 1.0
+      fc_0: 1.0
+
+  LOWZ__3:
+    data_catalog: '../data/WIxSC.fits'
+    mask: '../data/WISExSCOSmask.fits.gz'
+    star_map: '../data/allwise_total_galactic_1024.fits'
+    spec_sample: '../data/zSpec-comp-WIxSC.csv'
+    z_edges: [0.20, 0.25]
+    bin_name: 'z0p20_0p25'
+    path_rerun: 'data_yxgxk'
+    n_jk_dir: 100
+    mask_name: 'mask_LOWZ'
+    mapper_class: 'MapperWIxSC'
+    nside: 1024
+    #    bias: 1.144
+    nl_prior: 0.1
+    use_halo_model: True
+    coordinates: G
+    hod_params:
+      lMmin_0: 12.102643076216303
+      siglM_0: 0.345
+      lM0_0: 12.102643076216303
+      lM1_0: 13.413756881673216
+      alpha_0: 1.0
+      fc_0: 1.0
+
+  LOWZ__4:
+    data_catalog: '../data/WIxSC.fits'
+    mask: '../data/WISExSCOSmask.fits.gz'
+    star_map: '../data/allwise_total_galactic_1024.fits'
+    spec_sample: '../data/zSpec-comp-WIxSC.csv'
+    z_edges: [0.25, 0.30]
+    bin_name: 'z0p25_0p30'
+    path_rerun: 'data_yxgxk'
+    n_jk_dir: 100
+    mask_name: 'mask_LOWZ'
+    mapper_class: 'MapperWIxSC'
+    nside: 1024
+    #    bias: 1.206
+    nl_prior: 0.1
+    use_halo_model: True
+    coordinates: G
+    hod_params:
+      lMmin_0: 12.143671034659265
+      siglM_0: 0.345
+      lM0_0: 12.143671034659265
+      lM1_0: 13.433771902564393
+      alpha_0: 1.0
+      fc_0: 1.0
+
+  LOWZ__5:
+    data_catalog: '../data/WIxSC.fits'
+    mask: '../data/WISExSCOSmask.fits.gz'
+    star_map: '../data/allwise_total_galactic_1024.fits'
+    spec_sample: '../data/zSpec-comp-WIxSC.csv'
+    z_edges: [0.30, 0.35]
+    bin_name: 'z0p30_0p35'
+    path_rerun: 'data_yxgxk'
+    n_jk_dir: 100
+    mask_name: 'mask_LOWZ'
+    mapper_class: 'MapperWIxSC'
+    nside: 1024
+    #    bias: 1.548
+    nl_prior: 0.1
+    use_halo_model: True
+    coordinates: G
+    hod_params:
+      lMmin_0: 12.084028295507474
+      siglM_0: 0.345
+      lM0_0: 13.013641625761304
+      lM1_0: 12.084028295507474
+      alpha_0: 1.0
+      fc_0: 1.0
+
+  YMILCA:
+    file_map: '../data/milca_ymaps.fits'
+    file_mask: '../data/mask_y_galactic_HFI_PS_fsky0p60.fits.gz'
+    mask_name: 'mask_YMAP'
+    mapper_class: 'MapperP15tSZ'
+    nside: 1024
+    use_halo_model: True
+    gnfw_params:
+      mass_bias: 0.8
+
+  KAPPA:
+    file_klm: '../data/dat_klm.fits'
+    file_mask: '../data/mask_kappa.fits.gz'
+    file_noise: '../data/nlkk.dat'
+    nside: 1024
+    coordinates: G
+    mask_name: 'mask_P18kappa'
+    mapper_class: 'MapperP18CMBK'
+    path_lite: 'data_yxgxk'
+
+
+cls:
+  LOWZ-LOWZ:
+    compute: 'all'
+
+  LOWZ-YMILCA:
+    compute: 'all'
+
+  YMILCA-YMILCA:
+    compute: 'all'
+
+  LOWZ-KAPPA:
+    compute: 'all'
+
+  YMILCA-KAPPA:
+    compute: 'None'
+
+  KAPPA-KAPPA:
+    compute: 'None'
+
+
+bpw_edges: [2, 12, 22, 32, 42, 52, 62, 74, 88, 105, 126, 150, 179, 214, 256, 306, 365, 436, 521, 622, 743, 887, 1059, 1265, 1510, 1804, 2154, 2571, 3071]
+
+cov:
+  fiducial:
+    cosmo:
+      Omega_c: 0.26066676
+      Omega_b: 0.048974682
+      h: 0.6766
+      sigma8: 0.8102
+      n_s: 0.9665
+
+    halo_model:
+      mass_def: 500c
+      mass_function: Tinker08
+      halo_bias: Tinker10
+      concentration: Duffy08M500c
+
+  cls_from_data:
+    LOWZ-LOWZ:
+      compute: 'auto'
+
+    YMILCA-YMILCA:
+      compute: 'all'
+
+    KAPPA-KAPPA:
+      compute: 'all'
+
+  non_Gaussian: True
+
+toeplitz:
+  cls:
+    l_toeplitz: -1
+    l_exact: -1
+    dl_band: -1
+  cov:
+    l_toeplitz: -1
+    l_exact: -1
+    dl_band: -1
+
+sphere:
+  n_iter_sht: 0
+  n_iter_mcm: 3
+  n_iter_cmcm: 3
+  nside: 1024
+
+recompute:
+  cls: False
+  cov: False
+  mcm: False
+  cmcm: False
+
+output: '../data/1024_yxgxk_covmix/'

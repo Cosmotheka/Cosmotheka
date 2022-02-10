@@ -1,6 +1,5 @@
 from .mapper_base import MapperBase
 from .utils import get_map_from_points
-from astropy.io import fits
 from astropy.table import Table, vstack
 from scipy.integrate import simps
 import numpy as np
@@ -15,7 +14,7 @@ class MapperDELS(MapperBase):
           {'data_catalogs':['Legacy_Survey_BASS-MZLS_galaxies-selection.fits'],
            'zbin': 0,
            'z_name': 'PHOTOZ_3DINFER',
-           'z_arr_dim': 500,
+           'num_z_bins': 500,
            'binary_mask': 'Legacy_footprint_final_mask.fits',
            'completeness_map': 'Legacy_footprint_completeness_mask_128.fits',
            'star_map': 'allwise_total_rot_1024.fits',
@@ -24,7 +23,7 @@ class MapperDELS(MapperBase):
         """
         self._get_defaults(config)
         self.pz = config.get('z_name', 'PHOTOZ_3DINFER')
-        self.z_arr_dim = config.get('z_arr_dim', 500)
+        self.num_z_bins = config.get('num_z_bins', 500)
 
         self.cat_data = None
         self.npix = hp.nside2npix(self.nside)
@@ -47,24 +46,29 @@ class MapperDELS(MapperBase):
         self.stars = None
         self.bmask = None
 
-    def get_catalogs(self):
-        if self.cat_data is None:
-            self.cat_data = []
-            for file_data in self.config['data_catalogs']:
-                if not os.path.isfile(file_data):
-                    raise ValueError(f"File {file_data} not found")
-                with fits.open(file_data) as f:
-                    self.cat_data.append(Table.read(f))
-            self.cat_data = vstack(self.cat_data)
-            self.cat_data = self._bin_z(self.cat_data)
+    def _get_catalog(self):
+        cat = []
+        for file_data in self.config['data_catalogs']:
+            if not os.path.isfile(file_data):
+                raise ValueError(f"File {file_data} not found")
+            c = Table.read(file_data, format='fits')
+            c.keep_columns(['RA', 'DEC', self.pz])
+            cat.append(c)
+        cat = vstack(cat)
+        cat = self._bin_z(cat)
+        return cat.as_array()
 
+    def get_catalog(self):
+        if self.cat_data is None:
+            fn = f'DELS_cat_bin{self.zbin}.fits'
+            self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
+                                                   self._get_catalog)
         return self.cat_data
 
     def _get_angmask(self):
         if self.mskflag is None:
-            cat = self.get_catalogs()
-            bmask = hp.read_map(self.config['binary_mask'],
-                                verbose=False)
+            cat = self.get_catalog()
+            bmask = hp.read_map(self.config['binary_mask'])
             nside = hp.npix2nside(len(bmask))
             ipix = hp.ang2pix(nside, cat['RA'], cat['DEC'],
                               lonlat=True)
@@ -75,23 +79,6 @@ class MapperDELS(MapperBase):
         return cat[(cat[self.pz] >= self.z_edges[0]) &
                    (cat[self.pz] < self.z_edges[1])]
 
-    def get_nz(self, dz=0):
-        if self.dndz is None:
-            mskflag = self._get_angmask()
-            h, b = np.histogram(self.cat_data[self.pz][mskflag],
-                                range=[-0.3, 1], bins=self.z_arr_dim)
-            z_arr = 0.5 * (b[:-1] + b[1:])
-            kernel = self._get_lorentzian(z_arr)
-            nz_photo = h.astype(float)
-            nz_spec = simps(kernel*nz_photo[None, :], x=z_arr, axis=1)
-            nz_spec /= simps(nz_spec, x=z_arr)
-            self.dndz = np.array([z_arr, nz_spec])
-
-        z, nz = self.dndz
-        z_dz = z + dz
-        sel = z_dz >= 0
-        return np.array([z_dz[sel], nz[sel]])
-
     def _get_lorentzian(self, zz):
         # a m s
         params = np.array([[1.257, -0.0010, 0.0122],
@@ -101,10 +88,28 @@ class MapperDELS(MapperBase):
         [a, m, s] = params[self.zbin]
         return 1./(1+((zz[:, None]-zz[None, :]-m)/s)**2/(2*a))**a
 
+    def _get_nz(self):
+        cat_data = self.get_catalog()
+        mskflag = self._get_angmask()
+        h, b = np.histogram(cat_data[self.pz][mskflag],
+                            range=[-0.3, 1], bins=self.num_z_bins)
+        z_arr = 0.5 * (b[:-1] + b[1:])
+        kernel = self._get_lorentzian(z_arr)
+        nz_photo = h.astype(float)
+        nz_spec = simps(kernel*nz_photo[None, :], x=z_arr, axis=1)
+        nz_spec /= simps(nz_spec, x=z_arr)
+        return {'z_mid': z_arr, 'nz': nz_spec}
+
+    def get_nz(self, dz=0):
+        if self.dndz is None:
+            fn = f'DELS_dndz_bin{self.zbin}.npz'
+            self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
+        return self._get_shifted_nz(dz)
+
     def get_signal_map(self, apply_galactic_correction=True):
         if self.delta_map is None:
             d = np.zeros(self.npix)
-            cat_data = self.get_catalogs()
+            cat_data = self.get_catalog()
             self.comp_map = self._get_comp_map()
             self.bmask = self._get_binary_mask()
             self.stars = self._get_stars()
@@ -164,8 +169,7 @@ class MapperDELS(MapperBase):
     def _get_stars(self):
         if self.stars is None:
             # Power = -2 makes sure the total number of stars is conserved
-            self.stars = hp.ud_grade(hp.read_map(self.config['star_map'],
-                                                 verbose=False),
+            self.stars = hp.ud_grade(hp.read_map(self.config['star_map']),
                                      nside_out=self.nside, power=-2)
             # Convert to stars per deg^2
             pix_srad = 4*np.pi/self.npix
@@ -176,15 +180,13 @@ class MapperDELS(MapperBase):
     def _get_comp_map(self):
         if self.comp_map is None:
             self.comp_map = hp.ud_grade(hp.read_map(
-                                        self.config['completeness_map'],
-                                        verbose=False),
+                                        self.config['completeness_map']),
                                         nside_out=self.nside)
         return self.comp_map
 
     def _get_binary_mask(self):
         if self.bmask is None:
-            self.bmask = hp.ud_grade(hp.read_map(self.config['binary_mask'],
-                                                 verbose=False),
+            self.bmask = hp.ud_grade(hp.read_map(self.config['binary_mask']),
                                      nside_out=self.nside)
         return self.bmask
 
@@ -197,7 +199,7 @@ class MapperDELS(MapperBase):
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
-            cat_data = self.get_catalogs()
+            cat_data = self.get_catalog()
             n = get_map_from_points(cat_data, self.nside)
             N_mean = self._get_mean_n(n)
             N_mean_srad = N_mean * self.npix / (4 * np.pi)

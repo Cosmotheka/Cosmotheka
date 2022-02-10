@@ -1,9 +1,8 @@
 from .mapper_base import MapperBase
-from .utils import get_map_from_points
+from .utils import get_map_from_points, save_rerun_data
 from astropy.table import Table, vstack
 import numpy as np
 import healpy as hp
-import os
 
 
 class MapperKV450(MapperBase):
@@ -18,12 +17,10 @@ class MapperKV450(MapperBase):
           'file_nz': Nz_DIR_z0.1t0.3.asc,
           'zbin':0,
           'nside':nside,
-          'mask_name': 'mask_KV450_0',
-          'path_lite': path}
+          'mask_name': 'mask_KV450_0'}
         """
 
         self._get_defaults(config)
-        self.path_lite = config.get('path_lite', None)
         self.column_names = ['SG_FLAG', 'GAAP_Flag_ugriZYJHKs',
                              'Z_B', 'Z_B_MIN', 'Z_B_MAX',
                              'ALPHA_J2000', 'DELTA_J2000', 'PSF_e1', 'PSF_e2',
@@ -48,7 +45,7 @@ class MapperKV450(MapperBase):
         self.w2s2 = None
         self.w2s2s = {'PSF': None, 'shear': None, 'stars': None}
 
-        self.dndz = np.loadtxt(self.config['file_nz'], unpack=True)
+        self.dndz = None
         self.sel = {'galaxies': 1, 'stars': 0}
 
         self.signal_map = None
@@ -62,44 +59,33 @@ class MapperKV450(MapperBase):
 
     def get_catalog(self):
         if self.cat_data is None:
-            read_lite, fname_lite = self._check_lite_exists(self.zbin)
-            if read_lite:
-                print(f'loading lite cat {self.zbin}', flush=True)
-                self.cat_data = Table.read(fname_lite, format='fits')
-            else:
-                print(f'loading full cat {self.zbin}', flush=True)
-                self.cat_data = self._load_catalog()
-
-            print('Catalogs loaded', flush=True)
-
+            fn = f'KV450_cat_bin{self.zbin}.fits'
+            self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
+                                                   self._load_catalog,
+                                                   saved_by_func=True)
         return self.cat_data
 
     def _load_catalog(self):
         nzbins = self.zbin_edges.shape[0]
-        data = [Table() for i in range(nzbins)]
+        cat_bins = [Table() for i in range(nzbins)]
 
         for file_data in self.config['data_catalogs']:
-            data_cat = Table.read(file_data, format='fits')[self.column_names]
+            cat_field = Table.read(file_data, format='fits')[self.column_names]
             # GAAP cut
-            goodgaap = data_cat['GAAP_Flag_ugriZYJHKs'] == 0
-            data_cat = data_cat[goodgaap]
+            goodgaap = cat_field['GAAP_Flag_ugriZYJHKs'] == 0
+            cat_field = cat_field[goodgaap]
+            # Binning
+            for ibin in range(nzbins):
+                sel = self._bin_z(cat_field, ibin)
+                cat_field_bin = cat_field[sel]
+                self._remove_additive_bias(cat_field_bin)
+                cat_bins[ibin] = vstack([cat_bins[ibin], cat_field_bin])
 
-            for i in range(nzbins):
-                # Binning
-                sel = self._bin_z(data_cat, i)
-                data_zbin = data_cat[sel]
-                self._remove_additive_bias(data_zbin)
-                data[i] = vstack([data[i], data_zbin])
-
-        for zbin, cat_zbin in enumerate(data):
-            self._remove_multiplicative_bias(cat_zbin, zbin)
-            read_lite, fname_lite = self._check_lite_exists(zbin)
-            print(fname_lite)
-            if fname_lite is not None:
-                print(f'Writing lite catalog: {fname_lite}', flush=True)
-                cat_zbin.write(fname_lite)
-
-        return data[self.zbin]
+        for ibin, cat in enumerate(cat_bins):
+            self._remove_multiplicative_bias(cat, ibin)
+            fn = f'KV450_cat_bin{ibin}.fits'
+            save_rerun_data(self, fn, 'FITSTable', cat.as_array())
+        return cat_bins[self.zbin].as_array()
 
     def _set_mode(self, mode=None):
         if mode is None:
@@ -120,13 +106,6 @@ class MapperKV450(MapperBase):
         else:
             raise ValueError(f"Unknown mode {mode}")
         return kind, e1_flag, e2_flag, mode
-
-    def _check_lite_exists(self, zbin):
-        if self.path_lite is None:
-            return False, None
-        else:
-            fname_lite = self.path_lite + f'KV450_lite_cat_zbin{zbin}.fits'
-            return os.path.isfile(fname_lite), fname_lite
 
     def _bin_z(self, cat, zbin):
         z_key = 'Z_B'
@@ -154,6 +133,24 @@ class MapperKV450(MapperBase):
         sel = cat_data['SG_FLAG'] == self.sel[kind]
         return cat_data[sel]
 
+    def _get_ellip_maps(self, mode=None):
+        kind, e1f, e2f, mod = self._set_mode(mode)
+        print('Computing bin{} signal map'.format(self.zbin))
+        data = self._get_gals_or_stars(kind)
+        wcol = data['weight']*data[e1f]
+        we1 = get_map_from_points(data, self.nside, w=wcol,
+                                  ra_name='ALPHA_J2000',
+                                  dec_name='DELTA_J2000')
+        wcol = data['weight']*data[e2f]
+        we2 = get_map_from_points(data, self.nside, w=wcol,
+                                  ra_name='ALPHA_J2000',
+                                  dec_name='DELTA_J2000')
+        mask = self.get_mask(mod)
+        goodpix = mask > 0
+        we1[goodpix] /= mask[goodpix]
+        we2[goodpix] /= mask[goodpix]
+        return we1, we2
+
     def get_signal_map(self, mode=None):
         kind, e1f, e2f, mod = self._set_mode(mode)
         if self.maps[mod] is not None:
@@ -161,43 +158,14 @@ class MapperKV450(MapperBase):
             return self.signal_map
 
         # This will only be computed if self.maps['mod'] is None
-        file_name1 = \
-            f'KV450_signal_map_{mod}_e1_zbin{self.zbin}_ns{self.nside}'
-        file_name2 = \
-            f'KV450_signal_map_{mod}_e2_zbin{self.zbin}_ns{self.nside}'
-        # Add extension separately to respect text width < 78
-        file_name1 += '.fits.gz'
-        file_name2 += '.fits.gz'
-        read_lite1, fname_lite1 = self._check_lite_exists(file_name1)
-        read_lite2, fname_lite2 = self._check_lite_exists(file_name2)
-        if read_lite1 and read_lite2:
-            print('Loading bin{} signal map'.format(self.zbin))
-            e1 = hp.read_map(fname_lite1)
-            e2 = hp.read_map(fname_lite2)
-            self.maps[mod] = [-e1, e2]
-        else:
-            print('Computing bin{} signal map'.format(self.zbin))
-            data = self._get_gals_or_stars(kind)
-            wcol = data['weight']*data[e1f]
-            we1 = get_map_from_points(data, self.nside, w=wcol,
-                                      ra_name='ALPHA_J2000',
-                                      dec_name='DELTA_J2000')
-            wcol = data['weight']*data[e2f]
-            we2 = get_map_from_points(data, self.nside, w=wcol,
-                                      ra_name='ALPHA_J2000',
-                                      dec_name='DELTA_J2000')
-            mask = self.get_mask(mod)
-            goodpix = mask > 0
-            we1[goodpix] /= mask[goodpix]
-            we2[goodpix] /= mask[goodpix]
+        def get_ellip_maps_mod():
+            return self._get_ellip_maps(mode=mode)
 
-            # overwrite = True in case it is also being computed by other
-            # process
-            hp.write_map(fname_lite1, we1, overwrite=True)
-            hp.write_map(fname_lite2, we2, overwrite=True)
-
-            self.maps[mod] = [-we1, we2]
-
+        fn = f'KV450_signal_{mod}_bin{self.zbin}_ns{self.nside}.fits.gz'
+        d = self._rerun_read_cycle(fn, 'FITSMap',
+                                   get_ellip_maps_mod,
+                                   section=[0, 1])
+        self.maps[mod] = [-d[0], d[1]]
         self.signal_map = self.maps[mod]
         return self.signal_map
 
@@ -206,20 +174,18 @@ class MapperKV450(MapperBase):
         if self.masks[kind] is not None:
             self.mask = self.masks[kind]
             return self.mask
-        file_name = \
-            f'KV450_mask_{kind}_zbin{self.zbin}_ns{self.nside}'
-        file_name += '.fits.gz'
-        read_lite, fname_lite = self._check_lite_exists(file_name)
-        if read_lite:
-            print('Loading bin{} mask'.format(self.zbin))
-            self.masks[kind] = hp.read_map(fname_lite)
-        else:
+
+        def get_mask_mod():
             data = self._get_gals_or_stars(kind)
-            self.masks[kind] = get_map_from_points(data, self.nside,
-                                                   w=data['weight'],
-                                                   ra_name='ALPHA_J2000',
-                                                   dec_name='DELTA_J2000')
-            hp.write_map(fname_lite, self.masks[kind], overwrite=True)
+            msk = get_map_from_points(data, self.nside,
+                                      w=data['weight'],
+                                      ra_name='ALPHA_J2000',
+                                      dec_name='DELTA_J2000')
+            return msk
+
+        fn = f'KV450_mask_{kind}_bin{self.zbin}_ns{self.nside}.fits.gz'
+        self.masks[kind] = self._rerun_read_cycle(fn, 'FITSMap',
+                                                  get_mask_mod)
         self.mask = self.masks[kind]
         return self.mask
 
@@ -228,20 +194,18 @@ class MapperKV450(MapperBase):
         if self.w2s2s[mod] is not None:
             self.w2s2 = self.w2s2s[mod]
             return self.w2s2
-        file_name = \
-            f'KV450_w2s2_{kind}_zbin{self.zbin}_ns{self.nside}'
-        file_name += '.fits.gz'
-        read_lite, fname_lite = self._check_lite_exists(file_name)
-        if read_lite:
-            print('Loading bin{} w2s2'.format(self.zbin))
-            self.w2s2s[mod] = hp.read_map(fname_lite)
-        else:
+
+        def get_w2s2():
             data = self._get_gals_or_stars(kind)
             wcol = data['weight']**2*0.5*(data[e1f]**2+data[e2f]**2)
-            self.w2s2s[mod] = get_map_from_points(data, self.nside, w=wcol,
-                                                  ra_name='ALPHA_J2000',
-                                                  dec_name='DELTA_J2000')
-            hp.write_map(fname_lite, self.w2s2s[mod], overwrite=True)
+            w2s2 = get_map_from_points(data, self.nside, w=wcol,
+                                       ra_name='ALPHA_J2000',
+                                       dec_name='DELTA_J2000')
+            return w2s2
+
+        fn = f'KV450_w2s2_{kind}_bin{self.zbin}_ns{self.nside}.fits.gz'
+        self.w2s2s[mod] = self._rerun_read_cycle(fn, 'FITSMap',
+                                                 get_w2s2)
         self.w2s2 = self.w2s2s[mod]
         return self.w2s2
 
@@ -257,14 +221,10 @@ class MapperKV450(MapperBase):
         return self.nl_coupled
 
     def get_nz(self, dz=0):
-        if not dz:
-            return self.dndz
-
-        z, nz = self.dndz
-        z_dz = z + dz
-        sel = z_dz >= 0
-
-        return np.array([z_dz[sel], nz[sel]])
+        if self.dndz is None:
+            z, nz = np.loadtxt(self.config['file_nz'], unpack=True)
+            self.dndz = {'z_mid': z, 'nz': nz}
+        return self._get_shifted_nz(dz)
 
     def get_dtype(self):
         return 'galaxy_shear'

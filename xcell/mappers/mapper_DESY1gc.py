@@ -12,7 +12,7 @@ class MapperDESY1gc(MapperBase):
         Data source:
         https://des.ncsa.illinois.edu/releases/y1a1/key-catalogs/key-shape
         config - dict
-          {'data_catalogs':'/home/zcapjru/PhD/Data/DES_redm/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits',
+          {'data_catalog':'/home/zcapjru/PhD/Data/DES_redm/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits',
            'file_mask':'/home/zcapjru/PhD/Data/DES_redm/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits',
            'file_nz':'/home/zcapjru/PhD/Data/DES_redm/2pt_NG_mcal_1110.fits',
            'zbin':1,
@@ -39,7 +39,7 @@ class MapperDESY1gc(MapperBase):
 
     def get_catalog(self):
         if self.cat_data is None:
-            self.cat_data = Table.read(self.config['data_catalogs'])
+            self.cat_data = Table.read(self.config['data_catalog'])
             self.cat_data = self._bin_z(self.cat_data)
         return self.cat_data
 
@@ -56,7 +56,7 @@ class MapperDESY1gc(MapperBase):
 
     def get_mask(self):
         if self.mask is None:
-            self.mask = hp.read_map(self.config['file_mask'], verbose=False)
+            self.mask = hp.read_map(self.config['file_mask'])
             self.mask = hp.ud_grade(self.mask, nside_out=self.nside)
             # Cap it
             goodpix = self.mask > self.mask_threshold
@@ -66,14 +66,9 @@ class MapperDESY1gc(MapperBase):
     def get_nz(self, dz=0):
         if self.dndz is None:
             f = fits.open(self.config['file_nz'])[7].data
-            z = f['Z_MID']
-            nz = f['BIN%d' % (self.zbin+1)]
-            self.dndz = np.array([z, nz])
-        # Shift distribution by dz and remove z + dz < 0
-        z, nz = self.dndz
-        z_dz = z + dz
-        sel = z_dz >= 0
-        return np.array([z_dz[sel], nz[sel]])
+            self.dndz = {'z_mid': f['Z_MID'],
+                         'nz': f['BIN%d' % (self.zbin+1)]}
+        return self._get_shifted_nz(dz)
 
     def get_signal_map(self):
         if self.delta_map is None:

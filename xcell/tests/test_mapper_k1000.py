@@ -31,30 +31,29 @@ def get_es():
                      axis=0).flatten()
 
 
-def remove_lite(predir):
-    flite = glob.glob(predir + 'KiDS1000_lite*.fits*')
-    for f in flite:
+def remove_rerun(predir):
+    frerun = glob.glob(predir + 'KiDS1000_*.fits*')
+    for f in frerun:
         os.remove(f)
 
 
-def test_lite():
+def test_rerun():
     predir = 'xcell/tests/data/'
     config = get_config()
-    config['path_lite'] = predir
-    prefix = f'{predir}KiDS1000_lite'
-    remove_lite(predir)
+    config['path_rerun'] = predir
+    prefix = f'{predir}KiDS1000'
+    remove_rerun(predir)
     m = xc.mappers.MapperKiDS1000(config)
     m.get_catalog()
-    assert os.path.isfile(f'{prefix}_cat_zbin0.fits')
+    assert os.path.isfile(f'{prefix}_cat_bin0.fits')
     map1 = np.array(m.get_signal_map())
     mask1 = m.get_mask()
-    assert os.path.isfile(f'{prefix}_shear_e1_ns32_zbin0.fits.gz')
-    assert os.path.isfile(f'{prefix}_shear_e2_ns32_zbin0.fits.gz')
-    assert os.path.isfile(f'{prefix}_galaxies_mask_ns32_zbin0.fits.gz')
+    assert os.path.isfile(f'{prefix}_signal_shear_bin0_ns32.fits.gz')
+    assert os.path.isfile(f'{prefix}_mask_galaxies_bin0_ns32.fits.gz')
     nl1 = m.get_nl_coupled()
-    assert os.path.isfile(f'{prefix}_galaxies_w2s2_ns32_zbin0.fits.gz')
+    assert os.path.isfile(f'{prefix}_w2s2_galaxies_bin0_ns32.fits.gz')
 
-    # Non-exsisting fits files - read from lite
+    # Non-exsisting fits files - read from rerun
     config['data_catalog'] = 'whatever'
     m = xc.mappers.MapperKiDS1000(config)
     m.get_catalog()
@@ -67,7 +66,7 @@ def test_lite():
     assert np.all(np.fabs(mask1 - mask2) < 1E-5)
     assert np.all(np.fabs(map1 - map2) < 1E-5)
     assert np.all(np.fabs(nl1 - nl2) < 1E-5)
-    remove_lite(predir)
+    remove_rerun(predir)
 
 
 def test_get_signal_map():

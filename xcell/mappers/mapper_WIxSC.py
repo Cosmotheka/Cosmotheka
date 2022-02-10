@@ -1,6 +1,6 @@
 from .mapper_base import MapperBase
 from .utils import get_map_from_points, get_DIR_Nz
-from astropy.io import fits
+import fitsio
 from astropy.table import Table
 import pymaster as nmt
 import numpy as np
@@ -18,12 +18,12 @@ class MapperWIxSC(MapperBase):
            'spec_sample': 'zSpec-comp-WIxSC.csv',
            'bin_name': '0',
            'z_edges': [0, 0.5],
-           'path_rerun': '.',
            'n_jk_dir': 100,
            'mask_name': 'mask_WIxSC'}
         """
         self._get_defaults(config)
         self.z_edges = config.get('z_edges', [0, 0.5])
+        self.ra_name, self.dec_name, self.in_rad = self._get_coords(config)
 
         self.cat_data = None
         self.npix = hp.nside2npix(self.nside)
@@ -33,57 +33,57 @@ class MapperWIxSC(MapperBase):
         self.dndz = None
         self.mask = None
         self.stars = None
-        self.dndz = None
         self.delta_map = None
         self.nl_coupled = None
-        self.mask = None
         self.nside_nl_threshold = config.get('nside_nl_threshold',
                                              4096)
         self.lmin_nl_from_data = config.get('lmin_nl_from_data',
                                             2000)
 
+    def get_radec(self, cat):
+        if self.in_rad:
+            return (np.degrees(cat[self.ra_name]),
+                    np.degrees(cat[self.dec_name]))
+        else:
+            return cat[self.ra_name], cat[self.dec_name]
+
+    def _get_coords(self, config):
+        coords = config.get('coordinates', 'G')
+        if coords == 'G':  # Galactic
+            return 'L', 'B', False
+        elif coords == 'C':  # Celestial/Equatorial
+            return 'RA', 'DEC', True
+        else:
+            raise NotImplementedError(f"Unknown coordinates {coords}")
+
+    def _get_catalog(self):
+        file_data = self.config['data_catalog']
+        if not os.path.isfile(file_data):
+            raise ValueError(f"File {file_data} not found")
+        # Read catalog
+        cat = fitsio.read(file_data,
+                          columns=[self.ra_name,
+                                   self.dec_name,
+                                   'W1MCORR', 'W2MCORR',
+                                   'RCALCORR', 'BCALCORR',
+                                   'ZPHOTO_CORR'])
+        # Bin in redshift
+        cat = self._bin_z(cat)
+        # Sky mask
+        cat = self._mask_catalog(cat)
+        return cat
+
     def get_catalog(self):
         if self.cat_data is None:
-            fn = 'WIxSC_lite_bin' + self.bn + '.fits'
-            f_exists, fname_lite = self._check_rerun_file_exists(fn)
-            # Check if lite catalog exists
-            if f_exists:
-                with fits.open(fname_lite) as f:
-                    self.cat_data = Table.read(f, format='fits', memmap=True)
-            else:
-                file_data = self.config['data_catalog']
-                if not os.path.isfile(file_data):
-                    raise ValueError(f"File {file_data} not found")
-                # Read catalog
-                with fits.open(file_data) as f:
-                    self.cat_data = Table.read(f, format='fits', memmap=True)
-                # Bin in redshift
-                self.cat_data = self._bin_z(self.cat_data)
-                # Ditch useless columns
-                self.cat_data.keep_columns(['RA', 'DEC',
-                                            'W1MCORR', 'W2MCORR',
-                                            'RCALCORR', 'BCALCORR'])
-                # Sky mask
-                self.cat_data = self._mask_catalog(self.cat_data)
-                # Save lite if needed
-                if fname_lite is not None:
-                    self.cat_data.write(fname_lite)
+            fn = 'WIxSC_rerun_bin' + self.bn + '.fits'
+            self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
+                                                   self._get_catalog)
         return self.cat_data
-
-    def _check_rerun_file_exists(self, fname):
-        path_i = self.config.get('path_rerun', None)
-        if path_i is None:
-            return False, None
-        else:
-            fname_full = os.path.join(path_i, fname)
-            return os.path.isfile(fname_full), fname_full
 
     def _mask_catalog(self, cat):
         self.mask = self.get_mask()
-        ipix = hp.ang2pix(self.nside,
-                          np.degrees(cat['RA']),
-                          np.degrees(cat['DEC']),
-                          lonlat=True)
+        ra, dec = self.get_radec(cat)
+        ipix = hp.ang2pix(self.nside, ra, dec, lonlat=True)
         # Mask is binary, so 0.1 or 0.00001 doesn't really matter
         return cat[self.mask[ipix] > 0.1]
 
@@ -99,49 +99,33 @@ class MapperWIxSC(MapperBase):
                (ds['zCorr'] >= self.z_edges[0]))
         return ds[msk]
 
+    def _get_nz(self):
+        c_p = self.get_catalog()
+        c_s = self._get_specsample(c_p)
+        # Sort spec sample by nested pixel index so jackknife
+        # samples are spatially correlated.
+        ip_s = hp.ring2nest(self.nside,
+                            hp.ang2pix(self.nside, c_s['ra_WISE'],
+                                       c_s['dec_WISE'], lonlat=True))
+        idsort = np.argsort(ip_s)
+        c_s = c_s[idsort]
+        # Compute DIR N(z)
+        z, nz, nz_jk = get_DIR_Nz(c_s, c_p,
+                                  ['W1c', 'W2c', 'Bcc', 'Rcc'],
+                                  zflag='Zspec',
+                                  zrange=[0, 0.6],
+                                  nz=150,
+                                  bands_photo=['W1MCORR', 'W2MCORR',
+                                               'BCALCORR', 'RCALCORR'],
+                                  njk=self.config.get('n_jk_dir', 100))
+        zm = 0.5*(z[1:] + z[:-1])
+        return {'z_mid': zm, 'nz': nz, 'nz_jk': nz_jk}
+
     def get_nz(self, dz=0, return_jk_error=False):
         if self.dndz is None:
             fn = 'nz_WIxSC_bin' + self.bn + '.npz'
-            f_exists, f_name = self._check_rerun_file_exists(fn)
-            # Read from file if it exists
-            if f_exists:
-                d = np.load(f_name)
-                zm = d['z_mid']
-                nz = d['nz']
-                nz_jk = d['nz_jk']
-            else:  # Else compute DIR N(z) and jackknife resamples
-                c_p = self.get_catalog()
-                c_s = self._get_specsample(c_p)
-                # Sort spec sample by nested pixel index so jackknife
-                # samples are spatially correlated.
-                ip_s = hp.ring2nest(self.nside,
-                                    hp.ang2pix(self.nside, c_s['ra_WISE'],
-                                               c_s['dec_WISE'], lonlat=True))
-                idsort = np.argsort(ip_s)
-                c_s = c_s[idsort]
-                # Compute DIR N(z)
-                z, nz, nz_jk = get_DIR_Nz(c_s, c_p,
-                                          ['W1c', 'W2c', 'Bcc', 'Rcc'],
-                                          zflag='Zspec',
-                                          zrange=[0, 1.],
-                                          nz=100,
-                                          bands_photo=['W1MCORR', 'W2MCORR',
-                                                       'BCALCORR', 'RCALCORR'],
-                                          njk=self.config.get('n_jk_dir', 100))
-                zm = 0.5*(z[1:] + z[:-1])
-                if f_name is not None:
-                    np.savez(f_name, z_mid=zm, nz=nz, nz_jk=nz_jk)
-            self.dndz = (zm, nz, nz_jk)
-
-        z, nz, nz_jk = self.dndz
-        z_dz = z + dz
-        sel = z_dz >= 0
-        if return_jk_error:
-            njk = len(nz_jk)
-            enz = np.std(nz_jk, axis=0)*np.sqrt((njk-1)**2/njk)
-            return np.array([z_dz[sel], nz[sel], enz[sel]])
-        else:
-            return np.array([z_dz[sel], nz[sel]])
+            self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
+        return self._get_shifted_nz(dz, return_jk_error=return_jk_error)
 
     def get_signal_map(self):
         if self.delta_map is None:
@@ -150,8 +134,9 @@ class MapperWIxSC(MapperBase):
             self.mask = self.get_mask()
             self.stars = self._get_stars()
             nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            ra_name='RA', dec_name='DEC',
-                                            in_radians=True)
+                                            ra_name=self.ra_name,
+                                            dec_name=self.dec_name,
+                                            in_radians=self.in_rad)
             mean_n = self._get_mean_n(nmap_data)
             goodpix = self.mask > 0
             # Division by mask not really necessary, since it's binary.
@@ -165,16 +150,14 @@ class MapperWIxSC(MapperBase):
 
     def get_mask(self):
         if self.mask is None:
-            self.mask = hp.ud_grade(hp.read_map(self.config['mask'],
-                                                verbose=False),
+            self.mask = hp.ud_grade(hp.read_map(self.config['mask']),
                                     nside_out=self.nside)
         return self.mask
 
     def _get_stars(self):
         if self.stars is None:
             # Power = -2 makes sure the total number of stars is conserved
-            self.stars = hp.ud_grade(hp.read_map(self.config['star_map'],
-                                                 verbose=False),
+            self.stars = hp.ud_grade(hp.read_map(self.config['star_map']),
                                      nside_out=self.nside, power=-2)
             # Convert to stars per deg^2
             pix_srad = 4*np.pi/self.npix
@@ -228,8 +211,9 @@ class MapperWIxSC(MapperBase):
                     (self.config.get('nl_analytic', True))):
                 cat_data = self.get_catalog()
                 n = get_map_from_points(cat_data, self.nside,
-                                        ra_name='RA', dec_name='DEC',
-                                        in_radians=True)
+                                        ra_name=self.ra_name,
+                                        dec_name=self.dec_name,
+                                        in_radians=self.in_rad)
                 N_mean = self._get_mean_n(n)
                 N_mean_srad = N_mean * self.npix / (4 * np.pi)
                 mask = self.get_mask()

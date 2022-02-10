@@ -91,13 +91,8 @@ class MapperDummy(MapperBase):
             else:
                 return None
 
-            self.dndz = np.array([z, nz])
-
-        z, nz = self.dndz
-        z_dz = z + dz
-        sel = z_dz >= 0
-
-        return np.array([z_dz[sel], nz[sel]])
+            self.dndz = {'z_mid': z, 'nz': nz}
+        return self._get_shifted_nz(dz)
 
     def _get_cl_ccl(self, dtype):
         ls = np.arange(3 * self.nside)
@@ -133,11 +128,10 @@ class MapperDummy(MapperBase):
             np.random.seed(self.seed)
             cl = self.get_cl()
             if self.spin == 0:
-                self.signal_map = [hp.synfast(cl, self.nside, verbose=False)]
+                self.signal_map = [hp.synfast(cl, self.nside)]
             elif self.spin == 2:
                 _, mq, mu = hp.synfast([0*cl, cl, 0*cl, 0*cl],
-                                       self.nside, new=True,
-                                       verbose=False)
+                                       self.nside, new=True)
                 self.signal_map = [mq, mu]
         return self.signal_map
 

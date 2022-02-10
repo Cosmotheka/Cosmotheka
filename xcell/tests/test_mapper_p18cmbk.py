@@ -57,7 +57,7 @@ def test_get_signal_map():
 
 def test_get_mask():
     c = get_config()
-    c['path_lite'] = './lite'
+    c['path_rerun'] = './lite'
     m = xc.mappers.MapperP18CMBK(c)
     d = m.get_mask()
     assert np.all(np.fabs(d-1) < 1E-5)

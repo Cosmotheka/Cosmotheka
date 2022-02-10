@@ -11,16 +11,22 @@ from .mapper_eBOSS import MappereBOSS
 from .mapper_BOSS import MapperBOSS
 from .mapper_KV450 import MapperKV450
 from .mapper_KiDS1000 import MapperKiDS1000
+from .mapper_SPT import MapperSPT
 from .mapper_P18CMBK import MapperP18CMBK
 from .mapper_P15tSZ import MapperP15tSZ
 from .mapper_P18SMICA import MapperP18SMICA
 from .mapper_P15CIB import MapperP15CIB
+from .mapper_CIBLenz import MapperCIBLenz
 from .mapper_DELS import MapperDELS
 from .mapper_2MPZ import Mapper2MPZ
 from .mapper_WIxSC import MapperWIxSC
+from .mapper_HSC_DR1wl import MapperHSCDR1wl
+from .mapper_NVSS import MapperNVSS
+from .mapper_CatWISE import MapperCatWISE
+from .mapper_ROSAT import MapperROSATXray
 from .mapper_dummy import MapperDummy
-from .utils import get_map_from_points, get_DIR_Nz
-
+from .utils import (get_map_from_points, get_DIR_Nz,
+                    get_rerun_data, save_rerun_data)
 
 def mapper_from_name(name):
     def all_subclasses(cls):

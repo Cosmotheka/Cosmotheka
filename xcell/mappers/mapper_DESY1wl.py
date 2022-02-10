@@ -3,7 +3,6 @@ from .utils import get_map_from_points
 from astropy.table import Table, hstack
 import numpy as np
 import healpy as hp
-import os
 
 
 class MapperDESY1wl(MapperBase):
@@ -18,13 +17,11 @@ class MapperDESY1wl(MapperBase):
            'nside': Nside,
            'zbin': zbin,
            'mask_name': name,
-           'path_lite': path
            }
         """
 
         self._get_defaults(config)
         self.config = config
-        self.path_lite = config.get('path_lite', None)
         self.mode = config.get('mode', 'shear')
         self.zbin = config['zbin']
         self.npix = hp.nside2npix(self.nside)
@@ -57,7 +54,7 @@ class MapperDESY1wl(MapperBase):
 
         return self.cat_data
 
-    def _load_catalog(self):
+    def _load_catalog_from_raw(self):
         # Read catalogs
         # Columns explained in
         #
@@ -69,47 +66,36 @@ class MapperDESY1wl(MapperBase):
         # z-bin catalog
         columns_zbin = ['zbin_mcal', 'zbin_mcal_1p',
                         'zbin_mcal_1m', 'zbin_mcal_2p', 'zbin_mcal_2m']
+        print('Loading full cat')
+        cat = Table.read(self.config['data_cat'],
+                         format='fits', memmap=True)
+        cat.keep_columns(columns_data)
+        cat_zbin = Table.read(self.config['zbin_cat'],
+                              format='fits', memmap=True)
+        cat_zbin.keep_columns(columns_zbin)
+        cat = hstack([cat, cat_zbin])
 
-        file_name = f'DESwlMETACAL_catalog_lite_zbin{self.zbin}.fits'
-        read_lite, fname_lite = self._check_lite_exists(file_name)
+        # remove bins which are not the one of interest
+        # Logic: If item in one of zbins --> sel = False
+        # Thus it is not removed by next line
+        sel = (cat['zbin_mcal'] != self.zbin) * \
+            (cat['zbin_mcal_1p'] != self.zbin) * \
+            (cat['zbin_mcal_1m'] != self.zbin) * \
+            (cat['zbin_mcal_2p'] != self.zbin) * \
+            (cat['zbin_mcal_2m'] != self.zbin)
+        cat.remove_rows(sel)
+        # filter for -90<dec<-35
+        cat.remove_rows(cat['dec'] < -90)
+        cat.remove_rows(cat['dec'] > -35)
+        # remove flagged galaxies
+        cat.remove_rows(cat['flags_select'] != 0)
+        return cat.as_array()
 
-        if read_lite:
-            print('Loading lite bin{} cat'.format(self.zbin))
-            self.cat_data = Table.read(fname_lite, memmap=True)
-        else:
-            print('Loading full cat')
-            self.cat_data = Table.read(self.config['data_cat'],
-                                       format='fits', memmap=True)
-            self.cat_data.keep_columns(columns_data)
-            cat_zbin = Table.read(self.config['zbin_cat'],
-                                  format='fits', memmap=True)
-            cat_zbin.keep_columns(columns_zbin)
-            self.cat_data = hstack([self.cat_data, cat_zbin])
-
-            # remove bins which are not the one of interest
-            # Logic: If item in one of zbins --> sel = False
-            # Thus it is not removed by next line
-            sel = (self.cat_data['zbin_mcal'] != self.zbin) * \
-                (self.cat_data['zbin_mcal_1p'] != self.zbin) * \
-                (self.cat_data['zbin_mcal_1m'] != self.zbin) * \
-                (self.cat_data['zbin_mcal_2p'] != self.zbin) * \
-                (self.cat_data['zbin_mcal_2m'] != self.zbin)
-            self.cat_data.remove_rows(sel)
-            # filter for -90<dec<-35
-            self.cat_data.remove_rows(self.cat_data['dec'] < -90)
-            self.cat_data.remove_rows(self.cat_data['dec'] > -35)
-            # remove flagged galaxies
-            self.cat_data.remove_rows(self.cat_data['flags_select'] != 0)
-            if fname_lite is not None:
-                self.cat_data.write(fname_lite)
-        return self.cat_data
-
-    def _check_lite_exists(self, file_name):
-        if self.path_lite is None:
-            return False, None
-        else:
-            fname_lite = os.path.join(self.path_lite, file_name)
-            return os.path.isfile(fname_lite), fname_lite
+    def _load_catalog(self):
+        fn = f'DESY1wl_catalog_rerun_bin{self.zbin}.fits'
+        cat = self._rerun_read_cycle(fn, 'FITSTable',
+                                     self._load_catalog_from_raw)
+        return Table(cat)
 
     def _set_mode(self, mode=None):
         if mode is None:
@@ -165,6 +151,24 @@ class MapperDESY1wl(MapperBase):
         self.cat_data['e2'] /= one_plus_m
         return
 
+    def _get_ellipticity_maps(self, mode=None):
+        e1f, e2f, mod = self._set_mode(mode)
+        print('Computing bin{} signal map'.format(self.zbin))
+        cat_data = self.get_catalog()
+        we1 = get_map_from_points(cat_data, self.nside,
+                                  w=cat_data[e1f],
+                                  ra_name='ra',
+                                  dec_name='dec')
+        we2 = get_map_from_points(cat_data, self.nside,
+                                  w=cat_data[e2f],
+                                  ra_name='ra',
+                                  dec_name='dec')
+        mask = self.get_mask()
+        goodpix = mask > 0
+        we1[goodpix] /= mask[goodpix]
+        we2[goodpix] /= mask[goodpix]
+        return we1, we2
+
     def get_signal_map(self, mode=None):
         e1f, e2f, mod = self._set_mode(mode)
         if self.maps[mod] is not None:
@@ -172,76 +176,37 @@ class MapperDESY1wl(MapperBase):
             return self.signal_map
 
         # This will only be computed if self.maps['mod'] is None
-        file_name1 = \
-            f'DESwlMETACAL_signal_map_{mod}_e1_zbin{self.zbin}_ns{self.nside}'
-        file_name2 = \
-            f'DESwlMETACAL_signal_map_{mod}_e2_zbin{self.zbin}_ns{self.nside}'
-        # Add extension separately to respect text width < 78
-        file_name1 += '.fits.gz'
-        file_name2 += '.fits.gz'
-        read_lite1, fname_lite1 = self._check_lite_exists(file_name1)
-        read_lite2, fname_lite2 = self._check_lite_exists(file_name2)
-        if read_lite1 and read_lite2:
-            print('Loading bin{} signal map'.format(self.zbin))
-            e1 = hp.read_map(fname_lite1)
-            e2 = hp.read_map(fname_lite2)
-            self.maps[mod] = [-e1, e2]
-        else:
-            print('Computing bin{} signal map'.format(self.zbin))
-            cat_data = self.get_catalog()
-            we1 = get_map_from_points(cat_data, self.nside,
-                                      w=cat_data[e1f],
-                                      ra_name='ra',
-                                      dec_name='dec')
-            we2 = get_map_from_points(cat_data, self.nside,
-                                      w=cat_data[e2f],
-                                      ra_name='ra',
-                                      dec_name='dec')
-            mask = self.get_mask()
-            goodpix = mask > 0
-            we1[goodpix] /= mask[goodpix]
-            we2[goodpix] /= mask[goodpix]
-            self.maps[mod] = [-we1, we2]
-            # overwrite = True in case it is also being computed by other
-            # process
-            hp.write_map(fname_lite1, we1, overwrite=True)
-            hp.write_map(fname_lite2, we2, overwrite=True)
+        def get_ellip_maps():
+            return self._get_ellipticity_maps(mode=mode)
 
+        fn = f'DESY1wl_signal_map_{mod}_bin{self.zbin}_ns{self.nside}.fits.gz'
+        d = self._rerun_read_cycle(fn, 'FITSMap', get_ellip_maps,
+                                   section=[0, 1])
+        self.maps[mod] = [-d[0], d[1]]
         self.signal_map = self.maps[mod]
         return self.signal_map
 
     def get_nz(self, dz=0):
         if self.dndz is None:
-            file_nz = Table.read(self.config['file_nz'], format='fits',
-                                 hdu=1)['Z_MID', 'BIN{}'.format(self.zbin + 1)]
-            z = file_nz['Z_MID']
-            nz = file_nz['BIN{}'.format(self.zbin + 1)]
-            self.dndz = np.array([z, nz])
+            f = Table.read(self.config['file_nz'], format='fits',
+                           hdu=1)['Z_MID', 'BIN{}'.format(self.zbin + 1)]
+            self.dndz = {'z_mid': f['Z_MID'],
+                         'nz': f['BIN{}'.format(self.zbin + 1)]}
+        return self._get_shifted_nz(dz)
 
-        z, nz = self.dndz
-        z_dz = z + dz
-        sel = z_dz >= 0
-
-        return np.array([z_dz[sel], nz[sel]])
+    def _get_mask(self):
+        cat_data = self.get_catalog()
+        msk = get_map_from_points(cat_data, self.nside,
+                                  ra_name='ra', dec_name='dec')
+        return msk
 
     def get_mask(self):
         if self.mask is not None:
             return self.mask
 
         # This will only be computed if self.maps['mod'] is None
-        file_name = f'DESwlMETACAL_mask_zbin{self.zbin}_ns{self.nside}.fits.gz'
-        read_lite, fname_lite = self._check_lite_exists(file_name)
-
-        if read_lite:
-            print('Loading bin{} mask'.format(self.zbin))
-            self.mask = hp.read_map(fname_lite)
-        else:
-            cat_data = self.get_catalog()
-            self.mask = get_map_from_points(cat_data, self.nside,
-                                            ra_name='ra', dec_name='dec')
-            # overwrite = True in case it is also being computed by other
-            # process
-            hp.write_map(fname_lite, self.mask, overwrite=True)
+        fn = f'DESY1wl_mask_bin{self.zbin}_ns{self.nside}.fits.gz'
+        self.mask = self._rerun_read_cycle(fn, 'FITSMap', self._get_mask)
         return self.mask
 
     def get_nl_coupled(self, mode=None):
@@ -250,23 +215,18 @@ class MapperDESY1wl(MapperBase):
             self.nl_coupled = self.nls[mod]
             return self.nl_coupled
 
-        # This will only be computed if self.maps['mod'] is None
-        file_name = \
-            f'DESwlMETACAL_{mod}_w2s2_zbin{self.zbin}_ns{self.nside}.fits.gz'
-        read_lite, fname_lite = self._check_lite_exists(file_name)
-
-        if read_lite:
-            print('Loading w2s2 bin{} map'.format(self.zbin))
-            w2s2 = hp.read_map(fname_lite)
-        else:
+        # This will only be computed if self.nls['mod'] is None
+        def get_w2s2():
+            e1f, e2f, mod = self._set_mode(mode)
             cat_data = self.get_catalog()
-            w2s2 = get_map_from_points(cat_data, self.nside,
-                                       w=0.5*(cat_data[e1f]**2 +
-                                              cat_data[e2f]**2),
-                                       ra_name='ra', dec_name='dec')
-            # overwrite = True in case it is also being computed by other
-            # process
-            hp.write_map(fname_lite, w2s2, overwrite=True)
+            mp = get_map_from_points(cat_data, self.nside,
+                                     w=0.5*(cat_data[e1f]**2 +
+                                            cat_data[e2f]**2),
+                                     ra_name='ra', dec_name='dec')
+            return mp
+
+        fn = f'DESY1wl_{mod}_w2s2_bin{self.zbin}_ns{self.nside}.fits.gz'
+        w2s2 = self._rerun_read_cycle(fn, 'FITSMap', get_w2s2)
 
         N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
         nl = N_ell * np.ones(3*self.nside)

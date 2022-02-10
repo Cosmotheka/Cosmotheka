@@ -140,6 +140,16 @@ def test_initizalization():
     assert data2.data['bpw_edges'] == [0, 10]
     remove_yml_file(config)
 
+    # Check ignore_existing_yml
+    data = get_data()
+    data2 = Data(data=config, ignore_existing_yml=True)
+    assert data2.data['bpw_edges'] != data.data['bpw_edges']
+    remove_yml_file(config)
+
+    # Check error is rised when override and ignore_existing_yml are True
+    with pytest.raises(ValueError):
+        data2 = Data(data=config, ignore_existing_yml=True, override=True)
+
 
 def test_read_data():
     data = get_data()
@@ -297,10 +307,17 @@ def test_get_mapper():
     data = get_data()
     config = get_config_dict()
 
+    data.data['tracers']['DESgc__0']['nside'] = 512
+
     for tr, val in config['tracers'].items():
         class_name = val['mapper_class']
-        m = data.get_mapper(tr)
-        assert isinstance(m, mapper_from_name(class_name))
+        if tr == 'DESgc__0':
+            with pytest.raises(ValueError):
+                m = data.get_mapper(tr)
+        else:
+            m = data.get_mapper(tr)
+            assert m.nside == 4096
+            assert isinstance(m, mapper_from_name(class_name))
 
     remove_yml_file(config)
 
