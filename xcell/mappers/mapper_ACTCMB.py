@@ -1,8 +1,12 @@
+from .mapper_ACT_base import MapperACTBase
+from pixell import enmap, reproject
+
+
 from .mapper_ACT_compsept import MapperACTCompSept
 from pixell import enmap, reproject
 
 
-class MapperACTtSZ(MapperACTCompSept):
+class MapperACTCMB(MapperACTCompSept):
     def __init__(self, config):
         """
         config - dict
@@ -17,7 +21,7 @@ class MapperACTtSZ(MapperACTCompSept):
         self._get_ACT_CompSept_defaults(config)
 
     def get_dtype(self):
-        return 'cmb_tSZ'
+        return 'cmb_kSZ'
 
     def get_spin(self):
         return 0

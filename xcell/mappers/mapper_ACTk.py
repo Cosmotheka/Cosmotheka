@@ -23,13 +23,13 @@ class MapperACTk(MapperACTBase):
                                           nside=self.nside)
         mp *= np.mean(self.pixell_mask**2)
         return mp
-
-    def get_signal_map(self):
-        if self.signal_map is None:
-            fn = f'ACT_{self.map_name}_signal.fits.gz'
-            mp = self._rerun_read_cycle(fn, 'FITSMap', self._get_signal_map)
-            self.signal_map = [mp]
-        return self.signal_map
+    
+    def _get_mask(self):
+        self.pixell_mask = self._get_pixell_mask()
+        msk = reproject.healpix_from_enmap(self.pixell_mask,
+                                           lmax=self.lmax,
+                                           nside=self.nside)
+        return msk
 
     def get_dtype(self):
         return 'cmb_convergence'
