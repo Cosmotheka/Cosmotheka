@@ -23,7 +23,7 @@ class MapperACTk(MapperACTBase):
                                           nside=self.nside)
         mp *= np.mean(self.pixell_mask**2)
         return mp
-    
+
     def _get_mask(self):
         self.pixell_mask = self._get_pixell_mask()
         msk = reproject.healpix_from_enmap(self.pixell_mask,

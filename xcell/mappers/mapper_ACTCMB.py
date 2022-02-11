@@ -1,9 +1,4 @@
-from .mapper_ACT_base import MapperACTBase
-from pixell import enmap, reproject
-
-
 from .mapper_ACT_compsept import MapperACTCompSept
-from pixell import enmap, reproject
 
 
 class MapperACTCMB(MapperACTCompSept):

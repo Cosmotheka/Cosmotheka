@@ -1,5 +1,7 @@
 from .mapper_ACT_base import MapperACTBase
 from pixell import enmap, reproject
+import numpy as np
+from scipy.interpolate import interp1d
 
 
 class MapperACTCompSept(MapperACTBase):
@@ -15,12 +17,12 @@ class MapperACTCompSept(MapperACTBase):
          'lmax': 6000}
         """
         self._get_ACT_CompSept_defaults(config)
-        
+
     def _get_ACT_CompSept_defaults(self, config):
         self._get_defaults(config)
         self._get_ACT_defaults(config)
         self.nl_coupled = None
-        #self.beam_info = config.get('beam_info',
+        # self.beam_info = config.get('beam_info',
         #                            [{'type': 'custom',
         #                              'file': None}])
 
@@ -33,30 +35,30 @@ class MapperACTCompSept(MapperACTBase):
                                                       lmax=self.lmax,
                                                       nside=self.nside)
         return signal_map
-    
+
     def _get_mask(self):
         if self.mask is None:
             # It [The mask] has already been applied to the map.
-            # If you are doing a real-space analysis, you should 
+            # If you are doing a real-space analysis, you should
             # exclude any pixels where the value in the mask is
             # appreciably different from 1 since the signal there
             # should be attenuated by the value in the mask.
-            
+
             self.pixell_mask = self._get_pixell_mask()
             msk = reproject.healpix_from_enmap(self.pixell_mask,
-                                           lmax=self.lmax,
-                                           nside=self.nside)
-            msk[msk<0.95] = 0
+                                               lmax=self.lmax,
+                                               nside=self.nside)
+            msk[msk < 0.95] = 0
         return msk
-    
+
     def get_nl_coupled(self):
-        if self.nl_coupled is None: 
-            # 'Noise' contains the 2D Fourier space total noise power 
-            # spectrum from the ILC pipeline (this includes both 
-            # signal and instrument noise).  
+        if self.nl_coupled is None:
+            # 'Noise' contains the 2D Fourier space total noise power
+            # spectrum from the ILC pipeline (this includes both
+            # signal and instrument noise).
             pass
         return self.nl_coupled
-    
+
     def _get_custom_beam(self, info):
         fname = info['file']
         beam_file = np.loadtxt(fname)

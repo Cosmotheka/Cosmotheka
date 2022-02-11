@@ -1,5 +1,4 @@
 from .mapper_ACT_compsept import MapperACTCompSept
-from pixell import enmap, reproject
 
 
 class MapperACTtSZ(MapperACTCompSept):

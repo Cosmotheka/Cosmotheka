@@ -1,5 +1,6 @@
 from .mapper_base import MapperBase
-from pixell import enmap, reproject
+from pixell import enmap
+
 
 class MapperACTBase(MapperBase):
     def __init__(self, config):

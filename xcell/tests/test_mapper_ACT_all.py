@@ -19,22 +19,26 @@ def get_config(wbeam=True):
 
 
 @pytest.mark.parametrize('cls,spin', [(xc.mappers.MapperACTk, '0'),
-                                      (xc.mappers.MapperACTtSZ, '0')])
-
+                                      (xc.mappers.MapperACTtSZ, '0'),
+                                      (xc.mappers.MapperACTCMB, '0')])
 def test_get_spin(cls, spin):
     m = cls(get_config())
     assert m.get_spin() == int(spin)
 
+
 @pytest.mark.parametrize('cls,typ', [(xc.mappers.MapperACTk,
                                       'cmb_convergence'),
                                      (xc.mappers.MapperACTtSZ,
-                                      'cmb_tSZ')])
+                                      'cmb_tSZ'),
+                                     (xc.mappers.MapperACTCMB,
+                                      'cmb_kSZ')])
 def test_get_dtype(cls, typ):
     m = cls(get_config())
     assert m.get_dtype() == typ
 
 
 @pytest.mark.parametrize('cls', [(xc.mappers.MapperACTtSZ),
+                                 (xc.mappers.MapperACTCMB),
                                  (xc.mappers.MapperACTk)])
 def test_get_signal_map(cls):
     conf = get_config()
@@ -53,10 +57,13 @@ def test_get_signal_map(cls):
     os.remove(fn)
 
 
-def test_get_mask():
+@pytest.mark.parametrize('cls', [(xc.mappers.MapperACTtSZ),
+                                 (xc.mappers.MapperACTCMB),
+                                 (xc.mappers.MapperACTk)])
+def test_get_mask(cls):
     conf = get_config()
     conf['path_rerun'] = 'xcell/tests/data/'
-    m = xc.mappers.MapperACTBase(conf)
+    m = cls(conf)
     mb_pxll = enmap.read_map(conf['file_mask'])
     mb = [reproject.healpix_from_enmap(mb_pxll,
                                        lmax=6000,
