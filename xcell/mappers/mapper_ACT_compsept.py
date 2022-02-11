@@ -20,9 +20,9 @@ class MapperACTCompSept(MapperACTBase):
         self._get_defaults(config)
         self._get_ACT_defaults(config)
         self.nl_coupled = None
-        self.beam_info = config.get('beam_info',
-                                    [{'type': 'custom',
-                                      'file': None}])
+        #self.beam_info = config.get('beam_info',
+        #                            [{'type': 'custom',
+        #                              'file': None}])
 
     def _get_signal_map(self):
         if self.signal_map is None:
@@ -32,14 +32,6 @@ class MapperACTCompSept(MapperACTBase):
             signal_map = reproject.healpix_from_enmap(signal_map,
                                                       lmax=self.lmax,
                                                       nside=self.nside)
-            w = enmap.read_map(self.file_weights)
-            w = reproject.healpix_from_enmap(w,
-                                             lmax=self.lmax,
-                                             nside=self.nside)
-            # Fourrier transform the weights... 
-            # signal_map *= w
-            
-            signal_map = [signal_map]
         return signal_map
     
     def _get_mask(self):
@@ -54,7 +46,7 @@ class MapperACTCompSept(MapperACTBase):
             msk = reproject.healpix_from_enmap(self.pixell_mask,
                                            lmax=self.lmax,
                                            nside=self.nside)
-            msk = msk[msk==1]
+            msk[msk<0.95] = 0
         return msk
     
     def get_nl_coupled(self):

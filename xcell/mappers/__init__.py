@@ -1,7 +1,7 @@
 # flake8: noqa
 from .mapper_base import MapperBase
 from .mapper_ACT_base import MapperACTBase
-from .mapper_ACT_CompSept import MapperACTComptSept
+from .mapper_ACT_compsept import MapperACTCompSept
 from .mapper_ACTk import MapperACTk
 from .mapper_ACTtSZ import MapperACTtSZ
 from .mapper_ACTCMB import MapperACTCMB
