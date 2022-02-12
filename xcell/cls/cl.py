@@ -123,7 +123,7 @@ class Cl(ClBase):
 
     def get_workspace(self, read_unbinned_MCM=True):
         if self._w is None:
-            self._w = self._compute_workspace(read_unbinned_MCM)
+            self._w = self._compute_workspace(read_unbinned_MCM=read_unbinned_MCM)
         return self._w
 
     def get_workspace_cov(self):
