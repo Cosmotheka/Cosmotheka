@@ -462,7 +462,7 @@ class Cov():
             itime = time.time()
             cw = self.get_covariance_workspace()
             ftime = time.time()
-            print(f'Read covariance workspace. It took {(ftime - itime) / 60} min', flush=True)
+            print(f'Get covariance workspace. It took {(ftime - itime) / 60} min', flush=True)
 
             itime = time.time()
             if self.spin0 and (s_a1 + s_a2 + s_b1 + s_b2 != 0):
