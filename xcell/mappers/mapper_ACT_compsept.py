@@ -48,20 +48,15 @@ class MapperACTCompSept(MapperACTBase):
             msk = reproject.healpix_from_enmap(self.pixell_mask,
                                                lmax=self.lmax,
                                                nside=self.nside)
-            msk[msk < 0.95] = 0
+            msk[msk < 0.99] = 0
         return msk
 
     def get_nl_coupled(self):
-        if self.nl_coupled is None:
-            # 'Noise' contains the 2D Fourier space total noise power
-            # spectrum from the ILC pipeline (this includes both
-            # signal and instrument noise).
-            pass
-        return self.nl_coupled
+        raise NotImplementedError("No noise model for the ACT maps")
 
     def _get_custom_beam(self, info):
         fname = info['file']
-        beam_file = np.loadtxt(fname)
+        beam_file = np.transpose(np.loadtxt(fname))
         ells = beam_file[0]
         beam = beam_file[1]
         pixwin = interp1d(ells, np.log(beam),

@@ -1,6 +1,7 @@
 import xcell as xc
 from pixell import enmap, reproject
 import healpy as hp
+import numpy as np
 import os
 import pytest
 
@@ -75,3 +76,22 @@ def test_get_mask(cls):
     mrerun = hp.read_map(fn)
     assert (mrerun == mb).all()
     os.remove(fn)
+
+
+@pytest.mark.parametrize('cls', [(xc.mappers.MapperACTtSZ),
+                                 (xc.mappers.MapperACTCMB)])
+def test_get_beam(cls):
+    from scipy.interpolate import interp1d
+    conf = get_config()
+    conf['beam_info'] = [{'type': 'Custom',
+                          'file': 'xcell/tests/data/custom_beam_act.txt'}]
+    conf['path_rerun'] = 'xcell/tests/data/'
+    m = cls(conf)
+    beam = m.get_beam()
+    beamm_file = np.loadtxt('xcell/tests/data/custom_beam_act.txt')
+    beamm = np.transpose(beamm_file)[1]
+    ells = np.transpose(beamm_file)[0]
+    beamm_itp = interp1d(ells, np.log(beamm),
+                         fill_value='extrapolate')
+    beamm = np.exp(beamm_itp(np.arange(3*m.nside)))
+    assert (beam-beamm < 0.0005).all()
