@@ -123,14 +123,16 @@ class Cl(ClBase):
 
     def get_workspace(self, read_unbinned_MCM=True):
         if self._w is None:
-            self._w = self._compute_workspace(read_unbinned_MCM=read_unbinned_MCM)
+            self._w = \
+                self._compute_workspace(read_unbinned_MCM=read_unbinned_MCM)
         return self._w
 
     def get_workspace_cov(self):
         if self._wcov is None:
             spin0 = self.data.data['cov'].get('spin0', False)
             if spin0 and (self.get_spins() != (0, 0)):
-                self._wcov = self._compute_workspace(spin0=spin0, read_unbinned_MCM=False)
+                self._wcov = self._compute_workspace(spin0=spin0,
+                                                     read_unbinned_MCM=False)
             else:
                 self._wcov = self.get_workspace(read_unbinned_MCM=False)
 
