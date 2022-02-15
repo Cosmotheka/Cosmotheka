@@ -107,7 +107,9 @@ class Cov():
                                              l_toeplitz=l_toeplitz,
                                              l_exact=l_exact,
                                              dl_band=dl_band)
-            cw.write_to(fname)
+            # Recheck again in case other process has started writing it
+            if (not os.path.isfile(fname)):
+                cw.write_to(fname)
             self.recompute_cmcm = False
         else:
             cw.read_from(fname)
