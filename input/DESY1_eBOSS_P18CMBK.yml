@@ -1,0 +1,219 @@
+tracers:
+  # Biases from Table II of DES 5x2pt paper
+  DESgc__0:
+    data_catalogs: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits'
+    file_mask: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/data_vector/2pt_NG_mcal_1110.fits'
+    zbin: 0
+    nside: 4096
+    mask_name: 'mask_DESgc'
+    mapper_class: 'MapperDESY1gc'
+    # 1.41 -> Increased by 5% to match BF amplitude
+    bias: 1.48
+    threshold: 0.5
+
+
+  DESgc__1:
+    data_catalogs: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits'
+    file_mask: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/data_vector/2pt_NG_mcal_1110.fits'
+    zbin: 1
+    nside: 4096
+    mask_name: 'mask_DESgc'
+    mapper_class: 'MapperDESY1gc'
+    # 1.60 -> Increased by 10% to match BF amplitude
+    bias: 1.76
+    threshold: 0.5
+  
+  DESgc__2:
+    data_catalogs: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits'
+    file_mask: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/data_vector/2pt_NG_mcal_1110.fits'
+    zbin: 2
+    nside: 4096
+    mask_name: 'mask_DESgc'
+    mapper_class: 'MapperDESY1gc'
+    # 1.60 -> Increased by 11.3% to match BF amplitude
+    bias: 1.78
+    threshold: 0.5
+
+  DESgc__3:
+    data_catalogs: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits'
+    file_mask: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/data_vector/2pt_NG_mcal_1110.fits'
+    zbin: 3
+    nside: 4096
+    mask_name: 'mask_DESgc'
+    mapper_class: 'MapperDESY1gc'
+    # 1.91 -> Increased by 14.5% to match BF amplitude
+    bias: 2.19
+    threshold: 0.5
+    
+  DESgc__4:
+    data_catalogs: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits'
+    file_mask: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/data_vector/2pt_NG_mcal_1110.fits'
+    zbin: 4
+    nside: 4096
+    mask_name: 'mask_DESgc'
+    mapper_class: 'MapperDESY1gc'
+    bias: 1.60
+    # 1.96 -> Increased by 13.6% to match BF amplitude
+    bias: 2.23
+    threshold: 0.5
+
+  DESwl__0:
+    zbin_cat: '/mnt/extraspace/damonge/S8z_data/DES_data/shear_catalog/y1_source_redshift_binning_v1.fits'
+    data_cat:  '/mnt/extraspace/damonge/S8z_data/DES_data/shear_catalog/mcal-y1a1-combined-riz-unblind-v4-matched.fits'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/shear_catalog/y1_redshift_distributions_v1.fits'
+    nside: 4096
+    zbin: 0
+    path_lite: '/mnt/extraspace/gravityls_3/S8z/data/DES/'
+    mask_name: 'mask_DESwl0'
+    mapper_class: 'MapperDESY1wl'
+
+  DESwl__1:
+    zbin_cat: '/mnt/extraspace/damonge/S8z_data/DES_data/shear_catalog/y1_source_redshift_binning_v1.fits'
+    data_cat:  '/mnt/extraspace/damonge/S8z_data/DES_data/shear_catalog/mcal-y1a1-combined-riz-unblind-v4-matched.fits'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/shear_catalog/y1_redshift_distributions_v1.fits'
+    nside: 4096
+    zbin: 1
+    path_lite: '/mnt/extraspace/gravityls_3/S8z/data/DES/'
+    mask_name: 'mask_DESwl1'
+    mapper_class: 'MapperDESY1wl'
+
+  DESwl__2:
+    zbin_cat: '/mnt/extraspace/damonge/S8z_data/DES_data/shear_catalog/y1_source_redshift_binning_v1.fits'
+    data_cat:  '/mnt/extraspace/damonge/S8z_data/DES_data/shear_catalog/mcal-y1a1-combined-riz-unblind-v4-matched.fits'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/shear_catalog/y1_redshift_distributions_v1.fits'
+    nside: 4096
+    zbin: 2
+    path_lite: '/mnt/extraspace/gravityls_3/S8z/data/DES/'
+    mask_name: 'mask_DESwl2'
+    mapper_class: 'MapperDESY1wl'
+
+  DESwl__3:
+    zbin_cat: '/mnt/extraspace/damonge/S8z_data/DES_data/shear_catalog/y1_source_redshift_binning_v1.fits'
+    data_cat:  '/mnt/extraspace/damonge/S8z_data/DES_data/shear_catalog/mcal-y1a1-combined-riz-unblind-v4-matched.fits'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/shear_catalog/y1_redshift_distributions_v1.fits'
+    nside: 4096
+    zbin: 3
+    path_lite: '/mnt/extraspace/gravityls_3/S8z/data/DES/'
+    mask_name: 'mask_DESwl3'
+    mapper_class: 'MapperDESY1wl'
+
+  eBOSS__0:
+    data_catalogs:
+        - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_data-NGC-vDR16.fits'
+        - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_data-SGC-vDR16.fits'
+    random_catalogs: 
+        - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_random-NGC-vDR16.fits'
+        - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_random-SGC-vDR16.fits'
+    z_edges: [0, 1.5]
+    nside: 4096
+    mask_name: 'mask_QSO_0'
+    mapper_class: 'MappereBOSS'
+    # bias obtained fitting the fiducial Cl between kmin = 0.02, kmax = 0.15
+    bias: 2.1
+    nl_marginalize: True
+    nl_prior: 0.1
+
+  eBOSS__1:
+    data_catalogs:
+        - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_data-NGC-vDR16.fits'
+        - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_data-SGC-vDR16.fits'
+    random_catalogs: 
+        - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_random-NGC-vDR16.fits'
+        - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_random-SGC-vDR16.fits'
+    z_edges: [1.5, 4]
+    nside: 4096
+    mask_name: 'mask_QSO_1'
+    mapper_class: 'MappereBOSS'
+    # bias obtained fitting the fiducial Cl between kmin = 0.02, kmax = 0.15
+    bias: 2.5
+    nl_marginalize: True
+    nl_prior: 0.1
+
+  PLAcv:
+    file_klm: '/mnt/extraspace/damonge/S8z_data/Planck_data/COM_Lensing_4096_R3.00/MV/dat_klm.fits'
+    file_mask: '/mnt/extraspace/damonge/S8z_data/Planck_data/COM_Lensing_4096_R3.00/mask.fits.gz'
+    file_noise: '/mnt/extraspace/damonge/S8z_data/Planck_data/COM_Lensing_4096_R3.00/MV/nlkk.dat' 
+    nside: 4096
+    mask_name: 'mask_PLAcv'
+    mapper_class: 'MapperP18CMBK'
+    path_lite: '/mnt/extraspace/gravityls_3/S8z/data/derived_products/planck_lensing/COM_Lensing_4096_R3.00/'
+
+cls:
+  # Options: all, cross, None
+  DESgc-DESgc:
+    compute: 'auto'
+  DESgc-DESwl:
+    compute: 'all'
+  DESgc-eBOSS:
+    compute: 'None'
+  DESgc-PLAcv:
+    compute: 'all'
+  DESwl-DESwl:
+    compute: 'all'
+  DESwl-eBOSS:
+    compute: 'None'
+  DESwl-PLAcv:
+    compute: 'all'
+  eBOSS-eBOSS:
+    compute: 'auto'
+  eBOSS-PLAcv:
+    compute: 'all'
+  PLAcv-PLAcv:
+    compute: 'None'
+
+bpw_edges: [0, 30, 60, 90, 120, 150, 180, 210, 240, 272, 309, 351, 398, 452, 513, 582, 661, 750, 852, 967, 1098, 1247, 1416, 1608, 1826, 2073, 2354, 2673, 3035, 3446, 3914, 4444, 5047, 5731, 6508, 7390, 8392, 9529, 10821, 12288]
+
+cov: 
+  extra:
+    path: '/mnt/extraspace/damonge/S8z_data/derived_products/covmat_zeroed_g_gc_cmbk_s8z_NG+SSC.npy'
+    order: ['DESwl-DESwl', 'DESgc-DESgc', 'DESwl-DESgc', 'DESwl-PLAcv', 'DESgc-PLAcv']
+    has_b: False
+
+  fiducial:
+    cosmo:
+      # Planck 2018: Table 2 of 1807.06209
+      # Omega_m: 0.3133
+      Omega_c: 0.2640
+      Omega_b: 0.0493
+      h: 0.6736
+      n_s: 0.9649
+      sigma8: 0.8111
+      w0: -1
+      wa: 0
+      transfer_function: 'boltzmann_class'
+      baryons_power_spectrum: 'nobaryons'
+
+
+    #### Biases to apply to the tracers ####
+    gc_bias: True 
+    wl_m: False
+    wl_ia: False  # If you want wl_ia, give [A, eta, z0] instead of True
+
+toeplitz:
+  cls:
+    l_toeplitz: -1
+    l_exact: -1
+    dl_band: -1
+  cov:
+    l_toeplitz: -1
+    l_exact: -1
+    dl_band: -1
+
+sphere:
+  n_iter_sht: 0
+  n_iter_mcm: 3
+  n_iter_cmcm: 3
+  nside: 4096
+
+recompute:
+  cls: False
+  cov: False
+  mcm: False
+  cmcm: False
+
+output:  '/mnt/extraspace/gravityls_3/S8z/Cls_new_pipeline/4096_DES_eBOSS_CMB/'

@@ -1,0 +1,219 @@
+tracers:
+  DELS__0:
+    data_catalogs:
+      - '/mnt/extraspace/damonge/S8z_data/DELS/Legacy_Survey_BASS-MZLS_galaxies-selection.fits'
+      - '/mnt/extraspace/damonge/S8z_data/DELS/Legacy_Survey_DELS_galaxies-selection.fits'
+    zbin: 0
+    binary_mask: '/mnt/extraspace/damonge/S8z_data/DELS/Legacy_footprint_final_mask_cut_decm36.fits'
+    completeness_map: '/mnt/extraspace/damonge/S8z_data/DELS/Legacy_footprint_completeness_mask_128.fits'
+    star_map: '/mnt/extraspace/damonge/S8z_data/DELS/allwise_total_rot_1024.fits'
+    nside: 4096
+    mask_name: 'mask_DELS_decm36'
+    mapper_class: 'MapperDELS'
+    bias: 1.13
+
+  DELS__1:
+    data_catalogs:
+      - '/mnt/extraspace/damonge/S8z_data/DELS/Legacy_Survey_BASS-MZLS_galaxies-selection.fits'
+      - '/mnt/extraspace/damonge/S8z_data/DELS/Legacy_Survey_DELS_galaxies-selection.fits'
+    zbin: 1
+    binary_mask: '/mnt/extraspace/damonge/S8z_data/DELS/Legacy_footprint_final_mask_cut_decm36.fits'
+    completeness_map: '/mnt/extraspace/damonge/S8z_data/DELS/Legacy_footprint_completeness_mask_128.fits'
+    star_map: '/mnt/extraspace/damonge/S8z_data/DELS/allwise_total_rot_1024.fits'
+    nside: 4096
+    mask_name: 'mask_DELS_decm36'
+    mapper_class: 'MapperDELS'
+    bias: 1.40
+
+  DELS__2:
+    data_catalogs:
+      - '/mnt/extraspace/damonge/S8z_data/DELS/Legacy_Survey_BASS-MZLS_galaxies-selection.fits'
+      - '/mnt/extraspace/damonge/S8z_data/DELS/Legacy_Survey_DELS_galaxies-selection.fits'
+    zbin: 2
+    binary_mask: '/mnt/extraspace/damonge/S8z_data/DELS/Legacy_footprint_final_mask_cut_decm36.fits'
+    completeness_map: '/mnt/extraspace/damonge/S8z_data/DELS/Legacy_footprint_completeness_mask_128.fits'
+    star_map: '/mnt/extraspace/damonge/S8z_data/DELS/allwise_total_rot_1024.fits'
+    nside: 4096
+    mask_name: 'mask_DELS_decm36'
+    mapper_class: 'MapperDELS'
+    bias: 1.35
+
+  DELS__3:
+    data_catalogs:
+      - '/mnt/extraspace/damonge/S8z_data/DELS/Legacy_Survey_BASS-MZLS_galaxies-selection.fits'
+      - '/mnt/extraspace/damonge/S8z_data/DELS/Legacy_Survey_DELS_galaxies-selection.fits'
+    zbin: 3
+    binary_mask: '/mnt/extraspace/damonge/S8z_data/DELS/Legacy_footprint_final_mask_cut_decm36.fits'
+    completeness_map: '/mnt/extraspace/damonge/S8z_data/DELS/Legacy_footprint_completeness_mask_128.fits'
+    star_map: '/mnt/extraspace/damonge/S8z_data/DELS/allwise_total_rot_1024.fits'
+    nside: 4096
+    mask_name: 'mask_DELS_decm36'
+    mapper_class: 'MapperDELS'
+    bias: 1.77
+
+  eBOSS__0:
+    data_catalogs:
+        - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_data-NGC-vDR16.fits'
+        - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_data-SGC-vDR16.fits'
+    random_catalogs: 
+        - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_random-NGC-vDR16.fits'
+        - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_random-SGC-vDR16.fits'
+    z_edges: [0, 1.5]
+    nside: 4096
+    mask_name: 'mask_QSO_0'
+    mapper_class: 'MappereBOSS'
+    # bias obtained fitting the fiducial Cl between kmin = 0.02, kmax = 0.15
+    bias: 2.1
+    nl_marginalize: True
+    nl_prior: 0.1
+
+  eBOSS__1:
+    data_catalogs:
+        - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_data-NGC-vDR16.fits'
+        - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_data-SGC-vDR16.fits'
+    random_catalogs: 
+        - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_random-NGC-vDR16.fits'
+        - '/mnt/extraspace/gravityls_3/S8z/data/eBOSS_QSO/eBOSS_QSO_clustering_random-SGC-vDR16.fits'
+    z_edges: [1.5, 4]
+    nside: 4096
+    mask_name: 'mask_QSO_1'
+    mapper_class: 'MappereBOSS'
+    # bias obtained fitting the fiducial Cl between kmin = 0.02, kmax = 0.15
+    bias: 2.5
+    nl_marginalize: True
+    nl_prior: 0.1
+
+  KiDS1000__0:
+    data_catalog: '/mnt/extraspace/damonge/S8z_data/KiDS_1000/KiDS_DR4.1_ugriZYJHKs_SOM_gold_WL_cat.fits'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/KiDS_1000/SOM_N_of_Z/K1000_NS_V1.0.0A_ugriZYJHKs_photoz_SG_mask_LF_svn_309c_2Dbins_v2_SOMcols_Fid_blindC_TOMO1_Nz.asc'
+    zbin: 0
+    nside: 4096
+    mask_name: 'mask_KiDS1000_0'
+    mapper_class: 'MapperKiDS1000'
+    path_lite: '/mnt/extraspace/damonge/S8z_data/KiDS_1000/shear_KiDS1000_catalog/'
+
+  KiDS1000__1:
+    data_catalog: '/mnt/extraspace/damonge/S8z_data/KiDS_1000/KiDS_DR4.1_ugriZYJHKs_SOM_gold_WL_cat.fits'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/KiDS_1000/SOM_N_of_Z/K1000_NS_V1.0.0A_ugriZYJHKs_photoz_SG_mask_LF_svn_309c_2Dbins_v2_SOMcols_Fid_blindC_TOMO2_Nz.asc'
+    zbin: 1
+    nside: 4096
+    mask_name: 'mask_KiDS1000_1'
+    mapper_class: 'MapperKiDS1000'
+    path_lite: '/mnt/extraspace/damonge/S8z_data/KiDS_1000/shear_KiDS1000_catalog/'
+
+  KiDS1000__2:
+    data_catalog: '/mnt/extraspace/damonge/S8z_data/KiDS_1000/KiDS_DR4.1_ugriZYJHKs_SOM_gold_WL_cat.fits'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/KiDS_1000/SOM_N_of_Z/K1000_NS_V1.0.0A_ugriZYJHKs_photoz_SG_mask_LF_svn_309c_2Dbins_v2_SOMcols_Fid_blindC_TOMO3_Nz.asc'
+    zbin: 2
+    nside: 4096
+    mask_name: 'mask_KiDS1000_2'
+    mapper_class: 'MapperKiDS1000'
+    path_lite: '/mnt/extraspace/damonge/S8z_data/KiDS_1000/shear_KiDS1000_catalog/'
+
+  KiDS1000__3:
+    data_catalog: '/mnt/extraspace/damonge/S8z_data/KiDS_1000/KiDS_DR4.1_ugriZYJHKs_SOM_gold_WL_cat.fits'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/KiDS_1000/SOM_N_of_Z/K1000_NS_V1.0.0A_ugriZYJHKs_photoz_SG_mask_LF_svn_309c_2Dbins_v2_SOMcols_Fid_blindC_TOMO4_Nz.asc'
+    zbin: 3
+    nside: 4096
+    mask_name: 'mask_KiDS1000_3'
+    mapper_class: 'MapperKiDS1000'
+    path_lite: '/mnt/extraspace/damonge/S8z_data/KiDS_1000/shear_KiDS1000_catalog/'
+
+  KiDS1000__4:
+    data_catalog: '/mnt/extraspace/damonge/S8z_data/KiDS_1000/KiDS_DR4.1_ugriZYJHKs_SOM_gold_WL_cat.fits'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/KiDS_1000/SOM_N_of_Z/K1000_NS_V1.0.0A_ugriZYJHKs_photoz_SG_mask_LF_svn_309c_2Dbins_v2_SOMcols_Fid_blindC_TOMO5_Nz.asc'
+    zbin: 4
+    nside: 4096
+    mask_name: 'mask_KiDS1000_4'
+    mapper_class: 'MapperKiDS1000'
+    path_lite: '/mnt/extraspace/damonge/S8z_data/KiDS_1000/shear_KiDS1000_catalog/'
+
+  PLAcv:
+    file_klm: '/mnt/extraspace/damonge/S8z_data/Planck_data/COM_Lensing_4096_R3.00/MV/dat_klm.fits'
+    file_mask: '/mnt/extraspace/damonge/S8z_data/Planck_data/COM_Lensing_4096_R3.00/mask.fits.gz'
+    file_noise: '/mnt/extraspace/damonge/S8z_data/Planck_data/COM_Lensing_4096_R3.00/MV/nlkk.dat' 
+    nside: 4096
+    mask_name: 'mask_PLAcv'
+    mapper_class: 'MapperP18CMBK'
+    path_lite: '/mnt/extraspace/damonge/S8z_data/Planck_data/COM_Lensing_4096_R3.00/MV/lite/'
+
+cls:
+  DELS-DELS:
+    compute: 'auto'
+
+  DELS-KiDS1000:
+    compute: 'all'
+
+  DELS-eBOSS:
+    compute: 'None'
+
+  DELS-PLAcv:
+    compute: 'all'
+
+  eBOSS-eBOSS:
+    compute: 'auto'
+
+  eBOSS-KiDS1000:
+    compute: 'None'
+
+  eBOSS-PLAcv:
+    compute: 'all'
+
+  KiDS1000-eBOSS:
+    compute: 'all'
+
+  KiDS1000-KiDS1000:
+    compute: 'all'
+
+  KiDS1000-PLAcv:
+    compute: 'all'
+
+  PLAcv-PLAcv:
+    compute: 'None'
+
+bpw_edges: [0, 30, 60, 90, 120, 150, 180, 210, 240, 272, 309, 351, 398, 452, 513, 582, 661, 750, 852, 967, 1098, 1247, 1416, 1608, 1826, 2073, 2354, 2673, 3035, 3446, 3914, 4444, 5047, 5731, 6508, 7390, 8392, 9529, 10821, 12288]
+
+cov:
+  fiducial:
+    cosmo:
+      # Planck 2018: Table 2 of 1807.06209
+      # Omega_m: 0.3133
+      Omega_c: 0.2640
+      Omega_b: 0.0493
+      h: 0.6736
+      n_s: 0.9649
+      sigma8: 0.8111
+      w0: -1
+      wa: 0
+      transfer_function: 'boltzmann_class'
+      baryons_power_spectrum: 'nobaryons'
+
+    #### Biases to apply to the tracers ####
+    gc_bias: True
+    wl_m: False
+    wl_ia: False  # If you want wl_ia, give [A, eta, z0] instead of True
+
+toeplitz:
+  cls:
+    l_toeplitz: -1
+    l_exact: -1
+    dl_band: -1
+  cov:
+    l_toeplitz: 2750
+    l_exact: 1000
+    dl_band: 2000
+
+sphere:
+  n_iter_sht: 0
+  n_iter_mcm: 3
+  n_iter_cmcm: 3
+  nside: 4096
+  spin0_cov: True
+
+recompute:
+  cls: False
+  cov: False
+  mcm: False
+  cmcm: False
+
+output:  '/mnt/extraspace/gravityls_3/S8z/Cls_new_pipeline/4096_DELS_K1000_eBOSS_CMB/'
