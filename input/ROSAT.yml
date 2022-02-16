@@ -1,0 +1,61 @@
+tracers:
+  ROSAT:
+    exposure_map: 'data_xray/exposure/exposure_mean.fits'
+    photon_list: 'data_xray/rosat_photons_Egt0p4keV.fits'
+    energy_range: [0.5, 3.0]
+    exposure_min: 100.0
+    external_mask: '/home/damonge/Science/Datasets/2MPZ_WIxSC/mask_lowz_rotated.fits.gz'
+    mask_name: 'mask_ROSAT'
+    mapper_class: 'MapperROSATXray'
+    nside: 2048
+
+cls:
+  ROSAT-ROSAT:
+    compute: 'all'
+
+bpw_edges: [2, 12, 22, 32, 42, 52, 62, 74, 88, 105, 126, 150, 179, 214, 256, 306, 365, 436, 521, 622, 743, 887, 1059, 1265, 1510, 1804, 2154, 2571, 3071]
+
+cov:
+  fiducial:
+    cosmo:
+      Omega_c: 0.26066676
+      Omega_b: 0.048974682
+      h: 0.6766
+      sigma8: 0.8102
+      n_s: 0.9665
+
+    halo_model:
+      mass_def: 500c
+      mass_function: Tinker08
+      halo_bias: Tinker10
+      concentration: Duffy08M500c
+
+  cls_from_data:
+    ROSAT-ROSAT:
+      compute: 'auto'
+
+  non_Gaussian: False
+
+toeplitz:
+  cls:
+    l_toeplitz: -1
+    l_exact: -1
+    dl_band: -1
+  cov:
+    l_toeplitz: -1
+    l_exact: -1
+    dl_band: -1
+
+healpy:
+  n_iter_sht: 0
+  n_iter_mcm: 3
+  n_iter_cmcm: 3
+  nside: 2048
+
+recompute:
+  cls: False
+  cov: False
+  mcm: False
+  cmcm: False
+
+output: 'data_xray/output'

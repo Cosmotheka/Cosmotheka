@@ -1,0 +1,108 @@
+tracers:
+  eBOSS__0:
+    data_catalogs:
+      - '../data/eBOSS_LRG_clustering_data-NGC-vDR16.fits'
+      - '../data/eBOSS_LRG_clustering_data-SGC-vDR16.fits'
+    random_catalogs:
+      - '../data/eBOSS_LRG_clustering_random-NGC-vDR16.fits'
+      - '../data/eBOSS_LRG_clustering_random-SGC-vDR16.fits'
+    z_edges: [0.6, 1.0]
+    nside: 1024
+    mask_name: 'mask_LRG'
+    SDSS_name: 'LRG'
+    mapper_class: 'MappereBOSS'
+    bias: 2.3
+    path_lite: 'data_BOSS'
+
+  eBOSS__1:
+    data_catalogs:
+      - '../data/eBOSS_ELG_clustering_data-NGC-vDR16.fits'
+      - '../data/eBOSS_ELG_clustering_data-SGC-vDR16.fits'
+    random_catalogs:
+      - '../data/eBOSS_ELG_clustering_random-NGC-vDR16.fits'
+      - '../data/eBOSS_ELG_clustering_random-SGC-vDR16.fits'
+    z_edges: [0.6, 1.1]
+    nside: 1024
+    mask_name: 'mask_ELG'
+    SDSS_name: 'ELG'
+    mapper_class: 'MappereBOSS'
+    bias: 1.45
+    path_lite: 'data_BOSS'
+
+  eBOSS__2:
+    data_catalogs:
+      - '../data/eBOSS_QSO_clustering_data-NGC-vDR16.fits'
+      - '../data/eBOSS_QSO_clustering_data-SGC-vDR16.fits'
+    random_catalogs:
+      - '../data/eBOSS_QSO_clustering_random-NGC-vDR16.fits'
+      - '../data/eBOSS_QSO_clustering_random-SGC-vDR16.fits'
+    z_edges: [0.8, 2.2]
+    nside: 1024
+    mask_name: 'mask_QSO'
+    SDSS_name: 'QSO'
+    mapper_class: 'MappereBOSS'
+    bias: 2.4
+    path_lite: 'data_BOSS'
+
+  KAPPA:
+    file_klm: '../data/dat_klm.fits'
+    file_mask: '../data/mask_kappa.fits.gz'
+    file_noise: '../data/nlkk.dat'
+    nside: 1024
+    mask_name: 'mask_P18kappa'
+    mapper_class: 'MapperP18CMBK'
+    path_lite: 'data_BOSS'
+
+cls:
+  # Options: all, cross, None
+  eBOSS-eBOSS:
+    compute: 'auto'
+  eBOSS-KAPPA:
+    compute: 'all'
+  KAPPA-KAPPA:
+    compute: 'None'
+
+bpw_edges: [0, 30, 60, 90, 120, 150, 180, 210, 240, 272, 309, 351, 398, 452, 513, 582, 661, 750, 852, 967, 1098, 1247, 1416, 1608, 1826, 2073, 2354, 2673, 3035, 3446, 3914, 4444, 5047, 5731, 6508, 7390, 8392, 9529, 10821, 12288]
+
+cov: 
+  fiducial:
+    cosmo:
+      Omega_c: 0.26066676
+      Omega_b: 0.048974682
+      h: 0.6766
+      sigma8: 0.8102
+      n_s: 0.9665
+
+  cls_from_data:
+    eBOSS-eBOSS:
+      compute: 'auto'
+
+    eBOSS-KAPPA:
+      compute: 'None'
+
+    KAPPA-KAPPA:
+      compute: 'all'
+
+toeplitz:
+  cls:
+    l_toeplitz: -1
+    l_exact: -1
+    dl_band: -1
+  cov:
+    l_toeplitz: -1
+    l_exact: -1
+    dl_band: -1
+
+sphere:
+  n_iter_sht: 0
+  n_iter_mcm: 3
+  n_iter_cmcm: 3
+  nside: 1024
+
+recompute:
+  cls: False
+  cov: False
+  mcm: False
+  cmcm: False
+
+output:  './data_BOSS/output_eBOSS/'

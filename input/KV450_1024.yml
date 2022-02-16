@@ -1,0 +1,125 @@
+tracers:
+  # Biases from Table II of DES 5x2pt paper
+  
+  KV450__0:
+    data_catalogs:
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G12_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G23_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_GS_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G15_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G9_reweight_3x4x4_v2_good.cat'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/KiDS_data/KV450_COSMIC_SHEAR_DATA_RELEASE/REDSHIFT_DISTRIBUTIONS/Nz_DIR/Nz_DIR_Mean/Nz_DIR_z0.1t0.3.asc'
+    zbin: 0
+    nside: 1024
+    mask_name: 'mask_KV450_0'
+    mapper_class: 'MapperKV450'
+    path_lite: '/mnt/extraspace/gravityls_3/S8z/data/KV450/'
+
+  KV450__1:
+    data_catalogs:
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G12_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G23_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_GS_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G15_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G9_reweight_3x4x4_v2_good.cat'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/KiDS_data/KV450_COSMIC_SHEAR_DATA_RELEASE/REDSHIFT_DISTRIBUTIONS/Nz_DIR/Nz_DIR_Mean/Nz_DIR_z0.3t0.5.asc'
+    zbin: 1
+    nside: 1024
+    mask_name: 'mask_KV450_1'
+    mapper_class: 'MapperKV450'
+    path_lite: '/mnt/extraspace/gravityls_3/S8z/data/KV450/'
+
+  KV450__2:
+    data_catalogs:
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G12_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G23_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_GS_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G15_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G9_reweight_3x4x4_v2_good.cat'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/KiDS_data/KV450_COSMIC_SHEAR_DATA_RELEASE/REDSHIFT_DISTRIBUTIONS/Nz_DIR/Nz_DIR_Mean/Nz_DIR_z0.5t0.7.asc'
+    zbin: 2
+    nside: 1024
+    mask_name: 'mask_KV450_2'
+    mapper_class: 'MapperKV450'
+    path_lite: '/mnt/extraspace/gravityls_3/S8z/data/KV450/'
+
+  KV450__3:
+    data_catalogs:
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G12_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G23_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_GS_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G15_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G9_reweight_3x4x4_v2_good.cat'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/KiDS_data/KV450_COSMIC_SHEAR_DATA_RELEASE/REDSHIFT_DISTRIBUTIONS/Nz_DIR/Nz_DIR_Mean/Nz_DIR_z0.7t0.9.asc'
+    zbin: 3
+    nside: 1024
+    mask_name: 'mask_KV450_3'
+    mapper_class: 'MapperKV450'
+    path_lite: '/mnt/extraspace/gravityls_3/S8z/data/KV450/'
+
+  KV450__4:
+    data_catalogs:
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G12_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G23_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_GS_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G15_reweight_3x4x4_v2_good.cat'
+      - '/mnt/extraspace/damonge/S8z_data/KiDS_data/shear_KV450_catalog/KV450_G9_reweight_3x4x4_v2_good.cat'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/KiDS_data/KV450_COSMIC_SHEAR_DATA_RELEASE/REDSHIFT_DISTRIBUTIONS/Nz_DIR/Nz_DIR_Mean/Nz_DIR_z0.9t1.2.asc'
+    zbin: 4
+    nside: 1024
+    mask_name: 'mask_KV450_4'
+    mapper_class: 'MapperKV450'
+    path_lite: '/mnt/extraspace/gravityls_3/S8z/data/KV450/'
+
+cls:
+  # Options: all, cross, None
+  KV450-KV450:
+    compute: 'all'
+
+bpw_edges: [0, 30, 60, 90, 120, 150, 180, 210, 240, 272, 309, 351, 398, 452, 513, 582, 661, 750, 852, 967, 1098, 1247, 1416, 1608, 1826, 2073, 2354, 2673, 3072]
+
+
+cov: 
+  fiducial:
+    cosmo:
+      # Planck 2018: Table 2 of 1807.06209
+      # Omega_m: 0.3133
+      Omega_c: 0.2640
+      Omega_b: 0.0493
+      h: 0.6736
+      n_s: 0.9649
+      sigma8: 0.8111
+      w0: -1
+      wa: 0
+      transfer_function: 'boltzmann_class'
+      baryons_power_spectrum: 'nobaryons'
+
+
+    #### Biases to apply to the tracers ####
+    gc_bias: True 
+    wl_m: False
+    wl_ia: False  # If you want wl_ia, give [A, eta, z0] instead of True
+
+toeplitz:
+  cls:
+    l_toeplitz: -1
+    l_exact: -1
+    dl_band: -1
+  cov:
+    l_toeplitz: -1
+    l_exact: -1
+    dl_band: -1
+
+sphere:
+  n_iter_sht: 0
+  n_iter_mcm: 3
+  n_iter_cmcm: 3
+  nside: 1024
+
+recompute:
+  cls: False
+  cov: False
+  mcm: False
+  cmcm: False
+
+output:  '/mnt/extraspace/gravityls_3/S8z/Cls_new_pipeline/KV450_1024/'

@@ -1,0 +1,93 @@
+tracers:
+  BOSS__0:
+    data_catalogs:
+      - '../data/galaxy_DR12v5_LOWZ_North.fits.gz'
+      - '../data/galaxy_DR12v5_LOWZ_South.fits.gz'
+    random_catalogs:
+      - '../data/random0_DR12v5_LOWZ_North.fits.gz'
+      - '../data/random0_DR12v5_LOWZ_South.fits.gz'
+    z_edges: [0.1, 0.43]
+    nside: 1024
+    mask_name: 'mask_LOWZ'
+    SDSS_name: 'LOWZ'
+    mapper_class: 'MapperBOSS'
+    bias: 1.93
+    path_lite: 'data_BOSS'
+
+  BOSS__1:
+    data_catalogs:
+      - '../data/galaxy_DR12v5_CMASS_North.fits.gz'
+      - '../data/galaxy_DR12v5_CMASS_South.fits.gz'
+    random_catalogs:
+      - '../data/random0_DR12v5_CMASS_North.fits.gz'
+      - '../data/random0_DR12v5_CMASS_South.fits.gz'
+    z_edges: [0.4, 0.8]
+    nside: 1024
+    mask_name: 'mask_CMASS'
+    SDSS_name: 'CMASS'
+    mapper_class: 'MapperBOSS'
+    bias: 1.93
+    path_lite: 'data_BOSS'
+
+  KAPPA:
+    file_klm: '../data/dat_klm.fits'
+    file_mask: '../data/mask_kappa.fits.gz'
+    file_noise: '../data/nlkk.dat'
+    nside: 1024
+    mask_name: 'mask_P18kappa'
+    mapper_class: 'MapperP18CMBK'
+    path_lite: 'data_BOSS'
+
+cls:
+  # Options: all, cross, None
+  BOSS-BOSS:
+    compute: 'auto'
+  BOSS-KAPPA:
+    compute: 'all'
+  KAPPA-KAPPA:
+    compute: 'None'
+
+bpw_edges: [0, 30, 60, 90, 120, 150, 180, 210, 240, 272, 309, 351, 398, 452, 513, 582, 661, 750, 852, 967, 1098, 1247, 1416, 1608, 1826, 2073, 2354, 2673, 3035, 3446, 3914, 4444, 5047, 5731, 6508, 7390, 8392, 9529, 10821, 12288]
+
+cov: 
+  fiducial:
+    cosmo:
+      Omega_c: 0.26066676
+      Omega_b: 0.048974682
+      h: 0.6766
+      sigma8: 0.8102
+      n_s: 0.9665
+
+  cls_from_data:
+    BOSS-BOSS:
+      compute: 'auto'
+
+    BOSS-KAPPA:
+      compute: 'None'
+
+    KAPPA-KAPPA:
+      compute: 'all'
+
+toeplitz:
+  cls:
+    l_toeplitz: -1
+    l_exact: -1
+    dl_band: -1
+  cov:
+    l_toeplitz: -1
+    l_exact: -1
+    dl_band: -1
+
+sphere:
+  n_iter_sht: 0
+  n_iter_mcm: 3
+  n_iter_cmcm: 3
+  nside: 1024
+
+recompute:
+  cls: False
+  cov: False
+  mcm: False
+  cmcm: False
+
+output:  './data_BOSS/output/'
