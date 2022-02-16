@@ -121,8 +121,8 @@ class MapperDELS(MapperBase):
                 gcorr = self._get_galactic_correction(d, self.stars,
                                                       self.bmask)
                 d -= gcorr['delta_map']
-            self.delta_map = d
-        return [self.delta_map]
+            self.delta_map = np.array([d])
+        return self.delta_map
 
     def _get_galactic_correction(self, delta, stars, bmask, nbins=14, npoly=5):
         # Create bins of star density

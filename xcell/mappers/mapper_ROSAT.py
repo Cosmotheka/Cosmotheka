@@ -72,7 +72,8 @@ class MapperROSATXray(MapperBase):
             self.countrate_map[goodpix] = count_map[goodpix] / xpmap[goodpix]
             pixA = hp.nside2pixarea(self.nside)
             self.countrate_map *= 1/pixA
-        return [self.countrate_map]
+            self.countrate_map = np.array([self.countrate_map])
+        return self.countrate_map
 
     def get_mask(self):
         if self.mask is None:
