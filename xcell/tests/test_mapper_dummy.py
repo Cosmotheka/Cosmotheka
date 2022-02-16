@@ -173,3 +173,31 @@ def test_cls_covar_coupled():
                        atol=0, rtol=1E-10)
     assert np.allclose(cl1['auto_11'][0]-offset, cl2,
                        atol=0, rtol=1E-10)
+
+
+def test_get_beam():
+    ell = np.arange(3*32)
+    config = get_config()
+    beam_infos = {'default': [],
+                  'Gaussian': [{'type': 'Gaussian',
+                               'FWHM_arcmin': 0.5}],
+                  'PixWin': [{'type': 'PixWin',
+                              'nside_native': config['nside']}],
+                  'combined': [{'type': 'Gaussian',
+                               'FWHM_arcmin': 0.5},
+                               {'type': 'PixWin',
+                                'nside_native': config['nside']}]}
+    beam_outputs = {'default':
+                    np.ones(3*32),
+                    'Gaussian':
+                    np.exp(-1.907e-09*ell*(ell+1)),
+                    'PixWin':
+                    hp.sphtfunc.pixwin(config['nside'])}
+    beam_outputs['combined'] = beam_outputs['PixWin']
+    beam_outputs['combined'] *= beam_outputs['Gaussian']
+    for mode in beam_infos.keys():
+        config['beam_info'] = beam_infos[mode]
+        m = xc.mappers.MapperDummy(config)
+        beamm = beam_outputs[mode]
+        beam = m.get_beam()
+        assert ((beam - beamm) < 1e-30).all

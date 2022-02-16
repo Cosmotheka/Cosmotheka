@@ -29,10 +29,10 @@ class MapperPlanckBase(MapperBase):
     def get_signal_map(self):
         if self.signal_map is None:
             signal_map = hp.read_map(self.file_map)
+            signal_map[signal_map == hp.UNSEEN] = 0.0
+            signal_map[np.isnan(signal_map)] = 0.0
             self.signal_map = [hp.ud_grade(signal_map,
                                            nside_out=self.nside)]
-            self.signal_map[0][self.signal_map[0] == hp.UNSEEN] = 0.0
-            self.signal_map[0][np.isnan(self.signal_map[0])] = 0.0
         return self.signal_map
 
     def get_mask(self):
@@ -45,9 +45,6 @@ class MapperPlanckBase(MapperBase):
                 self.mask = np.ones(12*self.nside**2)
             if self.file_gp_mask is not None:
                 field = self.gp_mask_modes[self.gp_mask_mode]
-                print(self.gp_mask_modes)
-                print(self.gp_mask_mode)
-                print(field)
                 gp_mask = hp.read_map(self.file_gp_mask, field)
                 gp_mask = hp.ud_grade(gp_mask,
                                       nside_out=self.nside)
