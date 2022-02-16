@@ -21,7 +21,7 @@ class MapperSDSS(MapperBase):
         self.ws = {'data': None, 'random': None}
         self.alpha = None
         self.dndz = None
-        self.delta_map = None
+        self.signal_map = None
         self.nl_coupled = None
         self.mask = None
         self.nside_nl_threshold = config.get('nside_nl_threshold',
@@ -73,7 +73,7 @@ class MapperSDSS(MapperBase):
         return '_'.join([f'SDSS_{self.SDSS_name}_{mp}',
                          f'ns{self.nside}.fits.gz'])
 
-    def _get_delta_map(self):
+    def _get_signal_map(self):
         delta_map = np.zeros(self.npix)
         cat_data = self.get_catalog(mod='data')
         cat_random = self.get_catalog(mod='random')
@@ -91,11 +91,12 @@ class MapperSDSS(MapperBase):
         return delta_map
 
     def get_signal_map(self):
-        if self.delta_map is None:
+        if self.signal_map is None:
             fn = self._get_map_fname(mp='signal')
-            self.delta_map = self._rerun_read_cycle(fn, 'FITSMap',
-                                                    self._get_delta_map)
-        return [self.delta_map]
+            self.signal_map = self._rerun_read_cycle(fn, 'FITSMap',
+                                                     self._get_signal_map)
+            self.signal_map = np.array([self.signal_map])
+        return self.signal_map
 
     def _get_mask(self):
         cat_random = self.get_catalog(mod='random')
