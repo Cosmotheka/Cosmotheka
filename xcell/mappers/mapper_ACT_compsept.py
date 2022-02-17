@@ -22,9 +22,9 @@ class MapperACTCompSept(MapperACTBase):
         self._get_defaults(config)
         self._get_ACT_defaults(config)
         self.nl_coupled = None
-        # self.beam_info = config.get('beam_info',
-        #                            [{'type': 'custom',
-        #                              'file': None}])
+        self.beam_info = config.get('beam_info',
+                                    [{'type': 'custom',
+                                      'file': None}])
 
     def _get_signal_map(self):
         if self.signal_map is None:
