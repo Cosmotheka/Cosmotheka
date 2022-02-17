@@ -132,7 +132,6 @@ class Cl(ClBase):
             ibin += 1
         # And tell NaMaster to set it up.
         bins = nmt.NmtBin(self.nside,bpws=bpws,ells=ells,weights=weights)
-        print(bins.get_effective_ells())
         return(bins)
 
     def get_nmt_fields(self):

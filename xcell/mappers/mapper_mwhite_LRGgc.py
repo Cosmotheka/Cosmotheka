@@ -41,7 +41,7 @@ class MapperMWhiteLRGgc(MapperBase):
 
     def get_nz(self, dz=0):
         if self.dndz is None:
-            z, nz = np.loadtxt(self.config['file_nz'])
+            z, nz = np.loadtxt(self.config['file_nz'], unpack=True)
             self.dndz = {'z_mid': z,
                          'nz': nz}
         return self._get_shifted_nz(dz)
