@@ -3,6 +3,7 @@ from xcell.cls.data import Data
 import os
 import time
 import subprocess
+import numpy as np
 
 
 ##############################################################################
@@ -42,19 +43,25 @@ def check_skip(data, skip, trs):
 
 
 
-def get_pyexec(comment, nc, queue, mem, onlogin):
+def get_pyexec(comment, nc, queue, mem, onlogin, outdir):
     if onlogin:
         pyexec = "/usr/bin/python3"
     else:
-        pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
+        logdir = os.path.join(outdir, 'log')
+        os.makedirs(logdir, exist_ok=True)
+        logfname = os.path.join(logdir, comment + '.log')
+        pyexec = "addqueue -o {} -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(logfname, comment, nc, queue, mem)
 
     return pyexec
 
 
-def launch_cls(data, queue, njobs, nc, mem, wsp=False, fiducial=False, onlogin=False, skip=[]):
+def launch_cls(data, queue, njobs, nc, mem, fiducial=False, onlogin=False, skip=[]):
     #######
     #
-    cl_tracers = data.get_cl_trs_names(wsp)
+    cl_tracers = data.get_cl_trs_names(wsp=True)
+    cl_tracers += data.get_cl_trs_names(wsp=False)
+    # Remove duplicates
+    cl_tracers = np.unique(cl_tracers, axis=0).tolist()
     outdir = data.data['output']
     if fiducial:
         outdir = os.path.join(outdir, 'fiducial')
@@ -83,10 +90,10 @@ def launch_cls(data, queue, njobs, nc, mem, wsp=False, fiducial=False, onlogin=F
             continue
 
         if not fiducial:
-            pyexec = get_pyexec(comment, nc, queue, mem, onlogin)
+            pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir)
             pyrun = '-m xcell.cls.cl {} {} {}'.format(args.INPUT, tr1, tr2)
         else:
-            pyexec = get_pyexec(comment, nc, queue, 2, onlogin)
+            pyexec = get_pyexec(comment, nc, queue, 2, onlogin, outdir)
             pyrun = '-m xcell.cls.cl {} {} {} --fiducial'.format(args.INPUT, tr1, tr2)
 
         print(pyexec + " " + pyrun)
@@ -95,10 +102,12 @@ def launch_cls(data, queue, njobs, nc, mem, wsp=False, fiducial=False, onlogin=F
         time.sleep(1)
 
 
-def launch_cov(data, queue, njobs, nc, mem, wsp=False, onlogin=False, skip=[]):
+def launch_cov(data, queue, njobs, nc, mem, onlogin=False, skip=[]):
     #######
     #
-    cov_tracers = data.get_cov_trs_names(wsp)
+    cov_tracers = data.get_cov_trs_names(wsp=True)
+    cov_tracers += data.get_cov_trs_names(wsp=False)
+    cov_tracers = np.unique(cov_tracers, axis=0).tolist()
     outdir = data.data['output']
 
     if os.uname()[1] == 'glamdring':
@@ -119,7 +128,7 @@ def launch_cov(data, queue, njobs, nc, mem, wsp=False, onlogin=False, skip=[]):
         recompute = data.data['recompute']['cov'] or data.data['recompute']['cmcm']
         if os.path.isfile(fname) and (not recompute):
             continue
-        pyexec = get_pyexec(comment, nc, queue, mem, onlogin)
+        pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir)
         pyrun = '-m xcell.cls.cov {} {} {} {} {}'.format(args.INPUT, *trs)
         print(pyexec + " " + pyrun)
         os.system(pyexec + " " + pyrun)
@@ -134,7 +143,7 @@ def launch_to_sacc(data, name, use, queue, nc, mem, onlogin=False):
         return
 
     comment = 'to_sacc'
-    pyexec = get_pyexec(comment, nc, queue, mem, onlogin)
+    pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir)
     pyrun = '-m xcell.cls.to_sacc {} {}'.format(args.INPUT, name)
     if use == 'nl':
         pyrun += ' --use_nl'
@@ -148,15 +157,14 @@ def launch_to_sacc(data, name, use, queue, nc, mem, onlogin=False):
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="Compute Cls and cov from data.yml file")
+    parser = argparse.ArgumentParser(description="Compute Cls and cov from data.yml file",
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('INPUT', type=str, help='Input YAML data file')
     parser.add_argument('compute', type=str, help='Compute: cls, cov or to_sacc.')
     parser.add_argument('-n', '--nc', type=int, default=28, help='Number of cores to use')
     parser.add_argument('-m', '--mem', type=int, default=7., help='Memory (in GB) per core to use')
     parser.add_argument('-q', '--queue', type=str, default='berg', help='SLURM queue to use')
     parser.add_argument('-j', '--njobs', type=int, default=100000, help='Maximum number of jobs to launch')
-    parser.add_argument('-w', '--wsp', default=False, action='store_true',
-                        help='Set if you want to compute the different workspaces first')
     parser.add_argument('--to_sacc_name', type=str, default='cls_cov.fits', help='Sacc file name')
     parser.add_argument('--to_sacc_use_nl', default=False, action='store_true',
                         help='Set if you want to use nl and cov extra (if present) instead of cls and covG ')
@@ -177,9 +185,9 @@ if __name__ == "__main__":
     onlogin = args.onlogin
 
     if args.compute == 'cls':
-        launch_cls(data, queue, njobs, args.nc, args.mem, args.wsp, args.cls_fiducial, onlogin, args.skip)
+        launch_cls(data, queue, njobs, args.nc, args.mem, args.cls_fiducial, onlogin, args.skip)
     elif args.compute == 'cov':
-        launch_cov(data, queue, njobs, args.nc, args.mem, args.wsp, onlogin, args.skip)
+        launch_cov(data, queue, njobs, args.nc, args.mem, onlogin, args.skip)
     elif args.compute == 'to_sacc':
         if args.to_sacc_use_nl and args.to_sacc_use_fiducial:
             raise ValueError(
