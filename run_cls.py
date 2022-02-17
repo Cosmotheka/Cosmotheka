@@ -42,11 +42,14 @@ def check_skip(data, skip, trs):
 
 
 
-def get_pyexec(comment, nc, queue, mem, onlogin):
+def get_pyexec(comment, nc, queue, mem, onlogin, outdir):
     if onlogin:
         pyexec = "/usr/bin/python3"
     else:
-        pyexec = "addqueue -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(comment, nc, queue, mem)
+        logdir = os.path.join(outdir, 'log')
+        os.makedirs(logdir, exist_ok=True)
+        logfname = os.path.join(logdir, comment + '.log')
+        pyexec = "addqueue -o {} -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(logfname, comment, nc, queue, mem)
 
     return pyexec
 
@@ -83,10 +86,10 @@ def launch_cls(data, queue, njobs, nc, mem, wsp=False, fiducial=False, onlogin=F
             continue
 
         if not fiducial:
-            pyexec = get_pyexec(comment, nc, queue, mem, onlogin)
+            pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir)
             pyrun = '-m xcell.cls.cl {} {} {}'.format(args.INPUT, tr1, tr2)
         else:
-            pyexec = get_pyexec(comment, nc, queue, 2, onlogin)
+            pyexec = get_pyexec(comment, nc, queue, 2, onlogin, outdir)
             pyrun = '-m xcell.cls.cl {} {} {} --fiducial'.format(args.INPUT, tr1, tr2)
 
         print(pyexec + " " + pyrun)
@@ -119,7 +122,7 @@ def launch_cov(data, queue, njobs, nc, mem, wsp=False, onlogin=False, skip=[]):
         recompute = data.data['recompute']['cov'] or data.data['recompute']['cmcm']
         if os.path.isfile(fname) and (not recompute):
             continue
-        pyexec = get_pyexec(comment, nc, queue, mem, onlogin)
+        pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir)
         pyrun = '-m xcell.cls.cov {} {} {} {} {}'.format(args.INPUT, *trs)
         print(pyexec + " " + pyrun)
         os.system(pyexec + " " + pyrun)
@@ -134,7 +137,7 @@ def launch_to_sacc(data, name, use, queue, nc, mem, onlogin=False):
         return
 
     comment = 'to_sacc'
-    pyexec = get_pyexec(comment, nc, queue, mem, onlogin)
+    pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir)
     pyrun = '-m xcell.cls.to_sacc {} {}'.format(args.INPUT, name)
     if use == 'nl':
         pyrun += ' --use_nl'
@@ -148,7 +151,8 @@ def launch_to_sacc(data, name, use, queue, nc, mem, onlogin=False):
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="Compute Cls and cov from data.yml file")
+    parser = argparse.ArgumentParser(description="Compute Cls and cov from data.yml file",
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('INPUT', type=str, help='Input YAML data file')
     parser.add_argument('compute', type=str, help='Compute: cls, cov or to_sacc.')
     parser.add_argument('-n', '--nc', type=int, default=28, help='Number of cores to use')
