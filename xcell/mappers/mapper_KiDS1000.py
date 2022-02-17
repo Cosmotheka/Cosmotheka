@@ -155,7 +155,7 @@ class MapperKiDS1000(MapperBase):
         d = self._rerun_read_cycle(fn, 'FITSMap',
                                    get_ellip_maps_mod,
                                    section=[0, 1])
-        self.maps[mod] = [-d[0], d[1]]
+        self.maps[mod] = np.array([-d[0], d[1]])
         self.signal_map = self.maps[mod]
         return self.signal_map
 

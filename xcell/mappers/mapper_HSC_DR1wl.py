@@ -176,7 +176,7 @@ class MapperHSCDR1wl(MapperBase):
             d = self._rerun_read_cycle(fn, 'FITSMap',
                                        self._get_ellip_maps,
                                        section=[0, 1])
-            self.signal_map = [d[0], d[1]]
+            self.signal_map = np.array([d[0], d[1]])
         return self.signal_map
 
     def _get_mask(self):

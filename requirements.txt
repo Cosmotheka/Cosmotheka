@@ -5,7 +5,7 @@ flake8
 astropy
 healpy
 pandas
-pymaster
+git+git://github.com/LSSTDESC/NaMaster
 pyccl
 camb
 sacc

@@ -12,6 +12,7 @@ class ClBase():
         self.data = Data(data=data, ignore_existing_yml=ignore_existing_yml)
         self.tr1 = tr1
         self.tr2 = tr2
+        self.nside = self.data.data['sphere']['nside']
         self._read_symmetric = self.data.read_symmetric(tr1, tr2)
         if self._read_symmetric:
             warnings.warn('Reading/computing the symmetric element.')
@@ -21,6 +22,7 @@ class ClBase():
         self.cl_file = None
         self.ell = None
         self.cl = None
+        self.cl_cp = None
 
     def get_outdir(self, subdir=''):
         root = self.data.data['output']
@@ -48,6 +50,14 @@ class ClBase():
             self.get_cl_file()
         return self.ell, self.cl
 
+    def get_ell_cl_cp(self):
+        """
+        Return the noisless coupled Cell
+        """
+        if self.ell is None:
+            self.get_cl_file()
+        return np.arange(3 * self.nside), self.cl_cp
+
     def get_n_cls(self):
         s1, s2 = self.get_spins()
         nmap1 = 1 + (s1 > 0)
@@ -72,7 +82,6 @@ class Cl(ClBase):
         super().__init__(data, tr1, tr2, ignore_existing_yml)
         self.outdir = self.get_outdir()
         os.makedirs(self.outdir, exist_ok=True)
-        self.nside = self.data.data['sphere']['nside']
         self.b = self.get_NmtBin()
         self.recompute_cls = self.data.data['recompute']['cls']
         self.recompute_mcm = self.data.data['recompute']['mcm']
@@ -112,22 +121,24 @@ class Cl(ClBase):
         f2 = mapper2.get_nmt_field()
         return f1, f2
 
-    def get_workspace(self):
+    def get_workspace(self, read_unbinned_MCM=True):
         if self._w is None:
-            self._w = self._compute_workspace()
+            self._w = \
+                self._compute_workspace(read_unbinned_MCM=read_unbinned_MCM)
         return self._w
 
     def get_workspace_cov(self):
         if self._wcov is None:
             spin0 = self.data.data['cov'].get('spin0', False)
             if spin0 and (self.get_spins() != (0, 0)):
-                self._wcov = self._compute_workspace(spin0=spin0)
+                self._wcov = self._compute_workspace(spin0=spin0,
+                                                     read_unbinned_MCM=False)
             else:
-                self._wcov = self.get_workspace()
+                self._wcov = self.get_workspace(read_unbinned_MCM=False)
 
         return self._wcov
 
-    def _compute_workspace(self, spin0=False):
+    def _compute_workspace(self, spin0=False, read_unbinned_MCM=True):
         # Check if the fields are already of spin0 to avoid computing the
         # workspace twice
         spin0 = spin0 and (self.get_spins() != (0, 0))
@@ -153,10 +164,12 @@ class Cl(ClBase):
             w.compute_coupling_matrix(f1, f2, self.b, n_iter=n_iter,
                                       l_toeplitz=l_toeplitz, l_exact=l_exact,
                                       dl_band=dl_band)
-            w.write_to(fname)
+            # Recheck again in case other process has started writing it
+            if (not os.path.isfile(fname)):
+                w.write_to(fname)
             self.recompute_mcmc = False
         else:
-            w.read_from(fname)
+            w.read_from(fname, read_unbinned_MCM)
         return w
 
     def get_cl_file(self):
@@ -283,14 +296,6 @@ class Cl(ClBase):
             self.get_cl_file()
         return np.arange(3 * self.nside), self.nl_cp
 
-    def get_ell_cl_cp(self):
-        """
-        Return the noisless coupled Cell
-        """
-        if self.ell is None:
-            self.get_cl_file()
-        return np.arange(3 * self.nside), self.cl_cp
-
     def get_ell_cl_cp_cov(self):
         if self.ell is None:
             self.get_cl_file()
@@ -343,6 +348,9 @@ class ClFid(ClBase):
         self.th = Theory(self.data.data)
         self._ccl_tr1 = None
         self._ccl_tr2 = None
+        self.cl_data = Cl(data, tr1, tr2, ignore_existing_yml=True)
+        self.cl_binned = None  # This is the one you compare with data
+        self.ell_binned = None
 
     def get_tracers_ccl(self):
         if self._ccl_tr1 is None:
@@ -384,7 +392,12 @@ class ClFid(ClBase):
             cl_vector = np.zeros((size, cl.size))
             cl_vector[0] = cl
 
-            np.savez_compressed(fname, cl=cl_vector, ell=ell)
+            w = self.cl_data.get_workspace()
+            cl_cp = w.couple_cell(cl_vector)
+            cl_binned = w.decouple_cell(cl_cp)
+            ell_binned = self.cl_data.get_ell_cl()[0]
+            np.savez_compressed(fname, cl=cl_vector, ell=ell, cl_cp=cl_cp,
+                                ell_binned=ell_binned, cl_binned=cl_binned)
 
         cl_file = np.load(fname)
         if np.any(cl_file['ell'] != ell):
@@ -393,7 +406,19 @@ class ClFid(ClBase):
 
         self.ell = cl_file['ell']
         self.cl = cl_file['cl']
+        self.cl_cp = cl_file['cl_cp']
+        self.cl_binned = cl_file['cl_binned']
+        self.ell_binned = cl_file['ell_binned']
         return cl_file
+
+    def get_ell_cl_binned(self):
+        """
+        Return the binned Cell (i.e. decouple(couple(cl))). This one is the one
+        you compare with data.
+        """
+        if self.ell is None:
+            self.get_cl_file()
+        return self.ell_binned, self.cl_binned
 
 
 if __name__ == "__main__":

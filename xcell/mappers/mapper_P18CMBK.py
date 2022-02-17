@@ -45,7 +45,7 @@ class MapperP18CMBK(MapperBase):
                 fl = np.ones(lmax+1)
                 fl[3*self.nside:] = 0
                 self.klm = hp.almxfl(self.klm, fl, inplace=True)
-            self.signal_map = [hp.alm2map(self.klm, self.nside)]
+            self.signal_map = np.array([hp.alm2map(self.klm, self.nside)])
         return self.signal_map
 
     def _get_mask(self):
