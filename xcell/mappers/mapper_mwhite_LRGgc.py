@@ -15,6 +15,7 @@ class MapperMWhiteLRGgc(MapperBase):
           {'file_map': '/mnt/extraspace/gravityls_3/data/mwhite-ForOxford/maps/lrg_s01_del.hpx0256.fits',
            'file_mask': '/mnt/extraspace/gravityls_3/data/mwhite-ForOxford/maps/lrg_s01_msk.hpx0256.fits',
            'file_nz': '/mnt/extraspace/gravityls_3/data/mwhite-ForOxford/data/lrg_s01_dndz.txt'
+           'SN': uncoupled noise
            'nside':nside,
            'mask_name': 'mask_MWhiteLRGgc'}
         """
@@ -27,6 +28,7 @@ class MapperMWhiteLRGgc(MapperBase):
         self.delta_map = None
         self.nl_coupled = None
         self.cls_cov = None
+        self.SN = config.get('SN', 0)
 
     def get_mask(self):
         if self.mask is None:
@@ -51,8 +53,14 @@ class MapperMWhiteLRGgc(MapperBase):
         return [self.delta_map]
 
     def get_nl_coupled(self):
+        # We follow what we do in MapperP18CMBK.
+        # SN is the uncoupled noise. To "couple" it, multiply by the mean of
+        # the squared mask. This will account for the factor that will be
+        # divided for the coviariance.
+
         if self.nl_coupled is None:
-            self.nl_coupled = np.zeros((1, self.get_ell().size))
+            nl = self.SN * np.mean(self.get_mask()**2)
+            self.nl_coupled =  nl * np.ones((1, 3 * self.nside))
         return self.nl_coupled
 
 
