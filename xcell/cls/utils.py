@@ -1,4 +1,22 @@
-def cross_match_gals(cat1, cat2, cat1_columns,
+from astropy.coordinates import SkyCoord
+
+def columns_from_fits(catalog, columns):
+    """
+    Load columns from a catalog into an array
+
+    Arguments
+    ---------
+        catalog (fits): Input fit file
+        columns (list): List of columns names to return
+
+    Returns
+    -------
+        array: Array with the selected columns extracted from the given catalog
+    """
+    return np.array([np.array(catalog[i]) for i in columns])
+
+
+def cross_match_gals(self, cat1, cat2, cat1_columns,
                      cat2_columns, return_ix_xmat=False):
     """
     Match the galaxies in both cat1_sample and cat2_sample.
@@ -21,8 +39,18 @@ def cross_match_gals(cat1, cat2, cat1_columns,
         array: pix_xmat: Array with the indices of the galaxies in the
         photometric sample with spectroscopic counterpart.
     """
+    # Cut photo_sample around COSMOS area to speed up matching
     ra1, dec1 = columns_from_fits(cat1, cat1_columns)
     ra2, dec2 = columns_from_fits(cat2, cat2_columns)
+    arcmin = 10/60
+    sel = (ra1 >= ra2.min() - arcmin) * (ra1 <= ra2.max() + arcmin) * \
+          (dec1 >= dec2.min() - arcmin) * (dec1 <= dec2.max() + arcmin)
+
+    ra1 = ra1[sel]
+    ra2 = ra2[sel]
+    dec1 = dec1[sel]
+    dec2 = dec2[sel]
+    
     # Based on
     # https://github.com/LSSTDESC/DEHSC_LSS/blob/master/hsc_lss/cosmos_weight.py
     # Match coordinates
@@ -64,20 +92,3 @@ def cross_match_gals(cat1, cat2, cat1_columns,
         return cat1_xmat, cat2_xmat, pix_xmat, mask
     else:
         return cat1_xmat, cat2_xmat
-
-    
-def get_shared_shot_noise(mapper1, mapper2):
-    cat1 = mapper1.get_catalog()
-    cat2 = mapper2.get_catalog()
-    cols1 = mapper1._get_cat_cols()
-    cols2 = mapper2._get_cat_cols()
-    shared_cat = cross_match_gals(cat1, cat2, cols1, cols2)
-    shared_count = len(shared_cat)
-    if shared_count == 0:
-        shot_noise = 0 
-    else: 
-        cat1_count = len(cat1)
-        cat2_count = len(cat2)
-        shot_noise = (shared_count/(cat1_count+cat2_count))
-    return shot_noise
-    
