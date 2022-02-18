@@ -22,7 +22,7 @@ class MapperKV450(MapperBase):
 
         self._get_defaults(config)
         self.ra_name = "ALPHA_J2000"
-        self.dec_name = "DELTA_J2000" 
+        self.dec_name = "DELTA_J2000"
         self.column_names = ['SG_FLAG', 'GAAP_Flag_ugriZYJHKs',
                              'Z_B', 'Z_B_MIN', 'Z_B_MAX',
                              'ALPHA_J2000', 'DELTA_J2000', 'PSF_e1', 'PSF_e2',

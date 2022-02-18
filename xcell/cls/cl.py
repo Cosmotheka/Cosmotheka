@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from .data import Data
 from .theory import Theory
-from .utils import cross_match_gals
+from .utils import get_cross_match_gals
 import numpy as np
 import pymaster as nmt
 import os
@@ -139,14 +139,14 @@ class Cl(ClBase):
 
         return self._wcov
 
-    def _is_cross(self, mapper1, mapper2):
-        mask1 = mapper1.mask
-        mask2 = mapper2.mask
-        sky = np.array(mask1*maks2)
-        if np.all(sky==0):
-            cross = False 
-        else:
+    def is_cross(self, mapper1, mapper2):
+        mask1 = mapper1.get_mask()
+        mask2 = mapper2.get_mask()
+        sky = np.array(mask1*mask2)
+        if (self.tr1 != self.tr2) and (np.all(sky != 0)):
             cross = True
+        else:
+            cross = False
         return cross
 
     def _compute_workspace(self, spin0=False, read_unbinned_MCM=True):
@@ -182,18 +182,19 @@ class Cl(ClBase):
         else:
             w.read_from(fname, read_unbinned_MCM)
         return w
-    
+
     def get_shared_shot_noise(self, mapper1, mapper2):
-        shared_cat = self.cross_match_gals(mapper1, mapper2)
+        cat1 = mapper1.get_catalog()
+        cat2 = mapper2.get_catalog()
+        shared_cat = get_cross_match_gals(mapper1, mapper2)
         shared_count = len(shared_cat)
         if shared_count == 0:
-            shot_noise = 0 
-        else: 
+            shot_noise = 0
+        else:
             cat1_count = len(cat1)
             cat2_count = len(cat2)
             shot_noise = (shared_count/(cat1_count+cat2_count))
         return shot_noise
-    
 
     def get_cl_file(self):
         if self._read_symmetric:
@@ -224,7 +225,7 @@ class Cl(ClBase):
             if cross:
                 nl_cross = self.get_shared_shot_noise(mapper1, mapper2)
                 nl_cp += nl_cross*np.ones_like(nl)
-                
+
             # Signal
             if auto and mapper1.custom_auto:
                 cl_cp = mapper1.get_cl_coupled()

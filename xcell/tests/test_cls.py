@@ -100,6 +100,20 @@ def test_cl_correction():
     assert correct == correct_b
 
 
+def test_nl_cross():
+    data = get_config()
+    cl_class = Cl(data, 'Dummy__2', 'Dummy__2')
+    dummy1 = MapperDummy(data['tracers']['Dummy__1'])
+    dummy2 = MapperDummy(data['tracers']['Dummy__2'])
+    cross_b = True  # Are the dummies overalpping?
+    cross = cl_class.is_cross(dummy1, dummy2)
+    assert cross_b == cross
+    nl_cross = cl_class.get_shared_shot_noise(dummy1,
+                                              dummy2)
+    nl_cross_b = 0.
+    assert nl_cross == nl_cross_b
+
+
 def test_get_nmtbin():
     # This test checks that the bpw_edges can be read from the
     # global part of the yaml file or from the context of one

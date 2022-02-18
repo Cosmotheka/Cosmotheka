@@ -111,6 +111,6 @@ class MapperBase(object):
         if self.nmt_field is None:
             self.nmt_field = self._get_nmt_field(signal=None, **kwargs)
         return self.nmt_field
-    
+
     def _get_radec_names(self):
-        return np.array([self.ra_name, self.dec_name]
+        return np.array([self.ra_name, self.dec_name])

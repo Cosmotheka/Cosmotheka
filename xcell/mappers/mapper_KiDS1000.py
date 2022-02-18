@@ -18,7 +18,7 @@ class MapperKiDS1000(MapperBase):
 
         self._get_defaults(config)
         self.ra_name = "ALPHA_J2000"
-        self.dec_name = "DELTA_J2000" 
+        self.dec_name = "DELTA_J2000"
         self.mode = config.get('mode', 'shear')
         self.zbin_edges = np.array([[0.1, 0.3],
                                     [0.3, 0.5],
