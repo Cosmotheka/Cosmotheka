@@ -41,7 +41,7 @@ class MapperMWhiteP18CMBK(MapperBase):
         if self.nl_coupled is None:
             ell = self.get_ell()
             noise = self._get_noise()
-            ell, nl = noise[1]
+            nl = noise[1]
             nl = interp1d(noise[0], nl, bounds_error=False,
                           fill_value=(nl[0], nl[-1]))(ell)
 
