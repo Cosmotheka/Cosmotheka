@@ -2,7 +2,6 @@
 from .cl import Cl, ClFid
 from .cov import Cov
 from .data import Data
-from ..mappers import mapper_from_name
 import numpy as np
 import sacc
 import os
@@ -136,9 +135,7 @@ class ClSack():
             self.add_covariance_G(self.m_marg)
 
     def add_tracer(self, tr):
-        config = self.data.data['tracers'][tr]
-        mapper_class = config['mapper_class']
-        mapper = mapper_from_name(mapper_class)(config)
+        mapper = self.data.get_mapper(tr)
         quantity = mapper.get_dtype()
         spin = mapper.get_spin()
         if quantity == 'galaxy_density':
