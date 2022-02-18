@@ -66,9 +66,12 @@ def get_config(fsky=0.2, fsky2=0.3,
             'output': tmpdir1}
 
 
-def get_cl_class(fsky=0.2):
+def get_cl_class(fsky=0.2, fiducial=False):
     data = get_config(fsky)
-    return Cl(data, 'Dummy__0', 'Dummy__0')
+    if fiducial:
+        return ClFid(data, 'Dummy__0', 'Dummy__0')
+    else:
+        return Cl(data, 'Dummy__0', 'Dummy__0')
 
 
 def get_cov_class(fsky=0.2):
@@ -293,6 +296,30 @@ def test_get_ell_cl_cp():
     cl2 = w.decouple_cell(cl_cp)
     shutil.rmtree(tmpdir1)
     assert np.all(np.fabs(cl / cl2 - 1) < 1e-10)
+
+    # Test it also in ClFid
+    cl_class = get_cl_class(fiducial=True)
+    ell, cl = cl_class.get_ell_cl()
+    ell, cl_cp = cl_class.get_ell_cl_cp()
+    cl_cp2 = w.couple_cell(cl)
+    shutil.rmtree(tmpdir1)
+    assert np.all(np.fabs(cl_cp / cl_cp2 - 1) < 1e-10)
+
+
+def test_get_ell_cl_binned():
+    # Get cl from map
+    cl_class = get_cl_class()
+    ell = cl_class.get_ell_cl()[0]
+    w = cl_class.get_workspace()
+
+    # Test it also in ClFid
+    cl_class = get_cl_class(fiducial=True)
+    cl = cl_class.get_ell_cl()[1]
+    ell_binned, cl_binned = cl_class.get_ell_cl_binned()
+    cl_binned2 = w.decouple_cell(w.couple_cell(cl))
+    shutil.rmtree(tmpdir1)
+    assert np.all(np.fabs(cl_binned / cl_binned2 - 1) < 1e-10)
+    assert np.all(np.fabs(ell / ell_binned - 1) < 1e-10)
 
 
 def test_covar_from_data():
