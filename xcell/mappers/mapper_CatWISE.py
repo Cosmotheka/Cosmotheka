@@ -50,8 +50,8 @@ class MapperCatWISE(MapperBase):
             goodpix = self.mask > 0
             # Division by mask not really necessary, since it's binary.
             d[goodpix] = nmap_data[goodpix]/(mean_n*self.mask[goodpix])-1
-            self.delta_map = d
-        return [self.delta_map]
+            self.delta_map = np.array([d])
+        return self.delta_map
 
     def _cut_mask(self):
         mask = np.ones(self.npix)

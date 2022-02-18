@@ -28,7 +28,7 @@ class MapperACTk(MapperACTBase):
         if self.signal_map is None:
             fn = f'ACT_{self.map_name}_signal.fits.gz'
             mp = self._rerun_read_cycle(fn, 'FITSMap', self._get_signal_map)
-            self.signal_map = [mp]
+            self.signal_map = np.array([mp])
         return self.signal_map
 
     def get_dtype(self):

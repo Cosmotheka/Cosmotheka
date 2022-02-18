@@ -145,8 +145,8 @@ class MapperWIxSC(MapperBase):
                 gcorr = self._get_galactic_correction(d, self.stars,
                                                       self.mask)
                 d -= gcorr['delta_map']
-            self.delta_map = d
-        return [self.delta_map]
+            self.delta_map = np.array([d])
+        return self.delta_map
 
     def get_mask(self):
         if self.mask is None:

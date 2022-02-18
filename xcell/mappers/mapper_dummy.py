@@ -132,7 +132,7 @@ class MapperDummy(MapperBase):
             elif self.spin == 2:
                 _, mq, mu = hp.synfast([0*cl, cl, 0*cl, 0*cl],
                                        self.nside, new=True)
-                self.signal_map = [mq, mu]
+                self.signal_map = np.array([mq, mu])
         return self.signal_map
 
     def get_mask(self):
