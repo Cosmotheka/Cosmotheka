@@ -1,6 +1,6 @@
 from astropy.coordinates import SkyCoord
 
-def columns_from_fits(catalog, columns):
+def radec_from_fits(catalog, columns):
     """
     Load columns from a catalog into an array
 
@@ -16,8 +16,7 @@ def columns_from_fits(catalog, columns):
     return np.array([np.array(catalog[i]) for i in columns])
 
 
-def cross_match_gals(self, cat1, cat2, cat1_columns,
-                     cat2_columns, return_ix_xmat=False):
+def cross_match_gals(self, mapper1, mapper2, return_ix_xmat=False):
     """
     Match the galaxies in both cat1_sample and cat2_sample.
 
@@ -40,8 +39,12 @@ def cross_match_gals(self, cat1, cat2, cat1_columns,
         photometric sample with spectroscopic counterpart.
     """
     # Cut photo_sample around COSMOS area to speed up matching
-    ra1, dec1 = columns_from_fits(cat1, cat1_columns)
-    ra2, dec2 = columns_from_fits(cat2, cat2_columns)
+    cat1 = mapper1.get_catalog()
+    cat2 = mapper2.get_catalog()
+    cols1 = mapper1._get_radec_names()
+    cols2 = mapper2._get_radec_names()
+    ra1, dec1 = radec_from_fits(cat1, cat1_columns)
+    ra2, dec2 = radec_from_fits(cat2, cat2_columns)
     arcmin = 10/60
     sel = (ra1 >= ra2.min() - arcmin) * (ra1 <= ra2.max() + arcmin) * \
           (dec1 >= dec2.min() - arcmin) * (dec1 <= dec2.max() + arcmin)

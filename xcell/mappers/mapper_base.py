@@ -18,6 +18,8 @@ class MapperBase(object):
         self.nmt_field = None
         self.beam = None
         self.custom_auto = False
+        self.ra_name = "RA"
+        self.dec_name = "DEC"
 
     def get_signal_map(self):
         raise NotImplementedError("Do not use base class")
@@ -109,3 +111,6 @@ class MapperBase(object):
         if self.nmt_field is None:
             self.nmt_field = self._get_nmt_field(signal=None, **kwargs)
         return self.nmt_field
+    
+    def _get_radec_names(self):
+        return np.array([self.ra_name, self.dec_name]

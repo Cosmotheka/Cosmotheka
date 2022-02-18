@@ -184,11 +184,7 @@ class Cl(ClBase):
         return w
     
     def get_shared_shot_noise(self, mapper1, mapper2):
-        cat1 = mapper1.get_catalog()
-        cat2 = mapper2.get_catalog()
-        cols1 = mapper1._get_cat_cols()
-        cols2 = mapper2._get_cat_cols()
-        shared_cat = self.cross_match_gals(cat1, cat2, cols1, cols2)
+        shared_cat = self.cross_match_gals(mapper1, mapper2)
         shared_count = len(shared_cat)
         if shared_count == 0:
             shot_noise = 0 
