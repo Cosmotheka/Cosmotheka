@@ -52,7 +52,7 @@ def remove_further_duplicates(photo_index, dist_2d):
     return photo_index[sel], dist_2d[sel], sel
 
 
-def get_cross_match_gals(self, mapper1, mapper2, return_ix_xmat=False):
+def get_cross_match_gals(mapper1, mapper2, return_ix_xmat=False):
     """
     Match the galaxies in both cat1_sample and cat2_sample.
 

@@ -3,6 +3,8 @@ import numpy as np
 import healpy as hp
 import pyccl as ccl
 import pymaster as nmt
+import os
+import fitsio
 
 
 class MapperDummy(MapperBase):
@@ -60,12 +62,23 @@ class MapperDummy(MapperBase):
         self.cl_coupled = None
         self.cls_cov = None
         self.nl_coupled = None
+        self.cat = None
         self.mask = None
         self.dndz = None
         self.cl = None
         self.dec0 = self.config.get('dec0', 0.)
         self.ra0 = self.config.get('ra0', 0.)
         self.aposize = self.config.get('aposize', 1.)
+
+    def get_catalog(self):
+        file = self.config.get('catalog', None)
+        cols = ['RA', 'DEC', 'Z']
+        if (self.cat is None) and (file is not None):
+            if not os.path.isfile(file):
+                raise ValueError(f"File {file} not found")
+            d = fitsio.read(file, columns=cols)
+            self.cat = d
+        return self.cat
 
     def _check_dtype(self):
         dtypes = ['galaxy_density', 'galaxy_shear',

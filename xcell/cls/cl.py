@@ -143,7 +143,7 @@ class Cl(ClBase):
         mask1 = mapper1.get_mask()
         mask2 = mapper2.get_mask()
         sky = np.array(mask1*mask2)
-        if (self.tr1 != self.tr2) and (np.all(sky != 0)):
+        if (self.tr1 != self.tr2) and (np.any(sky != 0)):
             cross = True
         else:
             cross = False
@@ -186,14 +186,18 @@ class Cl(ClBase):
     def get_shared_shot_noise(self, mapper1, mapper2):
         cat1 = mapper1.get_catalog()
         cat2 = mapper2.get_catalog()
-        shared_cat = get_cross_match_gals(mapper1, mapper2)
-        shared_count = len(shared_cat)
-        if shared_count == 0:
+        if (cat1 is None) or (cat2 is None):
+            print("Either mapper doesn't have a catalog")
+            return 0
+        cat1_xmat, cat2_xmat = get_cross_match_gals(mapper1, mapper2)
+        shared_1 = len(cat1_xmat)
+        shared_2 = len(cat2_xmat)
+        if (shared_1 == 0) or (shared_2 == 0):
             shot_noise = 0
         else:
             cat1_count = len(cat1)
             cat2_count = len(cat2)
-            shot_noise = (shared_count/(cat1_count+cat2_count))
+            shot_noise = (np.sqrt(shared_1*shared_2)/(cat1_count+cat2_count))
         return shot_noise
 
     def get_cl_file(self):
@@ -213,7 +217,7 @@ class Cl(ClBase):
             # If auto-correlation, compute noise and,
             # if needed, the custom signal power spectrum.
             auto = self.tr1 == self.tr2
-            cross = self._is_cross(mapper1, mapper2)
+            cross = self.is_cross(mapper1, mapper2)
             # Noise
             if auto:
                 nl_cp = mapper1.get_nl_coupled()
@@ -224,7 +228,7 @@ class Cl(ClBase):
                 nl = np.zeros([n_cls, self.b.get_n_bands()])
             if cross:
                 nl_cross = self.get_shared_shot_noise(mapper1, mapper2)
-                nl_cp += nl_cross*np.ones_like(nl)
+                nl_cp += nl_cross*np.ones_like(nl_cp)
 
             # Signal
             if auto and mapper1.custom_auto:
