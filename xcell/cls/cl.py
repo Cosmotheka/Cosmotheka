@@ -2,6 +2,7 @@
 from .data import Data
 from .theory import Theory
 from .utils import get_cross_match_gals
+import healpy as hp
 import numpy as np
 import pymaster as nmt
 import os
@@ -184,7 +185,7 @@ class Cl(ClBase):
         return w
 
     def get_shared_shot_noise(self, mapper1, mapper2):
-        shot_noise = 0 
+        shot_noise = 0
         cat1 = mapper1.get_catalog()
         cat2 = mapper2.get_catalog()
         mask1 = mapper1.get_mask()
@@ -202,7 +203,7 @@ class Cl(ClBase):
         if shared_1 != shared_2:
             print('# galaxies in of mapper1 in mapper2 different ',
                   'from # galaxies of mappe2 in maper1.',
-                  ' Returning 0'.)
+                  ' Returning 0')
             # Why are they not the same?
             return shot_noise
         else:
