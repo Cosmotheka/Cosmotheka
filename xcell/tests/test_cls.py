@@ -47,7 +47,7 @@ def get_config(fsky=0.2, fsky2=0.3,
     dummy2 = {'mask_name': 'mask_dummy2', 'mapper_class': 'MapperDummy',
               'cosmo': cosmo, 'nside': nside, 'fsky': fsky2, 'seed': 100,
               'dtype': dtype1, 'use_halo_model': inc_hm, 'mask_power': 2,
-              'catalog': '/home/jaime/PhD/xCell/xcell/tests/data/catalog.fits'}
+              'catalog': 'xcell/tests/data/catalog.fits'}
     dummy3 = {'mask_name': 'mask_dummy2', 'mapper_class': 'MapperDummy',
               'cosmo': cosmo, 'nside': nside, 'fsky': fsky2, 'seed': 100,
               'dtype': dtype1, 'use_halo_model': inc_hm, 'mask_power': 2,
