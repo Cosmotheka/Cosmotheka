@@ -64,7 +64,7 @@ def get_cross_match_gals(mapper1, mapper2, return_ix_xmat=False):
     cat1_cols = mapper1._get_radec_names()
     cat2_cols = mapper2._get_radec_names()
     ra1, dec1 = np.array([np.array(cat1[i]) for i in cat1_cols])
-    ra2, dec2 = np.array([np.array(cat2[i]) for i in cat2_cols]) 
+    ra2, dec2 = np.array([np.array(cat2[i]) for i in cat2_cols])
     arcmin = 10/60
     sel = (ra1 >= ra2.min() - arcmin) * (ra1 <= ra2.max() + arcmin) * \
           (dec1 >= dec2.min() - arcmin) * (dec1 <= dec2.max() + arcmin)
