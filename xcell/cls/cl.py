@@ -147,7 +147,7 @@ class Cl(ClBase):
             cross = True
         else:
             cross = False
-        return cross
+        return cross, sky
 
     def _compute_workspace(self, spin0=False, read_unbinned_MCM=True):
         # Check if the fields are already of spin0 to avoid computing the
@@ -184,20 +184,41 @@ class Cl(ClBase):
         return w
 
     def get_shared_shot_noise(self, mapper1, mapper2):
+        shot_noise = 0 
         cat1 = mapper1.get_catalog()
         cat2 = mapper2.get_catalog()
+        mask1 = mapper1.get_mask()
+        mask2 = mapper2.get_mask()
+        shared_sky = np.array(mask1*mask2)
+        if (self.tr1 != self.tr2) and (np.any(shared_sky != 0)):
+            print("No sky overlap")
+            return shot_noise
         if (cat1 is None) or (cat2 is None):
             print("Either mapper doesn't have a catalog")
-            return 0
+            return shot_noise
         cat1_xmat, cat2_xmat = get_cross_match_gals(mapper1, mapper2)
         shared_1 = len(cat1_xmat)
         shared_2 = len(cat2_xmat)
-        if (shared_1 == 0) or (shared_2 == 0):
-            shot_noise = 0
+        if shared_1 != shared_2:
+            print('# galaxies in of mapper1 in mapper2 different ',
+                  'from # galaxies of mappe2 in maper1.',
+                  ' Returning 0'.)
+            # Why are they not the same?
+            return shot_noise
         else:
+            shared_count = shared_1
+        if (shared_1 == 0) or (shared_2 == 0):
+            print('No sources matched')
+            return shot_noise
+        else:
+            Apix = 4*np.pi/hp.nside2npix(mapper1.nside)
+            # Both mappers should have the same nside
+            shared_ndensity = np.sum(shared_sky)*shared_count/Apix
             cat1_count = len(cat1)
+            cat1_ndensity = np.sum(mapper1.get_mask())*cat1_count/Apix
             cat2_count = len(cat2)
-            shot_noise = (np.sqrt(shared_1*shared_2)/(cat1_count+cat2_count))
+            cat2_ndensity = np.sum(mapper1.get_mask())*cat2_count/Apix
+            shot_noise += shared_ndensity/(cat1_ndensity*cat2_ndensity)
         return shot_noise
 
     def get_cl_file(self):
@@ -217,7 +238,6 @@ class Cl(ClBase):
             # If auto-correlation, compute noise and,
             # if needed, the custom signal power spectrum.
             auto = self.tr1 == self.tr2
-            cross = self.is_cross(mapper1, mapper2)
             # Noise
             if auto:
                 nl_cp = mapper1.get_nl_coupled()
@@ -226,9 +246,9 @@ class Cl(ClBase):
                 n_cls = self.get_n_cls()
                 nl_cp = np.zeros((n_cls, 3 * self.nside))
                 nl = np.zeros([n_cls, self.b.get_n_bands()])
-            if cross:
-                nl_cross = self.get_shared_shot_noise(mapper1, mapper2)
-                nl_cp += nl_cross*np.ones_like(nl_cp)
+            # Add shot noise due to sky overlap (zero if no overlap)
+            nl_cross = self.get_shared_shot_noise(mapper1, mapper2)
+            nl_cp += nl_cross*np.ones_like(nl_cp)
 
             # Signal
             if auto and mapper1.custom_auto:
