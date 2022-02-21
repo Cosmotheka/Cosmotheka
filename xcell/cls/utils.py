@@ -2,22 +2,6 @@ from astropy.coordinates import SkyCoord
 import numpy as np
 
 
-def radec_from_fits(catalog, columns):
-    """
-    Load columns from a catalog into an array
-
-    Arguments
-    ---------
-        catalog (fits): Input fit file
-        columns (list): List of columns names to return
-
-    Returns
-    -------
-        array: Array with the selected columns extracted from the given catalog
-    """
-    return np.array([np.array(catalog[i]) for i in columns])
-
-
 def remove_further_duplicates(photo_index, dist_2d):
     """
     Remove duplicates matches. Keep only the closest galaxy.
@@ -79,8 +63,8 @@ def get_cross_match_gals(mapper1, mapper2, return_ix_xmat=False):
     cat2 = mapper2.get_catalog()
     cat1_cols = mapper1._get_radec_names()
     cat2_cols = mapper2._get_radec_names()
-    ra1, dec1 = radec_from_fits(cat1, cat1_cols)
-    ra2, dec2 = radec_from_fits(cat2, cat2_cols)
+    ra1, dec1 = np.array([np.array(cat1[i]) for i in cat1_cols])
+    ra2, dec2 = np.array([np.array(cat2[i]) for i in cat2_cols]) 
     arcmin = 10/60
     sel = (ra1 >= ra2.min() - arcmin) * (ra1 <= ra2.max() + arcmin) * \
           (dec1 >= dec2.min() - arcmin) * (dec1 <= dec2.max() + arcmin)
