@@ -47,16 +47,22 @@ def get_config(fsky=0.2, fsky2=0.3,
     dummy2 = {'mask_name': 'mask_dummy2', 'mapper_class': 'MapperDummy',
               'cosmo': cosmo, 'nside': nside, 'fsky': fsky2, 'seed': 100,
               'dtype': dtype1, 'use_halo_model': inc_hm, 'mask_power': 2,
-              'catalog': 'xcell/tests/data/catalog.fits'}
+              'catalog': '/home/jaime/PhD/xCell/xcell/tests/data/catalog.fits'}
     dummy3 = {'mask_name': 'mask_dummy2', 'mapper_class': 'MapperDummy',
               'cosmo': cosmo, 'nside': nside, 'fsky': fsky2, 'seed': 100,
               'dtype': dtype1, 'use_halo_model': inc_hm, 'mask_power': 2,
               'ra0': 60, 'dec0': 60,
-              'catalog': 'xcell/tests/data/catalog.fits'}
+              'catalog': '/home/jaime/PhD/xCell/xcell/tests/data/catalog.fits'}
+    dummy4 = {'mask_name': 'mask_dummy2', 'mapper_class': 'MapperDummy',
+              'cosmo': cosmo, 'nside': nside, 'fsky': fsky2, 'seed': 100,
+              'dtype': dtype1, 'use_halo_model': inc_hm, 'mask_power': 2,
+              'ra0': -60, 'dec0': -60,
+              'catalog': '/home/jaime/PhD/xCell/xcell/tests/data/catalog.fits'}
     bpw_edges = list(range(0, 3 * nside, 4))
 
     return {'tracers': {'Dummy__0': dummy0, 'Dummy__1': dummy1,
-                        'Dummy__2': dummy2, 'Dummy__3': dummy3},
+                        'Dummy__2': dummy2, 'Dummy__3': dummy3,
+                        'Dummy__4': dummy4},
             'cls': {'Dummy-Dummy': {'compute': 'all'}},
             'cov': {'fiducial': {'cosmo': cosmo,
                                  'wl_m': False, 'wl_ia': False}},
@@ -106,17 +112,16 @@ def test_cl_correction():
     assert correct == correct_b
 
 
-def test_nl_cross():
+@pytest.mark.parametrize('tracer1,tracer2,nl_cross_b',
+                         [('Dummy__2', 'Dummy__3', 8.34850793114762e-12),
+                          ('Dummy__3', 'Dummy__4', 0)])
+def test_nl_cross(tracer1, tracer2, nl_cross_b):
     data = get_config()
     cl_class = Cl(data, 'Dummy__2', 'Dummy__3')
-    dummy2 = MapperDummy(data['tracers']['Dummy__2'])
-    dummy3 = MapperDummy(data['tracers']['Dummy__3'])
-    cross_b = True
-    cross = cl_class.is_cross(dummy2, dummy3)
-    assert cross_b == cross
-    nl_cross = cl_class.get_shared_shot_noise(dummy2,
-                                              dummy3)
-    nl_cross_b = 0.5
+    mapper1 = MapperDummy(data['tracers'][tracer1])
+    mapper2 = MapperDummy(data['tracers'][tracer2])
+    nl_cross = cl_class.get_shared_shot_noise(mapper1,
+                                              mapper2)
     assert nl_cross == nl_cross_b
 
 

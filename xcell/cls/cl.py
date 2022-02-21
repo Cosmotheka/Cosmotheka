@@ -191,7 +191,7 @@ class Cl(ClBase):
         mask1 = mapper1.get_mask()
         mask2 = mapper2.get_mask()
         shared_sky = np.array(mask1*mask2)
-        if (self.tr1 != self.tr2) and (np.any(shared_sky != 0)):
+        if np.all(shared_sky == 0):
             print("No sky overlap")
             return shot_noise
         if (cat1 is None) or (cat2 is None):
