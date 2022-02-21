@@ -180,6 +180,8 @@ class Cl(ClBase):
                 w.write_to(fname)
             self.recompute_mcmc = False
         else:
+            print('fname:', fname, len(fname))
+            print('read_unbinned_MCM', read_unbinned_MCM, len(read_unbinned_MCM))
             w.read_from(fname, read_unbinned_MCM)
         return w
 
