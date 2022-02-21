@@ -47,17 +47,17 @@ def get_config(fsky=0.2, fsky2=0.3,
     dummy2 = {'mask_name': 'mask_dummy2', 'mapper_class': 'MapperDummy',
               'cosmo': cosmo, 'nside': nside, 'fsky': fsky2, 'seed': 100,
               'dtype': dtype1, 'use_halo_model': inc_hm, 'mask_power': 2,
-              'catalog': '/home/jaime/PhD/xCell/xcell/tests/data/catalog.fits'}
+              'catalog': 'xcell/tests/data/catalog.fits'}
     dummy3 = {'mask_name': 'mask_dummy2', 'mapper_class': 'MapperDummy',
               'cosmo': cosmo, 'nside': nside, 'fsky': fsky2, 'seed': 100,
               'dtype': dtype1, 'use_halo_model': inc_hm, 'mask_power': 2,
               'ra0': 60, 'dec0': 60,
-              'catalog': '/home/jaime/PhD/xCell/xcell/tests/data/catalog.fits'}
+              'catalog': 'xcell/tests/data/catalog.fits'}
     dummy4 = {'mask_name': 'mask_dummy2', 'mapper_class': 'MapperDummy',
               'cosmo': cosmo, 'nside': nside, 'fsky': fsky2, 'seed': 100,
               'dtype': dtype1, 'use_halo_model': inc_hm, 'mask_power': 2,
               'ra0': -60, 'dec0': -60,
-              'catalog': '/home/jaime/PhD/xCell/xcell/tests/data/catalog.fits'}
+              'catalog': 'xcell/tests/data/catalog.fits'}
     bpw_edges = list(range(0, 3 * nside, 4))
 
     return {'tracers': {'Dummy__0': dummy0, 'Dummy__1': dummy1,
