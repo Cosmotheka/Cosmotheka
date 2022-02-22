@@ -5,7 +5,7 @@ import pyccl as ccl
 import pytest
 
 
-def get_config(dtype='galaxy_density', fsky=0.2):
+def get_config(dtype='galaxy_density', fsky=0.2, cat=False):
     cosmo = {
       'Omega_c': 0.24,
       'Omega_b': 0.0493,
@@ -16,12 +16,16 @@ def get_config(dtype='galaxy_density', fsky=0.2):
       'wa': 0,
       'transfer_function': 'boltzmann_camb',
       'baryons_power_spectrum': 'nobaryons'}
+    if cat:
+        cat_file = 'xcell/tests/data/catalog.fits'
+    else:
+        cat_file = None
     return {'seed': 0, 'nside': 32, 'fsky': fsky, 'cosmo': cosmo,
-            'dtype': dtype}
+            'dtype': dtype, 'catalog': cat_file}
 
 
-def get_mapper(dtype='galaxy_density', fsky=0.2):
-    return xc.mappers.MapperDummy(get_config(dtype, fsky))
+def get_mapper(dtype='galaxy_density', fsky=0.2, cat=False):
+    return xc.mappers.MapperDummy(get_config(dtype, fsky, cat))
 
 
 def get_cl(dtype):
@@ -93,6 +97,12 @@ def test_get_nz(dtyp):
     else:
         assert len(nz) == 2
         assert len(nz.shape) == 2
+
+
+def test_get_catalog():
+    m = get_mapper(cat=True)
+    cat = m.get_catalog()
+    assert cat is not None
 
 
 def test_get_signal_map():
