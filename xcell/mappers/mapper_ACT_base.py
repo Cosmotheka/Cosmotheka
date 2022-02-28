@@ -15,6 +15,7 @@ class MapperACTBase(MapperBase):
         self.signal_map = None
         self.mask = None
         self.pixell_mask = None
+        self.nl_coupled = None
 
     def get_signal_map(self):
         if self.signal_map is None:

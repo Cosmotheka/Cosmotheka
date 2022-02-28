@@ -16,15 +16,7 @@ class MapperACTCompSept(MapperACTBase):
          'nside': 1024,
          'lmax': 6000}
         """
-        self._get_ACT_CompSept_defaults(config)
-
-    def _get_ACT_CompSept_defaults(self, config):
-        self._get_defaults(config)
         self._get_ACT_defaults(config)
-        self.nl_coupled = None
-        self.beam_info = config.get('beam_info',
-                                    [{'type': 'custom',
-                                      'file': None}])
 
     def _get_signal_map(self):
         if self.signal_map is None:
