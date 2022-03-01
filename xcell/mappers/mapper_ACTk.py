@@ -14,6 +14,7 @@ class MapperACTk(MapperACTBase):
         'mask_power': 2}
         """
         self._get_ACT_defaults(config)
+        self.mask_power = config.get('mask_power', 2)
 
     def _get_signal_map(self):
         self.pixell_mask = self._get_pixell_mask()
