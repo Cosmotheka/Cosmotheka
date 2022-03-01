@@ -14,6 +14,7 @@ class MapperACTk(MapperACTBase):
         'mask_power': 2}
         """
         self._get_ACT_defaults(config)
+        self.mask_power = config.get('mask_power', 2)
 
     def _get_signal_map(self):
         self.pixell_mask = self._get_pixell_mask()
@@ -24,12 +25,12 @@ class MapperACTk(MapperACTBase):
         mp *= np.mean(self.pixell_mask**2)
         return mp
 
-    def get_signal_map(self):
-        if self.signal_map is None:
-            fn = f'ACT_{self.map_name}_signal.fits.gz'
-            mp = self._rerun_read_cycle(fn, 'FITSMap', self._get_signal_map)
-            self.signal_map = np.array([mp])
-        return self.signal_map
+    def _get_mask(self):
+        self.pixell_mask = self._get_pixell_mask()
+        msk = reproject.healpix_from_enmap(self.pixell_mask,
+                                           lmax=self.lmax,
+                                           nside=self.nside)
+        return msk
 
     def get_dtype(self):
         return 'cmb_convergence'
