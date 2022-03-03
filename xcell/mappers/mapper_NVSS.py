@@ -135,6 +135,14 @@ class MapperNVSS(MapperBase):
             self.dndz = {'z_mid': zz, 'nz': nz}
         return self._get_shifted_nz(dz)
 
+    def get_radec(self):
+        cat = self.get_catalog()
+        if self.in_rad:
+            return (np.degrees(cat[self.ra_name]),
+                    np.degrees(cat[self.dec_name]))
+        else:
+            return cat[self.ra_name], cat[self.dec_name]
+
     # Type
     def get_dtype(self):
         return 'galaxy_density'

@@ -40,7 +40,8 @@ class MapperWIxSC(MapperBase):
         self.lmin_nl_from_data = config.get('lmin_nl_from_data',
                                             2000)
 
-    def get_radec(self, cat):
+    def get_radec(self):
+        cat = self.get_catalog()
         if self.in_rad:
             return (np.degrees(cat[self.ra_name]),
                     np.degrees(cat[self.dec_name]))

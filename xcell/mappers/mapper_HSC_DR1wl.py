@@ -26,6 +26,8 @@ class MapperHSCDR1wl(MapperBase):
         self.bn = self.config['bin_name']
         self.w_name = 'ishape_hsm_regauss_derived_shape_weight'
         self.npix = hp.nside2npix(self.nside)
+        self.ra_name = 'ra'
+        self.dec_name = 'dec'
 
         self.nl_coupled = None
         self.dndz = None
@@ -184,8 +186,8 @@ class MapperHSCDR1wl(MapperBase):
         cat = self.get_catalog()
         msk = get_map_from_points(cat, self.nside,
                                   w=cat[self.w_name],
-                                  ra_name='ra',
-                                  dec_name='dec')
+                                  ra_name=self.ra_name,
+                                  dec_name=self.dec_name)
         return msk
 
     def get_mask(self):
@@ -203,7 +205,8 @@ class MapperHSCDR1wl(MapperBase):
         w2s2 = get_map_from_points(cat, self.nside,
                                    w=(0.5*(cat['e1']**2 + cat['e2']**2) *
                                       cat[self.w_name]**2),
-                                   ra_name='ra', dec_name='dec')
+                                   ra_name=self.ra_name,
+                                   dec_name=self.dec_name)
         return w2s2
 
     def get_nl_coupled(self):
@@ -249,6 +252,14 @@ class MapperHSCDR1wl(MapperBase):
             fname = f'HSCDR1wl_nz_{self.bn}.npz'
             self.dndz = self._rerun_read_cycle(fname, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz)
+
+    def get_radec(self):
+        cat = self.get_catalog()
+        if self.in_rad:
+            return (np.degrees(cat[self.ra_name]),
+                    np.degrees(cat[self.dec_name]))
+        else:
+            return cat[self.ra_name], cat[self.dec_name]
 
     def get_dtype(self):
         return 'galaxy_shear'

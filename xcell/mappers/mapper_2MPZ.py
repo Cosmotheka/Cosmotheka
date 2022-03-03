@@ -128,6 +128,14 @@ class Mapper2MPZ(MapperBase):
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
 
+    def get_radec(self):
+        cat = self.get_catalog()
+        if self.in_rad:
+            return (np.degrees(cat[self.ra_name]),
+                    np.degrees(cat[self.dec_name]))
+        else:
+            return cat[self.ra_name], cat[self.dec_name]
+
     def get_dtype(self):
         return 'galaxy_density'
 

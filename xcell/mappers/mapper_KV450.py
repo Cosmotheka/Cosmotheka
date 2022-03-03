@@ -221,6 +221,14 @@ class MapperKV450(MapperBase):
             self.nls[mod] = np.array([nl, 0*nl, 0*nl, nl])
         self.nl_coupled = self.nls[mod]
         return self.nl_coupled
+    
+    def get_radec(self):
+        cat = self.get_catalog()
+        if self.in_rad:
+            return (np.degrees(cat[self.ra_name]),
+                    np.degrees(cat[self.dec_name]))
+        else:
+            return cat[self.ra_name], cat[self.dec_name]
 
     def get_nz(self, dz=0):
         if self.dndz is None:

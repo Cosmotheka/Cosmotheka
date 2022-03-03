@@ -61,18 +61,16 @@ def get_cross_match_gals(mapper1, mapper2, return_ix_xmat=False):
     # Cut photo_sample around COSMOS area to speed up matching
     cat1 = mapper1.get_catalog()
     cat2 = mapper2.get_catalog()
-    cat1_cols = mapper1._get_radec_names()
-    cat2_cols = mapper2._get_radec_names()
-    ra1, dec1 = np.array([np.array(cat1[i]) for i in cat1_cols])
-    ra2, dec2 = np.array([np.array(cat2[i]) for i in cat2_cols])
-    arcmin = 10/60
-    sel = (ra1 >= ra2.min() - arcmin) * (ra1 <= ra2.max() + arcmin) * \
-          (dec1 >= dec2.min() - arcmin) * (dec1 <= dec2.max() + arcmin)
+    ra1, dec1 = mapper1.get_radec()
+    ra2, dec2 = mapper2.get_radec()
 
-    ra1 = ra1[sel]
-    ra2 = ra2[sel]
-    dec1 = dec1[sel]
-    dec2 = dec2[sel]
+    #arcmin = 10/60
+    #sel = (ra1 >= ra2.min() - arcmin) * (ra1 <= ra2.max() + arcmin) * \
+    #      (dec1 >= dec2.min() - arcmin) * (dec1 <= dec2.max() + arcmin)
+    #ra1 = ra1[sel]
+    #ra2 = ra2[sel]
+    #dec1 = dec1[sel]
+    #dec2 = dec2[sel]
 
     # Based on
     # https://github.com/LSSTDESC/DEHSC_LSS/blob/master/hsc_lss/cosmos_weight.py

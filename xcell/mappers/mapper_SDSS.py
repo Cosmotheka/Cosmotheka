@@ -158,6 +158,14 @@ class MapperSDSS(MapperBase):
         return cat[(cat['Z'] >= self.z_edges[0]) &
                    (cat['Z'] < self.z_edges[1])]
 
+    def get_radec(self):
+        cat = self.get_catalog()
+        if self.in_rad:
+            return (np.degrees(cat[self.ra_name]),
+                    np.degrees(cat[self.dec_name]))
+        else:
+            return cat[self.ra_name], cat[self.dec_name]
+
     def get_dtype(self):
         return 'galaxy_density'
 
