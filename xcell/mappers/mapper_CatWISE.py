@@ -24,6 +24,8 @@ class MapperCatWISE(MapperBase):
         self.delta_map = None
         self.nl_coupled = None
         self.dndz = None
+        self.ra_name = 'ra'
+        self.dec_name = 'dec'
         # self.cat_redshift = None
 
     # CatWISE catalog
@@ -44,8 +46,8 @@ class MapperCatWISE(MapperBase):
             self.cat_data = self.get_catalog()
             self.mask = self.get_mask()
             nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            ra_name='ra',
-                                            dec_name='dec')
+                                            ra_name=self.ra_name,
+                                            dec_name=self.dec_name)
             mean_n = np.average(nmap_data, weights=self.mask)
             goodpix = self.mask > 0
             # Division by mask not really necessary, since it's binary.
@@ -65,8 +67,8 @@ class MapperCatWISE(MapperBase):
         if self.file_sourcemask is not None:
             # holes catalog
             mask_holes = Table.read(self.file_sourcemask)
-            vecmask = hp.ang2vec(mask_holes['ra'],
-                                 mask_holes['dec'],
+            vecmask = hp.ang2vec(mask_holes[self.ra_name],
+                                 mask_holes[self.dec_name],
                                  lonlat=True)
             for vec, radius in zip(vecmask,
                                    mask_holes['radius']):
@@ -93,8 +95,8 @@ class MapperCatWISE(MapperBase):
             self.cat_data = self.get_catalog()
             self.mask = self.get_mask()
             nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            ra_name='ra',
-                                            dec_name='dec')
+                                            ra_name=self.ra_name,
+                                            dec_name=self.dec_name)
             N_mean = np.average(nmap_data, weights=self.mask)
             N_mean_srad = N_mean * self.npix / (4 * np.pi)
             N_ell = np.mean(self.mask) / N_mean_srad
