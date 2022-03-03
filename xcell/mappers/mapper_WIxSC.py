@@ -40,8 +40,9 @@ class MapperWIxSC(MapperBase):
         self.lmin_nl_from_data = config.get('lmin_nl_from_data',
                                             2000)
 
-    def get_radec(self):
-        cat = self.get_catalog()
+    def get_radec(self, cat=None):
+        if cat is None:
+            cat = self.get_catalog()
         if self.in_rad:
             return (np.degrees(cat[self.ra_name]),
                     np.degrees(cat[self.dec_name]))
@@ -83,7 +84,7 @@ class MapperWIxSC(MapperBase):
 
     def _mask_catalog(self, cat):
         self.mask = self.get_mask()
-        ra, dec = self.get_radec()
+        ra, dec = self.get_radec(cat=cat)
         ipix = hp.ang2pix(self.nside, ra, dec, lonlat=True)
         # Mask is binary, so 0.1 or 0.00001 doesn't really matter
         return cat[self.mask[ipix] > 0.1]
