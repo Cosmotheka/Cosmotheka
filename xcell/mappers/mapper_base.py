@@ -13,14 +13,17 @@ class MapperBase(object):
         self.config = config
         self.mask_name = config.get('mask_name', None)
         self.beam_info = config.get('beam_info', [])
-        self.mask_power = config.get('mask_power', 1)
         self.nside = config['nside']
         self.nmt_field = None
         self.beam = None
-        self.custom_auto = False
+        self.custom_auto = Falses
         self.ra_name = "RA"
         self.dec_name = "DEC"
         self._in_rad = False
+        # Option introduced to modify the Mode Coupling Matrix
+        # In case the map has an implicit mask applied
+        # See ACTk case for an example
+        self.mask_power = config.get('mask_power', 1)
 
     def get_signal_map(self):
         raise NotImplementedError("Do not use base class")

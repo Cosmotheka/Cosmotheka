@@ -1,5 +1,5 @@
 from .mapper_base import MapperBase
-from pixell import enmap, reproject
+from pixell import enmap
 
 
 class MapperACTBase(MapperBase):
@@ -15,21 +15,19 @@ class MapperACTBase(MapperBase):
         self.signal_map = None
         self.mask = None
         self.pixell_mask = None
+        self.nl_coupled = None
 
     def get_signal_map(self):
-        return NotImplementedError("Do not use base class")
+        if self.signal_map is None:
+            fn = f'ACT_{self.map_name}_signal.fits.gz'
+            mp = self._rerun_read_cycle(fn, 'FITSMap', self._get_signal_map)
+            self.signal_map = [mp]
+        return self.signal_map
 
     def _get_pixell_mask(self):
         if self.pixell_mask is None:
             self.pixell_mask = enmap.read_map(self.file_mask)
         return self.pixell_mask
-
-    def _get_mask(self):
-        self.pixell_mask = self._get_pixell_mask()
-        msk = reproject.healpix_from_enmap(self.pixell_mask,
-                                           lmax=self.lmax,
-                                           nside=self.nside)
-        return msk
 
     def get_mask(self):
         if self.mask is None:

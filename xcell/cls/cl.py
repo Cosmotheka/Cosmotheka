@@ -302,6 +302,7 @@ class Cl(ClBase):
                 n_b = mapper2.mask_power
                 w_a = mapper1.get_mask()
                 w_b = mapper2.get_mask()
+
                 correction = np.mean(w_a*w_b)/np.mean(w_a**n_a*w_b**n_b)
                 # Apply correction to all Cl's
                 cl *= correction
