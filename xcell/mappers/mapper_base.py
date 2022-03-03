@@ -16,7 +16,7 @@ class MapperBase(object):
         self.nside = config['nside']
         self.nmt_field = None
         self.beam = None
-        self.custom_auto = Falses
+        self.custom_auto = False
         self.ra_name = "RA"
         self.dec_name = "DEC"
         self._in_rad = False
