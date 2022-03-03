@@ -83,7 +83,7 @@ class MapperWIxSC(MapperBase):
 
     def _mask_catalog(self, cat):
         self.mask = self.get_mask()
-        ra, dec = self.get_radec(cat)
+        ra, dec = self.get_radec()
         ipix = hp.ang2pix(self.nside, ra, dec, lonlat=True)
         # Mask is binary, so 0.1 or 0.00001 doesn't really matter
         return cat[self.mask[ipix] > 0.1]

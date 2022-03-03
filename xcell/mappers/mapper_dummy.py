@@ -206,6 +206,14 @@ class MapperDummy(MapperBase):
                             'auto_22': clc}
         return self.cls_cov
 
+    def get_radec(self):
+        cat = self.get_catalog()
+        if self.in_rad:
+            return (np.degrees(cat[self.ra_name]),
+                    np.degrees(cat[self.dec_name]))
+        else:
+            return cat[self.ra_name], cat[self.dec_name]
+
     def get_dtype(self):
         return self.dtype
 

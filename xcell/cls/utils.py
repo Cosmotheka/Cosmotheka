@@ -64,13 +64,13 @@ def get_cross_match_gals(mapper1, mapper2, return_ix_xmat=False):
     ra1, dec1 = mapper1.get_radec()
     ra2, dec2 = mapper2.get_radec()
 
-    #arcmin = 10/60
-    #sel = (ra1 >= ra2.min() - arcmin) * (ra1 <= ra2.max() + arcmin) * \
+    # arcmin = 10/60
+    # sel = (ra1 >= ra2.min() - arcmin) * (ra1 <= ra2.max() + arcmin) * \
     #      (dec1 >= dec2.min() - arcmin) * (dec1 <= dec2.max() + arcmin)
-    #ra1 = ra1[sel]
-    #ra2 = ra2[sel]
-    #dec1 = dec1[sel]
-    #dec2 = dec2[sel]
+    # ra1 = ra1[sel]
+    # ra2 = ra2[sel]
+    # dec1 = dec1[sel]
+    # dec2 = dec2[sel]
 
     # Based on
     # https://github.com/LSSTDESC/DEHSC_LSS/blob/master/hsc_lss/cosmos_weight.py
