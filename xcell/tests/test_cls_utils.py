@@ -1,4 +1,3 @@
-import numpy as np
 from xcell.mappers import MapperDummy
 from astropy.coordinates import SkyCoord
 from xcell.cls.utils import remove_further_duplicates, get_cross_match_gals
@@ -34,17 +33,14 @@ def get_config(fsky=0.2, fsky2=0.3,
 def test_get_cross_match_gals():
     data = get_config()
     mapper = MapperDummy(data['tracers']['Dummy__0'])
-    gals12, gals21 = get_cross_match_gals(mapper, mapper)
-    assert len(gals12) == len(gals21)
-    assert len(gals12) == len(mapper.get_catalog())
+    gals_xmatch = get_cross_match_gals(mapper, mapper)
+    assert len(gals_xmatch) == len(mapper.get_catalog())
 
 
 def test_remove_further_duplicates():
     data = get_config()
     mapper = MapperDummy(data['tracers']['Dummy__0'])
-    cat = mapper.get_catalog()
-    cat_cols = mapper._get_radec_names()
-    ra, dec = np.array([np.array(cat[i]) for i in cat_cols])
+    ra, dec = mapper.get_radec()
     cat1_skycoord = SkyCoord(ra=ra, dec=dec, unit='deg')
     cat2_skycoord = SkyCoord(ra=ra, dec=dec, unit='deg')
     cat1_index, dist_2d, _ = \

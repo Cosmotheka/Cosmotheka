@@ -197,18 +197,9 @@ class Cl(ClBase):
         if (cat1 is None) or (cat2 is None):
             print("Either mapper doesn't have a catalog")
             return shot_noise
-        cat1_xmat, cat2_xmat = get_cross_match_gals(mapper1, mapper2)
-        shared_1 = len(cat1_xmat)
-        shared_2 = len(cat2_xmat)
-        if shared_1 != shared_2:
-            print('# galaxies in of mapper1 in mapper2 different ',
-                  'from # galaxies of mappe2 in maper1.',
-                  ' Returning 0')
-            # Why are they not the same?
-            return shot_noise
-        else:
-            shared_count = shared_1
-        if (shared_1 == 0) or (shared_2 == 0):
+        cat_xmat = get_cross_match_gals(mapper1, mapper2)
+        shared_count = len(cat_xmat)
+        if shared_count == 0:
             print('No sources matched')
             return shot_noise
         else:

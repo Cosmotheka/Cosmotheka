@@ -19,7 +19,7 @@ class MapperBase(object):
         self.custom_auto = False
         self.ra_name = "RA"
         self.dec_name = "DEC"
-        self._in_rad = False
+        self.in_rad = False
         # Option introduced to modify the Mode Coupling Matrix
         # In case the map has an implicit mask applied
         # See ACTk case for an example
