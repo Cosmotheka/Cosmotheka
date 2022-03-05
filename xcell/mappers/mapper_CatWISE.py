@@ -67,7 +67,7 @@ class MapperCatWISE(MapperBase):
                 ec_lat_map = 90-np.degrees(theta_EC)
                 
                 # this hard-coded number stems from the fit in 2009.14826
-                dens += 0.0513 / pixelarea_deg2 * np.abs(ec_lat_map)
+                dens += 0.0513 * np.abs(ec_lat_map)
                 # modity the number counts per pixel before computing density contrast below
                 nmap_data = dens * pixelarea_deg2
             ####
