@@ -62,14 +62,14 @@ def get_cross_match_gals(mapper1, mapper2, return_ix_xmat=False):
 
     if np.abs(rdev) > 0:
         print('Removing multiple cross-matching', flush=True)
-        pix_xmat, dist_2d_xmat, sel = remove_further_duplicates(id_xmat,
+        id_xmat, dist_2d_xmat, sel = remove_further_duplicates(id_xmat,
                                                                 dist_2d[mask])
         # Update mask
         ix_to_remove = np.where(~sel)[0]
         ix_true_in_mask = np.where(mask)[0]
         mask[ix_true_in_mask[ix_to_remove]] = False
 
-        rdev = pix_xmat.size / np.unique(pix_xmat).size - 1
+        rdev = id_xmat.size / np.unique(id_xmat).size - 1
         print(f'Multiple cross-matching after cleaning: {100 * rdev:.2f}%',
               flush=True)
 

@@ -240,7 +240,7 @@ class Cl(ClBase):
                 nl = np.zeros([n_cls, self.b.get_n_bands()])
             # Add shot noise due to sky overlap (zero if no overlap)
             nl_cross = self.get_shared_shot_noise(mapper1, mapper2)
-            nl_cp += nl_cross*np.ones_like(nl_cp)
+            nl += nl_cross*np.ones_like(nl)
 
             # Signal
             if auto and mapper1.custom_auto:
