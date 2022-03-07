@@ -18,7 +18,8 @@ nside = 4096
 data_WIxSC = '/mnt/extraspace/damonge/Datasets/2MPZ_WIxSC/'
 WIxSC_config = {'data_catalog': data_WIxSC+'WIxSC.fits',
                'mask': data_WIxSC+'WISExSCOSmask_galactic.fits.gz',
-               'star_map': data_WIxSC+'stars.fits',
+               #'star_map': data_WIxSC+'stars.fits',
+               'apply_galactic_correction': False,
                'spec_sample': data_WIxSC+'zSpec-comp-WIxSC.csv',
                'bin_name': '0',
                'coordinates': 'C',
