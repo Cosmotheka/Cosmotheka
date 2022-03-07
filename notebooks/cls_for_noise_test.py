@@ -1,6 +1,7 @@
 import sys
 sys.path.insert(1, '/mnt/zfsusers/jaimerz/PhD/xCell')
 from xcell.mappers import MapperDELS
+from xcell.mappers import MapperWIxSC
 from xcell.mappers import MapperCatWISE
 from xcell.mappers import MapperNVSS
 from xcell.mappers import utils
@@ -14,7 +15,7 @@ import healpy as hp
 import os
 
 nside = 4096
-data_WIxSC = '/home/jaime/PhD/xCell/data/2MPZ_WIxSC/'
+data_WIxSC = '/mnt/extraspace/damonge/Datasets/2MPZ_WIxSC/'
 WIxSC_config = {'data_catalog': data_WIxSC+'WIxSC.fits',
                'mask': data_WIxSC+'WISExSCOSmask_galactic.fits.gz',
                'star_map': data_WIxSC+'stars.fits',
