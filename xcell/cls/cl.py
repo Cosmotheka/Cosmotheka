@@ -198,6 +198,9 @@ class Cl(ClBase):
             print("Either mapper doesn't have a catalog")
             return shot_noise
         cat_xmat = get_cross_match_gals(mapper1, mapper2)
+        # Make sure cat_xmat has already been masked
+        # Cats contain galaxies that will be masked when getting the signal
+        # Make sure we are not matching those
         shared_count = len(cat_xmat)
         if shared_count == 0:
             print('No sources matched')
@@ -205,11 +208,11 @@ class Cl(ClBase):
         else:
             Apix = 4*np.pi/hp.nside2npix(mapper1.nside)
             # Both mappers should have the same nside
-            shared_ndensity = np.sum(shared_sky)*shared_count/Apix
+            shared_ndensity = shared_count/(np.sum(shared_sky)*Apix)
             cat1_count = len(cat1)
-            cat1_ndensity = np.sum(mapper1.get_mask())*cat1_count/Apix
+            cat1_ndensity = cat1_count/(np.sum(mask1)*Apix)
             cat2_count = len(cat2)
-            cat2_ndensity = np.sum(mapper1.get_mask())*cat2_count/Apix
+            cat2_ndensity = cat2_count/(Apix*np.sum(mask2))
             shot_noise += shared_ndensity/(cat1_ndensity*cat2_ndensity)
         return shot_noise
 
