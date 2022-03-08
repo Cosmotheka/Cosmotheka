@@ -46,9 +46,10 @@ class MapperCatWISE(MapperBase):
             nmap_data = get_map_from_points(self.cat_data, self.nside,
                                             ra_name='ra',
                                             dec_name='dec')
+            goodpix = self.mask > 0
             
             #### ecliptic latitude correction -- SvH 5/3/22
-            if apply_ecliptic_correction :
+            if apply_ecliptic_correction:
                 
                 # The fit that lead to the ecl. lat. correction was done on the density map
                 # not the density contrast, hence introduce the density here.
@@ -73,7 +74,6 @@ class MapperCatWISE(MapperBase):
             ####
             
             mean_n = np.average(nmap_data, weights=self.mask)
-            goodpix = self.mask > 0
             # Division by mask not really necessary, since it's binary.
             d[goodpix] = nmap_data[goodpix]/(mean_n*self.mask[goodpix])-1
             self.delta_map = np.array([d])
