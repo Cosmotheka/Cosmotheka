@@ -52,7 +52,7 @@ def test_get_signal_map():
     config['GLAT_max_deg'] = 0.
     config.pop('mask_sources')
     m = xc.mappers.MapperCatWISE(config)
-    d = m.get_signal_map()
+    d = m.get_signal_map(apply_ecliptic_correction=False)
     d = np.array(d)
     print(d)
     assert d.shape == (1, hp.nside2npix(m.nside))
