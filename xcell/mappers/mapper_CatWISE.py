@@ -53,9 +53,9 @@ class MapperCatWISE(MapperBase):
                 # done on the density map not the density contrast,
                 # hence introduce the density here.
                 dens = np.zeros(self.npix)
-                pixelarea_deg2 = (hp.nside2resol(self.nside, arcmin=True)/60)**2
+                pixarea_deg2 = (hp.nside2resol(self.nside, arcmin=True)/60)**2
                 dens[goodpix] = (nmap_data[goodpix] /
-                                 pixelarea_deg2) * self.mask[goodpix]
+                                 pixarea_deg2) * self.mask[goodpix]
                 # Transforms equatorial to ecliptic coordinates
                 r = hp.Rotator(coord=['C', 'E'])
                 # Get equatorial coordinates
@@ -68,7 +68,7 @@ class MapperCatWISE(MapperBase):
                 dens += 0.0513 * np.abs(ec_lat_map)
                 # modify the number counts per pixel before computing
                 # density contrast below
-                nmap_data = dens * pixelarea_deg2
+                nmap_data = dens * pixarea_deg2
             #
             mean_n = np.average(nmap_data, weights=self.mask)
             # Division by mask not really necessary, since it's binary.
