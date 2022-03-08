@@ -54,7 +54,7 @@ class MapperCatWISE(MapperBase):
                 # not the density contrast, hence introduce the density here.
                 dens = np.zeros(self.npix)
                 
-                pixelarea_deg2 = (hp.nside2resol(self.nside,arcmin=True)/60)**2
+                pixelarea_deg2 = (hp.nside2resol(self.nside, arcmin=True)/60)**2
                 dens[goodpix] = nmap_data[goodpix] / pixelarea_deg2 * self.mask[goodpix]
                 
                 # Transforms equatorial to ecliptic coordinates
