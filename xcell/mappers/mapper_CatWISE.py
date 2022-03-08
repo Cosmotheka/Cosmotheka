@@ -38,7 +38,7 @@ class MapperCatWISE(MapperBase):
         return self.cat_data
 
     # Density Map
-    def get_signal_map(self, apply_galactic_correction=True):
+    def get_signal_map(self, apply_ecliptic_correction=True):
         if self.delta_map is None:
             d = np.zeros(self.npix)
             self.cat_data = self.get_catalog()
@@ -48,7 +48,7 @@ class MapperCatWISE(MapperBase):
                                             dec_name='dec')
             
             #### ecliptic latitude correction -- SvH 5/3/22
-            if apply_galactic_correction :
+            if apply_ecliptic_correction :
                 
                 # The fit that lead to the ecl. lat. correction was done on the density map
                 # not the density contrast, hence introduce the density here.
