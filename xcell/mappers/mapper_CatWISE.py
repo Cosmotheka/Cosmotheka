@@ -54,18 +54,21 @@ class MapperCatWISE(MapperBase):
                 # hence introduce the density here.
                 dens = np.zeros(self.npix)
                 pixelarea_deg2 = (hp.nside2resol(self.nside, arcmin=True)/60)**2
-                dens[goodpix] = nmap_data[goodpix] / pixelarea_deg2 * self.mask[goodpix]
+                dens[goodpix] = (nmap_data[goodpix] / 
+                                 pixelarea_deg2) * self.mask[goodpix]
                 # Transforms equatorial to ecliptic coordinates
                 r = hp.Rotator(coord=['C', 'E'])
                 # Get equatorial coordinates
-                theta_EQ, phi_EQ = hp.pix2ang(self.nside, np.arange(hp.nside2npix(self.nside)))
+                theta_EQ, phi_EQ = hp.pix2ang(self.nside,
+                                              np.arange(hp.nside2npix(self.nside)))
                 # Rotate to ecliptic
                 theta_EC, phi_EC = r(theta_EQ, phi_EQ)
                 # Make a map of ecliptic latitude
                 ec_lat_map = 90-np.degrees(theta_EC)
                 # this hard-coded number stems from the fit in 2009.14826
                 dens += 0.0513 * np.abs(ec_lat_map)
-                # modity the number counts per pixel before computing density contrast below
+                # modify the number counts per pixel before computing 
+                # density contrast below
                 nmap_data = dens * pixelarea_deg2
             #
             mean_n = np.average(nmap_data, weights=self.mask)
