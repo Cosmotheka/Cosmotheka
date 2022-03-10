@@ -9,13 +9,16 @@ class MapperCatWISE(MapperBase):
     def __init__(self, config):
         """
         config - dict
-          {'data_catalog': 'xcell/tests/data/
-          catwise_agns_masked_final_w1lt16p5_alpha.fits',
-           'mask': 'xcell/tests/data/MASKS_exclude_master_final.fits',
-           'mask_name': 'mask_CatWISE'}
+        {'data_catalog':
+        'xcell/tests/data/catwise_agns_masked_final_w1lt16p5_alpha.fits',
+        'mask': 'xcell/tests/data/MASKS_exclude_master_final.fits',
+        'mask_name': 'mask_CatWISE',
+        'apply_ecliptic_correction': True}
         """
         self._get_defaults(config)
         self.file_sourcemask = config.get('mask_sources', None)
+        self.apply_ecliptic_correction = \
+            config.get('apply_ecliptic_correction', True)
         self.cat_data = None
 
         self.npix = hp.nside2npix(self.nside)
@@ -37,39 +40,38 @@ class MapperCatWISE(MapperBase):
                  self.config.get('flux_max_W1', 16.4))]
         return self.cat_data
 
+    # Correction to Density
+    def get_ecliptic_correction(self):
+        pixarea_deg2 = (hp.nside2resol(self.nside, arcmin=True)/60)**2
+        # Transforms equatorial to ecliptic coordinates
+        r = hp.Rotator(coord=['C', 'E'])
+        # Get equatorial coordinates
+        theta_EQ, phi_EQ = hp.pix2ang(self.nside, np.arange(self.npix))
+        # Rotate to ecliptic
+        theta_EC, phi_EC = r(theta_EQ, phi_EQ)
+        # Make a map of ecliptic latitude
+        ec_lat_map = 90-np.degrees(theta_EC)
+        # this hard-coded number stems from the fit in 2009.14826
+        correction = 0.0513 * np.abs(ec_lat_map) * pixarea_deg2
+        return correction
+
     # Density Map
-    def get_signal_map(self, apply_ecliptic_correction=True):
+    def get_signal_map(self):
         if self.delta_map is None:
             d = np.zeros(self.npix)
             self.cat_data = self.get_catalog()
             self.mask = self.get_mask()
+            # ecliptic latitude correction -- SvH 5/3/22
+            if self.apply_ecliptic_correction:
+                correction = self.get_ecliptic_correction()
+            else:
+                correction = np.zeros_like(d)
             nmap_data = get_map_from_points(self.cat_data, self.nside,
                                             ra_name='ra',
                                             dec_name='dec')
-            goodpix = self.mask > 0
-            # ecliptic latitude correction -- SvH 5/3/22
-            if apply_ecliptic_correction:
-                # The fit that lead to the ecl. lat. correction was
-                # done on the density map not the density contrast,
-                # hence introduce the density here.
-                dens = np.zeros(self.npix)
-                pixarea_deg2 = (hp.nside2resol(self.nside, arcmin=True)/60)**2
-                dens[goodpix] = (nmap_data[goodpix] /
-                                 pixarea_deg2) * self.mask[goodpix]
-                # Transforms equatorial to ecliptic coordinates
-                r = hp.Rotator(coord=['C', 'E'])
-                # Get equatorial coordinates
-                theta_EQ, phi_EQ = hp.pix2ang(self.nside, np.arange(self.npix))
-                # Rotate to ecliptic
-                theta_EC, phi_EC = r(theta_EQ, phi_EQ)
-                # Make a map of ecliptic latitude
-                ec_lat_map = 90-np.degrees(theta_EC)
-                # this hard-coded number stems from the fit in 2009.14826
-                dens += 0.0513 * np.abs(ec_lat_map)
-                # modify the number counts per pixel before computing
-                # density contrast below
-                nmap_data = dens * pixarea_deg2
+            nmap_data = nmap_data + correction
             #
+            goodpix = self.mask > 0
             mean_n = np.average(nmap_data, weights=self.mask)
             # Division by mask not really necessary, since it's binary.
             d[goodpix] = nmap_data[goodpix]/(mean_n*self.mask[goodpix])-1
