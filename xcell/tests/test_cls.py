@@ -113,7 +113,7 @@ def test_cl_correction():
 
 
 @pytest.mark.parametrize('tracer1,tracer2,nl_cross_b',
-                         [('Dummy__2', 'Dummy__3', 8.34850793114762e-12),
+                         [('Dummy__2', 'Dummy__3', 0.000831708),
                           ('Dummy__3', 'Dummy__4', 0)])
 def test_nl_cross(tracer1, tracer2, nl_cross_b):
     data = get_config()
@@ -122,7 +122,7 @@ def test_nl_cross(tracer1, tracer2, nl_cross_b):
     mapper2 = MapperDummy(data['tracers'][tracer2])
     nl_cross = cl_class.get_shared_shot_noise(mapper1,
                                               mapper2)
-    assert nl_cross == nl_cross_b
+    assert (nl_cross-nl_cross_b) < 1E-5
 
 
 def test_get_nmtbin():
