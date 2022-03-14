@@ -55,6 +55,14 @@ def get_tracer_pair_iterator(data):
             yield t1, t2
 
 
+def test_input_from_another_file():
+    # This tests whether we can load yaml files that
+    # include other yaml files within them.
+    d = Data('xcell/tests/data/conftest.yml')
+    assert d.data['tracers']['DESgc__1']['bias'] == 1.76
+    remove_yml_file(d.data)
+
+
 def test_will_be_computed():
     d = get_data()
     n1 = d.will_pair_be_computed('DESwl__0', 'DESwl__1')
