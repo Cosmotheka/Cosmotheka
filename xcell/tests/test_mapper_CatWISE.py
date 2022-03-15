@@ -64,7 +64,7 @@ def test_get_signal_map():
 def test_ecliptic_correction():
     config = get_config()
     m = xc.mappers.MapperCatWISE(config)
-    d = m.get_ecliptic_correction()
+    d = m._get_ecliptic_correction()
     d = np.array(d)
     print(d)
     pixarea_deg2 = (hp.nside2resol(m.nside, arcmin=True)/60)**2

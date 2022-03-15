@@ -41,7 +41,7 @@ class MapperCatWISE(MapperBase):
         return self.cat_data
 
     # Correction to Density
-    def get_ecliptic_correction(self):
+    def _get_ecliptic_correction(self):
         pixarea_deg2 = (hp.nside2resol(self.nside, arcmin=True)/60)**2
         # Transforms equatorial to ecliptic coordinates
         r = hp.Rotator(coord=['C', 'E'])
@@ -61,14 +61,14 @@ class MapperCatWISE(MapperBase):
             d = np.zeros(self.npix)
             self.cat_data = self.get_catalog()
             self.mask = self.get_mask()
-            # ecliptic latitude correction -- SvH 5/3/22
-            if self.apply_ecliptic_correction:
-                correction = self.get_ecliptic_correction()
-            else:
-                correction = np.zeros_like(d)
             nmap_data = get_map_from_points(self.cat_data, self.nside,
                                             ra_name='ra',
                                             dec_name='dec')
+            # ecliptic latitude correction -- SvH 5/3/22
+            if self.apply_ecliptic_correction:
+                correction = self._get_ecliptic_correction()
+            else:
+                correction = np.zeros_like(d)
             nmap_data = nmap_data + correction
             #
             goodpix = self.mask > 0
