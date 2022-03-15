@@ -7,6 +7,21 @@ import os
 import shutil
 
 
+class CustomLoader(yaml.SafeLoader):
+    # This was copied from https://stackoverflow.com/questions/528281
+    def __init__(self, stream):
+        super(CustomLoader, self).__init__(stream)
+
+    def include(self, node):
+        filename = self.construct_scalar(node)
+
+        with open(filename, 'r') as f:
+            return yaml.load(f, CustomLoader)
+
+
+CustomLoader.add_constructor('!include', CustomLoader.include)
+
+
 class Data():
     def __init__(self, data_path='', data={}, override=False,
                  ignore_existing_yml=False):
@@ -69,7 +84,7 @@ class Data():
 
     def read_data(self, data_path):
         with open(data_path) as f:
-            data = yaml.safe_load(f)
+            data = yaml.load(f, CustomLoader)
         return data
 
     def get_tracers_used(self, wsp=False):

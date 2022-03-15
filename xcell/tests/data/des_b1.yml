@@ -1,0 +1,9 @@
+data_catalog: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits'
+file_mask: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits'
+file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/data_vector/2pt_NG_mcal_1110.fits'
+zbin: 1
+mask_name: 'mask_DESgc'
+mapper_class: 'MapperDESY1gc'
+# 1.60 -> Increased by 10% to match BF amplitude
+bias: 1.76
+threshold: 0.5

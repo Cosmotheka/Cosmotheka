@@ -1,0 +1,59 @@
+tracers:
+  # Biases from Table II of DES 5x2pt paper
+  DESgc__0:
+    data_catalog: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits'
+    file_mask: '/mnt/extraspace/damonge/S8z_data/DES_data/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits'
+    file_nz: '/mnt/extraspace/damonge/S8z_data/DES_data/data_vector/2pt_NG_mcal_1110.fits'
+    zbin: 0
+    mask_name: 'mask_DESgc'
+    mapper_class: 'MapperDESY1gc'
+    # 1.41 -> Increased by 5% to match BF amplitude
+    bias: 1.48
+    threshold: 0.5
+
+
+  DESgc__1: !include xcell/tests/data/des_b1.yml
+
+cls:
+  # Options: all, cross, None
+  DESgc-DESgc:
+    compute: 'auto'
+
+bpw_edges: [0, 30, 60, 90, 120, 150, 180]
+
+cov:
+  fiducial:
+    cosmo:
+      Omega_c: 0.2640
+      Omega_b: 0.0493
+      h: 0.6736
+      n_s: 0.9649
+      sigma8: 0.8111
+      w0: -1
+      wa: 0
+      transfer_function: 'boltzmann_class'
+      baryons_power_spectrum: 'nobaryons'
+
+toeplitz:
+  cls:
+    l_toeplitz: -1
+    l_exact: -1
+    dl_band: -1
+  cov:
+    l_toeplitz: 2750
+    l_exact: 1000
+    dl_band: 2000
+
+sphere:
+  n_iter_sht: 0
+  n_iter_mcm: 3
+  n_iter_cmcm: 3
+  nside: 4096
+
+recompute:
+  cls: False
+  cov: False
+  mcm: False
+  cmcm: False
+
+output:  './xcell/tests/cls/'
