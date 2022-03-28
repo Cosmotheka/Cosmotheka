@@ -69,18 +69,30 @@ def save_rerun_data(mpr, fname, ftype, data):
         raise ValueError(f"Unknown file format {ftype}")
 
 
-def get_map_from_points(cat, nside, w=None,
+def rotate_mask(mask, rot, binarize):
+    if rot is None:
+        return mask
+
+    m = rot.rotate_map_pixel(mask)
+    if binarize:
+        m[m < 0.5] = 0
+        m[m >= 0.5] = 1
+    return
+
+
+def get_map_from_points(cat, nside, w=None, rot=None,
                         ra_name='RA', dec_name='DEC',
                         in_radians=False):
     npix = hp.nside2npix(nside)
     if in_radians:
-        ipix = hp.ang2pix(nside,
-                          np.degrees(cat[ra_name]),
-                          np.degrees(cat[dec_name]),
-                          lonlat=True)
+        lon = np.degrees(cat[ra_name])
+        lat = np.degrees(cat[dec_name])
     else:
-        ipix = hp.ang2pix(nside, cat[ra_name], cat[dec_name],
-                          lonlat=True)
+        lon = cat[ra_name]
+        lat = cat[dec_name]
+    if rot is not None:
+        lon, lat = rot(lon, lat, lonlat=True)
+    ipix = hp.ang2pix(nside, lon, lat, lonlat=True)
     numcount = np.bincount(ipix, weights=w, minlength=npix)
     return numcount
 

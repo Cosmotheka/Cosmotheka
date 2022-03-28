@@ -21,6 +21,7 @@ class MapperBase(object):
         # In case the map has an implicit mask applied
         # See ACTk case for an example
         self.mask_power = config.get('mask_power', 1)
+        self.coords = config['coords']
 
     def get_signal_map(self):
         raise NotImplementedError("Do not use base class")
