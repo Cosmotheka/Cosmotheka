@@ -10,7 +10,7 @@ def get_config():
             'mask': 'xcell/tests/data/map.fits',
             'z_edges': [-1E-10, 0.5],
             'path_rerun': '.',
-            'coordinates': 'C',
+            'coords': 'C',
             'nside': 32, 'mask_name': 'mask'}
 
 

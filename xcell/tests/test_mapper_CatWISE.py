@@ -9,7 +9,7 @@ def get_config():
     return {'data_catalog':
             'xcell/tests/data/catalog_CatWISE.fits',
             'mask_sources': 'xcell/tests/data/MASKS_exclude_master_final.fits',
-            'nside': 32, 'mask_name': 'mask'}
+            'nside': 32, 'mask_name': 'mask', 'coords': 'C'}
 
 
 def make_fake_data():

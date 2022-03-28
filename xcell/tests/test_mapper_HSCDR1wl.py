@@ -85,7 +85,7 @@ def get_config():
             'bin_name': 'bin_test',
             'fname_cosmos': 'xcell/tests/data/hsc_cosmos_catalog.fits',
             'fnames_cosmos_ph': ['xcell/tests/data/hsc_photoz_catalog.fits'],
-            'nside': 32, 'mask_name': 'mask'}
+            'nside': 32, 'mask_name': 'mask', 'coords': 'C'}
 
 
 def remove_rerun(prerun):

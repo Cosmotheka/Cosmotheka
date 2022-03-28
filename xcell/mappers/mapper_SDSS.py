@@ -75,8 +75,8 @@ class MapperSDSS(MapperBase):
 
     def _get_map_fname(self, mp='mask'):
         return '_'.join([f'SDSS_{self.SDSS_name}_{mp}',
-                         f'_coord{self.coords}',
-                         f'_ns{self.nside}.fits.gz'])
+                         f'coord{self.coords}',
+                         f'ns{self.nside}.fits.gz'])
 
     def _get_signal_map(self):
         delta_map = np.zeros(self.npix)
@@ -153,8 +153,8 @@ class MapperSDSS(MapperBase):
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             fn = '_'.join([f'SDSS_{self.SDSS_name}_Nell',
-                           f'_coord{self.coords}',
-                           f'_ns{self.nside}.npz'])
+                           f'coord{self.coords}',
+                           f'ns{self.nside}.npz'])
             d = self._rerun_read_cycle(fn, 'NPZ',
                                        self._get_nl_coupled)
             self.nl_coupled = d['nls']

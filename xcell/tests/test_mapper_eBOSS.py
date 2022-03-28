@@ -9,7 +9,7 @@ def get_config():
             'random_catalogs': ['xcell/tests/data/catalog.fits',
                                 'xcell/tests/data/catalog.fits'],
             'z_edges': [0, 1.5], 'nside': 32, 'mask_name': 'mask',
-            'SDSS_name': 'dummy'}
+            'SDSS_name': 'dummy', 'coords': 'C'}
 
 
 def get_mapper(c=None):

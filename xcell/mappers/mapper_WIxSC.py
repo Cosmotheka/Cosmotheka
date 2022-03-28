@@ -48,13 +48,12 @@ class MapperWIxSC(MapperBase):
             return cat[self.ra_name], cat[self.dec_name]
 
     def _get_coords(self, config):
-        coords = config.get('coordinates', 'G')
-        if coords == 'G':  # Galactic
+        if self.coords == 'G':  # Galactic
             return 'L', 'B', False
-        elif coords == 'C':  # Celestial/Equatorial
+        elif self.coords == 'C':  # Celestial/Equatorial
             return 'RA', 'DEC', True
         else:
-            raise NotImplementedError(f"Unknown coordinates {coords}")
+            raise NotImplementedError(f"Unknown coordinates {self.coords}")
 
     def _get_catalog(self):
         file_data = self.config['data_catalog']
@@ -150,6 +149,8 @@ class MapperWIxSC(MapperBase):
 
     def get_mask(self):
         if self.mask is None:
+            # We will assume the mask has been provided in the right
+            # coordinates, so no further conversion is needed.
             self.mask = hp.ud_grade(hp.read_map(self.config['mask']),
                                     nside_out=self.nside)
         return self.mask

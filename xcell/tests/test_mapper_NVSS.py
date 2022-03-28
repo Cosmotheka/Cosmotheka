@@ -8,7 +8,7 @@ from astropy.table import Table
 def get_config():
     return {'data_catalog': 'xcell/tests/data/catalog_nvss.fits',
             'mask_sources': 'xcell/tests/data/source_masks_nvss.txt',
-            'nside': 32, 'mask_name': 'mask',
+            'nside': 32, 'mask_name': 'mask', 'coords': 'C',
             'redshift_catalog': 'xcell/tests/data/redshift_catalog_nvss.fits'}
 
 

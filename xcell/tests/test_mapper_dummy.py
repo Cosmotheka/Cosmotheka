@@ -17,7 +17,7 @@ def get_config(dtype='galaxy_density', fsky=0.2):
       'transfer_function': 'boltzmann_camb',
       'baryons_power_spectrum': 'nobaryons'}
     return {'seed': 0, 'nside': 32, 'fsky': fsky, 'cosmo': cosmo,
-            'dtype': dtype}
+            'dtype': dtype, 'coords': 'C'}
 
 
 def get_mapper(dtype='galaxy_density', fsky=0.2):

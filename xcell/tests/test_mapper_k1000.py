@@ -13,6 +13,7 @@ def get_config(w_stars=False):
     return {'data_catalog': fname,
             'file_nz': 'xcell/tests/data/Nz_DIR_z0.1t0.3.asc',
             'zbin': 0, 'nside': 32, 'mask_name': 'mask',
+            'coords': 'C',
             'e1_flag': 'bias_corrected_e1',
             'e2_flag': 'bias_corrected_e2'}
 

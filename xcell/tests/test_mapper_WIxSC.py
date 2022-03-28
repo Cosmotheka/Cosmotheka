@@ -15,7 +15,7 @@ def get_config():
             'z_edges': [-1E-10, 0.5],
             'bin_name': '0',
             'path_rerun': '.',
-            'coordinates': 'C',
+            'coords': 'C',
             'apply_galactic_correction': False,
             'nside': 32, 'mask_name': 'mask'}
 

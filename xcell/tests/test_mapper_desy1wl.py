@@ -10,7 +10,8 @@ def get_config():
     return {'data_cat': 'xcell/tests/data/catalog.fits',
             'zbin_cat': 'xcell/tests/data/cat_zbin.fits',
             'file_nz': 'xcell/tests/data/cat_zbin.fits',
-            'zbin': 1, 'nside': 32, 'mask_name': 'mask'}
+            'zbin': 1, 'nside': 32, 'mask_name': 'mask',
+            'coords': 'C'}
 
 
 def get_mapper():

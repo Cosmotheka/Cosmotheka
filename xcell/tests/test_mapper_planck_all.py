@@ -56,6 +56,7 @@ def get_config(mode, wbeam=True):
     if wbeam:
         c['beam_info'] = [{'type': 'Gaussian',
                            'FWHM_arcmin': 0.5}]
+    c['coords'] = 'G'
     return c
 
 

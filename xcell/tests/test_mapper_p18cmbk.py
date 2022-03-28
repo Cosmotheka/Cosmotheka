@@ -11,7 +11,7 @@ def get_config():
             'mask_name': 'mask_CMBK',
             'mask_aposize': 3,  # Must be large than pixel size
             'mask_apotype': 'C1',
-            'nside': 32}
+            'nside': 32, 'coords': 'G'}
 
 
 def get_mapper():

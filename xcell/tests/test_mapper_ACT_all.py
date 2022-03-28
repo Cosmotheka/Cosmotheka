@@ -15,6 +15,7 @@ def get_config(wbeam=True):
          'file_weights': path+'act_zeros.fits.gz',
          'file_beam': path+'act_zeros.fits.gz',
          'map_name': 'test',
+         'coords': 'C',
          'nside': 32}
     return c
 
