@@ -209,8 +209,7 @@ class MapperKV450(MapperBase):
             wcol = data['weight']**2*0.5*(data[e1f]**2+data[e2f]**2)
             w2s2 = get_map_from_points(data, self.nside, w=wcol,
                                        ra_name='ALPHA_J2000',
-                                       dec_name='DELTA_J2000',
-                                       rot=self.rot)
+                                       dec_name='DELTA_J2000')
             return w2s2
 
         fn = f'KV450_w2s2_{kind}_bin{self.zbin}_ns{self.nside}.fits.gz'

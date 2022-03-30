@@ -1,4 +1,5 @@
 from .mapper_Planck_base import MapperPlanckBase
+from .utils import rotate_map
 import healpy as hp
 import numpy as np
 
@@ -36,12 +37,14 @@ class MapperP15CIB(MapperPlanckBase):
     def _get_hm_maps(self):
         if self.hm1_map is None:
             hm1_map = hp.read_map(self.file_hm1)
+            hm1_map = rotate_map(hm1_map, self.rot)
             self.hm1_map = [hp.ud_grade(hm1_map,
                             nside_out=self.nside)]
             self.hm1_map[0][self.hm1_map[0] == hp.UNSEEN] = 0.0
             self.hm1_map[0][np.isnan(self.hm1_map[0])] = 0.0
         if self.hm2_map is None:
             hm2_map = hp.read_map(self.file_hm2)
+            hm2_map = rotate_map(hm2_map, self.rot)
             self.hm2_map = [hp.ud_grade(hm2_map,
                             nside_out=self.nside)]
             self.hm2_map[0][self.hm2_map[0] == hp.UNSEEN] = 0.0

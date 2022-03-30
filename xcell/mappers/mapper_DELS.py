@@ -1,5 +1,5 @@
+from .utils import get_map_from_points, rotate_map, rotate_mask
 from .mapper_base import MapperBase
-from .utils import get_map_from_points
 from astropy.table import Table, vstack
 from scipy.integrate import simps
 import numpy as np

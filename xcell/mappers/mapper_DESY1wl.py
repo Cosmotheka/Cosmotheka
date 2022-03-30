@@ -1,3 +1,4 @@
+from .utils import get_map_from_points, rotate_mask, rotate_map
 from .mapper_base import MapperBase
 from .utils import get_map_from_points
 from astropy.table import Table, hstack
@@ -22,6 +23,10 @@ class MapperDESY1wl(MapperBase):
 
         self._get_defaults(config)
         self.config = config
+        if self.coords != 'C':
+            self.rot = hp.Rotator(coord=['C', self.coords])
+        else:
+            self.rot = None
         self.mode = config.get('mode', 'shear')
         self.zbin = config['zbin']
         self.npix = hp.nside2npix(self.nside)
@@ -158,11 +163,13 @@ class MapperDESY1wl(MapperBase):
         we1 = get_map_from_points(cat_data, self.nside,
                                   w=cat_data[e1f],
                                   ra_name='ra',
-                                  dec_name='dec')
+                                  dec_name='dec',
+                                  rot=self.rot)
         we2 = get_map_from_points(cat_data, self.nside,
                                   w=cat_data[e2f],
                                   ra_name='ra',
-                                  dec_name='dec')
+                                  dec_name='dec',
+                                  rot=self.rot)
         mask = self.get_mask()
         goodpix = mask > 0
         we1[goodpix] /= mask[goodpix]
@@ -197,7 +204,8 @@ class MapperDESY1wl(MapperBase):
     def _get_mask(self):
         cat_data = self.get_catalog()
         msk = get_map_from_points(cat_data, self.nside,
-                                  ra_name='ra', dec_name='dec')
+                                  ra_name='ra', dec_name='dec',
+                                  rot=self.rot)
         return msk
 
     def get_mask(self):
@@ -222,7 +230,8 @@ class MapperDESY1wl(MapperBase):
             mp = get_map_from_points(cat_data, self.nside,
                                      w=0.5*(cat_data[e1f]**2 +
                                             cat_data[e2f]**2),
-                                     ra_name='ra', dec_name='dec')
+                                     ra_name='ra', dec_name='dec',
+                                     rot=self.rot)
             return mp
 
         fn = f'DESY1wl_{mod}_w2s2_bin{self.zbin}_ns{self.nside}.fits.gz'

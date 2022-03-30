@@ -1,5 +1,5 @@
 from .mapper_base import MapperBase
-from .utils import get_map_from_points
+from .utils import get_map_from_points, rotate_map, rotate_mask
 from astropy.table import Table
 import numpy as np
 import healpy as hp
@@ -15,6 +15,10 @@ class MapperNVSS(MapperBase):
            'redshift_catalog':'100sqdeg_1uJy_s1400.fits'}
         """
         self._get_defaults(config)
+        if self.coords != 'C':
+            self.rot = hp.Rotator(coord=['C', self.coords])
+        else:
+            self.rot = None
         self.file_sourcemask = config.get('mask_sources', None)
         self.ra_name = 'RAJ2000'
         self.dec_name = 'DEJ2000'
@@ -74,7 +78,8 @@ class MapperNVSS(MapperBase):
             self.mask = self.get_mask()
             nmap_data = get_map_from_points(self.cat_data, self.nside,
                                             ra_name=self.ra_name,
-                                            dec_name=self.dec_name)
+                                            dec_name=self.dec_name,
+                                            rot=self.rot)
             mean_n = np.average(nmap_data, weights=self.mask)
             goodpix = self.mask > 0
             # Division by mask not really necessary, since it's binary.
@@ -87,16 +92,17 @@ class MapperNVSS(MapperBase):
         if self.mask is None:
 
             if self.config.get('mask_file', None) is not None:
-                self.mask = hp.ud_grade(hp.read_map(self.config['mask_file']),
-                                        nside_out=self.nside)
+                mask = hp.read_map(self.config['mask_file'])
+                mask = rotate_mask(mask, self.rot)
+                self.mask = hp.ud_grade(mask, nside_out=self.nside)
             else:
-                self.mask = np.ones(self.npix)
+                mask = np.ones(self.npix)
                 r = hp.Rotator(coord=['C', 'G'])
                 RApix, DEpix = hp.pix2ang(self.nside, np.arange(self.npix),
                                           lonlat=True)
                 lpix, bpix = r(RApix, DEpix, lonlat=True)
                 # angular conditions
-                self.mask[(DEpix < self.config.get('DEC_min_deg', -40)) |
+                mask[(DEpix < self.config.get('DEC_min_deg', -40)) |
                           (np.fabs(bpix) < self.config.get('GLAT_max_deg',
                                                            5))] = 0
                 if self.file_sourcemask is not None:
@@ -108,7 +114,9 @@ class MapperNVSS(MapperBase):
                         ipix_hole = hp.query_disc(self.nside, vec,
                                                   np.radians(radius),
                                                   inclusive=True)
-                        self.mask[ipix_hole] = 0
+                        mask[ipix_hole] = 0
+                self.mask = rotate_mask(mask, self.rot)
+               
         return self.mask
 
     # Shot noise
@@ -118,7 +126,8 @@ class MapperNVSS(MapperBase):
             self.mask = self.get_mask()
             nmap_data = get_map_from_points(self.cat_data, self.nside,
                                             ra_name=self.ra_name,
-                                            dec_name=self.dec_name)
+                                            dec_name=self.dec_name,
+                                            rot=self.rot)
             N_mean = np.average(nmap_data, weights=self.mask)
             N_mean_srad = N_mean * self.npix / (4 * np.pi)
             N_ell = np.mean(self.mask) / N_mean_srad

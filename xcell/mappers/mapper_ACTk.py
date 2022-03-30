@@ -1,4 +1,5 @@
 from .mapper_ACT_base import MapperACTBase
+from .utils import rotate_mask, rotate_map
 from pixell import enmap, reproject
 import numpy as np
 
@@ -22,6 +23,7 @@ class MapperACTk(MapperACTBase):
         mp = reproject.healpix_from_enmap(mp,
                                           lmax=self.lmax,
                                           nside=self.nside)
+        mp = rotate_map(mp, self.rot)
         mp *= np.mean(self.pixell_mask**2)
         return mp
 
@@ -30,6 +32,7 @@ class MapperACTk(MapperACTBase):
         msk = reproject.healpix_from_enmap(self.pixell_mask,
                                            lmax=self.lmax,
                                            nside=self.nside)
+        msk = rotate_mask(msk, self.rot)
         return msk
 
     def get_dtype(self):

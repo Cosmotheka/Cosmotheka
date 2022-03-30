@@ -21,6 +21,10 @@ class MapperHSCDR1wl(MapperBase):
         }
         """
         self._get_defaults(config)
+        if self.coords != 'C':
+            self.rot = hp.Rotator(coord=['C', self.coords])
+        else:
+            self.rot = None
         self.icut = config.get('depth_cut', 24.5)
         self.z_edges = config['z_edges']
         self.bn = self.config['bin_name']
@@ -159,11 +163,13 @@ class MapperHSCDR1wl(MapperBase):
         we1 = get_map_from_points(cat, self.nside,
                                   w=cat['e1']*cat[self.w_name],
                                   ra_name='ra',
-                                  dec_name='dec')
+                                  dec_name='dec',
+                                  rot=self.rot)
         we2 = get_map_from_points(cat, self.nside,
                                   w=cat['e2']*cat[self.w_name],
                                   ra_name='ra',
-                                  dec_name='dec')
+                                  dec_name='dec',
+                                  rot=self.rot)
         mask = self.get_mask()
         goodpix = mask > 0
         we1[goodpix] /= mask[goodpix]
@@ -185,7 +191,8 @@ class MapperHSCDR1wl(MapperBase):
         msk = get_map_from_points(cat, self.nside,
                                   w=cat[self.w_name],
                                   ra_name='ra',
-                                  dec_name='dec')
+                                  dec_name='dec', 
+                                  rot=self.rot)
         return msk
 
     def get_mask(self):

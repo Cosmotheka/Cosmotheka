@@ -1,4 +1,5 @@
 from .mapper_ACT_base import MapperACTBase
+from .utils import rotate_mask, rotate_map
 from pixell import enmap, reproject
 import numpy as np
 from scipy.interpolate import interp1d
@@ -26,6 +27,7 @@ class MapperACTCompSept(MapperACTBase):
             signal_map = reproject.healpix_from_enmap(signal_map,
                                                       lmax=self.lmax,
                                                       nside=self.nside)
+            signal_map = rotate_map(signal_map, self.rot)
         return signal_map
 
     def _get_mask(self):
@@ -41,6 +43,7 @@ class MapperACTCompSept(MapperACTBase):
                                                lmax=self.lmax,
                                                nside=self.nside)
             msk[msk < 0.99] = 0
+            msk = rotate_mask(msk, self.rot)
         return msk
 
     def get_nl_coupled(self):
