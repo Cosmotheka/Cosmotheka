@@ -1,4 +1,4 @@
-from .utils import get_map_from_points, rotate_mask, rotate_map
+from .utils import get_map_from_points, rotate_mask
 from .mapper_base import MapperBase
 from astropy.io import fits
 from astropy.table import Table

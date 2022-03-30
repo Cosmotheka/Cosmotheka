@@ -49,10 +49,10 @@ def test_rerun():
     assert os.path.isfile(f'{prefix}_cat_bin0.fits')
     map1 = np.array(m.get_signal_map())
     mask1 = m.get_mask()
-    assert os.path.isfile(f'{prefix}_signal_shear_bin0_ns32.fits.gz')
-    assert os.path.isfile(f'{prefix}_mask_galaxies_bin0_ns32.fits.gz')
+    assert os.path.isfile(f'{prefix}_signal_shear_bin0_coordC_ns32.fits.gz')
+    assert os.path.isfile(f'{prefix}_mask_galaxies_bin0_coordC_ns32.fits.gz')
     nl1 = m.get_nl_coupled()
-    assert os.path.isfile(f'{prefix}_w2s2_galaxies_bin0_ns32.fits.gz')
+    assert os.path.isfile(f'{prefix}_w2s2_galaxies_bin0_coordC_ns32.fits.gz')
 
     # Non-exsisting fits files - read from rerun
     config['data_catalog'] = 'whatever'

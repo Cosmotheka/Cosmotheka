@@ -1,5 +1,5 @@
 from .mapper_base import MapperBase
-from .utils import get_map_from_points, rotate_map, rotate_mask
+from .utils import get_map_from_points, rotate_mask
 from astropy.table import Table
 import numpy as np
 import healpy as hp
@@ -103,8 +103,8 @@ class MapperNVSS(MapperBase):
                 lpix, bpix = r(RApix, DEpix, lonlat=True)
                 # angular conditions
                 mask[(DEpix < self.config.get('DEC_min_deg', -40)) |
-                          (np.fabs(bpix) < self.config.get('GLAT_max_deg',
-                                                           5))] = 0
+                     (np.fabs(bpix) < self.config.get('GLAT_max_deg',
+                      5))] = 0
                 if self.file_sourcemask is not None:
                     # holes catalog
                     RAmask, DEmask, radmask = np.loadtxt(self.file_sourcemask,
@@ -116,7 +116,7 @@ class MapperNVSS(MapperBase):
                                                   inclusive=True)
                         mask[ipix_hole] = 0
                 self.mask = rotate_mask(mask, self.rot)
-               
+
         return self.mask
 
     # Shot noise

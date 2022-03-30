@@ -1,4 +1,4 @@
-from .utils import get_map_from_points, rotate_map, rotate_mask
+from .utils import get_map_from_points, rotate_mask
 from .mapper_base import MapperBase
 from astropy.table import Table, vstack
 from scipy.integrate import simps
@@ -118,7 +118,7 @@ class MapperDELS(MapperBase):
             self.comp_map = self._get_comp_map()
             self.bmask = self._get_binary_mask()
             self.stars = self._get_stars()
-            nmap_data = get_map_from_points(cat_data, self.nside
+            nmap_data = get_map_from_points(cat_data, self.nside,
                                             rot=self.rot)
             mean_n = self._get_mean_n(nmap_data)
             goodpix = self.bmask > 0

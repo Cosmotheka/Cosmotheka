@@ -1,5 +1,6 @@
 from .mapper_base import MapperBase
 from pixell import enmap
+import healpy as hp
 
 
 class MapperACTBase(MapperBase):

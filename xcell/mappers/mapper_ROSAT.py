@@ -88,7 +88,7 @@ class MapperROSATXray(MapperBase):
             self.mask[xpmap <= self.explimit] = 0
             if self.mask_external is not None:
                 msk = hp.read_map(self.mask_external)
-                msk = rotate_mask(msk, self.rot) #Do we need this one here?
+                msk = rotate_mask(msk, self.rot)  # Do we need this one here?
                 msk = hp.ud_grade(msk, nside_out=self.nside)
                 self.mask *= msk
         return self.mask

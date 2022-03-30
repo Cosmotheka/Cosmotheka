@@ -1,3 +1,4 @@
+from .utils import rotate_map
 from .mapper_Planck_base import MapperPlanckBase
 import healpy as hp
 

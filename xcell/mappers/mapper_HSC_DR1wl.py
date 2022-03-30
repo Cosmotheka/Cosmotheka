@@ -191,7 +191,7 @@ class MapperHSCDR1wl(MapperBase):
         msk = get_map_from_points(cat, self.nside,
                                   w=cat[self.w_name],
                                   ra_name='ra',
-                                  dec_name='dec', 
+                                  dec_name='dec',
                                   rot=self.rot)
         return msk
 

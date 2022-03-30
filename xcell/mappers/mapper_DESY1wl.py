@@ -1,6 +1,5 @@
-from .utils import get_map_from_points, rotate_mask, rotate_map
-from .mapper_base import MapperBase
 from .utils import get_map_from_points
+from .mapper_base import MapperBase
 from astropy.table import Table, hstack
 import numpy as np
 import healpy as hp
