@@ -22,6 +22,10 @@ class MapperDELS(MapperBase):
            'mask_name': 'mask_DELS'}
         """
         self._get_defaults(config)
+        if self.coords != 'C':
+            self.rot = hp.Rotator(coord=['C', self.coords])
+        else:
+            self.rot = None
         self.pz = config.get('z_name', 'PHOTOZ_3DINFER')
         self.num_z_bins = config.get('num_z_bins', 500)
 
@@ -73,6 +77,7 @@ class MapperDELS(MapperBase):
             ipix = hp.ang2pix(nside, cat['RA'], cat['DEC'],
                               lonlat=True)
             self.mskflag = bmask[ipix] > 0.
+            self.mskflag = rotate_mask(self.mskflag, self.rot)
         return self.mskflag
 
     def _bin_z(self, cat):
@@ -113,7 +118,8 @@ class MapperDELS(MapperBase):
             self.comp_map = self._get_comp_map()
             self.bmask = self._get_binary_mask()
             self.stars = self._get_stars()
-            nmap_data = get_map_from_points(cat_data, self.nside)
+            nmap_data = get_map_from_points(cat_data, self.nside
+                                            rot=self.rot)
             mean_n = self._get_mean_n(nmap_data)
             goodpix = self.bmask > 0
             d[goodpix] = nmap_data[goodpix]/(mean_n*self.comp_map[goodpix])-1
@@ -186,8 +192,9 @@ class MapperDELS(MapperBase):
 
     def _get_binary_mask(self):
         if self.bmask is None:
-            self.bmask = hp.ud_grade(hp.read_map(self.config['binary_mask']),
-                                     nside_out=self.nside)
+            bmsk = hp.read_map(self.config['binary_mask'])
+            bmsk = rotate_mask(bmsk, self.rot)
+            self.bmask = hp.ud_grade(bmsk, nside_out=self.nside)
         return self.bmask
 
     def get_mask(self):
