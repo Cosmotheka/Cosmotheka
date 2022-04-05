@@ -88,7 +88,7 @@ def rotate_map(mapp, rot):
 
 def get_map_from_points(cat, nside, w=None, rot=None,
                         ra_name='RA', dec_name='DEC',
-                        in_radians=False):
+                        in_radians=False, qu=None):
     npix = hp.nside2npix(nside)
     if in_radians:
         lon = np.degrees(cat[ra_name])
@@ -97,9 +97,22 @@ def get_map_from_points(cat, nside, w=None, rot=None,
         lon = cat[ra_name]
         lat = cat[dec_name]
     if rot is not None:
+        # Rotate spin-2 quantities if needed
+        if qu is not None:
+            angle_ref = rot.angle_ref(lon, lat, lonlat=True)
+            ll = (qu[0] + 1j*qu[1])*np.exp(1j*2*angle_ref)
+            qu = [np.real(ll), np.imag(ll)]
+        # Rotate coordinates
         lon, lat = rot(lon, lat, lonlat=True)
     ipix = hp.ang2pix(nside, lon, lat, lonlat=True)
-    numcount = np.bincount(ipix, weights=w, minlength=npix)
+    if qu is not None:
+        if w is not None:
+            qu = [x*w for x in qu]
+        q = np.bincount(ipix, weights=qu[0], minlength=npix)
+        u = np.bincount(ipix, weights=qu[1], minlength=npix)
+        numcount = [q, u]
+    else:
+        numcount = np.bincount(ipix, weights=w, minlength=npix)
     return numcount
 
 

@@ -139,16 +139,12 @@ class MapperKV450(MapperBase):
         kind, e1f, e2f, mod = self._set_mode(mode)
         print('Computing bin{} signal map'.format(self.zbin))
         data = self._get_gals_or_stars(kind)
-        wcol = data['weight']*data[e1f]
-        we1 = get_map_from_points(data, self.nside, w=wcol,
-                                  ra_name='ALPHA_J2000',
-                                  dec_name='DELTA_J2000',
-                                  rot=self.rot)
-        wcol = data['weight']*data[e2f]
-        we2 = get_map_from_points(data, self.nside, w=wcol,
-                                  ra_name='ALPHA_J2000',
-                                  dec_name='DELTA_J2000',
-                                  rot=self.rot)
+        we1, we2 = get_map_from_points(data, self.nside,
+                                       w=data['weight'],
+                                       qu=[data[e1f], data[e2f]],
+                                       ra_name='ALPHA_J2000',
+                                       dec_name='DELTA_J2000',
+                                       rot=self.rot)
         mask = self.get_mask(mod)
         goodpix = mask > 0
         we1[goodpix] /= mask[goodpix]
@@ -165,7 +161,7 @@ class MapperKV450(MapperBase):
         def get_ellip_maps_mod():
             return self._get_ellip_maps(mode=mode)
 
-        fn = f'KV450_signal_{mod}_bin{self.zbin}_ns{self.nside}.fits.gz'
+        fn = f'KV450_signal_{mod}_bin{self.zbin}_coord{self.coords}_ns{self.nside}.fits.gz'
         d = self._rerun_read_cycle(fn, 'FITSMap',
                                    get_ellip_maps_mod,
                                    section=[0, 1])
@@ -188,7 +184,7 @@ class MapperKV450(MapperBase):
                                       rot=self.rot)
             return msk
 
-        fn = f'KV450_mask_{kind}_bin{self.zbin}_ns{self.nside}.fits.gz'
+        fn = f'KV450_mask_{kind}_bin{self.zbin}_coord{self.coords}_ns{self.nside}.fits.gz'
         self.masks[kind] = self._rerun_read_cycle(fn, 'FITSMap',
                                                   get_mask_mod)
         self.mask = self.masks[kind]
@@ -205,10 +201,11 @@ class MapperKV450(MapperBase):
             wcol = data['weight']**2*0.5*(data[e1f]**2+data[e2f]**2)
             w2s2 = get_map_from_points(data, self.nside, w=wcol,
                                        ra_name='ALPHA_J2000',
-                                       dec_name='DELTA_J2000')
+                                       dec_name='DELTA_J2000',
+                                       rot=self.rot)
             return w2s2
 
-        fn = f'KV450_w2s2_{kind}_bin{self.zbin}_ns{self.nside}.fits.gz'
+        fn = f'KV450_w2s2_{kind}_bin{self.zbin}_coord{self.coords}_ns{self.nside}.fits.gz'
         self.w2s2s[mod] = self._rerun_read_cycle(fn, 'FITSMap',
                                                  get_w2s2)
         self.w2s2 = self.w2s2s[mod]

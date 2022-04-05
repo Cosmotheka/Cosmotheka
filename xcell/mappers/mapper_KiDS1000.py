@@ -129,16 +129,12 @@ class MapperKiDS1000(MapperBase):
         kind, e1f, e2f, mod = self._set_mode(mode)
         print('Computing bin{} signal map'.format(self.zbin))
         data = self._get_gals_or_stars(kind)
-        we1 = get_map_from_points(data, self.nside,
-                                  w=data['weight']*data[e1f],
-                                  ra_name='ALPHA_J2000',
-                                  dec_name='DELTA_J2000',
-                                  rot=self.rot)
-        we2 = get_map_from_points(data, self.nside,
-                                  w=data['weight']*data[e2f],
-                                  ra_name='ALPHA_J2000',
-                                  dec_name='DELTA_J2000',
-                                  rot=self.rot)
+        we1, we2 = get_map_from_points(data, self.nside,
+                                       w=data['weight'],
+                                       qu=[data[e1f], data[e2f]],
+                                       ra_name='ALPHA_J2000',
+                                       dec_name='DELTA_J2000',
+                                       rot=self.rot)
         mask = self.get_mask(mod)
         goodpix = mask > 0
         we1[goodpix] /= mask[goodpix]
@@ -197,7 +193,8 @@ class MapperKiDS1000(MapperBase):
             wcol = data['weight']**2*0.5*(data[e1f]**2+data[e2f]**2)
             w2s2 = get_map_from_points(data, self.nside, w=wcol,
                                        ra_name='ALPHA_J2000',
-                                       dec_name='DELTA_J2000')
+                                       dec_name='DELTA_J2000',
+                                       rot=self.rot)
             return w2s2
 
         fn = f'KiDS1000_w2s2_{kind}_bin{self.zbin}'
