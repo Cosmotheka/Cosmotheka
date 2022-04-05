@@ -11,7 +11,7 @@ def get_config():
             'mask_name': 'mask_CMBK',
             'mask_aposize': 3,  # Must be large than pixel size
             'mask_apotype': 'C1',
-            'nside': 32, 'coords': 'G'}
+            'nside': 32, 'coords': 'C'}
 
 
 def get_mapper():
@@ -26,7 +26,7 @@ def test_alm_cut():
     m = xc.mappers.MapperP18CMBK(config)
     m.get_signal_map()
     alm_all, lmax = hp.read_alm(config['file_klm'], return_mmax=True)
-    alm_all = m.r.rotate_alm(alm_all)
+    alm_all = m.rot.rotate_alm(alm_all)
     fl = np.ones(lmax+1)
     fl[3*16:] = 0
     alm_cut = hp.almxfl(alm_all, fl, inplace=True)

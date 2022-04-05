@@ -196,7 +196,7 @@ class MapperDELS(MapperBase):
             bmsk = rotate_mask(bmsk, self.rot)
             self.bmask = hp.ud_grade(bmsk, nside_out=self.nside)
             self.bmask[self.bmask < 0.5] = 0
-            self.bmask[self.bmask >= 0.5] = 0
+            self.bmask[self.bmask >= 0.5] = 1
         return self.bmask
 
     def get_mask(self):
