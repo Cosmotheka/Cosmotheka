@@ -24,8 +24,10 @@ class MapperP18CMBK(MapperBase):
         self.noise = None
 
         # Galactic-to-celestial coordinate rotator
-        self.rotate = config.get('coordinates', 'C') != 'G'
-        self.r = hp.Rotator(coord=['G', 'C'])
+        if self.coords != 'G':
+            self.rot = hp.Rotator(coord=['G', self.coords])
+        else:
+            self.rot = None
 
         # Defaults
         self.signal_map = None
@@ -38,8 +40,8 @@ class MapperP18CMBK(MapperBase):
             # Read alms
             self.klm, lmax = hp.read_alm(self.config['file_klm'],
                                          return_mmax=True)
-            if self.rotate:
-                self.klm = self.r.rotate_alm(self.klm)
+            if self.rot is not None:
+                self.klm = self.rot.rotate_alm(self.klm)
             # Filter if lmax is too large
             if lmax > 3*self.nside-1:
                 fl = np.ones(lmax+1)
@@ -51,8 +53,8 @@ class MapperP18CMBK(MapperBase):
     def _get_mask(self):
         msk = hp.read_map(self.config['file_mask'],
                           dtype=float)
-        if self.rotate:
-            msk = self.r.rotate_map_pixel(msk)
+        if self.rot is not None:
+            msk = self.rot.rotate_map_pixel(msk)
             # Binarize
             thr = self.config.get('mask_threshold', 0.5)
             msk[msk < thr] = 0
@@ -67,6 +69,7 @@ class MapperP18CMBK(MapperBase):
         if self.mask is None:
             fn = '_'.join([f'P18CMBK_mask_{self.mask_aposize}',
                            f'{self.mask_apotype}',
+                           f'coord{self.coords}',
                            f'ns{self.nside}.fits.gz'])
             self.mask = self._rerun_read_cycle(fn, 'FITSMap', self._get_mask)
         return self.mask
@@ -81,7 +84,7 @@ class MapperP18CMBK(MapperBase):
 
             # The Nl in the file is decoupled. To "couple" it, multiply by the
             # mean of the squared mask. This will account for the factor that
-            # will be divided for the coviariance.
+            # will be divided for in the covariance.
             nl *= np.mean(self.get_mask()**2.)
             self.nl_coupled = np.array([nl])
         return self.nl_coupled

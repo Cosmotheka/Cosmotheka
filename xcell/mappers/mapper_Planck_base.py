@@ -43,22 +43,27 @@ class MapperPlanckBase(MapperBase):
 
     def get_mask(self):
         if self.mask is None:
+            msk = None
             if self.file_mask is not None:
-                self.mask = hp.read_map(self.file_mask)
-            else:
-                self.mask = np.ones(12*self.nside**2)
+                msk = hp.read_map(self.file_mask)
             if self.file_gp_mask is not None:
                 field = self.gp_mask_modes[self.gp_mask_mode]
                 gp_mask = hp.read_map(self.file_gp_mask, field)
-                self.mask *= gp_mask
+                if msk is None:
+                    msk = gp_mask
+                else:
+                    msk *= gp_mask
             if self.file_ps_mask is not None:
                 for mode in self.ps_mask_mode:
                     field = self.ps_mask_modes[mode]
                     ps_mask = hp.read_map(self.file_ps_mask, field)
-                    self.mask *= ps_mask
-            self.mask = rotate_mask(self.mask, self.rot)  # Binarize?
-            self.mask = hp.ud_grade(self.mask,
-                                    nside_out=self.nside)
+                    if msk is None:
+                        msk = ps_mask
+                    else:
+                        msk *= ps_mask
+            msk = rotate_mask(msk, self.rot)  # Binarize?
+            msk[msk < 0] = 0
+            self.mask = hp.ud_grade(msk, nside_out=self.nside)
         return self.mask
 
     def _get_hm_maps(self):
