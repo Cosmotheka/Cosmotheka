@@ -77,7 +77,6 @@ class MapperDELS(MapperBase):
             ipix = hp.ang2pix(nside, cat['RA'], cat['DEC'],
                               lonlat=True)
             self.mskflag = bmask[ipix] > 0.
-            self.mskflag = rotate_mask(self.mskflag, self.rot)
         return self.mskflag
 
     def _bin_z(self, cat):
@@ -175,8 +174,10 @@ class MapperDELS(MapperBase):
     def _get_stars(self):
         if self.stars is None:
             # Power = -2 makes sure the total number of stars is conserved
-            self.stars = hp.ud_grade(hp.read_map(self.config['star_map']),
-                                     nside_out=self.nside, power=-2)
+            stars = hp.read_map(self.config['star_map'])
+            stars = rotate_mask(stars, self.rot)
+            self.stars = hp.ud_grade(stars, nside_out=self.nside,
+                                     power=-2)
             # Convert to stars per deg^2
             pix_srad = 4*np.pi/self.npix
             pix_deg2 = pix_srad*(180/np.pi)**2
@@ -185,9 +186,11 @@ class MapperDELS(MapperBase):
 
     def _get_comp_map(self):
         if self.comp_map is None:
-            self.comp_map = hp.ud_grade(hp.read_map(
-                                        self.config['completeness_map']),
+            comp_map = hp.read_map(self.config['completeness_map'])
+            comp_map = rotate_mask(comp_map, self.rot)
+            self.comp_map = hp.ud_grade(comp_map,
                                         nside_out=self.nside)
+            self.comp_map[comp_map < 0.1] = 0.
         return self.comp_map
 
     def _get_binary_mask(self):
@@ -195,6 +198,8 @@ class MapperDELS(MapperBase):
             bmsk = hp.read_map(self.config['binary_mask'])
             bmsk = rotate_mask(bmsk, self.rot)
             self.bmask = hp.ud_grade(bmsk, nside_out=self.nside)
+            self.bmask[self.bmask < 0.5] = 0
+            self.bmask[self.bmask >= 0.5] = 0
         return self.bmask
 
     def get_mask(self):
@@ -207,7 +212,8 @@ class MapperDELS(MapperBase):
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             cat_data = self.get_catalog()
-            n = get_map_from_points(cat_data, self.nside)
+            n = get_map_from_points(cat_data, self.nside,
+                                    rot=self.rot)
             N_mean = self._get_mean_n(n)
             N_mean_srad = N_mean * self.npix / (4 * np.pi)
             mask = self.get_mask()

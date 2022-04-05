@@ -94,9 +94,9 @@ class MapperDESY1gc(MapperBase):
             cat_data = self.get_catalog()
             w = self._get_w()
             nmap_w = get_map_from_points(cat_data, self.nside,
-                                         w=w)
+                                         w=w, rot=self.rot)
             nmap_w2 = get_map_from_points(cat_data, self.nside,
-                                          w=w**2)
+                                          w=w**2, rot=self.rot)
             mask = self.get_mask()
             goodpix = mask > 0  # Already capped at mask_threshold
             N_mean = np.sum(nmap_w[goodpix])/np.sum(mask[goodpix])
