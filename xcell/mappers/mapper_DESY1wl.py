@@ -22,10 +22,7 @@ class MapperDESY1wl(MapperBase):
 
         self._get_defaults(config)
         self.config = config
-        if self.coords != 'C':
-            self.rot = hp.Rotator(coord=['C', self.coords])
-        else:
-            self.rot = None
+        self.rot = self._get_rotator('C')
         self.mode = config.get('mode', 'shear')
         self.zbin = config['zbin']
         self.npix = hp.nside2npix(self.nside)

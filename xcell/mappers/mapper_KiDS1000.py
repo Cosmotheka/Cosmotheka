@@ -17,11 +17,7 @@ class MapperKiDS1000(MapperBase):
         """
 
         self._get_defaults(config)
-
-        if self.coords != 'C':
-            self.rot = hp.Rotator(coord=['C', self.coords])
-        else:
-            self.rot = None
+        self.rot = self._get_rotator('C')
 
         self.mode = config.get('mode', 'shear')
         self.zbin_edges = np.array([[0.1, 0.3],

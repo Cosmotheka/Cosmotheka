@@ -28,10 +28,7 @@ class MapperSDSS(MapperBase):
                                              4096)
         self.lmin_nl_from_data = config.get('lmin_nl_from_data',
                                             2000)
-        if self.coords != 'C':
-            self.rot = hp.Rotator(coord=['C', self.coords])
-        else:
-            self.rot = None
+        self.rot = self._get_rotator('C')
 
     def get_catalog(self, mod='data'):
         if mod == 'data':

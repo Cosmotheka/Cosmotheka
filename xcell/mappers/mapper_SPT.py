@@ -19,10 +19,7 @@ class MapperSPT(MapperPlanckBase):
         self.ps_mask_modes = {'default': 0}
         self.ps_mask_mode = config.get('ps_mask_mode', ['default'])
         # Fix rotation from Planck's default
-        if self.coords != 'C':
-            self.rot = hp.Rotator(coord=['C', self.coords])
-        else:
-            self.rot = None
+        self.rot = self._get_rotator('C')
 
     def _get_hm_maps(self):
         if self.hm1_map is None:

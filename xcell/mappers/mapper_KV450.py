@@ -21,11 +21,7 @@ class MapperKV450(MapperBase):
         """
 
         self._get_defaults(config)
-
-        if self.coords != 'C':
-            self.rot = hp.Rotator(coord=['C', self.coords])
-        else:
-            self.rot = None
+        self.rot = self._get_rotator('C')
 
         self.column_names = ['SG_FLAG', 'GAAP_Flag_ugriZYJHKs',
                              'Z_B', 'Z_B_MIN', 'Z_B_MAX',

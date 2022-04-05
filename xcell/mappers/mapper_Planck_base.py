@@ -11,10 +11,7 @@ class MapperPlanckBase(MapperBase):
 
     def _get_Planck_defaults(self, config):
         self._get_defaults(config)
-        if self.coords != 'G':
-            self.rot = hp.Rotator(coord=['G', self.coords])
-        else:
-            self.rot = None
+        self.rot = self._get_rotator('G')
         self.file_map = config['file_map']
         self.file_hm1 = config.get('file_hm1', None)
         self.file_hm2 = config.get('file_hm2', None)

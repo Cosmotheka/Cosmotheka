@@ -24,10 +24,7 @@ class MapperP18CMBK(MapperBase):
         self.noise = None
 
         # Galactic-to-celestial coordinate rotator
-        if self.coords != 'G':
-            self.rot = hp.Rotator(coord=['G', self.coords])
-        else:
-            self.rot = None
+        self.rot = self._get_rotator('G')
 
         # Defaults
         self.signal_map = None

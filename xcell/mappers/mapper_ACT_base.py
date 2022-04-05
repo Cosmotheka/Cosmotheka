@@ -9,10 +9,7 @@ class MapperACTBase(MapperBase):
 
     def _get_ACT_defaults(self, config):
         self._get_defaults(config)
-        if self.coords != 'C':
-            self.rot = hp.Rotator(coord=['C', self.coords])
-        else:
-            self.rot = None
+        self.rot = self._get_rotator('C')
         self.file_map = config['file_map']
         self.file_mask = config['file_mask']
         self.map_name = config['map_name']

@@ -24,10 +24,7 @@ class MapperCatWISE(MapperBase):
         self.delta_map = None
         self.nl_coupled = None
         self.dndz = None
-        if self.coords != 'C':
-            self.rot = hp.Rotator(coord=['C', self.coords])
-        else:
-            self.rot = None
+        self.rot = self._get_rotator('C')
 
     # CatWISE catalog
     def get_catalog(self):

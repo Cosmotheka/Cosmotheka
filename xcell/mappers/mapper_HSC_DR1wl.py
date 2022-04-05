@@ -21,10 +21,7 @@ class MapperHSCDR1wl(MapperBase):
         }
         """
         self._get_defaults(config)
-        if self.coords != 'C':
-            self.rot = hp.Rotator(coord=['C', self.coords])
-        else:
-            self.rot = None
+        self.rot = self._get_rotator('C')
         self.icut = config.get('depth_cut', 24.5)
         self.z_edges = config['z_edges']
         self.bn = self.config['bin_name']

@@ -22,10 +22,7 @@ class MapperDELS(MapperBase):
            'mask_name': 'mask_DELS'}
         """
         self._get_defaults(config)
-        if self.coords != 'C':
-            self.rot = hp.Rotator(coord=['C', self.coords])
-        else:
-            self.rot = None
+        self.rot = self._get_rotator('C')
         self.pz = config.get('z_name', 'PHOTOZ_3DINFER')
         self.num_z_bins = config.get('num_z_bins', 500)
 

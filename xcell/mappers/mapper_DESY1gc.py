@@ -21,10 +21,7 @@ class MapperDESY1gc(MapperBase):
         """
 
         self._get_defaults(config)
-        if self.coords != 'C':
-            self.rot = hp.Rotator(coord=['C', self.coords])
-        else:
-            self.rot = None
+        self.rot = self._get_rotator('C')
         self.mask_threshold = config.get('mask_threshold', 0.5)
         bin_edges = [[0.15, 0.30],
                      [0.30, 0.45],

@@ -15,10 +15,7 @@ class MapperNVSS(MapperBase):
            'redshift_catalog':'100sqdeg_1uJy_s1400.fits'}
         """
         self._get_defaults(config)
-        if self.coords != 'C':
-            self.rot = hp.Rotator(coord=['C', self.coords])
-        else:
-            self.rot = None
+        self.rot = self._get_rotator('C')
         self.file_sourcemask = config.get('mask_sources', None)
         self.ra_name = 'RAJ2000'
         self.dec_name = 'DEJ2000'

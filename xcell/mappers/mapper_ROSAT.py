@@ -31,10 +31,7 @@ class MapperROSATXray(MapperBase):
     """
     def __init__(self, config):
         self._get_defaults(config)
-        if self.coords != 'C':
-            self.rot = hp.Rotator(coord=['C', self.coords])
-        else:
-            self.rot = None
+        self.rot = self._get_rotator('C')
         self.fname_expmap = config['exposure_map']
         self.fname_pholist = config['photon_list']
         self.erange = config.get('energy_range', [0.5, 3.0])
