@@ -126,9 +126,9 @@ def test_rerun():
     nside = c['nside']
 
     for fname in [f'{bn}.fits',
-                  f'signal_{bn}_ns{nside}.fits.gz',
-                  f'mask_{bn}_ns{nside}.fits.gz',
-                  f'w2s2_{bn}_ns{nside}.fits.gz',
+                  f'signal_{bn}_coordC_ns{nside}.fits.gz',
+                  f'mask_{bn}_coordC_ns{nside}.fits.gz',
+                  f'w2s2_{bn}_coordC_ns{nside}.fits.gz',
                   f'nz_{bn}.npz']:
         fname_full = os.path.join(prerun, "HSCDR1wl_" + fname)
         assert os.path.isfile(fname_full)
