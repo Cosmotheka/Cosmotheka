@@ -171,7 +171,9 @@ class MapperHSCDR1wl(MapperBase):
 
     def get_signal_map(self):
         if self.signal_map is None:
-            fn = f'HSCDR1wl_signal_{self.bn}_coord{self.coord}_ns{self.nside}.fits.gz'
+            fn = '_'.join([f'HSCDR1wl_signal_{self.bn}',
+                           f'coord{self.coord}',
+                           f'ns{self.nside}.fits.gz'])
             d = self._rerun_read_cycle(fn, 'FITSMap',
                                        self._get_ellip_maps,
                                        section=[0, 1])
@@ -192,7 +194,9 @@ class MapperHSCDR1wl(MapperBase):
         if self.mask is not None:
             return self.mask
 
-        fn = f'HSCDR1wl_mask_{self.bn}_coord{self.coord}_ns{self.nside}.fits.gz'
+        fn = '_'.join([f'HSCDR1wl_mask_{self.bn}',
+                       f'coord{self.coord}',
+                       f'ns{self.nside}.fits.gz'])
         self.mask = self._rerun_read_cycle(fn, 'FITSMap',
                                            self._get_mask)
         return self.mask
@@ -211,7 +215,9 @@ class MapperHSCDR1wl(MapperBase):
         if self.nl_coupled is not None:
             return self.nl_coupled
 
-        fn = f'HSCDR1wl_w2s2_{self.bn}_coord{self.coord}_ns{self.nside}.fits.gz'
+        fn = '_'.join([f'HSCDR1wl_w2s2_{self.bn}',
+                       f'coord{self.coord}',
+                       f'ns{self.nside}.fits.gz'])
         w2s2 = self._rerun_read_cycle(fn, 'FITSMap', self._get_w2s2)
         N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
         nl = N_ell * np.ones(3*self.nside)

@@ -161,7 +161,9 @@ class MapperKV450(MapperBase):
         def get_ellip_maps_mod():
             return self._get_ellip_maps(mode=mode)
 
-        fn = f'KV450_signal_{mod}_bin{self.zbin}_coord{self.coords}_ns{self.nside}.fits.gz'
+        fn = '_'.join([f'KV450_signal_{mod}_bin{self.zbin}',
+                       f'coord{self.coords}',
+                       f'ns{self.nside}.fits.gz'])
         d = self._rerun_read_cycle(fn, 'FITSMap',
                                    get_ellip_maps_mod,
                                    section=[0, 1])
@@ -184,7 +186,9 @@ class MapperKV450(MapperBase):
                                       rot=self.rot)
             return msk
 
-        fn = f'KV450_mask_{kind}_bin{self.zbin}_coord{self.coords}_ns{self.nside}.fits.gz'
+        fn = '_'.join([f'KV450_mask_{kind}_bin{self.zbin}',
+                       f'coord{self.coords}',
+                       f'ns{self.nside}.fits.gz'])
         self.masks[kind] = self._rerun_read_cycle(fn, 'FITSMap',
                                                   get_mask_mod)
         self.mask = self.masks[kind]
@@ -205,7 +209,9 @@ class MapperKV450(MapperBase):
                                        rot=self.rot)
             return w2s2
 
-        fn = f'KV450_w2s2_{kind}_bin{self.zbin}_coord{self.coords}_ns{self.nside}.fits.gz'
+        fn = '_'.join([f'KV450_w2s2_{kind}_bin{self.zbin}',
+                       f'coord{self.coords}',
+                       f'ns{self.nside}.fits.gz'])
         self.w2s2s[mod] = self._rerun_read_cycle(fn, 'FITSMap',
                                                  get_w2s2)
         self.w2s2 = self.w2s2s[mod]

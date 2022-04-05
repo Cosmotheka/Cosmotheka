@@ -151,8 +151,9 @@ class MapperKiDS1000(MapperBase):
         def get_ellip_maps_mod():
             return self._get_ellip_maps(mode=mode)
 
-        fn = f'KiDS1000_signal_{mod}_bin{self.zbin}'
-        fn += f'_coord{self.coords}_ns{self.nside}.fits.gz'
+        fn = '_'.join([f'KiDS1000_signal_{mod}_bin{self.zbin}',
+                       f'coord{self.coords}',
+                       f'ns{self.nside}.fits.gz'])
         d = self._rerun_read_cycle(fn, 'FITSMap',
                                    get_ellip_maps_mod,
                                    section=[0, 1])
@@ -175,8 +176,9 @@ class MapperKiDS1000(MapperBase):
                                       rot=self.rot)
             return msk
 
-        fn = f'KiDS1000_mask_{kind}_bin{self.zbin}'
-        fn += f'_coord{self.coords}_ns{self.nside}.fits.gz'
+        fn = '_'.join([f'KiDS1000_mask_{kind}_bin{self.zbin}',
+                       f'coord{self.coords}',
+                       f'ns{self.nside}.fits.gz'])
         self.masks[kind] = self._rerun_read_cycle(fn, 'FITSMap',
                                                   get_mask_mod)
         self.mask = self.masks[kind]
@@ -197,8 +199,9 @@ class MapperKiDS1000(MapperBase):
                                        rot=self.rot)
             return w2s2
 
-        fn = f'KiDS1000_w2s2_{kind}_bin{self.zbin}'
-        fn += f'_coord{self.coords}_ns{self.nside}.fits.gz'
+        fn = '_'.join([f'KiDS1000_w2s2_{kind}_bin{self.zbin}',
+                       f'coord{self.coords}',
+                       f'ns{self.nside}.fits.gz'])
         self.w2s2s[mod] = self._rerun_read_cycle(fn, 'FITSMap', get_w2s2)
         self.w2s2 = self.w2s2s[mod]
         return self.w2s2
