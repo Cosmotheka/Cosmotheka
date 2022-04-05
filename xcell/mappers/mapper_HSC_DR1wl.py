@@ -172,7 +172,7 @@ class MapperHSCDR1wl(MapperBase):
     def get_signal_map(self):
         if self.signal_map is None:
             fn = '_'.join([f'HSCDR1wl_signal_{self.bn}',
-                           f'coord{self.coord}',
+                           f'coord{self.coords}',
                            f'ns{self.nside}.fits.gz'])
             d = self._rerun_read_cycle(fn, 'FITSMap',
                                        self._get_ellip_maps,
@@ -195,7 +195,7 @@ class MapperHSCDR1wl(MapperBase):
             return self.mask
 
         fn = '_'.join([f'HSCDR1wl_mask_{self.bn}',
-                       f'coord{self.coord}',
+                       f'coord{self.coords}',
                        f'ns{self.nside}.fits.gz'])
         self.mask = self._rerun_read_cycle(fn, 'FITSMap',
                                            self._get_mask)
@@ -216,7 +216,7 @@ class MapperHSCDR1wl(MapperBase):
             return self.nl_coupled
 
         fn = '_'.join([f'HSCDR1wl_w2s2_{self.bn}',
-                       f'coord{self.coord}',
+                       f'coord{self.coords}',
                        f'ns{self.nside}.fits.gz'])
         w2s2 = self._rerun_read_cycle(fn, 'FITSMap', self._get_w2s2)
         N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
