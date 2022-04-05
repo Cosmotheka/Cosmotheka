@@ -158,6 +158,7 @@ class MapperWIxSC(MapperBase):
     def _get_stars(self):
         if self.stars is None:
             # Power = -2 makes sure the total number of stars is conserved
+            # We assume the star map has been provided in the right coords
             self.stars = hp.ud_grade(hp.read_map(self.config['star_map']),
                                      nside_out=self.nside, power=-2)
             # Convert to stars per deg^2

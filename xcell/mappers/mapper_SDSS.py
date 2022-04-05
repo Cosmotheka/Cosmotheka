@@ -107,9 +107,8 @@ class MapperSDSS(MapperBase):
         cat_random = self.get_catalog(mod='random')
         w_random = self._get_w(mod='random')
         alpha = self._get_alpha()
-        mask = get_map_from_points(cat_random,
-                                   self.nside_mask,
-                                   w=w_random)
+        mask = get_map_from_points(cat_random, self.nside_mask,
+                                   w=w_random, rot=self.rot)
         mask *= alpha
         # Account for different pixel areas
         area_ratio = (self.nside_mask/self.nside)**2
@@ -134,9 +133,11 @@ class MapperSDSS(MapperBase):
             pixel_A = 4*np.pi/hp.nside2npix(self.nside)
             mask = self.get_mask()
             w2_data = get_map_from_points(cat_data, self.nside,
-                                          w=w_data**2)
+                                          w=w_data**2,
+                                          rot=self.rot)
             w2_random = get_map_from_points(cat_random, self.nside,
-                                            w=w_random**2)
+                                            w=w_random**2,
+                                            rot=self.rot)
             goodpix = mask > 0
             N_ell = (w2_data[goodpix].sum() +
                      alpha**2*w2_random[goodpix].sum())
