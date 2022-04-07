@@ -141,7 +141,7 @@ class MapperKV450(MapperBase):
         data = self._get_gals_or_stars(kind)
         we1, we2 = get_map_from_points(data, self.nside,
                                        w=data['weight'],
-                                       qu=[data[e1f], data[e2f]],
+                                       qu=[-data[e1f], data[e2f]],
                                        ra_name='ALPHA_J2000',
                                        dec_name='DELTA_J2000',
                                        rot=self.rot)
@@ -167,7 +167,7 @@ class MapperKV450(MapperBase):
         d = self._rerun_read_cycle(fn, 'FITSMap',
                                    get_ellip_maps_mod,
                                    section=[0, 1])
-        self.maps[mod] = np.array([-d[0], d[1]])
+        self.maps[mod] = np.array([d[0], d[1]])
         self.signal_map = self.maps[mod]
         return self.signal_map
 

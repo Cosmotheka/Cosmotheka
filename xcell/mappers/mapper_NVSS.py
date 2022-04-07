@@ -86,8 +86,10 @@ class MapperNVSS(MapperBase):
 
             if self.config.get('mask_file', None) is not None:
                 mask = hp.read_map(self.config['mask_file'])
-                mask = rotate_mask(mask, self.rot, binarize=True)
-                self.mask = hp.ud_grade(mask, nside_out=self.nside)
+                self.mask = hp.ud_grade(rotate_mask(mask, self.rot),
+                                        nside_out=self.nside)
+                self.mask[self.mask > 0.5] = 1.
+                self.mask[self.mask <= 0.5] = 0.
             else:
                 mask = np.ones(self.npix)
                 r = hp.Rotator(coord=['C', 'G'])

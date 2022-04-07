@@ -3,6 +3,7 @@ from scipy.interpolate import interp1d
 import numpy as np
 import healpy as hp
 import pymaster as nmt
+from .utils import rotate_mask
 
 
 class MapperP18CMBK(MapperBase):
@@ -51,11 +52,7 @@ class MapperP18CMBK(MapperBase):
         msk = hp.read_map(self.config['file_mask'],
                           dtype=float)
         if self.rot is not None:
-            msk = self.rot.rotate_map_pixel(msk)
-            # Binarize
-            thr = self.config.get('mask_threshold', 0.5)
-            msk[msk < thr] = 0
-            msk[msk >= thr] = 1.
+            msk = rotate_mask(msk, binarize=True)
         # Apodize
         msk = nmt.mask_apodization(msk, self.mask_aposize,
                                    self.mask_apotype)

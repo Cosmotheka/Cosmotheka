@@ -157,7 +157,7 @@ class MapperDESY1wl(MapperBase):
         print('Computing bin{} signal map'.format(self.zbin))
         cat_data = self.get_catalog()
         we1, we2 = get_map_from_points(cat_data, self.nside,
-                                       qu=[cat_data[e1f], cat_data[e2f]],
+                                       qu=[-cat_data[e1f], cat_data[e2f]],
                                        ra_name='ra',
                                        dec_name='dec',
                                        rot=self.rot)
@@ -182,7 +182,7 @@ class MapperDESY1wl(MapperBase):
                        f'ns{self.nside}.fits.gz'])
         d = self._rerun_read_cycle(fn, 'FITSMap', get_ellip_maps,
                                    section=[0, 1])
-        self.maps[mod] = [-d[0], d[1]]
+        self.maps[mod] = np.array([d[0], d[1]])
         self.signal_map = self.maps[mod]
         return self.signal_map
 
