@@ -51,8 +51,7 @@ class MapperP18CMBK(MapperBase):
     def _get_mask(self):
         msk = hp.read_map(self.config['file_mask'],
                           dtype=float)
-        if self.rot is not None:
-            msk = rotate_mask(msk, binarize=True)
+        msk = rotate_mask(msk, self.rot, binarize=True)
         # Apodize
         msk = nmt.mask_apodization(msk, self.mask_aposize,
                                    self.mask_apotype)
