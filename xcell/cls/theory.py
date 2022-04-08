@@ -118,7 +118,7 @@ class Theory():
             z, pz = mapper.get_nz(dz=0)
             bias = (z, np.ones_like(z))
             mag_bias = None
-            mag_s = tracer.get('mag_s', None)
+            mag_s = tracer.get('magnif_s', None)
             if mag_s:
                 mag_bias = (z, np.ones_like(z) * mag_s)
             # Get tracer

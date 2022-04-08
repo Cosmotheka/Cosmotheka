@@ -661,12 +661,12 @@ def test_clfid_against_ccl(tr1, tr2):
     data = get_config(dtype0=tr1, dtype1=tr2)
     if tr1 == 'galaxy_density':
         data['tracers']['Dummy__0']['bias'] = 1.
-        data['tracers']['Dummy__0']['mag_s'] = 1
+        data['tracers']['Dummy__0']['magnif_s'] = 1
     elif tr1 == 'galaxy_shear':
         data['tracers']['Dummy__0']['m'] = 0.
     if tr2 == 'galaxy_density':
         data['tracers']['Dummy__1']['bias'] = 1.
-        data['tracers']['Dummy__1']['mag_s'] = 1
+        data['tracers']['Dummy__1']['magnif_s'] = 1
     elif tr2 == 'galaxy_shear':
         data['tracers']['Dummy__1']['m'] = 0.
 
