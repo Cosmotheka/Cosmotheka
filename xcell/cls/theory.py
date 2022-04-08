@@ -117,9 +117,14 @@ class Theory():
             # Import z, pz
             z, pz = mapper.get_nz(dz=0)
             bias = (z, np.ones_like(z))
+            mag_bias = None
+            mag_s = tracer.get('magnif_s', None)
+            if mag_s:
+                mag_bias = (z, np.ones_like(z) * mag_s)
             # Get tracer
             ccl_tr = ccl.NumberCountsTracer(cosmo, has_rsd=False,
-                                            dndz=(z, pz), bias=bias)
+                                            dndz=(z, pz), bias=bias,
+                                            mag_bias=mag_bias)
             if with_hm:
                 hod_pars = tracer.get('hod_params', {})
                 ccl_pr = ccl.halos.HaloProfileHOD(hm_par['cM'],

@@ -661,10 +661,12 @@ def test_clfid_against_ccl(tr1, tr2):
     data = get_config(dtype0=tr1, dtype1=tr2)
     if tr1 == 'galaxy_density':
         data['tracers']['Dummy__0']['bias'] = 1.
+        data['tracers']['Dummy__0']['magnif_s'] = 1
     elif tr1 == 'galaxy_shear':
         data['tracers']['Dummy__0']['m'] = 0.
     if tr2 == 'galaxy_density':
         data['tracers']['Dummy__1']['bias'] = 1.
+        data['tracers']['Dummy__1']['magnif_s'] = 1
     elif tr2 == 'galaxy_shear':
         data['tracers']['Dummy__1']['m'] = 0.
 
@@ -678,7 +680,8 @@ def test_clfid_against_ccl(tr1, tr2):
             z, nz = np.loadtxt('xcell/tests/data/DESY1gc_dndz_bin0.txt',
                                usecols=(1, 3), unpack=True)
             t = ccl.NumberCountsTracer(cosmo, False, dndz=(z, nz),
-                                       bias=(z, np.ones_like(z)))
+                                       bias=(z, np.ones_like(z)),
+                                       mag_bias=(z, np.ones_like(z)))
         elif tr == 'galaxy_shear':
             z, nz = np.loadtxt('xcell/tests/data/Nz_DIR_z0.1t0.3.asc',
                                usecols=(0, 1), unpack=True)
