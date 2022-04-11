@@ -53,7 +53,6 @@ class MapperKV450(MapperBase):
         self.signal_map = None
         self.maps = {'PSF': None, 'shear': None, 'stars': None}
 
-        self.mask = None
         self.masks = {'stars': None, 'galaxies': None}
 
         self.nl_coupled = None
@@ -186,7 +185,7 @@ class MapperKV450(MapperBase):
                                       rot=self.rot)
             return msk
 
-        fn = '_'.join([f'KV450_mask_{kind}_bin{self.zbin}',
+        fn = '_'.join([f'mask_{self.mask_name}_{kind}',
                        f'coord{self.coords}',
                        f'ns{self.nside}.fits.gz'])
         self.masks[kind] = self._rerun_read_cycle(fn, 'FITSMap',

@@ -26,7 +26,6 @@ class MapperPlanckBase(MapperBase):
         self.cl_coupled = None
         self.cls_cov = None
         self.custom_auto = True
-        self.mask = None
 
     def get_signal_map(self):
         if self.signal_map is None:
@@ -38,30 +37,29 @@ class MapperPlanckBase(MapperBase):
                                         nside_out=self.nside)])
         return self.signal_map
 
-    def get_mask(self):
-        if self.mask is None:
-            msk = None
-            if self.file_mask is not None:
-                msk = hp.read_map(self.file_mask)
-            if self.file_gp_mask is not None:
-                field = self.gp_mask_modes[self.gp_mask_mode]
-                gp_mask = hp.read_map(self.file_gp_mask, field)
+    def _get_mask(self):
+        msk = None
+        if self.file_mask is not None:
+            msk = hp.read_map(self.file_mask)
+        if self.file_gp_mask is not None:
+            field = self.gp_mask_modes[self.gp_mask_mode]
+            gp_mask = hp.read_map(self.file_gp_mask, field)
+            if msk is None:
+                msk = gp_mask
+            else:
+                msk *= gp_mask
+        if self.file_ps_mask is not None:
+            for mode in self.ps_mask_mode:
+                field = self.ps_mask_modes[mode]
+                ps_mask = hp.read_map(self.file_ps_mask, field)
                 if msk is None:
-                    msk = gp_mask
+                    msk = ps_mask
                 else:
-                    msk *= gp_mask
-            if self.file_ps_mask is not None:
-                for mode in self.ps_mask_mode:
-                    field = self.ps_mask_modes[mode]
-                    ps_mask = hp.read_map(self.file_ps_mask, field)
-                    if msk is None:
-                        msk = ps_mask
-                    else:
-                        msk *= ps_mask
-            msk = rotate_mask(msk, self.rot)  # Binarize?
-            msk[msk < 0] = 0
-            self.mask = hp.ud_grade(msk, nside_out=self.nside)
-        return self.mask
+                    msk *= ps_mask
+        msk = rotate_mask(msk, self.rot)
+        msk[msk < 0] = 0
+        msk = hp.ud_grade(msk, nside_out=self.nside)
+        return msk
 
     def _get_hm_maps(self):
         return NotImplementedError("Do not use base class")

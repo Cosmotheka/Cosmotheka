@@ -37,6 +37,10 @@ def remove_rerun(predir):
     for f in frerun:
         os.remove(f)
 
+    fn = predir + 'mask_mask_galaxies_coordC_ns32.fits.gz'
+    if os.path.isfile(fn):
+        os.remove(fn)
+
 
 def test_rerun():
     predir = 'xcell/tests/data/'
@@ -50,7 +54,7 @@ def test_rerun():
     map1 = np.array(m.get_signal_map())
     mask1 = m.get_mask()
     assert os.path.isfile(f'{prefix}_signal_shear_bin0_coordC_ns32.fits.gz')
-    assert os.path.isfile(f'{prefix}_mask_galaxies_bin0_coordC_ns32.fits.gz')
+    assert os.path.isfile(f'{predir}mask_mask_galaxies_coordC_ns32.fits.gz')
     nl1 = m.get_nl_coupled()
     assert os.path.isfile(f'{prefix}_w2s2_galaxies_bin0_coordC_ns32.fits.gz')
 

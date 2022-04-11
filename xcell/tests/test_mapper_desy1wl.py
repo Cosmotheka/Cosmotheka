@@ -22,6 +22,9 @@ def remove_rerun(prerun):
     frerun = glob.glob(prerun + 'DESY1wl*.fits*')
     for f in frerun:
         os.remove(f)
+    fn = prerun + 'mask_mask_coordC_ns32.fits.gz'
+    if os.path.isfile(fn):
+        os.remove(fn)
 
 
 def test_smoke():
@@ -86,10 +89,11 @@ def test_rerun():
     for fname in [f'catalog_rerun_bin{zbin}.fits',
                   f'signal_map_shear_bin{zbin}_coordC_ns{nside}.fits.gz',
                   f'signal_map_PSF_bin{zbin}_coordC_ns{nside}.fits.gz',
-                  f'mask_bin{zbin}_coordC_ns{nside}.fits.gz',
                   f'shear_w2s2_bin{zbin}_coordC_ns{nside}.fits.gz',
                   f'PSF_w2s2_bin{zbin}_coordC_ns{nside}.fits.gz']:
         assert os.path.isfile(os.path.join(prerun, "DESY1wl_" + fname))
+    assert os.path.isfile(os.path.join(prerun,
+                                       f'mask_mask_coordC_ns{nside}.fits.gz'))
 
     # Check we recover the same mask and catalog
     # Non-exsisting fits files - read from rerun

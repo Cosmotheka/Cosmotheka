@@ -23,7 +23,6 @@ class MapperSDSS(MapperBase):
         self.dndz = None
         self.signal_map = None
         self.nl_coupled = None
-        self.mask = None
         self.nside_nl_threshold = config.get('nside_nl_threshold',
                                              4096)
         self.lmin_nl_from_data = config.get('lmin_nl_from_data',
@@ -70,11 +69,6 @@ class MapperSDSS(MapperBase):
             self.alpha = np.sum(w_data)/np.sum(w_random)
         return self.alpha
 
-    def _get_map_fname(self, mp='mask'):
-        return '_'.join([f'SDSS_{self.SDSS_name}_{mp}',
-                         f'coord{self.coords}',
-                         f'ns{self.nside}.fits.gz'])
-
     def _get_signal_map(self):
         delta_map = np.zeros(self.npix)
         cat_data = self.get_catalog(mod='data')
@@ -94,7 +88,9 @@ class MapperSDSS(MapperBase):
 
     def get_signal_map(self):
         if self.signal_map is None:
-            fn = self._get_map_fname(mp='signal')
+            fn = '_'.join([f'SDSS_{self.SDSS_name}_signal',
+                           f'coord{self.coords}',
+                           f'ns{self.nside}.fits.gz'])
             self.signal_map = self._rerun_read_cycle(fn, 'FITSMap',
                                                      self._get_signal_map)
             self.signal_map = np.array([self.signal_map])
@@ -112,12 +108,6 @@ class MapperSDSS(MapperBase):
         mask = area_ratio * hp.ud_grade(mask,
                                         nside_out=self.nside)
         return mask
-
-    def get_mask(self):
-        if self.mask is None:
-            fn = self._get_map_fname(mp='mask')
-            self.mask = self._rerun_read_cycle(fn, 'FITSMap', self._get_mask)
-        return self.mask
 
     def _get_nl_coupled(self):
         if self.nside < self.nside_nl_threshold:

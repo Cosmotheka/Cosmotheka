@@ -31,7 +31,6 @@ class MapperHSCDR1wl(MapperBase):
         self.nl_coupled = None
         self.dndz = None
         self.cat = None
-        self.mask = None
         self.signal_map = None
 
     def _get_catalog_from_raw(self):
@@ -189,17 +188,6 @@ class MapperHSCDR1wl(MapperBase):
                                   dec_name='dec',
                                   rot=self.rot)
         return msk
-
-    def get_mask(self):
-        if self.mask is not None:
-            return self.mask
-
-        fn = '_'.join([f'HSCDR1wl_mask_{self.bn}',
-                       f'coord{self.coords}',
-                       f'ns{self.nside}.fits.gz'])
-        self.mask = self._rerun_read_cycle(fn, 'FITSMap',
-                                           self._get_mask)
-        return self.mask
 
     def _get_w2s2(self):
         print('Computing w2s2 map')

@@ -15,7 +15,9 @@ def get_config():
 
 
 def cleanup_rerun():
-    for fname in ['nz_2MPZ.npz']:
+    for fname in ['nz_2MPZ.npz',
+                  'mask_mask_coordC_ns32.fits.gz',
+                  'mask_mask_coordG_ns32.fits.gz']:
         if os.path.isfile(fname):
             os.remove(fname)
 
@@ -29,6 +31,7 @@ def test_smoke():
     m = get_mapper()
     m.get_catalog()
     assert len(m.cat_data) == hp.nside2npix(32)
+    cleanup_rerun()
 
 
 def test_get_nz():
@@ -49,6 +52,7 @@ def test_get_nz():
     m.get_catalog()
     z2, nz2 = m.get_nz()
     assert np.all(np.fabs(nz2-nz) < 1E-5)
+    cleanup_rerun()
 
 
 @pytest.mark.parametrize('coord', ['G', 'C', 'E'])
@@ -65,6 +69,7 @@ def test_get_signal_map(coord):
     d = np.array(d)
     assert d.shape == (1, hp.nside2npix(m.nside))
     assert np.all(np.fabs(d) < 1E-15)
+    cleanup_rerun()
 
 
 def test_get_mask():
@@ -72,15 +77,18 @@ def test_get_mask():
     m = get_mapper()
     d = m.get_mask()
     assert np.all(np.fabs(d-1) < 1E-5)
+    cleanup_rerun()
 
 
 def test_get_nl_coupled():
+    cleanup_rerun()
     m = get_mapper()
     pix_area = 4*np.pi/hp.nside2npix(m.nside)
     nl_pred = hp.nside2npix(32)
     nl_pred *= pix_area**2/(4*np.pi)
     nl = m.get_nl_coupled()
     assert np.all(np.fabs(nl-nl_pred) < 1E-5)
+    cleanup_rerun()
 
 
 def test_get_dtype():

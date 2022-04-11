@@ -42,7 +42,6 @@ class MapperROSATXray(MapperBase):
         self.expmap = None
         self.pholist = None
         self.countrate_map = None
-        self.mask = None
         self.nl_coupled = None
 
     def get_pholist(self):
@@ -78,17 +77,16 @@ class MapperROSATXray(MapperBase):
             self.countrate_map = np.array([self.countrate_map])
         return self.countrate_map
 
-    def get_mask(self):
-        if self.mask is None:
-            self.mask = np.ones(self.npix)
-            xpmap = self.get_expmap()
-            self.mask[xpmap <= self.explimit] = 0
-            if self.mask_external is not None:
-                msk = hp.read_map(self.mask_external)
-                msk = rotate_mask(msk, self.rot, binarize=True)
-                msk = hp.ud_grade(msk, nside_out=self.nside)
-                self.mask *= msk
-        return self.mask
+    def _get_mask(self):
+        mask = np.ones(self.npix)
+        xpmap = self.get_expmap()
+        mask[xpmap <= self.explimit] = 0
+        if self.mask_external is not None:
+            msk = hp.read_map(self.mask_external)
+            msk = rotate_mask(msk, self.rot, binarize=True)
+            msk = hp.ud_grade(msk, nside_out=self.nside)
+            mask *= msk
+        return mask
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:

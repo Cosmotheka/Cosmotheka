@@ -24,7 +24,11 @@ def make_fake_data():
 
 
 def clean_fake_data():
-    os.remove('xcell/tests/data/catalog_CatWISE.fits')
+    for fn in ['catalog_CatWISE.fits',
+               'mask_mask_coordC_ns32.fits.gz']:
+        fname = f'xcell/tests/data/{fn}'
+        if os.path.isfile(fname):
+            os.remove(fname)
 
 
 def test_basic():
@@ -94,7 +98,8 @@ def test_rerun():
     config.pop('mask_sources')
     m = xc.mappers.MapperCatWISE(config)
     msk = m.get_mask()
-    fn = 'xcell/tests/data/CatWise_cutout_mask_ns32.fits.gz'
+    fn = 'xcell/tests/data/mask_mask_coordC_ns32.fits.gz'
     mskb = hp.read_map(fn)
     assert (msk == mskb).all()
     os.remove(fn)
+    clean_fake_data()

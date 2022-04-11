@@ -31,7 +31,6 @@ class MapperWIxSC(MapperBase):
 
         # Angular mask
         self.dndz = None
-        self.mask = None
         self.stars = None
         self.delta_map = None
         self.nl_coupled = None
@@ -147,13 +146,12 @@ class MapperWIxSC(MapperBase):
             self.delta_map = np.array([d])
         return self.delta_map
 
-    def get_mask(self):
-        if self.mask is None:
-            # We will assume the mask has been provided in the right
-            # coordinates, so no further conversion is needed.
-            self.mask = hp.ud_grade(hp.read_map(self.config['mask']),
-                                    nside_out=self.nside)
-        return self.mask
+    def _get_mask(self):
+        # We will assume the mask has been provided in the right
+        # coordinates, so no further conversion is needed.
+        mask = hp.ud_grade(hp.read_map(self.config['mask']),
+                           nside_out=self.nside)
+        return mask
 
     def _get_stars(self):
         if self.stars is None:

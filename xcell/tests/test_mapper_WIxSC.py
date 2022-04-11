@@ -21,7 +21,9 @@ def get_config():
 
 
 def cleanup_rerun():
-    for fname in ['nz_WIxSC_bin0.npz', 'WIxSC_rerun_bin0.fits']:
+    for fname in ['nz_WIxSC_bin0.npz', 'WIxSC_rerun_bin0.fits',
+                  'mask_mask_coordC_ns32.fits.gz',
+                  'mask_mask_coordG_ns32.fits.gz']:
         if os.path.isfile(fname):
             os.remove(fname)
 

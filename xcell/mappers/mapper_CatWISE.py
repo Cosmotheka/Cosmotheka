@@ -20,7 +20,6 @@ class MapperCatWISE(MapperBase):
 
         self.npix = hp.nside2npix(self.nside)
         # Angular mask
-        self.mask = None
         self.delta_map = None
         self.nl_coupled = None
         self.dndz = None
@@ -76,17 +75,14 @@ class MapperCatWISE(MapperBase):
                 mask[ipix_hole] = 0
         return mask
 
-    def get_mask(self):
-        if self.mask is None:
-            if self.config.get('mask_file', None) is not None:
-                mask = hp.ud_grade(hp.read_map(self.config['mask_file']),
-                                   nside_out=self.nside)
-            else:
-                fn = f'CatWise_cutout_mask_ns{self.nside}.fits.gz'
-                mask = self._rerun_read_cycle(fn, 'FITSMap',
-                                              self._cut_mask)
-            self.mask = rotate_mask(mask, self.rot, binarize=True)
-        return self.mask
+    def _get_mask(self):
+        if self.config.get('mask_file', None) is not None:
+            mask = hp.ud_grade(hp.read_map(self.config['mask_file']),
+                               nside_out=self.nside)
+        else:
+            mask = self._cut_mask()
+        mask = rotate_mask(mask, self.rot, binarize=True)
+        return mask
 
     # Shot noise
     def get_nl_coupled(self):

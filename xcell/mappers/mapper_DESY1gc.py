@@ -33,7 +33,6 @@ class MapperDESY1gc(MapperBase):
         self.zbin = config['zbin']
         self.z_edges = bin_edges[self.zbin]
         self.w = None
-        self.mask = None
         self.dndz = None
         self.delta_map = None
         self.nl_coupled = None
@@ -55,15 +54,14 @@ class MapperDESY1gc(MapperBase):
             self.w = np.array(cat_data['weight'])
         return self.w
 
-    def get_mask(self):
-        if self.mask is None:
-            self.mask = hp.read_map(self.config['file_mask'])
-            self.maks = rotate_mask(self.mask, self.rot)
-            self.mask = hp.ud_grade(self.mask, nside_out=self.nside)
-            # Cap it
-            goodpix = self.mask > self.mask_threshold
-            self.mask[~goodpix] = 0
-        return self.mask
+    def _get_mask(self):
+        mask = hp.read_map(self.config['file_mask'])
+        mask = rotate_mask(mask, self.rot)
+        mask = hp.ud_grade(mask, nside_out=self.nside)
+        # Cap it
+        goodpix = mask > self.mask_threshold
+        mask[~goodpix] = 0
+        return mask
 
     def get_nz(self, dz=0):
         if self.dndz is None:

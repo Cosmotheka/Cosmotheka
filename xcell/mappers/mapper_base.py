@@ -22,6 +22,7 @@ class MapperBase(object):
         # See ACTk case for an example
         self.mask_power = config.get('mask_power', 1)
         self.coords = config['coords']
+        self.mask = None
 
     def _get_rotator(self, coord_default):
         if self.coords != coord_default:
@@ -37,6 +38,14 @@ class MapperBase(object):
         return None
 
     def get_mask(self):
+        if self.mask is None:
+            fn = '_'.join([f'mask_{self.mask_name}',
+                           f'coord{self.coords}',
+                           f'ns{self.nside}.fits.gz'])
+            self.mask = self._rerun_read_cycle(fn, 'FITSMap', self._get_mask)
+        return self.mask
+
+    def _get_mask(self):
         raise NotImplementedError("Do not use base class")
 
     def get_nl_coupled(self):

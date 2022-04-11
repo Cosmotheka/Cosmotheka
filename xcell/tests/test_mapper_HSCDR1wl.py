@@ -92,6 +92,9 @@ def remove_rerun(prerun):
     frerun = glob.glob(prerun + 'HSCDR1wl*')
     for f in frerun:
         os.remove(f)
+    fn = prerun + 'mask_mask_coordC_ns32.fits.gz'
+    if os.path.isfile(fn):
+        os.remove(fn)
 
 
 def test_smoke():
@@ -127,11 +130,12 @@ def test_rerun():
 
     for fname in [f'{bn}.fits',
                   f'signal_{bn}_coordC_ns{nside}.fits.gz',
-                  f'mask_{bn}_coordC_ns{nside}.fits.gz',
                   f'w2s2_{bn}_coordC_ns{nside}.fits.gz',
                   f'nz_{bn}.npz']:
         fname_full = os.path.join(prerun, "HSCDR1wl_" + fname)
         assert os.path.isfile(fname_full)
+    fname_full = os.path.join(prerun, "mask_mask_coordC_ns32.fits.gz")
+    assert os.path.isfile(fname_full)
 
     # Check we recover the same mask and catalog
     # Non-exsisting fits files - read from rerun
