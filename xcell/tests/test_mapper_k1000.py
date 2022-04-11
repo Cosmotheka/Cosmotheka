@@ -13,6 +13,7 @@ def get_config(w_stars=False):
     return {'data_catalog': fname,
             'file_nz': 'xcell/tests/data/Nz_DIR_z0.1t0.3.asc',
             'zbin': 0, 'nside': 32, 'mask_name': 'mask',
+            'coords': 'C',
             'e1_flag': 'bias_corrected_e1',
             'e2_flag': 'bias_corrected_e2'}
 
@@ -48,10 +49,10 @@ def test_rerun():
     assert os.path.isfile(f'{prefix}_cat_bin0.fits')
     map1 = np.array(m.get_signal_map())
     mask1 = m.get_mask()
-    assert os.path.isfile(f'{prefix}_signal_shear_bin0_ns32.fits.gz')
-    assert os.path.isfile(f'{prefix}_mask_galaxies_bin0_ns32.fits.gz')
+    assert os.path.isfile(f'{prefix}_signal_shear_bin0_coordC_ns32.fits.gz')
+    assert os.path.isfile(f'{prefix}_mask_galaxies_bin0_coordC_ns32.fits.gz')
     nl1 = m.get_nl_coupled()
-    assert os.path.isfile(f'{prefix}_w2s2_galaxies_bin0_ns32.fits.gz')
+    assert os.path.isfile(f'{prefix}_w2s2_galaxies_bin0_coordC_ns32.fits.gz')
 
     # Non-exsisting fits files - read from rerun
     config['data_catalog'] = 'whatever'

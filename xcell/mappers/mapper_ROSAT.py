@@ -1,5 +1,5 @@
+from .utils import get_map_from_points, rotate_map, rotate_mask
 from .mapper_base import MapperBase
-from .utils import get_map_from_points
 import fitsio
 import numpy as np
 import healpy as hp
@@ -31,6 +31,7 @@ class MapperROSATXray(MapperBase):
     """
     def __init__(self, config):
         self._get_defaults(config)
+        self.rot = self._get_rotator('C')
         self.fname_expmap = config['exposure_map']
         self.fname_pholist = config['photon_list']
         self.erange = config.get('energy_range', [0.5, 3.0])
@@ -56,6 +57,7 @@ class MapperROSATXray(MapperBase):
     def get_expmap(self):
         if self.expmap is None:
             mp = hp.read_map(self.fname_expmap)
+            mp = rotate_map(mp, self.rot)
             self.expmap = hp.ud_grade(mp, nside_out=self.nside)
         return self.expmap
 
@@ -66,7 +68,8 @@ class MapperROSATXray(MapperBase):
             mask = self.get_mask()
             count_map = get_map_from_points(cat, self.nside,
                                             ra_name='raj2000',
-                                            dec_name='dej2000')
+                                            dec_name='dej2000',
+                                            rot=self.rot)
             self.countrate_map = np.zeros(self.npix)
             goodpix = mask > 0.0
             self.countrate_map[goodpix] = count_map[goodpix] / xpmap[goodpix]
@@ -81,8 +84,9 @@ class MapperROSATXray(MapperBase):
             xpmap = self.get_expmap()
             self.mask[xpmap <= self.explimit] = 0
             if self.mask_external is not None:
-                msk = hp.ud_grade(hp.read_map(self.mask_external),
-                                  nside_out=self.nside)
+                msk = hp.read_map(self.mask_external)
+                msk = rotate_mask(msk, self.rot, binarize=True)
+                msk = hp.ud_grade(msk, nside_out=self.nside)
                 self.mask *= msk
         return self.mask
 
@@ -93,7 +97,8 @@ class MapperROSATXray(MapperBase):
             mask = self.get_mask()
             count_map = get_map_from_points(cat, self.nside,
                                             ra_name='raj2000',
-                                            dec_name='dej2000')
+                                            dec_name='dej2000',
+                                            rot=self.rot)
             goodpix = mask > 0.0
             # Mean count rate
             # CR_mean = \sum n_p / \sum exp_p

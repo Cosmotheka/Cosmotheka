@@ -1,5 +1,5 @@
 from .mapper_base import MapperBase
-from .utils import get_map_from_points
+from .utils import get_map_from_points, rotate_mask
 from astropy.table import Table
 import numpy as np
 import healpy as hp
@@ -24,7 +24,7 @@ class MapperCatWISE(MapperBase):
         self.delta_map = None
         self.nl_coupled = None
         self.dndz = None
-        # self.cat_redshift = None
+        self.rot = self._get_rotator('C')
 
     # CatWISE catalog
     def get_catalog(self):
@@ -44,7 +44,7 @@ class MapperCatWISE(MapperBase):
             self.cat_data = self.get_catalog()
             self.mask = self.get_mask()
             nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            ra_name='ra',
+                                            rot=self.rot, ra_name='ra',
                                             dec_name='dec')
             mean_n = np.average(nmap_data, weights=self.mask)
             goodpix = self.mask > 0
@@ -79,12 +79,13 @@ class MapperCatWISE(MapperBase):
     def get_mask(self):
         if self.mask is None:
             if self.config.get('mask_file', None) is not None:
-                self.mask = hp.ud_grade(hp.read_map(self.config['mask_file']),
-                                        nside_out=self.nside)
+                mask = hp.ud_grade(hp.read_map(self.config['mask_file']),
+                                   nside_out=self.nside)
             else:
                 fn = f'CatWise_cutout_mask_ns{self.nside}.fits.gz'
-                self.mask = self._rerun_read_cycle(fn, 'FITSMap',
-                                                   self._cut_mask)
+                mask = self._rerun_read_cycle(fn, 'FITSMap',
+                                              self._cut_mask)
+            self.mask = rotate_mask(mask, self.rot, binarize=True)
         return self.mask
 
     # Shot noise
@@ -93,7 +94,7 @@ class MapperCatWISE(MapperBase):
             self.cat_data = self.get_catalog()
             self.mask = self.get_mask()
             nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            ra_name='ra',
+                                            rot=self.rot, ra_name='ra',
                                             dec_name='dec')
             N_mean = np.average(nmap_data, weights=self.mask)
             N_mean_srad = N_mean * self.npix / (4 * np.pi)

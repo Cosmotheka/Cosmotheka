@@ -12,9 +12,10 @@ def test_mapper_from_name():
 
 def test_maper_base_defaults():
     m = xc.mappers.MapperBase({'mask_name': 'mask',
-                               'nside': 32})
+                               'nside': 32, 'coords': 'C'})
 
     assert m.nside == 32
+    assert m.coords == 'C'
     assert m.mask_name == 'mask'
 
     with pytest.raises(NotImplementedError):

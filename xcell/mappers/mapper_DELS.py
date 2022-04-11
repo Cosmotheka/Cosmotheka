@@ -1,5 +1,5 @@
+from .utils import get_map_from_points, rotate_mask
 from .mapper_base import MapperBase
-from .utils import get_map_from_points
 from astropy.table import Table, vstack
 from scipy.integrate import simps
 import numpy as np
@@ -22,6 +22,7 @@ class MapperDELS(MapperBase):
            'mask_name': 'mask_DELS'}
         """
         self._get_defaults(config)
+        self.rot = self._get_rotator('C')
         self.pz = config.get('z_name', 'PHOTOZ_3DINFER')
         self.num_z_bins = config.get('num_z_bins', 500)
 
@@ -113,7 +114,8 @@ class MapperDELS(MapperBase):
             self.comp_map = self._get_comp_map()
             self.bmask = self._get_binary_mask()
             self.stars = self._get_stars()
-            nmap_data = get_map_from_points(cat_data, self.nside)
+            nmap_data = get_map_from_points(cat_data, self.nside,
+                                            rot=self.rot)
             mean_n = self._get_mean_n(nmap_data)
             goodpix = self.bmask > 0
             d[goodpix] = nmap_data[goodpix]/(mean_n*self.comp_map[goodpix])-1
@@ -169,8 +171,10 @@ class MapperDELS(MapperBase):
     def _get_stars(self):
         if self.stars is None:
             # Power = -2 makes sure the total number of stars is conserved
-            self.stars = hp.ud_grade(hp.read_map(self.config['star_map']),
-                                     nside_out=self.nside, power=-2)
+            stars = hp.read_map(self.config['star_map'])
+            stars = rotate_mask(stars, self.rot)
+            self.stars = hp.ud_grade(stars, nside_out=self.nside,
+                                     power=-2)
             # Convert to stars per deg^2
             pix_srad = 4*np.pi/self.npix
             pix_deg2 = pix_srad*(180/np.pi)**2
@@ -179,15 +183,20 @@ class MapperDELS(MapperBase):
 
     def _get_comp_map(self):
         if self.comp_map is None:
-            self.comp_map = hp.ud_grade(hp.read_map(
-                                        self.config['completeness_map']),
+            comp_map = hp.read_map(self.config['completeness_map'])
+            comp_map = rotate_mask(comp_map, self.rot)
+            self.comp_map = hp.ud_grade(comp_map,
                                         nside_out=self.nside)
+            self.comp_map[comp_map < 0.1] = 0.
         return self.comp_map
 
     def _get_binary_mask(self):
         if self.bmask is None:
-            self.bmask = hp.ud_grade(hp.read_map(self.config['binary_mask']),
-                                     nside_out=self.nside)
+            bmsk = hp.read_map(self.config['binary_mask'])
+            bmsk = rotate_mask(bmsk, self.rot)
+            self.bmask = hp.ud_grade(bmsk, nside_out=self.nside)
+            self.bmask[self.bmask < 0.5] = 0
+            self.bmask[self.bmask >= 0.5] = 1
         return self.bmask
 
     def get_mask(self):
@@ -200,7 +209,8 @@ class MapperDELS(MapperBase):
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             cat_data = self.get_catalog()
-            n = get_map_from_points(cat_data, self.nside)
+            n = get_map_from_points(cat_data, self.nside,
+                                    rot=self.rot)
             N_mean = self._get_mean_n(n)
             N_mean_srad = N_mean * self.npix / (4 * np.pi)
             mask = self.get_mask()

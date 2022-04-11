@@ -10,7 +10,8 @@ def get_config():
     return {'data_cat': 'xcell/tests/data/catalog.fits',
             'zbin_cat': 'xcell/tests/data/cat_zbin.fits',
             'file_nz': 'xcell/tests/data/cat_zbin.fits',
-            'zbin': 1, 'nside': 32, 'mask_name': 'mask'}
+            'zbin': 1, 'nside': 32, 'mask_name': 'mask',
+            'coords': 'C'}
 
 
 def get_mapper():
@@ -83,11 +84,11 @@ def test_rerun():
     nside = config['nside']
 
     for fname in [f'catalog_rerun_bin{zbin}.fits',
-                  f'signal_map_shear_bin{zbin}_ns{nside}.fits.gz',
-                  f'signal_map_PSF_bin{zbin}_ns{nside}.fits.gz',
-                  f'mask_bin{zbin}_ns{nside}.fits.gz',
-                  f'shear_w2s2_bin{zbin}_ns{nside}.fits.gz',
-                  f'PSF_w2s2_bin{zbin}_ns{nside}.fits.gz']:
+                  f'signal_map_shear_bin{zbin}_coordC_ns{nside}.fits.gz',
+                  f'signal_map_PSF_bin{zbin}_coordC_ns{nside}.fits.gz',
+                  f'mask_bin{zbin}_coordC_ns{nside}.fits.gz',
+                  f'shear_w2s2_bin{zbin}_coordC_ns{nside}.fits.gz',
+                  f'PSF_w2s2_bin{zbin}_coordC_ns{nside}.fits.gz']:
         assert os.path.isfile(os.path.join(prerun, "DESY1wl_" + fname))
 
     # Check we recover the same mask and catalog

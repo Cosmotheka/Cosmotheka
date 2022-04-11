@@ -11,7 +11,6 @@ def get_config(mode, wbeam=True):
         c = {'file_map': 'xcell/tests/data/map.fits',
              'file_hm1': 'xcell/tests/data/hm1_map.fits',
              'file_hm2': 'xcell/tests/data/hm2_map.fits',
-             'file_mask': 'xcell/tests/data/map.fits',
              'file_gp_mask': 'xcell/tests/data/mask1.fits',
              'gp_mask_mode': '0.2',
              'nside': 32}
@@ -45,7 +44,7 @@ def get_config(mode, wbeam=True):
              'file_hm2': 'xcell/tests/data/hm2_map.fits',
              'file_gp_mask': 'xcell/tests/data/mask1.fits',
              'file_ps_mask': 'xcell/tests/data/mask2.fits',
-             'nside': 32}
+             'nside': 32, 'coords': 'C'}
     elif mode == 'base':
         c = {'file_map': 'xcell/tests/data/map.fits',
              'file_hm1': 'xcell/tests/data/hm1_map.fits',
@@ -56,6 +55,7 @@ def get_config(mode, wbeam=True):
     if wbeam:
         c['beam_info'] = [{'type': 'Gaussian',
                            'FWHM_arcmin': 0.5}]
+    c['coords'] = c.get('coords', 'G')
     return c
 
 

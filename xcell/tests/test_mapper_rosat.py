@@ -12,7 +12,7 @@ def get_config():
          'energy_range': [0.5, 3.0],
          'exposure_min': 100.,
          'mask_name': 'mask_ROSAT',
-         'nside': 32}
+         'nside': 32, 'coords': 'C'}
     return c
 
 

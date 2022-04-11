@@ -2,6 +2,7 @@ import numpy as np
 import healpy as hp
 import pymaster as nmt
 from .mapper_base import MapperBase
+from .utils import rotate_mask, rotate_map
 
 
 class MapperPlanckBase(MapperBase):
@@ -10,6 +11,7 @@ class MapperPlanckBase(MapperBase):
 
     def _get_Planck_defaults(self, config):
         self._get_defaults(config)
+        self.rot = self._get_rotator('G')
         self.file_map = config['file_map']
         self.file_hm1 = config.get('file_hm1', None)
         self.file_hm2 = config.get('file_hm2', None)
@@ -31,31 +33,34 @@ class MapperPlanckBase(MapperBase):
             signal_map = hp.read_map(self.file_map)
             signal_map[signal_map == hp.UNSEEN] = 0.0
             signal_map[np.isnan(signal_map)] = 0.0
+            signal_map = rotate_map(signal_map, self.rot)
             self.signal_map = np.array([hp.ud_grade(signal_map,
                                         nside_out=self.nside)])
         return self.signal_map
 
     def get_mask(self):
         if self.mask is None:
+            msk = None
             if self.file_mask is not None:
-                self.mask = hp.read_map(self.file_mask)
-                self.mask = hp.ud_grade(self.mask,
-                                        nside_out=self.nside)
-            else:
-                self.mask = np.ones(12*self.nside**2)
+                msk = hp.read_map(self.file_mask)
             if self.file_gp_mask is not None:
                 field = self.gp_mask_modes[self.gp_mask_mode]
                 gp_mask = hp.read_map(self.file_gp_mask, field)
-                gp_mask = hp.ud_grade(gp_mask,
-                                      nside_out=self.nside)
-                self.mask *= gp_mask
+                if msk is None:
+                    msk = gp_mask
+                else:
+                    msk *= gp_mask
             if self.file_ps_mask is not None:
                 for mode in self.ps_mask_mode:
                     field = self.ps_mask_modes[mode]
                     ps_mask = hp.read_map(self.file_ps_mask, field)
-                    ps_mask = hp.ud_grade(ps_mask,
-                                          nside_out=self.nside)
-                    self.mask *= ps_mask
+                    if msk is None:
+                        msk = ps_mask
+                    else:
+                        msk *= ps_mask
+            msk = rotate_mask(msk, self.rot)  # Binarize?
+            msk[msk < 0] = 0
+            self.mask = hp.ud_grade(msk, nside_out=self.nside)
         return self.mask
 
     def _get_hm_maps(self):

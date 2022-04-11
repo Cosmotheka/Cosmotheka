@@ -39,13 +39,13 @@ def get_config(fsky=0.2, fsky2=0.3,
         'baryons_power_spectrum': 'nobaryons',
     }
     dummy0 = {'mask_name': 'mask_dummy0', 'mapper_class': 'MapperDummy',
-              'cosmo': cosmo, 'nside': nside, 'fsky': fsky, 'seed': 0,
+              'cosmo': cosmo, 'fsky': fsky, 'seed': 0,
               'dtype': dtype0, 'use_halo_model': inc_hm}
     dummy1 = {'mask_name': 'mask_dummy1', 'mapper_class': 'MapperDummy',
-              'cosmo': cosmo, 'nside': nside, 'fsky': fsky2, 'seed': 100,
+              'cosmo': cosmo, 'fsky': fsky2, 'seed': 100,
               'dtype': dtype1, 'use_halo_model': inc_hm}
     dummy2 = {'mask_name': 'mask_dummy2', 'mapper_class': 'MapperDummy',
-              'cosmo': cosmo, 'nside': nside, 'fsky': fsky2, 'seed': 100,
+              'cosmo': cosmo, 'fsky': fsky2, 'seed': 100,
               'dtype': dtype1, 'use_halo_model': inc_hm, 'mask_power': 2}
     bpw_edges = list(range(0, 3 * nside, 4))
 
@@ -58,7 +58,8 @@ def get_config(fsky=0.2, fsky2=0.3,
             'sphere': {'n_iter_sht': 0,
                        'n_iter_mcm': 3,
                        'n_iter_cmcm': 3,
-                       'nside': nside},
+                       'nside': nside,
+                       'coords': 'C'},
             'recompute': {'cls': True,
                           'cov': True,
                           'mcm': True,
@@ -404,7 +405,10 @@ def test_cls_vs_namaster():
 
     # NaMaster
     config = get_config()
-    m = MapperDummy(config['tracers']['Dummy__0'])
+    conf = config['tracers']['Dummy__0']
+    conf['nside'] = config['sphere']['nside']
+    conf['coords'] = config['sphere']['coords']
+    m = MapperDummy(conf)
 
     # True cl
     cl_m = m.get_cl()

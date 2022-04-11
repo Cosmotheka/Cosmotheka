@@ -85,7 +85,7 @@ def get_config():
             'bin_name': 'bin_test',
             'fname_cosmos': 'xcell/tests/data/hsc_cosmos_catalog.fits',
             'fnames_cosmos_ph': ['xcell/tests/data/hsc_photoz_catalog.fits'],
-            'nside': 32, 'mask_name': 'mask'}
+            'nside': 32, 'mask_name': 'mask', 'coords': 'C'}
 
 
 def remove_rerun(prerun):
@@ -126,9 +126,9 @@ def test_rerun():
     nside = c['nside']
 
     for fname in [f'{bn}.fits',
-                  f'signal_{bn}_ns{nside}.fits.gz',
-                  f'mask_{bn}_ns{nside}.fits.gz',
-                  f'w2s2_{bn}_ns{nside}.fits.gz',
+                  f'signal_{bn}_coordC_ns{nside}.fits.gz',
+                  f'mask_{bn}_coordC_ns{nside}.fits.gz',
+                  f'w2s2_{bn}_coordC_ns{nside}.fits.gz',
                   f'nz_{bn}.npz']:
         fname_full = os.path.join(prerun, "HSCDR1wl_" + fname)
         assert os.path.isfile(fname_full)

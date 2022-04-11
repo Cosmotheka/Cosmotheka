@@ -1,3 +1,4 @@
+from .utils import rotate_map
 from .mapper_Planck_base import MapperPlanckBase
 import healpy as hp
 
@@ -29,10 +30,12 @@ class MapperP15tSZ(MapperPlanckBase):
     def _get_hm_maps(self):
         if self.hm1_map is None:
             hm1_map = hp.read_map(self.file_hm1, 1)
+            hm1_map = rotate_map(hm1_map, self.rot)
             self.hm1_map = [hp.ud_grade(hm1_map,
                             nside_out=self.nside)]
         if self.hm2_map is None:
             hm2_map = hp.read_map(self.file_hm2, 2)
+            hm2_map = rotate_map(hm2_map, self.rot)
             self.hm2_map = [hp.ud_grade(hm2_map,
                             nside_out=self.nside)]
         return self.hm1_map, self.hm2_map

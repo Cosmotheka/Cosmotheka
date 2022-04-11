@@ -10,7 +10,7 @@ def get_config():
                               'xcell/tests/data/catalog.fits'],
             'completeness_map': 'xcell/tests/data/map.fits',
             'binary_mask': 'xcell/tests/data/map.fits',
-            'num_z_bins': 500,
+            'num_z_bins': 500, 'coords': 'C',
             'star_map': 'xcell/tests/data/map.fits',
             'zbin': 0, 'nside': 32, 'mask_name': 'mask'}
 

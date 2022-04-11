@@ -21,6 +21,14 @@ class MapperBase(object):
         # In case the map has an implicit mask applied
         # See ACTk case for an example
         self.mask_power = config.get('mask_power', 1)
+        self.coords = config['coords']
+
+    def _get_rotator(self, coord_default):
+        if self.coords != coord_default:
+            rot = hp.Rotator(coord=[coord_default, self.coords])
+        else:
+            rot = None
+        return rot
 
     def get_signal_map(self):
         raise NotImplementedError("Do not use base class")

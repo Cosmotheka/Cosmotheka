@@ -15,6 +15,7 @@ def get_config(wbeam=True):
          'file_weights': path+'act_zeros.fits.gz',
          'file_beam': path+'act_zeros.fits.gz',
          'map_name': 'test',
+         'coords': 'C',
          'nside': 32}
     return c
 
@@ -52,7 +53,7 @@ def test_get_signal_map(cls):
     mm = m.get_signal_map()[0]
     assert (len(mm)/12)**(1/2) == 32
     assert (mb == mm).all()
-    fn = 'xcell/tests/data/ACT_test_signal.fits.gz'
+    fn = 'xcell/tests/data/ACT_test_signal_coordC_ns32.fits.gz'
     mrerun = hp.read_map(fn)
     assert (mrerun == mb).all()
     os.remove(fn)
@@ -72,7 +73,7 @@ def test_get_mask(cls):
     mm = m.get_mask()
     assert (len(mm)/12)**(1/2) == 32
     assert (mb == mm).all()
-    fn = 'xcell/tests/data/ACT_test_mask.fits.gz'
+    fn = 'xcell/tests/data/ACT_test_mask_coordC_ns32.fits.gz'
     mrerun = hp.read_map(fn)
     assert (mrerun == mb).all()
     os.remove(fn)

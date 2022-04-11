@@ -69,19 +69,50 @@ def save_rerun_data(mpr, fname, ftype, data):
         raise ValueError(f"Unknown file format {ftype}")
 
 
-def get_map_from_points(cat, nside, w=None,
+def rotate_mask(mask, rot, binarize=False):
+    if rot is None:
+        return mask
+
+    m = rot.rotate_map_pixel(mask)
+    if binarize:
+        m[m < 0.5] = 0
+        m[m >= 0.5] = 1
+    return m
+
+
+def rotate_map(mapp, rot):
+    if rot is None:
+        return mapp
+    return rot.rotate_map_alms(mapp)
+
+
+def get_map_from_points(cat, nside, w=None, rot=None,
                         ra_name='RA', dec_name='DEC',
-                        in_radians=False):
+                        in_radians=False, qu=None):
     npix = hp.nside2npix(nside)
     if in_radians:
-        ipix = hp.ang2pix(nside,
-                          np.degrees(cat[ra_name]),
-                          np.degrees(cat[dec_name]),
-                          lonlat=True)
+        lon = np.degrees(cat[ra_name])
+        lat = np.degrees(cat[dec_name])
     else:
-        ipix = hp.ang2pix(nside, cat[ra_name], cat[dec_name],
-                          lonlat=True)
-    numcount = np.bincount(ipix, weights=w, minlength=npix)
+        lon = cat[ra_name]
+        lat = cat[dec_name]
+    if rot is not None:
+        # Rotate spin-2 quantities if needed
+        if qu is not None:
+            angle_ref = rot.angle_ref(lon, lat, lonlat=True)
+            ll = (qu[0] + 1j*qu[1])*np.exp(1j*2*angle_ref)
+            qu = [np.real(ll), np.imag(ll)]
+        # Rotate coordinates
+        lon, lat = rot(lon, lat, lonlat=True)
+    ipix = hp.ang2pix(nside, lon, lat, lonlat=True)
+    if qu is not None:
+        if w is not None:
+            qu = [x*w for x in qu]
+        q = np.bincount(ipix, weights=qu[0], minlength=npix)
+        u = np.bincount(ipix, weights=qu[1], minlength=npix)
+        numcount = [q, u]
+    else:
+        numcount = np.bincount(ipix, weights=w, minlength=npix)
     return numcount
 
 

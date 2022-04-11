@@ -36,10 +36,10 @@ def get_config(fsky0=0.2, fsky1=0.3, dtype0='galaxy_density',
             'baryons_power_spectrum': 'nobaryons',
         }
     dummy0 = {'mask_name': 'mask_dummy0', 'mapper_class': 'MapperDummy',
-              'cosmo': cosmo, 'nside': nside, 'fsky': fsky0, 'seed': 0,
+              'cosmo': cosmo, 'fsky': fsky0, 'seed': 0,
               'dtype': dtype0}
     dummy1 = {'mask_name': 'mask_dummy1', 'mapper_class': 'MapperDummy',
-              'cosmo': cosmo, 'nside': nside, 'fsky': fsky1, 'seed': 100,
+              'cosmo': cosmo, 'fsky': fsky1, 'seed': 100,
               'dtype': dtype1}
     bpw_edges = list(range(0, 3 * nside, 4))
 
@@ -49,7 +49,7 @@ def get_config(fsky0=0.2, fsky1=0.3, dtype0='galaxy_density',
                                  False, 'wl_ia': False}},
             'bpw_edges': bpw_edges,
             'sphere': {'n_iter_sht': 0, 'n_iter_mcm': 3, 'n_iter_cmcm': 3,
-                       'nside': nside},
+                       'nside': nside, 'coords': 'C'},
             'recompute': {'cls': False, 'cov': False, 'mcm': False, 'cmcm':
                           False},
             'output': tmpdir}

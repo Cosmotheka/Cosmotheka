@@ -8,6 +8,7 @@ class MapperACTBase(MapperBase):
 
     def _get_ACT_defaults(self, config):
         self._get_defaults(config)
+        self.rot = self._get_rotator('C')
         self.file_map = config['file_map']
         self.file_mask = config['file_mask']
         self.map_name = config['map_name']
@@ -19,7 +20,9 @@ class MapperACTBase(MapperBase):
 
     def get_signal_map(self):
         if self.signal_map is None:
-            fn = f'ACT_{self.map_name}_signal.fits.gz'
+            fn = '_'.join([f'ACT_{self.map_name}_signal',
+                           f'coord{self.coords}',
+                           f'ns{self.nside}.fits.gz'])
             mp = self._rerun_read_cycle(fn, 'FITSMap', self._get_signal_map)
             self.signal_map = [mp]
         return self.signal_map
@@ -31,6 +34,8 @@ class MapperACTBase(MapperBase):
 
     def get_mask(self):
         if self.mask is None:
-            fn = f'ACT_{self.map_name}_mask.fits.gz'
+            fn = '_'.join([f'ACT_{self.map_name}_mask',
+                           f'coord{self.coords}',
+                           f'ns{self.nside}.fits.gz'])
             self.mask = self._rerun_read_cycle(fn, 'FITSMap', self._get_mask)
         return self.mask

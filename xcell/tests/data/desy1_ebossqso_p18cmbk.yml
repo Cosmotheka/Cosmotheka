@@ -198,6 +198,7 @@ sphere:
   n_iter_mcm: 3
   n_iter_cmcm: 3
   nside: 4096
+  coords: 'C'
 
 recompute:
   cls: False

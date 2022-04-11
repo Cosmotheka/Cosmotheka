@@ -283,11 +283,17 @@ class Data():
     def get_mapper(self, tr):
         config = self.data['tracers'][tr]
         nside = self.data['sphere']['nside']
+        coords = self.data['sphere']['coords']
         if 'nside' not in config:
             config['nside'] = nside
         elif config['nside'] != nside:
-            raise ValueError(f"Nside missmatch in tracer {tr} and " +
+            raise ValueError(f"Nside mismatch in tracer {tr} and " +
                              f"'sphere': {config['nside']} vs {nside}")
+        if 'coords' not in config:
+            config['coords'] = coords
+        elif config['coords'] != coords:
+            raise ValueError(f"Coordinate mismatch in tracer {tr} and " +
+                             f"'sphere': {config['coords']} vs {coords}")
         if 'path_rerun' not in config:
             config['path_rerun'] = self.data.get('path_rerun', None)
         mapper_class = config['mapper_class']

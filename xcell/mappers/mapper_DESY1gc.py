@@ -1,5 +1,5 @@
+from .utils import get_map_from_points, rotate_mask
 from .mapper_base import MapperBase
-from .utils import get_map_from_points
 from astropy.io import fits
 from astropy.table import Table
 import numpy as np
@@ -21,6 +21,7 @@ class MapperDESY1gc(MapperBase):
         """
 
         self._get_defaults(config)
+        self.rot = self._get_rotator('C')
         self.mask_threshold = config.get('mask_threshold', 0.5)
         bin_edges = [[0.15, 0.30],
                      [0.30, 0.45],
@@ -57,6 +58,7 @@ class MapperDESY1gc(MapperBase):
     def get_mask(self):
         if self.mask is None:
             self.mask = hp.read_map(self.config['file_mask'])
+            self.maks = rotate_mask(self.mask, self.rot)
             self.mask = hp.ud_grade(self.mask, nside_out=self.nside)
             # Cap it
             goodpix = self.mask > self.mask_threshold
@@ -76,7 +78,7 @@ class MapperDESY1gc(MapperBase):
             cat_data = self.get_catalog()
             w = self._get_w()
             nmap_w = get_map_from_points(cat_data, self.nside,
-                                         w=w)
+                                         w=w, rot=self.rot)
             self.delta_map = np.zeros(self.npix)
             goodpix = mask > 0
             N_mean = np.sum(nmap_w[goodpix])/np.sum(mask[goodpix])
@@ -89,9 +91,9 @@ class MapperDESY1gc(MapperBase):
             cat_data = self.get_catalog()
             w = self._get_w()
             nmap_w = get_map_from_points(cat_data, self.nside,
-                                         w=w)
+                                         w=w, rot=self.rot)
             nmap_w2 = get_map_from_points(cat_data, self.nside,
-                                          w=w**2)
+                                          w=w**2, rot=self.rot)
             mask = self.get_mask()
             goodpix = mask > 0  # Already capped at mask_threshold
             N_mean = np.sum(nmap_w[goodpix])/np.sum(mask[goodpix])

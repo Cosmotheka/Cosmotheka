@@ -8,7 +8,7 @@ from astropy.table import Table
 def get_config():
     return {'data_catalog': 'xcell/tests/data/catalog_nvss.fits',
             'mask_sources': 'xcell/tests/data/source_masks_nvss.txt',
-            'nside': 32, 'mask_name': 'mask',
+            'nside': 32, 'mask_name': 'mask', 'coords': 'C',
             'redshift_catalog': 'xcell/tests/data/redshift_catalog_nvss.fits'}
 
 
@@ -51,6 +51,7 @@ def test_basic():
 
 
 def test_get_mask():
+    # Nothing should get masked
     config = get_config()
     config['DEC_min_deg'] = -90.
     config['GLAT_max_deg'] = 0.
@@ -58,6 +59,22 @@ def test_get_mask():
     m = xc.mappers.MapperNVSS(config)
     d = m.get_mask()
     assert np.all(np.fabs(d-1) == 0)
+
+    # Again, nothing should get masked
+    config = get_config()
+    config['mask_file'] = 'xcell/tests/data/map.fits'
+    m = xc.mappers.MapperNVSS(config)
+    d = m.get_mask()
+    assert np.all(np.fabs(d-1) == 0)
+
+    # Now sources should get masked
+    config = get_config()
+    m = xc.mappers.MapperNVSS(config)
+    d = m.get_mask()
+    ra, dec, _ = np.loadtxt('xcell/tests/data/source_masks_nvss.txt',
+                            unpack=True)
+    ipix = hp.ang2pix(32, ra, dec, lonlat=True)
+    assert np.all(d[ipix] == 0)
 
 
 def test_get_signal_map():

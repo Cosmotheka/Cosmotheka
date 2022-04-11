@@ -1,5 +1,5 @@
-from .mapper_base import MapperBase
 from .utils import get_map_from_points
+from .mapper_base import MapperBase
 from astropy.table import Table, hstack
 import numpy as np
 import healpy as hp
@@ -22,6 +22,7 @@ class MapperDESY1wl(MapperBase):
 
         self._get_defaults(config)
         self.config = config
+        self.rot = self._get_rotator('C')
         self.mode = config.get('mode', 'shear')
         self.zbin = config['zbin']
         self.npix = hp.nside2npix(self.nside)
@@ -155,14 +156,11 @@ class MapperDESY1wl(MapperBase):
         e1f, e2f, mod = self._set_mode(mode)
         print('Computing bin{} signal map'.format(self.zbin))
         cat_data = self.get_catalog()
-        we1 = get_map_from_points(cat_data, self.nside,
-                                  w=cat_data[e1f],
-                                  ra_name='ra',
-                                  dec_name='dec')
-        we2 = get_map_from_points(cat_data, self.nside,
-                                  w=cat_data[e2f],
-                                  ra_name='ra',
-                                  dec_name='dec')
+        we1, we2 = get_map_from_points(cat_data, self.nside,
+                                       qu=[-cat_data[e1f], cat_data[e2f]],
+                                       ra_name='ra',
+                                       dec_name='dec',
+                                       rot=self.rot)
         mask = self.get_mask()
         goodpix = mask > 0
         we1[goodpix] /= mask[goodpix]
@@ -179,10 +177,12 @@ class MapperDESY1wl(MapperBase):
         def get_ellip_maps():
             return self._get_ellipticity_maps(mode=mode)
 
-        fn = f'DESY1wl_signal_map_{mod}_bin{self.zbin}_ns{self.nside}.fits.gz'
+        fn = '_'.join([f'DESY1wl_signal_map_{mod}_bin{self.zbin}',
+                       f'coord{self.coords}',
+                       f'ns{self.nside}.fits.gz'])
         d = self._rerun_read_cycle(fn, 'FITSMap', get_ellip_maps,
                                    section=[0, 1])
-        self.maps[mod] = [-d[0], d[1]]
+        self.maps[mod] = np.array([d[0], d[1]])
         self.signal_map = self.maps[mod]
         return self.signal_map
 
@@ -197,7 +197,8 @@ class MapperDESY1wl(MapperBase):
     def _get_mask(self):
         cat_data = self.get_catalog()
         msk = get_map_from_points(cat_data, self.nside,
-                                  ra_name='ra', dec_name='dec')
+                                  ra_name='ra', dec_name='dec',
+                                  rot=self.rot)
         return msk
 
     def get_mask(self):
@@ -205,7 +206,9 @@ class MapperDESY1wl(MapperBase):
             return self.mask
 
         # This will only be computed if self.maps['mod'] is None
-        fn = f'DESY1wl_mask_bin{self.zbin}_ns{self.nside}.fits.gz'
+        fn = '_'.join([f'DESY1wl_mask_bin{self.zbin}',
+                       f'coord{self.coords}',
+                       f'ns{self.nside}.fits.gz'])
         self.mask = self._rerun_read_cycle(fn, 'FITSMap', self._get_mask)
         return self.mask
 
@@ -222,10 +225,13 @@ class MapperDESY1wl(MapperBase):
             mp = get_map_from_points(cat_data, self.nside,
                                      w=0.5*(cat_data[e1f]**2 +
                                             cat_data[e2f]**2),
-                                     ra_name='ra', dec_name='dec')
+                                     ra_name='ra', dec_name='dec',
+                                     rot=self.rot)
             return mp
 
-        fn = f'DESY1wl_{mod}_w2s2_bin{self.zbin}_ns{self.nside}.fits.gz'
+        fn = '_'.join([f'DESY1wl_{mod}_w2s2_bin{self.zbin}',
+                       f'coord{self.coords}',
+                       f'ns{self.nside}.fits.gz'])
         w2s2 = self._rerun_read_cycle(fn, 'FITSMap', get_w2s2)
 
         N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix

@@ -1,5 +1,5 @@
 from .mapper_base import MapperBase
-from .utils import get_map_from_points
+from .utils import get_map_from_points, rotate_mask
 from astropy.table import Table
 import numpy as np
 import healpy as hp
@@ -15,6 +15,7 @@ class MapperNVSS(MapperBase):
            'redshift_catalog':'100sqdeg_1uJy_s1400.fits'}
         """
         self._get_defaults(config)
+        self.rot = self._get_rotator('C')
         self.file_sourcemask = config.get('mask_sources', None)
         self.ra_name = 'RAJ2000'
         self.dec_name = 'DEJ2000'
@@ -28,7 +29,6 @@ class MapperNVSS(MapperBase):
         self.dndz = None
         self.cat_redshift = None
 
-    # NVSS catalog
     def get_catalog(self):
         if self.cat_data is None:
             file_data = self.config['data_catalog']
@@ -51,7 +51,6 @@ class MapperNVSS(MapperBase):
                  self.config.get('GLAT_max_deg', 5))]
         return self.cat_data
 
-    # Redshift Distribution Catalog
     def get_catalog_redshift(self):
         if self.cat_redshift is None:
             file_data = self.config['redshift_catalog']
@@ -66,7 +65,6 @@ class MapperNVSS(MapperBase):
                 (self.cat_redshift['redshift'] <= 5)]
         return self.cat_redshift
 
-    # Density Map
     def get_signal_map(self, apply_galactic_correction=True):
         if self.delta_map is None:
             d = np.zeros(self.npix)
@@ -74,7 +72,8 @@ class MapperNVSS(MapperBase):
             self.mask = self.get_mask()
             nmap_data = get_map_from_points(self.cat_data, self.nside,
                                             ra_name=self.ra_name,
-                                            dec_name=self.dec_name)
+                                            dec_name=self.dec_name,
+                                            rot=self.rot)
             mean_n = np.average(nmap_data, weights=self.mask)
             goodpix = self.mask > 0
             # Division by mask not really necessary, since it's binary.
@@ -82,23 +81,25 @@ class MapperNVSS(MapperBase):
             self.delta_map = np.array([d])
         return self.delta_map
 
-    # Mask
     def get_mask(self):
         if self.mask is None:
 
             if self.config.get('mask_file', None) is not None:
-                self.mask = hp.ud_grade(hp.read_map(self.config['mask_file']),
+                mask = hp.read_map(self.config['mask_file'])
+                self.mask = hp.ud_grade(rotate_mask(mask, self.rot),
                                         nside_out=self.nside)
+                self.mask[self.mask > 0.5] = 1.
+                self.mask[self.mask <= 0.5] = 0.
             else:
-                self.mask = np.ones(self.npix)
+                mask = np.ones(self.npix)
                 r = hp.Rotator(coord=['C', 'G'])
                 RApix, DEpix = hp.pix2ang(self.nside, np.arange(self.npix),
                                           lonlat=True)
                 lpix, bpix = r(RApix, DEpix, lonlat=True)
                 # angular conditions
-                self.mask[(DEpix < self.config.get('DEC_min_deg', -40)) |
-                          (np.fabs(bpix) < self.config.get('GLAT_max_deg',
-                                                           5))] = 0
+                mask[(DEpix < self.config.get('DEC_min_deg', -40)) |
+                     (np.fabs(bpix) < self.config.get('GLAT_max_deg',
+                      5))] = 0
                 if self.file_sourcemask is not None:
                     # holes catalog
                     RAmask, DEmask, radmask = np.loadtxt(self.file_sourcemask,
@@ -108,24 +109,25 @@ class MapperNVSS(MapperBase):
                         ipix_hole = hp.query_disc(self.nside, vec,
                                                   np.radians(radius),
                                                   inclusive=True)
-                        self.mask[ipix_hole] = 0
+                        mask[ipix_hole] = 0
+                self.mask = rotate_mask(mask, self.rot, binarize=True)
+
         return self.mask
 
-    # Shot noise
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             self.cat_data = self.get_catalog()
             self.mask = self.get_mask()
             nmap_data = get_map_from_points(self.cat_data, self.nside,
                                             ra_name=self.ra_name,
-                                            dec_name=self.dec_name)
+                                            dec_name=self.dec_name,
+                                            rot=self.rot)
             N_mean = np.average(nmap_data, weights=self.mask)
             N_mean_srad = N_mean * self.npix / (4 * np.pi)
             N_ell = np.mean(self.mask) / N_mean_srad
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
 
-    # Redshift Distribution
     def get_nz(self, dz=0):
         if self.dndz is None:
             self.cat_redshift = self.get_catalog_redshift()
@@ -135,10 +137,8 @@ class MapperNVSS(MapperBase):
             self.dndz = {'z_mid': zz, 'nz': nz}
         return self._get_shifted_nz(dz)
 
-    # Type
     def get_dtype(self):
         return 'galaxy_density'
 
-    # Spin
     def get_spin(self):
         return 0

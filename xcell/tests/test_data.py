@@ -327,6 +327,19 @@ def test_get_mapper():
             assert m.nside == 4096
             assert isinstance(m, mapper_from_name(class_name))
 
+    data.data['tracers']['DESgc__0'].pop('nside')
+    data.data['tracers']['DESgc__0']['coords'] = 'G'
+
+    for tr, val in config['tracers'].items():
+        class_name = val['mapper_class']
+        if tr == 'DESgc__0':
+            with pytest.raises(ValueError):
+                m = data.get_mapper(tr)
+        else:
+            m = data.get_mapper(tr)
+            assert m.coords == 'C'
+            assert isinstance(m, mapper_from_name(class_name))
+
     remove_yml_file(config)
 
 

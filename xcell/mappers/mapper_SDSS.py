@@ -28,6 +28,7 @@ class MapperSDSS(MapperBase):
                                              4096)
         self.lmin_nl_from_data = config.get('lmin_nl_from_data',
                                             2000)
+        self.rot = self._get_rotator('C')
 
     def get_catalog(self, mod='data'):
         if mod == 'data':
@@ -71,6 +72,7 @@ class MapperSDSS(MapperBase):
 
     def _get_map_fname(self, mp='mask'):
         return '_'.join([f'SDSS_{self.SDSS_name}_{mp}',
+                         f'coord{self.coords}',
                          f'ns{self.nside}.fits.gz'])
 
     def _get_signal_map(self):
@@ -81,9 +83,9 @@ class MapperSDSS(MapperBase):
         w_random = self._get_w(mod='random')
         alpha = self._get_alpha()
         nmap_data = get_map_from_points(cat_data, self.nside,
-                                        w=w_data)
+                                        w=w_data, rot=self.rot)
         nmap_random = get_map_from_points(cat_random, self.nside,
-                                          w=w_random)
+                                          w=w_random, rot=self.rot)
         mask = self.get_mask()
         goodpix = mask > 0
         delta_map = (nmap_data - alpha * nmap_random)
@@ -102,9 +104,8 @@ class MapperSDSS(MapperBase):
         cat_random = self.get_catalog(mod='random')
         w_random = self._get_w(mod='random')
         alpha = self._get_alpha()
-        mask = get_map_from_points(cat_random,
-                                   self.nside_mask,
-                                   w=w_random)
+        mask = get_map_from_points(cat_random, self.nside_mask,
+                                   w=w_random, rot=self.rot)
         mask *= alpha
         # Account for different pixel areas
         area_ratio = (self.nside_mask/self.nside)**2
@@ -129,9 +130,11 @@ class MapperSDSS(MapperBase):
             pixel_A = 4*np.pi/hp.nside2npix(self.nside)
             mask = self.get_mask()
             w2_data = get_map_from_points(cat_data, self.nside,
-                                          w=w_data**2)
+                                          w=w_data**2,
+                                          rot=self.rot)
             w2_random = get_map_from_points(cat_random, self.nside,
-                                            w=w_random**2)
+                                            w=w_random**2,
+                                            rot=self.rot)
             goodpix = mask > 0
             N_ell = (w2_data[goodpix].sum() +
                      alpha**2*w2_random[goodpix].sum())
@@ -148,6 +151,7 @@ class MapperSDSS(MapperBase):
     def get_nl_coupled(self):
         if self.nl_coupled is None:
             fn = '_'.join([f'SDSS_{self.SDSS_name}_Nell',
+                           f'coord{self.coords}',
                            f'ns{self.nside}.npz'])
             d = self._rerun_read_cycle(fn, 'NPZ',
                                        self._get_nl_coupled)
