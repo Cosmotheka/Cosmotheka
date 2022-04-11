@@ -60,7 +60,7 @@ def test_get_nl_coupled_data(m):
 
 
 def test_rerun():
-    fname_msk = 'xcell/tests/data/SDSS_dummy_mask_coordC_ns32.fits.gz'
+    fname_msk = 'xcell/tests/data/mask_mask_coordC_ns32.fits.gz'
     fname_map = 'xcell/tests/data/SDSS_dummy_signal_coordC_ns32.fits.gz'
     fname_nls = 'xcell/tests/data/SDSS_dummy_Nell_coordC_ns32.npz'
 
