@@ -287,12 +287,12 @@ class Data():
         if 'nside' not in config:
             config['nside'] = nside
         elif config['nside'] != nside:
-            raise ValueError(f"Nside missmatch in tracer {tr} and " +
+            raise ValueError(f"Nside mismatch in tracer {tr} and " +
                              f"'sphere': {config['nside']} vs {nside}")
         if 'coords' not in config:
             config['coords'] = coords
         elif config['coords'] != coords:
-            raise ValueError(f"Coordinate missmatch in tracer {tr} and " +
+            raise ValueError(f"Coordinate mismatch in tracer {tr} and " +
                              f"'sphere': {config['coords']} vs {coords}")
         if 'path_rerun' not in config:
             config['path_rerun'] = self.data.get('path_rerun', None)

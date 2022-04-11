@@ -11,7 +11,6 @@ def get_config(mode, wbeam=True):
         c = {'file_map': 'xcell/tests/data/map.fits',
              'file_hm1': 'xcell/tests/data/hm1_map.fits',
              'file_hm2': 'xcell/tests/data/hm2_map.fits',
-             'file_mask': 'xcell/tests/data/map.fits',
              'file_gp_mask': 'xcell/tests/data/mask1.fits',
              'gp_mask_mode': '0.2',
              'nside': 32}

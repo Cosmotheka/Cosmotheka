@@ -83,7 +83,7 @@ def rotate_mask(mask, rot, binarize=False):
 def rotate_map(mapp, rot):
     if rot is None:
         return mapp
-    return rot.rotate_map_alms(mapp, verbose=False)
+    return rot.rotate_map_alms(mapp)
 
 
 def get_map_from_points(cat, nside, w=None, rot=None,

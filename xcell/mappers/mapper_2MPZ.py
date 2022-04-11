@@ -31,6 +31,7 @@ class Mapper2MPZ(MapperBase):
 
     def _get_coords(self, config):
         if self.coords == 'G':  # Galactic
+            print("HIII")
             return 'L', 'B'
         elif self.coords == 'C':  # Celestial/Equatorial
             return 'SUPRA', 'SUPDEC'

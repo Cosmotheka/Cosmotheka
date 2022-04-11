@@ -63,12 +63,16 @@ def test_get_nz():
     assert np.all(np.fabs(nz2-nz) < 1E-5)
 
 
-@pytest.mark.parametrize('coord', ['G', 'C'])
+@pytest.mark.parametrize('coord', ['G', 'C', 'E'])
 def test_get_signal_map(coord):
     cleanup_rerun()
     c = get_config()
-    c['coordinates'] = coord
-    m = xc.mappers.MapperWIxSC(c)
+    c['coords'] = coord
+    try:
+        m = xc.mappers.MapperWIxSC(c)
+    except NotImplementedError:
+        assert coord == 'E'
+        return
     d = m.get_signal_map()
     d = np.array(d)
     assert d.shape == (1, hp.nside2npix(m.nside))
