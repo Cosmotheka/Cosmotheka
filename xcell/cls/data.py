@@ -284,6 +284,9 @@ class Data():
         config = self.data['tracers'][tr]
         nside = self.data['sphere']['nside']
         coords = self.data['sphere']['coords']
+        config['ignore_rerun'] = config.get('ignore_rerun',
+                                            self.data.get('ignore_rerun',
+                                                          False))
         if 'nside' not in config:
             config['nside'] = nside
         elif config['nside'] != nside:
