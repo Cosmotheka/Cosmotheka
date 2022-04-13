@@ -78,9 +78,8 @@ class MapperKiDS1000(MapperBase):
                 cat_out = cat
         return cat_out
 
-    def _set_mode(self, mode=None):
-        if mode is None:
-            mode = self.mode
+    def _set_mode(self):
+        mode = self.mode
 
         if mode == 'shear':
             kind = 'galaxies'
@@ -124,8 +123,8 @@ class MapperKiDS1000(MapperBase):
         sel = cat_data['SG_FLAG'] == self.sel[kind]
         return cat_data[sel]
 
-    def _get_ellip_maps(self, mode=None):
-        kind, e1f, e2f, mod = self._set_mode(mode)
+    def _get_ellip_maps(self):
+        kind, e1f, e2f, mod = self._set_mode()
         print('Computing bin{} signal map'.format(self.zbin))
         data = self._get_gals_or_stars(kind)
         we1, we2 = get_map_from_points(data, self.nside,
@@ -134,21 +133,21 @@ class MapperKiDS1000(MapperBase):
                                        ra_name='ALPHA_J2000',
                                        dec_name='DELTA_J2000',
                                        rot=self.rot)
-        mask = self.get_mask(mod)
+        mask = self.get_mask()
         goodpix = mask > 0
         we1[goodpix] /= mask[goodpix]
         we2[goodpix] /= mask[goodpix]
         return we1, we2
 
-    def get_signal_map(self, mode=None):
-        kind, e1f, e2f, mod = self._set_mode(mode)
+    def get_signal_map(self):
+        kind, e1f, e2f, mod = self._set_mode()
         if self.maps[mod] is not None:
             self.signal_map = self.maps[mod]
             return self.signal_map
 
         # This will only be computed if self.maps['mod'] is None
         def get_ellip_maps_mod():
-            return self._get_ellip_maps(mode=mode)
+            return self._get_ellip_maps()
 
         fn = '_'.join([f'KiDS1000_signal_{mod}_bin{self.zbin}',
                        f'coord{self.coords}',
@@ -160,31 +159,22 @@ class MapperKiDS1000(MapperBase):
         self.signal_map = self.maps[mod]
         return self.signal_map
 
-    def get_mask(self, mode=None):
-        kind, e1f, e2f, mod = self._set_mode(mode)
+    def _get_mask(self):
+        kind, e1f, e2f, mod = self._set_mode()
         if self.masks[kind] is not None:
-            self.mask = self.masks[kind]
-            return self.mask
+            return self.masks[kind]
 
-        def get_mask_mod():
-            data = self._get_gals_or_stars(kind)
-            msk = get_map_from_points(data, self.nside,
-                                      w=data['weight'],
-                                      ra_name='ALPHA_J2000',
-                                      dec_name='DELTA_J2000',
-                                      rot=self.rot)
-            return msk
+        data = self._get_gals_or_stars(kind)
+        msk = get_map_from_points(data, self.nside,
+                                  w=data['weight'],
+                                  ra_name='ALPHA_J2000',
+                                  dec_name='DELTA_J2000',
+                                  rot=self.rot)
+        self.masks[kind] = msk
+        return msk
 
-        fn = '_'.join([f'mask_{self.mask_name}_{kind}',
-                       f'coord{self.coords}',
-                       f'ns{self.nside}.fits.gz'])
-        self.masks[kind] = self._rerun_read_cycle(fn, 'FITSMap',
-                                                  get_mask_mod)
-        self.mask = self.masks[kind]
-        return self.mask
-
-    def _get_w2s2(self, mode):
-        kind, e1f, e2f, mod = self._set_mode(mode)
+    def _get_w2s2(self):
+        kind, e1f, e2f, mod = self._set_mode()
         if self.w2s2s[mod] is not None:
             self.w2s2 = self.w2s2s[mod]
             return self.w2s2
@@ -205,10 +195,10 @@ class MapperKiDS1000(MapperBase):
         self.w2s2 = self.w2s2s[mod]
         return self.w2s2
 
-    def get_nl_coupled(self, mode=None):
-        kind, e1f, e2f, mod = self._set_mode(mode)
+    def get_nl_coupled(self):
+        kind, e1f, e2f, mod = self._set_mode()
         if self.nls[mod] is None:
-            self.w2s2 = self._get_w2s2(mode)
+            self.w2s2 = self._get_w2s2()
             N_ell = hp.nside2pixarea(self.nside) * np.mean(self.w2s2)
             nl = N_ell * np.ones(3*self.nside)
             nl[:2] = 0  # ylm = 0 for l < spin

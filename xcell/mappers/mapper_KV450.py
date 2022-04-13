@@ -173,25 +173,16 @@ class MapperKV450(MapperBase):
     def get_mask(self, mode=None):
         kind, e1f, e2f, mod = self._set_mode(mode)
         if self.masks[kind] is not None:
-            self.mask = self.masks[kind]
-            return self.mask
+            return self.masks[kind]
 
-        def get_mask_mod():
-            data = self._get_gals_or_stars(kind)
-            msk = get_map_from_points(data, self.nside,
-                                      w=data['weight'],
-                                      ra_name='ALPHA_J2000',
-                                      dec_name='DELTA_J2000',
-                                      rot=self.rot)
-            return msk
-
-        fn = '_'.join([f'mask_{self.mask_name}_{kind}',
-                       f'coord{self.coords}',
-                       f'ns{self.nside}.fits.gz'])
-        self.masks[kind] = self._rerun_read_cycle(fn, 'FITSMap',
-                                                  get_mask_mod)
-        self.mask = self.masks[kind]
-        return self.mask
+        data = self._get_gals_or_stars(kind)
+        msk = get_map_from_points(data, self.nside,
+                                  w=data['weight'],
+                                  ra_name='ALPHA_J2000',
+                                  dec_name='DELTA_J2000',
+                                  rot=self.rot)
+        self.masks[kind] = msk
+        return msk
 
     def _get_w2s2(self, mode):
         kind, e1f, e2f, mod = self._set_mode(mode)
