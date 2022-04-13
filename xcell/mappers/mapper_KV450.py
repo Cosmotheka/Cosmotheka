@@ -88,9 +88,8 @@ class MapperKV450(MapperBase):
             save_rerun_data(self, fn, 'FITSTable', cat.as_array())
         return cat_bins[self.zbin].as_array()
 
-    def _set_mode(self, mode=None):
-        if mode is None:
-            mode = self.mode
+    def _set_mode(self):
+        mode = self.mode
 
         if mode == 'shear':
             kind = 'galaxies'
@@ -134,8 +133,8 @@ class MapperKV450(MapperBase):
         sel = cat_data['SG_FLAG'] == self.sel[kind]
         return cat_data[sel]
 
-    def _get_ellip_maps(self, mode=None):
-        kind, e1f, e2f, mod = self._set_mode(mode)
+    def _get_ellip_maps(self):
+        kind, e1f, e2f, mod = self._set_mode()
         print('Computing bin{} signal map'.format(self.zbin))
         data = self._get_gals_or_stars(kind)
         we1, we2 = get_map_from_points(data, self.nside,
@@ -144,34 +143,30 @@ class MapperKV450(MapperBase):
                                        ra_name='ALPHA_J2000',
                                        dec_name='DELTA_J2000',
                                        rot=self.rot)
-        mask = self.get_mask(mod)
+        mask = self.get_mask()
         goodpix = mask > 0
         we1[goodpix] /= mask[goodpix]
         we2[goodpix] /= mask[goodpix]
         return we1, we2
 
-    def get_signal_map(self, mode=None):
-        kind, e1f, e2f, mod = self._set_mode(mode)
+    def get_signal_map(self):
+        kind, e1f, e2f, mod = self._set_mode()
         if self.maps[mod] is not None:
             self.signal_map = self.maps[mod]
             return self.signal_map
-
-        # This will only be computed if self.maps['mod'] is None
-        def get_ellip_maps_mod():
-            return self._get_ellip_maps(mode=mode)
 
         fn = '_'.join([f'KV450_signal_{mod}_bin{self.zbin}',
                        f'coord{self.coords}',
                        f'ns{self.nside}.fits.gz'])
         d = self._rerun_read_cycle(fn, 'FITSMap',
-                                   get_ellip_maps_mod,
+                                   self._get_ellip_maps,
                                    section=[0, 1])
         self.maps[mod] = np.array([d[0], d[1]])
         self.signal_map = self.maps[mod]
         return self.signal_map
 
-    def get_mask(self, mode=None):
-        kind, e1f, e2f, mod = self._set_mode(mode)
+    def _get_mask(self):
+        kind, e1f, e2f, mod = self._set_mode()
         if self.masks[kind] is not None:
             return self.masks[kind]
 
@@ -184,8 +179,8 @@ class MapperKV450(MapperBase):
         self.masks[kind] = msk
         return msk
 
-    def _get_w2s2(self, mode):
-        kind, e1f, e2f, mod = self._set_mode(mode)
+    def _get_w2s2(self):
+        kind, e1f, e2f, mod = self._set_mode()
         if self.w2s2s[mod] is not None:
             self.w2s2 = self.w2s2s[mod]
             return self.w2s2
@@ -207,10 +202,10 @@ class MapperKV450(MapperBase):
         self.w2s2 = self.w2s2s[mod]
         return self.w2s2
 
-    def get_nl_coupled(self, mode=None):
-        kind, e1f, e2f, mod = self._set_mode(mode)
+    def get_nl_coupled(self):
+        kind, e1f, e2f, mod = self._set_mode()
         if self.nls[mod] is None:
-            self.w2s2 = self._get_w2s2(mode)
+            self.w2s2 = self._get_w2s2()
             N_ell = hp.nside2pixarea(self.nside) * np.mean(self.w2s2)
             nl = N_ell * np.ones(3*self.nside)
             nl[:2] = 0  # ylm = 0 for l < spin

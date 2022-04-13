@@ -146,14 +146,11 @@ class MapperKiDS1000(MapperBase):
             return self.signal_map
 
         # This will only be computed if self.maps['mod'] is None
-        def get_ellip_maps_mod():
-            return self._get_ellip_maps()
-
         fn = '_'.join([f'KiDS1000_signal_{mod}_bin{self.zbin}',
                        f'coord{self.coords}',
                        f'ns{self.nside}.fits.gz'])
         d = self._rerun_read_cycle(fn, 'FITSMap',
-                                   get_ellip_maps_mod,
+                                   self._get_ellip_maps,
                                    section=[0, 1])
         self.maps[mod] = np.array([d[0], d[1]])
         self.signal_map = self.maps[mod]

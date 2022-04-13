@@ -4,15 +4,16 @@ import healpy as hp
 import os
 
 
-def get_config():
+def get_config(mode='shear'):
     return {'data_catalogs': ['xcell/tests/data/catalog.fits',
                               'xcell/tests/data/catalog_stars.fits'],
             'file_nz': 'xcell/tests/data/Nz_DIR_z0.1t0.3.asc',
-            'zbin': 0, 'nside': 32, 'mask_name': 'mask', 'coords': 'C'}
+            'zbin': 0, 'nside': 32, 'mode': mode,
+            'mask_name': 'mask', 'coords': 'C'}
 
 
-def get_mapper():
-    return xc.mappers.MapperKV450(get_config())
+def get_mapper(mode='shear'):
+    return xc.mappers.MapperKV450(get_config(mode=mode))
 
 
 def test_smoke():
@@ -47,10 +48,12 @@ def test_rerun():
 
 
 def test_get_signal_map():
-    m = get_mapper()
-    sh = np.array(m.get_signal_map('shear'))
-    psf = np.array(m.get_signal_map('PSF'))
-    star = np.array(m.get_signal_map('stars'))
+    m = get_mapper('shear')
+    sh = np.array(m.get_signal_map())
+    m = get_mapper('PSF')
+    psf = np.array(m.get_signal_map())
+    m = get_mapper('stars')
+    star = np.array(m.get_signal_map())
     es = get_es()
     assert sh.shape == (2, hp.nside2npix(32))
     assert psf.shape == (2, hp.nside2npix(32))
@@ -61,10 +64,12 @@ def test_get_signal_map():
 
 
 def test_get_mask():
+    m = get_mapper('shear')
+    sh = m.get_mask()
     m = get_mapper()
-    sh = m.get_mask('shear')
-    psf = m.get_mask('PSF')
-    star = m.get_mask('stars')
+    psf = m.get_mask()
+    m = get_mapper('stars')
+    star = m.get_mask()
     assert len(sh) == len(psf) == len(star) == hp.nside2npix(32)
     assert np.all(np.fabs(sh-2) < 1E-5)
     assert np.all(np.fabs(psf-2) < 1E-5)
@@ -72,20 +77,22 @@ def test_get_mask():
 
 
 def test_get_nl_coupled():
-    m = get_mapper()
     aa = hp.nside2pixarea(32)
 
+    m = get_mapper('shear')
     sh = m.get_nl_coupled()
     shp = 4*np.std(np.arange(4))**2*aa/(1+m.m[0])**2
     assert np.all(sh[0][:2] == 0)
     assert np.fabs(np.mean(sh[0][2:])-shp) < 1E-5
 
-    psf = m.get_nl_coupled('PSF')
+    m = get_mapper('PSF')
+    psf = m.get_nl_coupled()
     psfp = 4*np.mean(np.arange(4)**2)*aa
     assert np.all(psf[0][:2] == 0)
     assert np.fabs(np.mean(psf[0][2:])-psfp) < 1E-5
 
-    star = m.get_nl_coupled('stars')
+    m = get_mapper('stars')
+    star = m.get_nl_coupled()
     starp = 4*np.mean(np.arange(4)**2)*aa
     assert np.all(star[0][:2] == 0)
     assert np.fabs(np.mean(star[0][2:])-starp) < 1E-5
