@@ -42,7 +42,6 @@ class MapperDELS(MapperBase):
         self.dndz = None
         self.delta_map = None
         self.nl_coupled = None
-        self.mask = None
         self.comp_map = None
         self.stars = None
         self.bmask = None
@@ -199,12 +198,10 @@ class MapperDELS(MapperBase):
             self.bmask[self.bmask >= 0.5] = 1
         return self.bmask
 
-    def get_mask(self):
-        if self.mask is None:
-            self.bmask = self._get_binary_mask()
-            self.comp_map = self._get_comp_map()
-            self.mask = self.bmask * self.comp_map
-        return self.mask
+    def _get_mask(self):
+        self.bmask = self._get_binary_mask()
+        self.comp_map = self._get_comp_map()
+        return self.bmask * self.comp_map
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:

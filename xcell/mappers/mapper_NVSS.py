@@ -23,7 +23,6 @@ class MapperNVSS(MapperBase):
 
         self.npix = hp.nside2npix(self.nside)
         # Angular mask
-        self.mask = None
         self.delta_map = None
         self.nl_coupled = None
         self.dndz = None
@@ -81,38 +80,34 @@ class MapperNVSS(MapperBase):
             self.delta_map = np.array([d])
         return self.delta_map
 
-    def get_mask(self):
-        if self.mask is None:
-
-            if self.config.get('mask_file', None) is not None:
-                mask = hp.read_map(self.config['mask_file'])
-                self.mask = hp.ud_grade(rotate_mask(mask, self.rot),
-                                        nside_out=self.nside)
-                self.mask[self.mask > 0.5] = 1.
-                self.mask[self.mask <= 0.5] = 0.
-            else:
-                mask = np.ones(self.npix)
-                r = hp.Rotator(coord=['C', 'G'])
-                RApix, DEpix = hp.pix2ang(self.nside, np.arange(self.npix),
-                                          lonlat=True)
-                lpix, bpix = r(RApix, DEpix, lonlat=True)
-                # angular conditions
-                mask[(DEpix < self.config.get('DEC_min_deg', -40)) |
-                     (np.fabs(bpix) < self.config.get('GLAT_max_deg',
-                      5))] = 0
-                if self.file_sourcemask is not None:
-                    # holes catalog
-                    RAmask, DEmask, radmask = np.loadtxt(self.file_sourcemask,
-                                                         unpack=True)
-                    vecmask = hp.ang2vec(RAmask, DEmask, lonlat=True)
-                    for vec, radius in zip(vecmask, radmask):
-                        ipix_hole = hp.query_disc(self.nside, vec,
-                                                  np.radians(radius),
-                                                  inclusive=True)
-                        mask[ipix_hole] = 0
-                self.mask = rotate_mask(mask, self.rot, binarize=True)
-
-        return self.mask
+    def _get_mask(self):
+        if self.config.get('mask_file', None) is not None:
+            mask = hp.read_map(self.config['mask_file'])
+            mask = hp.ud_grade(rotate_mask(mask, self.rot),
+                               nside_out=self.nside)
+            mask[mask > 0.5] = 1.
+            mask[mask <= 0.5] = 0.
+        else:
+            mask = np.ones(self.npix)
+            r = hp.Rotator(coord=['C', 'G'])
+            RApix, DEpix = hp.pix2ang(self.nside, np.arange(self.npix),
+                                      lonlat=True)
+            lpix, bpix = r(RApix, DEpix, lonlat=True)
+            # angular conditions
+            mask[(DEpix < self.config.get('DEC_min_deg', -40)) |
+                 (np.fabs(bpix) < self.config.get('GLAT_max_deg', 5))] = 0
+            if self.file_sourcemask is not None:
+                # holes catalog
+                RAmask, DEmask, radmask = np.loadtxt(self.file_sourcemask,
+                                                     unpack=True)
+                vecmask = hp.ang2vec(RAmask, DEmask, lonlat=True)
+                for vec, radius in zip(vecmask, radmask):
+                    ipix_hole = hp.query_disc(self.nside, vec,
+                                              np.radians(radius),
+                                              inclusive=True)
+                    mask[ipix_hole] = 0
+            mask = rotate_mask(mask, self.rot, binarize=True)
+        return mask
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:

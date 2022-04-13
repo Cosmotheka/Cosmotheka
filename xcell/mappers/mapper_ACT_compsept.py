@@ -31,19 +31,18 @@ class MapperACTCompSept(MapperACTBase):
         return signal_map
 
     def _get_mask(self):
-        if self.mask is None:
-            # It [The mask] has already been applied to the map.
-            # If you are doing a real-space analysis, you should
-            # exclude any pixels where the value in the mask is
-            # appreciably different from 1 since the signal there
-            # should be attenuated by the value in the mask.
+        # It [The mask] has already been applied to the map.
+        # If you are doing a real-space analysis, you should
+        # exclude any pixels where the value in the mask is
+        # appreciably different from 1 since the signal there
+        # should be attenuated by the value in the mask.
 
-            self.pixell_mask = self._get_pixell_mask()
-            msk = reproject.healpix_from_enmap(self.pixell_mask,
-                                               lmax=self.lmax,
-                                               nside=self.nside)
-            msk[msk < 0.99] = 0
-            msk = rotate_mask(msk, self.rot)
+        self.pixell_mask = self._get_pixell_mask()
+        msk = reproject.healpix_from_enmap(self.pixell_mask,
+                                           lmax=self.lmax,
+                                           nside=self.nside)
+        msk[msk < 0.99] = 0
+        msk = rotate_mask(msk, self.rot)
         return msk
 
     def get_nl_coupled(self):

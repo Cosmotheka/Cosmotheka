@@ -36,8 +36,6 @@ class MapperDESY1wl(MapperBase):
         self.signal_map = None
         self.maps = {'PSF': None, 'shear': None}
 
-        self.mask = None
-
         self.nl_coupled = None
         self.nls = {'PSF': None, 'shear': None}
 
@@ -200,17 +198,6 @@ class MapperDESY1wl(MapperBase):
                                   ra_name='ra', dec_name='dec',
                                   rot=self.rot)
         return msk
-
-    def get_mask(self):
-        if self.mask is not None:
-            return self.mask
-
-        # This will only be computed if self.maps['mod'] is None
-        fn = '_'.join([f'DESY1wl_mask_bin{self.zbin}',
-                       f'coord{self.coords}',
-                       f'ns{self.nside}.fits.gz'])
-        self.mask = self._rerun_read_cycle(fn, 'FITSMap', self._get_mask)
-        return self.mask
 
     def get_nl_coupled(self, mode=None):
         e1f, e2f, mod = self._set_mode(mode)

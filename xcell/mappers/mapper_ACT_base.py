@@ -14,7 +14,6 @@ class MapperACTBase(MapperBase):
         self.map_name = config['map_name']
         self.lmax = config.get('lmax', 6000)
         self.signal_map = None
-        self.mask = None
         self.pixell_mask = None
         self.nl_coupled = None
 
@@ -31,11 +30,3 @@ class MapperACTBase(MapperBase):
         if self.pixell_mask is None:
             self.pixell_mask = enmap.read_map(self.file_mask)
         return self.pixell_mask
-
-    def get_mask(self):
-        if self.mask is None:
-            fn = '_'.join([f'ACT_{self.map_name}_mask',
-                           f'coord{self.coords}',
-                           f'ns{self.nside}.fits.gz'])
-            self.mask = self._rerun_read_cycle(fn, 'FITSMap', self._get_mask)
-        return self.mask

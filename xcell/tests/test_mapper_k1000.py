@@ -5,7 +5,7 @@ import os
 import glob
 
 
-def get_config(w_stars=False):
+def get_config(mode='shear', w_stars=False):
     if w_stars:
         fname = 'xcell/tests/data/catalog_stars.fits'
     else:
@@ -13,13 +13,14 @@ def get_config(w_stars=False):
     return {'data_catalog': fname,
             'file_nz': 'xcell/tests/data/Nz_DIR_z0.1t0.3.asc',
             'zbin': 0, 'nside': 32, 'mask_name': 'mask',
-            'coords': 'C',
+            'coords': 'C', 'mode': mode,
             'e1_flag': 'bias_corrected_e1',
             'e2_flag': 'bias_corrected_e2'}
 
 
-def get_mapper(w_stars=False):
-    return xc.mappers.MapperKiDS1000(get_config(w_stars))
+def get_mapper(mode='shear', w_stars=False):
+    return xc.mappers.MapperKiDS1000(get_config(mode=mode,
+                                                w_stars=w_stars))
 
 
 def test_smoke():
@@ -37,6 +38,10 @@ def remove_rerun(predir):
     for f in frerun:
         os.remove(f)
 
+    fn = predir + 'mask_mask_coordC_ns32.fits.gz'
+    if os.path.isfile(fn):
+        os.remove(fn)
+
 
 def test_rerun():
     predir = 'xcell/tests/data/'
@@ -50,7 +55,7 @@ def test_rerun():
     map1 = np.array(m.get_signal_map())
     mask1 = m.get_mask()
     assert os.path.isfile(f'{prefix}_signal_shear_bin0_coordC_ns32.fits.gz')
-    assert os.path.isfile(f'{prefix}_mask_galaxies_bin0_coordC_ns32.fits.gz')
+    assert os.path.isfile(f'{predir}mask_mask_coordC_ns32.fits.gz')
     nl1 = m.get_nl_coupled()
     assert os.path.isfile(f'{prefix}_w2s2_galaxies_bin0_coordC_ns32.fits.gz')
 
@@ -71,11 +76,12 @@ def test_rerun():
 
 
 def test_get_signal_map():
-    m = get_mapper()
-    ms = get_mapper(w_stars=True)
-    sh = np.array(m.get_signal_map('shear'))
-    psf = np.array(m.get_signal_map('PSF'))
-    star = np.array(ms.get_signal_map('stars'))
+    m = get_mapper(mode='PSF')
+    psf = np.array(m.get_signal_map())
+    m = get_mapper(mode='stars', w_stars=True)
+    star = np.array(m.get_signal_map())
+    m = get_mapper(mode='shear')
+    sh = np.array(m.get_signal_map())
     es = get_es()
     assert sh.shape == (2, hp.nside2npix(32))
     assert psf.shape == (2, hp.nside2npix(32))
@@ -85,16 +91,17 @@ def test_get_signal_map():
     assert np.all(np.fabs(-star-es) < 1E-5)
 
     # Check pre-loaded map
-    sh2 = np.array(m.get_signal_map('shear'))
+    sh2 = np.array(m.get_signal_map())
     assert np.all(sh2 == sh)
 
 
 def test_get_mask():
-    m = get_mapper()
-    ms = get_mapper(w_stars=True)
-    sh = m.get_mask('shear')
-    psf = m.get_mask('PSF')
-    star = ms.get_mask('stars')
+    m = get_mapper(mode='shear')
+    sh = m.get_mask()
+    m = get_mapper(mode='PSF')
+    psf = m.get_mask()
+    m = get_mapper(mode='stars', w_stars=True)
+    star = m.get_mask()
     assert len(sh) == len(psf) == len(star) == hp.nside2npix(32)
     assert np.all(np.fabs(sh-2) < 1E-5)
     assert np.all(np.fabs(psf-2) < 1E-5)
@@ -102,21 +109,22 @@ def test_get_mask():
 
 
 def test_get_nl_coupled():
-    m = get_mapper()
-    ms = get_mapper(w_stars=True)
     aa = hp.nside2pixarea(32)
 
+    m = get_mapper(mode='shear')
     sh = m.get_nl_coupled()
     shp = 4*np.std(np.arange(4))**2*aa/(1+m.m[0])**2
     assert np.all(sh[0][:2] == 0)
     assert np.fabs(np.mean(sh[0][2:])/shp-1) < 1E-5
 
-    psf = m.get_nl_coupled('PSF')
+    m = get_mapper(mode='PSF')
+    psf = m.get_nl_coupled()
     psfp = 4*np.mean(np.arange(4)**2)*aa
     assert np.all(psf[0][:2] == 0)
     assert np.fabs(np.mean(psf[0][2:])/psfp-1) < 1E-5
 
-    star = ms.get_nl_coupled('stars')
+    m = get_mapper(mode='stars', w_stars=True)
+    star = m.get_nl_coupled()
     starp = 4*np.mean(np.arange(4)**2)*aa
     assert np.all(star[0][:2] == 0)
     assert np.fabs(np.mean(star[0][2:])/starp-1) < 1E-5

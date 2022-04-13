@@ -30,7 +30,6 @@ class MapperP18CMBK(MapperBase):
         # Defaults
         self.signal_map = None
         self.nl_coupled = None
-        self.mask = None
         self.cl_fid = None
 
     def get_signal_map(self):
@@ -57,15 +56,6 @@ class MapperP18CMBK(MapperBase):
                                    self.mask_apotype)
         msk = hp.ud_grade(msk, nside_out=self.nside)
         return msk
-
-    def get_mask(self):
-        if self.mask is None:
-            fn = '_'.join([f'P18CMBK_mask_{self.mask_aposize}',
-                           f'{self.mask_apotype}',
-                           f'coord{self.coords}',
-                           f'ns{self.nside}.fits.gz'])
-            self.mask = self._rerun_read_cycle(fn, 'FITSMap', self._get_mask)
-        return self.mask
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
