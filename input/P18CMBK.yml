@@ -1,25 +1,16 @@
 tracers:
-  P18SMICA:
-    file_map:
-      - '../data/P18SMICA_NOSZ/COM_CMB_IQU-smica-nosz_2048_R3.00_full.fits'
-    file_hm1:
-      - '../data/P18SMICA_NOSZ/COM_CMB_IQU-smica-nosz_2048_R3.00_hm1.fits'
-    file_hm2:
-      - '../data/P18SMICA_NOSZ/COM_CMB_IQU-smica-nosz_2048_R3.00_hm2.fits'
-    file_mask:
-      - None
-    file_gp_mask:
-      - '../data/P18SMICA_NOSZ/HFI_Mask_GalPlane-apo2_2048_R2.00.fits'
-    file_sp_mask:
-      - '../data/P18SMICA_NOSZ/HFI_Mask_PointSrc_2048_R2.00.fits'
+    P18CMBK:
+    file_klm: '../data/Planck_data/COM_Lensing_4096_R3.00/MV/dat_klm.fits'
+    file_mask: '../data/Planck_data/COM_Lensing_4096_R3.00/mask.fits.gz'
+    file_noise: '../data/Planck_data/COM_Lensing_4096_R3.00/MV/nlkk.dat' 
     nside: 4096
-    mask_name: 'P18SMICA'
-    mapper_class: 'MapperP18SMICA'
-    path_lite: 'data_P18SMICA'
+    mask_name: 'mask_P18CMBk'
+    mapper_class: 'MapperP18CMBK'
+    path_lite: 'data_P18CMBk'
 
 cls:
   # Options: all, cross, None
-  P18SMICA-P18SMICA:
+  P18CMBK-P18CMBK:
     compute: 'all'
 
 bpw_edges: [0, 30, 60, 90, 120, 150, 180, 210, 240, 272, 309, 351, 398, 452, 513, 582, 661, 750, 852, 967, 1098, 1247, 1416, 1608, 1826, 2073, 2354, 2673, 3035, 3446, 3914, 4444, 5047, 5731, 6508, 7390, 8392, 9529, 10821, 12288]
@@ -34,8 +25,8 @@ cov:
       n_s: 0.9665
 
   cls_from_data:
-    P18SMICA-P18SMICA:
-    compute: 'all'
+    P18CMBK-P18CMBK:
+      compute: 'all'
 
 toeplitz:
   cls:
@@ -59,4 +50,4 @@ recompute:
   mcm: False
   cmcm: False
 
-output:  './data_P18SMICA/output_P18SMICA/'
+output:  './data_P18CMBK/output_P18CMBK/'

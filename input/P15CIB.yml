@@ -1,33 +1,27 @@
 tracers:
-  CIB_Lenz:
+  P18SMICA:
     file_map:
-      - '../data/CIB_Lenz/cib_fullmission.hpx.fits'
+      - '../data/P15CIB/COM_CompMap_CIB-GNILC-F545_2048_R2.00.fits'
     file_hm1:
-      - '../data/CIB_Lenz/cib_evenring.hpx.fits'
+      - '../data/P15CIB/COM_CMB_IQU-nilc_2048_R3.00_hm1.fits'
     file_hm2:
-      - '../data/CIB_Lenz/cib_oddring.hpx.fits'
+      - '../data/P15CIB/COM_CMB_IQU-nilc_2048_R3.00_hm2.fits'
     file_mask:
-      - '../data/CIB_Lenz/mask_apod.hpx.fits'
+       - '../data/P15CIB/COM_CMB_IQU-nilc_2048_R3.00_hm2.fits'
     file_gp_mask:
       - None
     file_sp_mask:
       - None
     nside: 4096
-    gal_mask_mode: '0.2'
-    sp_mask_mode:  '545'
-    mask_name: 'CIB_Lenz'
-    mapper_class: 'MapperCIBLenz'
-    path_lite: 'data_CIBLenz'
-    beam_info: [{'type': 'Custom',
-                 'file': '../data/CIB_Lenz/windowfunctions.csv',
-                 'field': 'Wl_eff'},
-                 {'type': 'Pixel',
-                 'nside_native': 2048,
-                 'nside_wanted': 4096}]}  
+    gal_mask_mode: 0.2
+    sp_mask_mode: 545
+    mask_name: 'P15CIB'
+    mapper_class: 'MappereP15CIB'
+    path_lite: 'data_P15CIB'
 
 cls:
   # Options: all, cross, None
-  CIB_Lenz-CIB_Lenz:
+  P15CIB-P15CIB:
     compute: 'all'
 
 bpw_edges: [0, 30, 60, 90, 120, 150, 180, 210, 240, 272, 309, 351, 398, 452, 513, 582, 661, 750, 852, 967, 1098, 1247, 1416, 1608, 1826, 2073, 2354, 2673, 3035, 3446, 3914, 4444, 5047, 5731, 6508, 7390, 8392, 9529, 10821, 12288]
@@ -42,7 +36,7 @@ cov:
       n_s: 0.9665
 
   cls_from_data:
-    CIB_Lenz-CIB_Lenz:
+    P15CIB-P15CIB:
     compute: 'all'
 
 toeplitz:
@@ -67,4 +61,4 @@ recompute:
   mcm: False
   cmcm: False
 
-output:  './data_CIBLenz/output_CIBLenz/'
+output:  './data_P15CIB/output_P15CIB/'
