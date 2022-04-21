@@ -1,62 +1,13 @@
-tracers:
-  SPT:
-    file_map:
-      - '../data/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap.fits'
-    file_hm1:
-      - '../data/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap_half1.fits'
-    file_hm2:
-      - '../data/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap_half2.fits'
-    file_mask:
-      - None
-    file_gp_mask:
-      - '../data/SPT/sptsz_planck_ymap_healpix/SPTSZ_dust_mask_top_5percent.fits'
-    file_sp_mask:
-      - '../data/SPT/sptsz_planck_ymap_healpix/SPTSZ_point_source_mask_nside_8192_binary_mask.fits'
-    nside: 4096
-    mask_name: 'SPT'
-    mapper_class: 'MapperSPT'
-    path_lite: 'data_SPT'
-
-cls:
-  # Options: all, cross, None
-  SPT-SPT:
-    compute: 'all'
-
-bpw_edges: [0, 30, 60, 90, 120, 150, 180, 210, 240, 272, 309, 351, 398, 452, 513, 582, 661, 750, 852, 967, 1098, 1247, 1416, 1608, 1826, 2073, 2354, 2673, 3035, 3446, 3914, 4444, 5047, 5731, 6508, 7390, 8392, 9529, 10821, 12288]
-
-cov: 
-  fiducial:
-    cosmo:
-      Omega_c: 0.26066676
-      Omega_b: 0.048974682
-      h: 0.6766
-      sigma8: 0.8102
-      n_s: 0.9665
-
-  cls_from_data:
-    SPT-SPT:
-        compute: 'all'
-
-toeplitz:
-  cls:
-    l_toeplitz: -1
-    l_exact: -1
-    dl_band: -1
-  cov:
-    l_toeplitz: -1
-    l_exact: -1
-    dl_band: -1
-
-sphere:
-  n_iter_sht: 0
-  n_iter_mcm: 3
-  n_iter_cmcm: 3
-  nside: 1024
-
-recompute:
-  cls: False
-  cov: False
-  mcm: False
-  cmcm: False
-
-output:  './data_SPT/output_SPT/'
+mapper_class: 'MapperSPT'
+map_name: SPT
+file_map: /mnt/extraspace/damonge/Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap.fits
+file_hm1: /mnt/extraspace/damonge/Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap_half1.fits
+file_hm2: /mnt/extraspace/damonge/Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap_half2.fits
+file_gp_mask: /mnt/extraspace/damonge/Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_dust_mask_top_5percent.fits
+gp_mask_mode: 'default'
+file_sp_mask: /mnt/extraspace/damonge/Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_point_source_mask_nside_8192_binary_mask.fits
+ps_mask_mode: ['default']
+coords: G
+custom_auto: True
+mask_name: mask_SPT
+path_rerun: '/mnt/extraspace/damonge/Datasets/SPT/xcell_runs'

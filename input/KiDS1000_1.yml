@@ -1,56 +1,8 @@
-tracers:
-  KiDS1000__1:
-    data_catalog:
-      - '../data/KiDS/KiDS_DR4.1_ugriZYJHKs_SOM_gold_WL_cat.fits'
-    file_nz: 
-      - '../data/KiDS/SOM_N_of_Z/K1000_NS_V1.0.0A_ugriZYJHKs_photoz_SG_mask_LF_svn_309c_2Dbins_v2_SOMcols_Fid_blindC_TOMO2_Nz.asc
-    mode: "shear"
-    zbin: "1"
-    nside: 4096
-    mask_name: "KiDS1000__1"
-    mapper_class: MapperKiDS1000
-    path_lite: 'data_KiDS1000'
-
-cls:
-  # Options: all, cross, None
-  KiDS1000__1-KiDS1000__1:
-    compute: 'all'
-
-bpw_edges: [0, 30, 60, 90, 120, 150, 180, 210, 240, 272, 309, 351, 398, 452, 513, 582, 661, 750, 852, 967, 1098, 1247, 1416, 1608, 1826, 2073, 2354, 2673, 3035, 3446, 3914, 4444, 5047, 5731, 6508, 7390, 8392, 9529, 10821, 12288]
-
-cov: 
-  fiducial:
-    cosmo:
-      Omega_c: 0.26066676
-      Omega_b: 0.048974682
-      h: 0.6766
-      sigma8: 0.8102
-      n_s: 0.9665
-
-  cls_from_data:
-    KiDS1000__1-KiDS1000__1:
-      compute: 'all'
-
-toeplitz:
-  cls:
-    l_toeplitz: -1
-    l_exact: -1
-    dl_band: -1
-  cov:
-    l_toeplitz: -1
-    l_exact: -1
-    dl_band: -1
-
-sphere:
-  n_iter_sht: 0
-  n_iter_mcm: 3
-  n_iter_cmcm: 3
-  nside: 1024
-
-recompute:
-  cls: False
-  cov: False
-  mcm: False
-  cmcm: False
-
-output:  './data_KiDS1000/output_KiDS1000/'
+mapper_class: MapperKiDS1000
+map_name: KiDS1000__1
+data_catalog: /mnt/extraspace/damonge/Datasets/KiDS/KiDS_DR4.1_ugriZYJHKs_SOM_gold_WL_cat.fits
+file_nz: /mnt/extraspace/damonge/Datasets/KiDS/SOM_N_of_Z/K1000_NS_V1.0.0A_ugriZYJHKs_photoz_SG_mask_LF_svn_309c_2Dbins_v2_SOMcols_Fid_blindC_TOMO2_Nz.asc
+mode: "shear"
+zbin: "1"
+mask_name: "mask_KiDS1000__1"
+path_rerun: '/mnt/extraspace/damonge/Datasets/KiDS/xcell_runs'

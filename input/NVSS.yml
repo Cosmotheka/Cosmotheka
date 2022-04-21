@@ -1,56 +1,9 @@
-tracers:
-  NVSS:
-    data_catalog:
-      - '../data/NVSS/nvss.fits'
-    file_mask:
-      - '../data/CATWISE/mask.fits'
-    redshift_catalog:
-      - '../data/CATWISE/100sqdeg_1uJy_s1400.fits'
-    nside: 4096
-    mask_name: 'NVSS'
-    mapper_class: 'MapperNVSS'
-    path_lite: 'data_NVSS'
-
-cls:
-  # Options: all, cross, None
-  NVSS-NVSS:
-    compute: 'all'
-
-bpw_edges: [0, 30, 60, 90, 120, 150, 180, 210, 240, 272, 309, 351, 398, 452, 513, 582, 661, 750, 852, 967, 1098, 1247, 1416, 1608, 1826, 2073, 2354, 2673, 3035, 3446, 3914, 4444, 5047, 5731, 6508, 7390, 8392, 9529, 10821, 12288]
-
-cov: 
-  fiducial:
-    cosmo:
-      Omega_c: 0.26066676
-      Omega_b: 0.048974682
-      h: 0.6766
-      sigma8: 0.8102
-      n_s: 0.9665
-
-  cls_from_data:
-    NVSS-NVSS:
-      compute: 'all'
-
-toeplitz:
-  cls:
-    l_toeplitz: -1
-    l_exact: -1
-    dl_band: -1
-  cov:
-    l_toeplitz: -1
-    l_exact: -1
-    dl_band: -1
-
-sphere:
-  n_iter_sht: 0
-  n_iter_mcm: 3
-  n_iter_cmcm: 3
-  nside: 1024
-
-recompute:
-  cls: False
-  cov: False
-  mcm: False
-  cmcm: False
-
-output:  './data_NVSS/output_NVSS/'
+mapper_class: MapperNVSS
+map_name: NVSS
+data_catalog: /mnt/extraspace/damonge/Datasets/NVSS/nvss.fits
+file_mask: /mnt/extraspace/damonge/Datasets/NVSS/mask.fits
+redshift_catalog: /mnt/extraspace/damonge/Datasets/NVSS/100sqdeg_1uJy_s1400.fits
+mask_sources: /mnt/extraspace/damonge/Datasets/NVSS/source_masks_nvss.txt
+coords: G
+mask_name: mask_NVSS
+path_rerun: '/mnt/extraspace/damonge/Datasets/NVSS/xcell_runs'
