@@ -6,10 +6,10 @@ from astropy.table import Table
 
 
 def get_config():
-    return {'data_catalog':
-            'xcell/tests/data/catalog_CatWISE.fits',
+    return {'data_catalog': 'xcell/tests/data/catalog_CatWISE.fits',
             'mask_sources': 'xcell/tests/data/MASKS_exclude_master_final.fits',
-            'nside': 32, 'mask_name': 'mask', 'coords': 'C'}
+            'nside': 32, 'mask_name': 'mask', 'coords': 'C',
+            'apply_ecliptic_correction': True}
 
 
 def make_fake_data():
@@ -56,6 +56,7 @@ def test_get_signal_map():
     config['GLAT_max_deg'] = 0.
     config.pop('mask_sources')
     m = xc.mappers.MapperCatWISE(config)
+    m.apply_ecliptic_correction = False
     d = m.get_signal_map()
     d = np.array(d)
     print(d)
@@ -78,6 +79,16 @@ def test_get_nl_coupled():
     assert nl.shape == (1, 3*m.nside)
     assert np.all(np.fabs(nl/nl_pred-1) < 1E-10)
     clean_fake_data()
+
+
+def test_ecliptic_correction():
+    config = get_config()
+    m = xc.mappers.MapperCatWISE(config)
+    d = m._get_ecliptic_correction()
+    d = np.array(d)
+    pixarea_deg2 = (hp.nside2resol(m.nside, arcmin=True)/60)**2
+    assert d.shape[0] == hp.nside2npix(m.nside)
+    assert np.all(np.fabs(d) < 0.0513 * np.abs(90.) * pixarea_deg2)
 
 
 def test_get_dtype():
