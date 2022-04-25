@@ -7,6 +7,7 @@ data_catalogs:
 binary_mask: '/mnt/extraspace/damonge/Datasets/DELS/Legacy_footprint_final_mask_cut_decm36.fits'
 completeness_map: '/mnt/extraspace/damonge/Datasets/DELS/Legacy_footprint_completeness_mask_128.fits'
 star_map: '/mnt/extraspace/damonge/Datasets/DELS/allwise_total_rot_1024.fits'
+path_rerun: '/mnt/extraspace/damonge/Datasets/DELS/xcell_reruns/'
 mask_name: 'mask_DELS_decm36'
 mapper_class: 'MapperDELS'
 bias: 1.35

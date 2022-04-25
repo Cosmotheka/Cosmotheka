@@ -1,4 +1,5 @@
 zbin: 3
+mode: shear
 zbin_cat: '/mnt/extraspace/damonge/Datasets/DES_Y1/shear_catalog/y1_source_redshift_binning_v1.fits'
 data_cat:  '/mnt/extraspace/damonge/Datasets/DES_Y1/shear_catalog/mcal-y1a1-combined-riz-unblind-v4-matched.fits'
 file_nz: '/mnt/extraspace/damonge/Datasets/DES_Y1/shear_catalog/y1_redshift_distributions_v1.fits'
