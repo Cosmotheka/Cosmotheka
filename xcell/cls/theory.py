@@ -205,15 +205,15 @@ class Theory():
                                             a_arr=a_s, lk_arr=lk_s)
         elif kind == 'SSC':
             tkk = ccl.halos.halomod_Tk3D_SSC(cosmo, hm_par['calculator'],
-                                            prof1=pA1, prof2=pA2,
-                                            prof12_2pt=pr2ptA,
-                                            prof3=pB1, prof4=pB2,
-                                            prof34_2pt=pr2ptB,
-                                            normprof1=ccl_trA1['normed'],
-                                            normprof2=ccl_trA2['normed'],
-                                            normprof3=ccl_trB1['normed'],
-                                            normprof4=ccl_trB2['normed'],
-                                            a_arr=a_s, lk_arr=lk_s)
+                                             prof1=pA1, prof2=pA2,
+                                             prof12_2pt=pr2ptA,
+                                             prof3=pB1, prof4=pB2,
+                                             prof34_2pt=pr2ptB,
+                                             normprof1=ccl_trA1['normed'],
+                                             normprof2=ccl_trA2['normed'],
+                                             normprof3=ccl_trB1['normed'],
+                                             normprof4=ccl_trB2['normed'],
+                                             a_arr=a_s, lk_arr=lk_s)
         return tkk
 
     def get_ccl_pk(self, ccl_tr1, ccl_tr2):
@@ -274,7 +274,7 @@ class Theory():
                                          cltracer3=ccl_trB1['ccl_tr'],
                                          cltracer4=ccl_trB2['ccl_tr'],
                                          ell2=ellB,
-            #                             sigma2_B=(a, sigma2_B),
+                                         # sigma2_B=(a, sigma2_B),
                                          integration_method='qag_quad')
         else:
             cov = ccl.angular_cl_cov_cNG(cosmo,
@@ -284,6 +284,7 @@ class Theory():
                                          tkka=tkk, fsky=fsky,
                                          cltracer3=ccl_trB1['ccl_tr'],
                                          cltracer4=ccl_trB2['ccl_tr'],
-                                         ell2=ellB, integration_method='spline')
+                                         ell2=ellB,
+                                         integration_method='spline')
 
         return cov

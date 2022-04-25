@@ -184,7 +184,6 @@ def test_cov_ng():
                                          normprof3=True, normprof4=True,
                                          a_arr=a_arr, lk_arr=np.log(k_arr))
 
-
     # Gaussian only
     data = get_config(fsky=0.2, inc_hm=True)
     data['tracers']['Dummy__0']['hod_params'] = {'lMmin_0': 12.1,
@@ -224,9 +223,9 @@ def test_cov_ng():
     # Computing this here because setting fsky=0.2 is not good enough to
     # pass the test later on
     covSSC0 = ccl.angular_cl_cov_SSC(cosmo,
-                                    cltracer1=tr, cltracer2=tr,
-                                    ell=ells, tkka=tkk_ssc, fsky=fsky,
-                                    cltracer3=tr, cltracer4=tr, ell2=ells)
+                                     cltracer1=tr, cltracer2=tr,
+                                     ell=ells, tkka=tkk_ssc, fsky=fsky,
+                                     cltracer3=tr, cltracer4=tr, ell2=ells)
 
     # fsky on input
     data = get_config(fsky=0.2, inc_hm=True)
