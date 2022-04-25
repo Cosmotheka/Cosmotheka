@@ -46,6 +46,8 @@ class Cov():
         # Multiplicative bias marginalization
         self.m_marg = self.data.data['cov'].get('m_marg', False)
         self.do_NG = self.data.data['cov'].get('non_Gaussian', False)
+        self.do_SSC = self.data.data['cov'].get('SSC', False)
+        self._fsky = None
 
     def _load_Cls(self):
         data = self.data.data
@@ -455,6 +457,7 @@ class Cov():
         cov_NG = np.zeros((size1, size2))
         cov_nlm = np.zeros((size1, size2))
         cov_mm = np.zeros((size1, size2))
+        cov_NGs = {}
         if notnull:
             itime = time.time()
             wa = self.clA1A2.get_workspace_cov()
@@ -499,16 +502,12 @@ class Cov():
                   flush=True)
 
         if self.do_NG and notnull:
-            fsky = self.data.data['cov'].get('fsky_NG', None)
-            if fsky is None:  # Calculate from masks
-                fsky = np.mean(((m_a1 > 0) & (m_a2 > 0) &
-                                (m_b1 > 0) & (m_b2 > 0)))
             kinds = self.data.data['cov'].get('NG_terms',
-                                              ['1h'])
+                                              ['1h', 'SSC'])
             for kind in kinds:
-                cov_NG += self.get_covariance_ng_halomodel(s_a1, s_a2,
-                                                           s_b1, s_b2,
-                                                           fsky, kind)
+                key = f'cov_NG_{kind}'
+                cov_NGs[key] = self.get_covariance_ng_halomodel(kind)
+                cov_NG += cov_NGs[key]
 
         itime = time.time()
         self.cov = cov_G + cov_nlm + cov_mm + cov_NG
@@ -518,19 +517,35 @@ class Cov():
 
         itime = time.time()
         np.savez_compressed(fname, cov=self.cov, cov_G=cov_G, cov_NG=cov_NG,
-                            cov_nl_marg=cov_nlm, cov_m_marg=cov_mm)
+                            cov_nl_marg=cov_nlm, cov_m_marg=cov_mm, **cov_NGs)
         ftime = time.time()
         print(f'Saved cov npz file. It took {(ftime - itime) / 60} min',
               flush=True)
         self.recompute_cov = False
         return self.cov
 
-    def get_covariance_ng_halomodel(self, s_a1, s_a2, s_b1, s_b2,
-                                    fsky, kind='1h'):
-        ellA = self.clA1A2.b.get_effective_ells()
-        ellB = self.clB1B2.b.get_effective_ells()
-        nclsa = np.max([1, s_a1 + s_a2])
-        nclsb = np.max([1, s_b1 + s_b2])
+    def get_fsky(self):
+        if self._fsky is not None:
+            return self._fsky
+
+        fsky = self.data.data['cov'].get('fsky_NG', None)
+        if fsky is None:  # Calculate from masks
+            m_a1, m_a2 = self.clA1A2.get_masks()
+            m_b1, m_b2 = self.clB1B2.get_masks()
+            fsky = np.mean(((m_a1 > 0) & (m_a2 > 0) &
+                            (m_b1 > 0) & (m_b2 > 0)))
+        self._fsky = fsky
+
+        return fsky
+
+    def get_covariance_ng_halomodel(self, kind, fsky=None):
+        if fsky is None:
+            fsky = self.get_fsky()
+
+        ellA, clA1A2 = self.clA1A2.get_ell_cl()
+        ellB, clB1B2 = self.clB1B2.get_ell_cl()
+        nclsa = clA1A2.shape[0]
+        nclsb = clB1B2.shape[0]
         cov = np.zeros([ellA.size, nclsa, ellB.size, nclsb])
         th = Theory(self.data.data)
         mpA1, mpA2 = self.clA1A2.get_mappers()
@@ -552,12 +567,13 @@ class Cov():
                                          trlist[self.trB2],
                                          mpB2)
         bB2 = self.data.get_bias(self.trB2)
+
         covNG = th.get_ccl_cl_covNG(ccl_trA1, ccl_trA2, ellA,
                                     ccl_trB1, ccl_trB2, ellB,
                                     fsky, kind=kind)
         # NG covariances can only be calculated for E-modes
         cov[:, 0, :, 0] = covNG*bA1*bA2*bB1*bB2
-        return cov.reshape([ellA.size*nclsa, ellB.size*nclsb])
+        return cov.reshape([clA1A2.size, clB1B2.size])
 
     def get_covariance_nl_marg(self):
         _, nl = self.clA1A2.get_ell_nl()
