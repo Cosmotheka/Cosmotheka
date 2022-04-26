@@ -26,6 +26,8 @@ class MapperPlanckBase(MapperBase):
         self.cl_coupled = None
         self.cls_cov = None
         self.custom_auto = True
+        self.pre_mask_ps = config.get("pre_mask_ps", False)
+        self.ps_mask = None
 
     def get_signal_map(self):
         if self.signal_map is None:
@@ -33,6 +35,15 @@ class MapperPlanckBase(MapperBase):
             signal_map[signal_map == hp.UNSEEN] = 0.0
             signal_map[np.isnan(signal_map)] = 0.0
             signal_map = rotate_map(signal_map, self.rot)
+            if self.pre_mask_ps is True
+                if self.file_ps_mask is not None
+                    field = self.ps_mask_modes[mode]
+                    ps_mask = hp.read_map(self.file_ps_mask, field)
+                    signal_map *= ps_mask
+                else
+                    NotImplementedError("""Tried to pre-mask point
+                                        sources but couldn't find 
+                                        file_ps_mask""")
             self.signal_map = np.array([hp.ud_grade(signal_map,
                                         nside_out=self.nside)])
         return self.signal_map
@@ -48,10 +59,9 @@ class MapperPlanckBase(MapperBase):
                 msk = gp_mask
             else:
                 msk *= gp_mask
-        if self.file_ps_mask is not None:
+        if (self.file_ps_mask is not None) && (self.pre_mask_ps == False):
             for mode in self.ps_mask_mode:
-                field = self.ps_mask_modes[mode]
-                ps_mask = hp.read_map(self.file_ps_mask, field)
+                ps_mask = self._get_ps_mask()
                 if msk is None:
                     msk = ps_mask
                 else:
@@ -60,6 +70,12 @@ class MapperPlanckBase(MapperBase):
         msk[msk < 0] = 0
         msk = hp.ud_grade(msk, nside_out=self.nside)
         return msk
+    
+    def _get_ps_mask(self):
+        if self.ps_mask is None:
+            field = self.ps_mask_modes[mode]
+            self.ps_mask = hp.read_map(self.file_ps_mask, field)
+        return self.ps_mask
 
     def _get_hm_maps(self):
         return NotImplementedError("Do not use base class")
