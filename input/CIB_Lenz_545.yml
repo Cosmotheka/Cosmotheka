@@ -10,6 +10,5 @@ beam_info:
   - type: 'PixWin'
     nside_native: 2048
     nside_wanted: 4096
-custom_auto: True
 mask_name: mask_CIB_Lenz_545 
 path_rerun: '/mnt/extraspace/damonge/Datasets/CIB_Lenz_353/xcell_runs'

@@ -8,6 +8,5 @@ beam_info:
   - type: 'Gaussian'
     FWHM_arcmin': 5.0
 gp_mask_mode: '0.6'
-custom_auto: True
 mask_name: mask_P18SMICA
 path_rerun: '/mnt/extraspace/damonge/Datasets/P18SMICA_NOSZ/xcell_runs'
