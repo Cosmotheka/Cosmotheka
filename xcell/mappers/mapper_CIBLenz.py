@@ -62,3 +62,6 @@ class MapperCIBLenz(MapperPlanckBase):
                                         file_ps_mask""")
             self.hm2_map = [hp.ud_grade(hm2_map,
                             nside_out=self.nside)]
+    def get_dtype(self):
+        return 'generic'
+
