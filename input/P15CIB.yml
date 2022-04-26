@@ -1,13 +1,13 @@
 mapper_class: MappereP15CIB
-map_name: P15CIB
 file_map: /mnt/extraspace/damonge/Datasets/P15CIB/COM_CompMap_CIB-GNILC-F545_2048_R2.00.fits
 file_hm1: /mnt/extraspace/damonge/Datasets/P15CIB/COM_CMB_IQU-nilc_2048_R3.00_hm1.fits
 file_hm2: /mnt/extraspace/damonge/Datasets/P15CIB/COM_CMB_IQU-nilc_2048_R3.00_hm2.fits
 file_mask: /mnt/extraspace/damonge/Datasets/P15CIB/COM_CMB_IQU-nilc_2048_R3.00_hm2.fits
 gp_mask_mode: '0.6'
 ps_mask_mode: ['545']
-beam_info: [{'type': 'Gaussian', 'FWHM_arcmin': 5.0}]
-coords: G
+beam_info:
+  - type: 'Gaussian'
+    FWHM_arcmin: 5.0
 custom_auto: True
 mask_name: mask_P15CIB
 path_rerun: '/mnt/extraspace/damonge/Datasets/P15CIB/xcell_runs'

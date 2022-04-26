@@ -1,9 +1,10 @@
 mapper_class: MapperNVSS
-map_name: NVSS
 data_catalog: /mnt/extraspace/damonge/Datasets/NVSS/nvss.fits
-file_mask: /mnt/extraspace/damonge/Datasets/NVSS/mask.fits
-redshift_catalog: /mnt/extraspace/damonge/Datasets/NVSS/100sqdeg_1uJy_s1400.fits
 mask_sources: /mnt/extraspace/damonge/Datasets/NVSS/source_masks_nvss.txt
-coords: G
+redshift_catalog: /mnt/extraspace/damonge/Datasets/NVSS/100sqdeg_1uJy_s1400.fits
+DEC_min_deg: -40
+flux_min_mJy: 10
+fux_max_mJy: 1000
+GLAT_max_deg: 5
 mask_name: mask_NVSS
 path_rerun: '/mnt/extraspace/damonge/Datasets/NVSS/xcell_runs'

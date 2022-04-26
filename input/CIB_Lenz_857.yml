@@ -1,0 +1,15 @@
+mapper_class: MapperCIBLenz
+file_map: /mnt/extraspace/damonge/Datasets/CIB_Lenz/857/2.5e+20_gp20/cib_fullmission.hpx.fits
+file_hm1: /mnt/extraspace/damonge/Datasets/CIB_Lenz/857/2.5e+20_gp20/cib_evenring.hpx.fits
+file_hm2: /mnt/extraspace/damonge/Datasets/CIB_Lenz/857/2.5e+20_gp20/cib_oddring.hpx.fits
+file_mask: /mnt/extraspace/damonge/Datasets/CIB_Lenz/857/2.5e+20_gp20/mask_apod.hpx.fits
+beam_info:
+  - type: 'Custom'
+    file: '/mnt/extraspace/damonge/Datasets/CIB_Lenz/857/2.5e+20_gp20/windowfunctions.csv'
+    field: 'Wl_eff'
+  - type: 'PixWin'
+    nside_native: 2048
+    nside_wanted: 2048
+custom_auto: True
+mask_name: mask_CIB_Lenz_857 
+path_rerun: '/mnt/extraspace/damonge/Datasets/CIB_Lenz_857/xcell_runs'

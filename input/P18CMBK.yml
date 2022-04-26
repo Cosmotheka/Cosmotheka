@@ -5,7 +5,5 @@ file_mask: /mnt/extraspace/damonge/Datasets/Planck_data/COM_Lensing_4096_R3.00/m
 file_noise: /mnt/extraspace/damonge/Datasets/Planck_data/COM_Lensing_4096_R3.00/MV/nlkk.dat 
 mask_aposize: 0.2
 mask_apotype: 'C1'
-coords: G
 custom_auto: True
-mask_name: P18CMB_kappa
 path_rerun: '/mnt/extraspace/damonge/Datasets/P18CMBK/xcell_runs'

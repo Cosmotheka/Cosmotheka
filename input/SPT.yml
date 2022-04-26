@@ -1,5 +1,4 @@
 mapper_class: 'MapperSPT'
-map_name: SPT
 file_map: /mnt/extraspace/damonge/Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap.fits
 file_hm1: /mnt/extraspace/damonge/Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap_half1.fits
 file_hm2: /mnt/extraspace/damonge/Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap_half2.fits
@@ -7,7 +6,9 @@ file_gp_mask: /mnt/extraspace/damonge/Datasets/SPT/sptsz_planck_ymap_healpix/SPT
 gp_mask_mode: 'default'
 file_sp_mask: /mnt/extraspace/damonge/Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_point_source_mask_nside_8192_binary_mask.fits
 ps_mask_mode: ['default']
-coords: G
+beam_info: 
+  - type: 'Gaussian'
+    FWHM_arcmin: 1.6
 custom_auto: True
 mask_name: mask_SPT
 path_rerun: '/mnt/extraspace/damonge/Datasets/SPT/xcell_runs'
