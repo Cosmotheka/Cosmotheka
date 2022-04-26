@@ -1,7 +1,9 @@
 import numpy as np
-from scipy.interpolate import interp1d
 import pandas as pd
-from .mapper_P15CIB import MapperP15CIB
+import healpy as hp
+from scipy.interpolate import interp1d
+from .utils import rotate_map
+from .mapper_Planck_base import MapperPlanckBase
 
 
 class MapperCIBLenz(MapperPlanckBase):
@@ -35,13 +37,13 @@ class MapperCIBLenz(MapperPlanckBase):
             hm1_map[hm1_map == hp.UNSEEN] = 0.0
             hm1_map[np.isnan(hm1_map)] = 0.0
             hm1_map = rotate_map(hm1_map, self.rot)
-            if self.pre_mask_ps is True
-                if self.file_ps_mask is not None
+            if self.pre_mask_ps is True:
+                if self.file_ps_mask is not None:
                     ps_mask = self._get_ps_mask()
                     hm1_map *= ps_mask
-                else
+                else:
                     NotImplementedError("""Tried to pre-mask point
-                                        sources but couldn't find 
+                                        sources but couldn't find
                                         file_ps_mask""")
             self.hm1_map = [hp.ud_grade(hm1_map,
                             nside_out=self.nside)]
@@ -50,13 +52,13 @@ class MapperCIBLenz(MapperPlanckBase):
             hm2_map[hm2_map == hp.UNSEEN] = 0.0
             hm2_map[np.isnan(hm2_map)] = 0.0
             hm2_map = rotate_map(hm2_map, self.rot)
-            if self.pre_mask_ps is True
-                if self.file_ps_mask is not None
+            if self.pre_mask_ps is True:
+                if self.file_ps_mask is not None:
                     ps_mask = self._get_ps_mask()
                     hm2_map *= ps_mask
-                else
+                else:
                     NotImplementedError("""Tried to pre-mask point
-                                        sources but couldn't find 
+                                        sources but couldn't find
                                         file_ps_mask""")
             self.hm2_map = [hp.ud_grade(hm2_map,
                             nside_out=self.nside)]

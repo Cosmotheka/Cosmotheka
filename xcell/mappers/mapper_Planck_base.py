@@ -35,14 +35,13 @@ class MapperPlanckBase(MapperBase):
             signal_map[signal_map == hp.UNSEEN] = 0.0
             signal_map[np.isnan(signal_map)] = 0.0
             signal_map = rotate_map(signal_map, self.rot)
-            if self.pre_mask_ps is True
-                if self.file_ps_mask is not None
-                    field = self.ps_mask_modes[mode]
-                    ps_mask = hp.read_map(self.file_ps_mask, field)
+            if self.pre_mask_ps is True:
+                if self.file_ps_mask is not None:
+                    ps_mask = self._get_ps_mask()
                     signal_map *= ps_mask
-                else
+                else:
                     NotImplementedError("""Tried to pre-mask point
-                                        sources but couldn't find 
+                                        sources but couldn't find
                                         file_ps_mask""")
             self.signal_map = np.array([hp.ud_grade(signal_map,
                                         nside_out=self.nside)])
@@ -59,7 +58,7 @@ class MapperPlanckBase(MapperBase):
                 msk = gp_mask
             else:
                 msk *= gp_mask
-        if (self.file_ps_mask is not None) && (self.pre_mask_ps == False):
+        if (self.file_ps_mask is not None) & (self.pre_mask_ps is False):
             for mode in self.ps_mask_mode:
                 ps_mask = self._get_ps_mask()
                 if msk is None:
@@ -70,10 +69,10 @@ class MapperPlanckBase(MapperBase):
         msk[msk < 0] = 0
         msk = hp.ud_grade(msk, nside_out=self.nside)
         return msk
-    
+
     def _get_ps_mask(self):
         if self.ps_mask is None:
-            field = self.ps_mask_modes[mode]
+            field = self.ps_mask_modes[self.ps_mask_mode]
             self.ps_mask = hp.read_map(self.file_ps_mask, field)
         return self.ps_mask
 
