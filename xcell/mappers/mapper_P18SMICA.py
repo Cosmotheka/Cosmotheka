@@ -24,6 +24,12 @@ class MapperP18SMICA(MapperPlanckBase):
                               '0.9': 5,
                               '0.97': 6,
                               '0.99': 7}
+        self.ps_mask_modes = {'F100': 0,
+                              'F143': 1,
+                              'F217': 2,
+                              'F353': 3}
+        self.ps_mask_mode = config.get('ps_mask_mode',
+                                       ['F100', 'F143', 'F217', 'F353'])
 
     def _get_hm_maps(self):
         if self.hm1_map is None:

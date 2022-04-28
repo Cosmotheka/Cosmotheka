@@ -17,7 +17,7 @@ class MapperSPT(MapperPlanckBase):
         self.gp_mask_modes = {'default': 0}
         self.gp_mask_mode = config.get('gp_mask_mode', 'default')
         self.ps_mask_modes = {'default': 0}
-        self.ps_mask_mode = config.get('ps_mask_mode', 'default')
+        self.ps_mask_mode = config.get('ps_mask_mode', ['default'])
         # Fix rotation from Planck's default
         self.rot = self._get_rotator('C')
         self.pre_mask_ps = config.get("pre_mask_ps", True)

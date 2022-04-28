@@ -72,8 +72,10 @@ class MapperPlanckBase(MapperBase):
 
     def _get_ps_mask(self):
         if self.ps_mask is None:
-            field = self.ps_mask_modes[self.ps_mask_mode]
-            self.ps_mask = hp.read_map(self.file_ps_mask, field)
+            self.ps_mask = np.ones(hp.nside2npix(self.nside))
+            for mode in self.ps_mask_mode:
+                field = self.ps_mask_modes[mode]
+                self.ps_mask *= hp.read_map(self.file_ps_mask, field)
         return self.ps_mask
 
     def _get_hm_maps(self):
