@@ -8,4 +8,4 @@ beam_info:
   - type: 'Gaussian'
     FWHM_arcmin: 10.0
 mask_name: mask_P15tSZ
-path_rerun: '/mnt/extraspace/damonge/Datasets/P15tSZ/COM_CompMap_YSZ_R2.02/xcell_runs'
+path_rerun: '/mnt/extraspace/damonge/Datasets/Planck_tSZ/COM_CompMap_YSZ_R2.02/xcell_runs'
