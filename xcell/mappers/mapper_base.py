@@ -14,6 +14,7 @@ class MapperBase(object):
         self.mask_name = config.get('mask_name', None)
         self.beam_info = config.get('beam_info', [])
         self.nside = config['nside']
+        self.npix = hp.nside2npix(self.nside)
         self.nmt_field = None
         self.beam = None
         self.custom_auto = False
