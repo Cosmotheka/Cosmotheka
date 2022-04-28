@@ -27,7 +27,6 @@ class MapperSPT(MapperPlanckBase):
             hm1_map = hp.read_map(self.file_hm1)
             hm1_map[hm1_map == hp.UNSEEN] = 0.0
             hm1_map[np.isnan(hm1_map)] = 0.0
-            hm1_map = rotate_map(hm1_map, self.rot)
             if self.pre_mask_ps is True:
                 if self.file_ps_mask is not None:
                     ps_mask = self._get_ps_mask()
@@ -36,13 +35,13 @@ class MapperSPT(MapperPlanckBase):
                     NotImplementedError("""Tried to pre-mask point
                                         sources but couldn't find
                                         file_ps_mask""")
+            hm1_map = rotate_map(hm1_map, self.rot)
             self.hm1_map = [hp.ud_grade(hm1_map,
                             nside_out=self.nside)]
         if self.hm2_map is None:
             hm2_map = hp.read_map(self.file_hm2)
             hm2_map[hm2_map == hp.UNSEEN] = 0.0
             hm2_map[np.isnan(hm2_map)] = 0.0
-            hm2_map = rotate_map(hm2_map, self.rot)
             if self.pre_mask_ps is True:
                 if self.file_ps_mask is not None:
                     ps_mask = self._get_ps_mask()
@@ -51,6 +50,7 @@ class MapperSPT(MapperPlanckBase):
                     NotImplementedError("""Tried to pre-mask point
                                         sources but couldn't find
                                         file_ps_mask""")
+            hm2_map = rotate_map(hm2_map, self.rot)
             self.hm2_map = [hp.ud_grade(hm2_map,
                             nside_out=self.nside)]
         return self.hm1_map, self.hm2_map
