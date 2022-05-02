@@ -7,7 +7,8 @@ import yaml
 
 # Just run this test in Glamdring
 if os.uname()[1] != 'glamdring':
-    pytest.exit('Skipping this test as it can only be run in Glamdring')
+    pytest.skip('Skipping this test as it can only be run in Glamdring',
+                allow_module_level=True)
 
 with open('input/master.yml') as f:
     master_data = yaml.load(f, CustomLoader)
