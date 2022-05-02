@@ -17,9 +17,11 @@ path_rerun = 'xcell/tests/cls/input_master_path_rerun_tmp'
 nside = 32
 coords = 'G'
 
+
 def cleanup():
     if os.path.isfile(path_rerun):
         shutil.rmtree(path_rerun)
+
 
 def test_smoke():
     for trn, config in master_data['tracers'].items():
@@ -32,5 +34,6 @@ def test_smoke():
 
     tr.get_signal_map()
     tr.get_mask()
+
 
 cleanup()
