@@ -5,12 +5,6 @@ tracers:
   ACT__kappaD56: !include input/ACTk__D56.yml
   ACT__tSZBN: !include input/ACTtSZ__BN.yml
   ACT__tSZD56: !include input/ACTtSZ__D56.yml
-  SDSS__CMASS: !include input/SDSS__CMASS.yml
-  SDSS__LOWZ: !include input/SDSS__LOWZ.yml
-  SDSS__LRG: !include input/SDSS__LRG.yml
-  SDSS__ELG: !include input/SDSS__ELG.yml
-  SDSS__QSO0: !include input/SDSS__QSO0.yml
-  SDSS__QSO1: !include input/SDSS__QSO1.yml
   CatWISE: !include input/CatWISE.yml
   CIBLenz__353: !include input/CIBLenz__353.yml
   CIBLenz__545: !include input/CIBLenz__545.yml
@@ -38,10 +32,16 @@ tracers:
   KiDS1000__3: !include input/KiDS1000__3.yml
   KiDS1000__4: !include input/KiDS1000__4.yml
   NVSS: !include input/NVSS.yml
-  Planck__tSZ15: !include input/Planck__tSZ15.yml
   Planck__CMB18: !include input/Planck__CMB18.yml
   Planck__kappa18: !include input/Planck__kappa18.yml
+  Planck__tSZ15: !include input/Planck__tSZ15.yml
   ROSAT: !include input/ROSAT.yml
+  SDSS__CMASS: !include input/SDSS__CMASS.yml
+  SDSS__LOWZ: !include input/SDSS__LOWZ.yml
+  SDSS__LRG: !include input/SDSS__LRG.yml
+  SDSS__ELG: !include input/SDSS__ELG.yml
+  SDSS__QSO0: !include input/SDSS__QSO0.yml
+  SDSS__QSO1: !include input/SDSS__QSO1.yml
   SPT__tSZ: !include input/SPT__tSZ.yml
   WIxSCx2M__0: !include input/2MPZ.yml
   WIxSCx2M__1: !include input/WIxSC__0.yml
