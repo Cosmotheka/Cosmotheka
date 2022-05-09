@@ -1,0 +1,367 @@
+tracers:
+  ACT__CMBBN: !include input/ACTCMB__BN.yml
+  ACT__CMBD56: !include input/ACTCMB__D56.yml
+  ACT__kappaBN: !include input/ACTk__BN.yml
+  ACT__kappaD56: !include input/ACTk__D56.yml
+  ACT__tSZBN: !include input/ACTtSZ__BN.yml
+  ACT__tSZD56: !include input/ACTtSZ__D56.yml
+  SDSS__CMASS: !include input/SDSS__CMASS.yml
+  SDSS__LOWZ: !include input/SDSS__LOWZ.yml
+  SDSS__LRG: !include input/SDSS__LRG.yml
+  SDSS__ELG: !include input/SDSS__ELG.yml
+  SDSS__QSO0: !include input/SDSS__QSO0.yml
+  SDSS__QSO1: !include input/SDSS__QSO1.yml
+  CatWISE: !include input/CatWISE.yml
+  CIBLenz__353: !include input/CIBLenz__353.yml
+  CIBLenz__545: !include input/CIBLenz__545.yml
+  CIBLenz__857: !include input/CIBLenz__857.yml
+  DELS__0: !include input/DELS__0.yml
+  DELS__1: !include input/DELS__1.yml
+  DELS__2: !include input/DELS__2.yml
+  DELS__3: !include input/DELS__3.yml
+  DESY1gc__0: !include input/DESY1gc__0.yml
+  DESY1gc__1: !include input/DESY1gc__1.yml
+  DESY1gc__2: !include input/DESY1gc__2.yml
+  DESY1gc__3: !include input/DESY1gc__3.yml
+  DESY1gc__4: !include input/DESY1gc__4.yml
+  DESY1wl__0: !include input/DESY1wl__0.yml
+  DESY1wl__1: !include input/DESY1wl__1.yml
+  DESY1wl__2: !include input/DESY1wl__2.yml
+  DESY1wl__3: !include input/DESY1wl__3.yml
+  HSCDR1wl__0: !include input/HSCDR1wl__0.yml
+  HSCDR1wl__1: !include input/HSCDR1wl__1.yml
+  HSCDR1wl__2: !include input/HSCDR1wl__2.yml
+  HSCDR1wl__3: !include input/HSCDR1wl__3.yml 
+  KiDS1000__0: !include input/KiDS1000__0.yml
+  KiDS1000__1: !include input/KiDS1000__1.yml
+  KiDS1000__2: !include input/KiDS1000__2.yml
+  KiDS1000__3: !include input/KiDS1000__3.yml
+  KiDS1000__4: !include input/KiDS1000__4.yml
+  NVSS: !include input/NVSS.yml
+  Planck__tSZ15: !include input/Planck__tSZ15.yml
+  Planck__CMB18: !include input/Planck__CMB18.yml
+  Planck__kappa18: !include input/Planck__kappa18.yml
+  ROSAT: !include input/ROSAT.yml
+  SPT__tSZ: !include input/SPT__tSZ.yml
+  WIxSCx2M__0: !include input/2MPZ.yml
+  WIxSCx2M__1: !include input/WIxSC__0.yml
+  WIxSCx2M__2: !include input/WIxSC__1.yml
+  WIxSCx2M__3: !include input/WIxSC__2.yml
+  WIxSCx2M__4: !include input/WIxSC__3.yml
+  WIxSCx2M__5: !include input/WIxSC__4.yml
+
+cls:
+  ACT-ACT:
+    compute: 'all'
+
+  ACT-SDSS:
+    compute: 'all'
+
+  ACT-CatWISE:
+    compute: 'all'
+
+  ACT-CIBLenz:
+    compute: 'all'
+
+  ACT-DELS:
+    compute: 'all'
+
+  ACT-DESY1gc:
+    compute: 'all'
+
+  ACT-DESY1wl:
+    compute: 'all'
+
+  ACT-HSCDR1wl:
+    compute: 'all'
+
+  ACT-KiDS1000:
+    compute: 'all'
+
+  ACT-NVSS:
+    compute: 'all'
+
+  ACT-Planck:
+    compute: 'all'
+
+  ACT-ROSAT:
+    compute: 'all'
+
+  ACT-SPT:
+    compute: 'all'
+
+  ACT-WIxSCx2M:
+    compute: 'all'
+
+  SDSS-SDSS:
+    compute: 'all'
+
+  SDSS-CatWISE:
+    compute: 'all'
+
+  SDSS-CIBLenz:
+    compute: 'all'
+
+  SDSS-DELS:
+    compute: 'all'
+
+  SDSS-DESY1gc:
+    compute: 'all'
+
+  SDSS-DESY1wl:
+    compute: 'all'
+
+  SDSS-HSCDR1wl:
+    compute: 'all'
+
+  SDSS-KiDS1000:
+    compute: 'all'
+
+  SDSS-NVSS:
+    compute: 'all'
+
+  SDSS-Planck:
+    compute: 'all'
+
+  SDSS-ROSAT:
+    compute: 'all'
+
+  SDSS-SPT:
+    compute: 'all'
+
+  SDSS-WIxSCx2M:
+    compute: 'all'
+
+  CatWISE-CatWISE:
+    compute: 'all'
+
+  CatWISE-CIBLenz:
+    compute: 'all'
+
+  CatWISE-DELS:
+    compute: 'all'
+
+  CatWISE-DESY1gc:
+    compute: 'all'
+
+  CatWISE-DESY1wl:
+    compute: 'all'
+
+  CatWISE-HSCDR1wl:
+    compute: 'all'
+
+  CatWISE-KiDS1000:
+    compute: 'all'
+
+  CatWISE-NVSS:
+    compute: 'all'
+
+  CatWISE-Planck:
+    compute: 'all'
+
+  CatWISE-ROSAT:
+    compute: 'all'
+
+  CatWISE-SPT:
+    compute: 'all'
+
+  CatWISE-WIxSCx2M:
+    compute: 'all'
+
+  CIBLenz-CIBLenz:
+    compute: 'all'
+
+  CIBLenz-DELS:
+    compute: 'all'
+
+  CIBLenz-DESY1gc:
+    compute: 'all'
+
+  CIBLenz-DESY1wl:
+    compute: 'all'
+
+  CIBLenz-HSCDR1wl:
+    compute: 'all'
+
+  CIBLenz-KiDS1000:
+    compute: 'all'
+
+  CIBLenz-NVSS:
+    compute: 'all'
+
+  CIBLenz-Planck:
+    compute: 'all'
+
+  CIBLenz-ROSAT:
+    compute: 'all'
+
+  CIBLenz-SPT:
+    compute: 'all'
+
+  CIBLenz-WIxSCx2M:
+    compute: 'all'
+
+  DELS-DELS:
+    compute: 'all'
+
+  DELS-DESY1gc:
+    compute: 'all'
+
+  DELS-DESY1wl:
+    compute: 'all'
+
+  DELS-HSCDR1wl:
+    compute: 'all'
+
+  DELS-KiDS1000:
+    compute: 'all'
+
+  DELS-NVSS:
+    compute: 'all'
+
+  DELS-Planck:
+    compute: 'all'
+
+  DELS-ROSAT:
+    compute: 'all'
+
+  DELS-SPT:
+    compute: 'all'
+
+  DELS-WIxSCx2M:
+    compute: 'all'
+
+  DESY1gc-DESY1gc:
+    compute: 'all'
+
+  DESY1gc-DESY1wl:
+    compute: 'all'
+
+  DESY1gc-HSCDR1wl:
+    compute: 'all'
+
+  DESY1gc-KiDS1000:
+    compute: 'all'
+
+  DESY1gc-NVSS:
+    compute: 'all'
+
+  DESY1gc-Planck:
+    compute: 'all'
+
+  DESY1gc-ROSAT:
+    compute: 'all'
+
+  DESY1gc-SPT:
+    compute: 'all'
+
+  DESY1gc-WIxSCx2M:
+    compute: 'all'
+
+  DESY1wl-DESY1wl:
+    compute: 'all'
+
+  DESY1wl-HSCDR1wl:
+    compute: 'all'
+
+  DESY1wl-KiDS1000:
+    compute: 'all'
+
+  DESY1wl-NVSS:
+    compute: 'all'
+
+  DESY1wl-Planck:
+    compute: 'all'
+
+  DESY1wl-ROSAT:
+    compute: 'all'
+
+  DESY1wl-SPT:
+    compute: 'all'
+
+  DESY1wl-WIxSCx2M:
+    compute: 'all'
+
+  HSCDR1wl-HSCDR1wl:
+    compute: 'all'
+
+  HSCDR1wl-KiDS1000:
+    compute: 'all'
+
+  HSCDR1wl-NVSS:
+    compute: 'all'
+
+  HSCDR1wl-Planck:
+    compute: 'all'
+
+  HSCDR1wl-ROSAT:
+    compute: 'all'
+
+  HSCDR1wl-SPT:
+    compute: 'all'
+
+  HSCDR1wl-WIxSCx2M:
+    compute: 'all'
+
+  KiDS1000-KiDS1000:
+    compute: 'all'
+
+  KiDS1000-NVSS:
+    compute: 'all'
+
+  KiDS1000-Planck:
+    compute: 'all'
+
+  KiDS1000-ROSAT:
+    compute: 'all'
+
+  KiDS1000-SPT:
+    compute: 'all'
+
+  KiDS1000-WIxSCx2M:
+    compute: 'all'
+
+  NVSS-NVSS:
+    compute: 'all'
+
+  NVSS-Planck:
+    compute: 'all'
+
+  NVSS-ROSAT:
+    compute: 'all'
+
+  NVSS-SPT:
+    compute: 'all'
+
+  NVSS-WIxSCx2M:
+    compute: 'all'
+
+  Planck-Planck:
+    compute: 'all'
+
+  Planck-ROSAT:
+    compute: 'all'
+
+  Planck-SPT:
+    compute: 'all'
+
+  Planck-WIxSCx2M:
+    compute: 'all'
+
+  ROSAT-ROSAT:
+    compute: 'all'
+
+  ROSAT-SPT:
+    compute: 'all'
+
+  ROSAT-WIxSCx2M:
+    compute: 'all'
+
+  SPT-SPT:
+    compute: 'all'
+
+  SPT-WIxSCx2M:
+    compute: 'all'
+
+  WIxSCx2M-WIxSCx2M:
+    compute: 'all'
