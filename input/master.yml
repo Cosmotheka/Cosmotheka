@@ -42,7 +42,7 @@ tracers:
   SDSS__ELG: !include input/SDSS__ELG.yml
   SDSS__QSO0: !include input/SDSS__QSO0.yml
   SDSS__QSO1: !include input/SDSS__QSO1.yml
-  SPT__tSZ: !include input/SPT__tSZ.yml
+  #SPT__tSZ: !include input/SPT__tSZ.yml
   WIxSCx2M__0: !include input/2MPZ.yml
   WIxSCx2M__1: !include input/WIxSC__0.yml
   WIxSCx2M__2: !include input/WIxSC__1.yml
