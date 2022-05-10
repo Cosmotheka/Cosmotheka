@@ -1,7 +1,7 @@
 mapper_class: 'MapperSPT'
-file_map: /mnt/extraspace/damonge/Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap.fits
-file_hm1: /mnt/extraspace/damonge/Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap_half1.fits
-file_hm2: /mnt/extraspace/damonge/Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap_half2.fits
+file_map: /mnt/extraspace/damonge/Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap.fits.gz
+file_hm1: /mnt/extraspace/damonge/Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap_half1.fits.gz
+file_hm2: /mnt/extraspace/damonge/Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap_half2.fits.gz
 file_gp_mask: /mnt/extraspace/damonge/Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_dust_mask_top_5percent.fits.gz
 gp_mask_mode: 'default'
 file_ps_mask: /mnt/extraspace/damonge/Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_point_source_mask_nside_8192_binary_mask.fits.gz
