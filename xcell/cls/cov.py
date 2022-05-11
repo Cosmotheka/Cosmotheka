@@ -46,7 +46,6 @@ class Cov():
         # Multiplicative bias marginalization
         self.m_marg = self.data.data['cov'].get('m_marg', False)
         self.do_NG = self.data.data['cov'].get('non_Gaussian', False)
-        self.do_SSC = self.data.data['cov'].get('SSC', False)
         self._fsky = None
 
     def _load_Cls(self):

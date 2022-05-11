@@ -94,6 +94,7 @@ class Cl(ClBase):
         self.cl_cp = None
         self.wins = None
         self.cls_cov = None
+        self.cl_masks = None
 
     def get_NmtBin(self):
         if self._read_symmetric:
@@ -258,12 +259,15 @@ class Cl(ClBase):
                 cl_cov_12_cp *= correction
                 cl_cov_22_cp *= correction
 
+            # Mask cl needed for the SSC
+            cl_masks = self._get_cl_masks()
+
             np.savez(fname, ell=ell, cl=cl, cl_cp=cl_cp, nl=nl,
                      nl_cp=nl_cp, cl_cov_cp=cl_cov_cp,
                      cl_cov_11_cp=cl_cov_11_cp,
                      cl_cov_12_cp=cl_cov_12_cp,
                      cl_cov_22_cp=cl_cov_22_cp,
-                     wins=wins, correction=correction)
+                     wins=wins, correction=correction, cl_masks=cl_masks)
             self.recompute_cls = False
 
         cl_file = np.load(fname)
@@ -283,6 +287,7 @@ class Cl(ClBase):
                         'auto_11': cl_file['cl_cov_11_cp'],
                         'auto_12': cl_file['cl_cov_12_cp'],
                         'auto_22': cl_file['cl_cov_22_cp']}
+        self.cl_masks = cl_file['cl_masks']
 
         return cl_file
 
@@ -321,6 +326,22 @@ class Cl(ClBase):
         m1 = mapper1.mask_name
         m2 = mapper2.mask_name
         return m1, m2
+
+    def _get_cl_masks(self):
+        if self.cl_masks is None:
+            mapper1, mapper2 = self.get_mappers()
+            m1 = mapper1.get_mask_lm()
+            m2 = mapper2.get_mask_lm()
+
+            ell = np.arange(3 * self.nside)
+            self.cl_masks = np.sum(m1 * m2, axis=1) / (2 * ell + 1)
+        return self.cl_masks
+
+    def get_ell_cl_masks(self):
+        if self.cl_masks is None:
+            self.get_cl_file()
+
+        return self.ell, self.cl_masks
 
     def get_bandpower_windows(self):
         if self.ell is None:

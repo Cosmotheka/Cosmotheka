@@ -40,6 +40,9 @@ class Theory():
         self.config = data['cov']['fiducial']
         self._cosmo = None
         self._hm_par = None
+        k_s = np.geomspace(1E-4, 1E2, 512)
+        self.lk_s = np.log(k_s)
+        self.a_s = 1./(1+np.linspace(0., 6., 30)[::-1])
 
     def get_cosmo_ccl(self):
         if self._cosmo is None:
@@ -188,9 +191,6 @@ class Theory():
             pB2 = pB1
         else:
             pr2ptB = hm_par['prof_2pt']
-        k_s = np.geomspace(1E-4, 1E2, 512)
-        lk_s = np.log(k_s)
-        a_s = 1./(1+np.linspace(0., 6., 30)[::-1])
 
         if kind == '1h':
             tkk = ccl.halos.halomod_Tk3D_1h(cosmo, hm_par['calculator'],
@@ -202,7 +202,7 @@ class Theory():
                                             normprof2=ccl_trA2['normed'],
                                             normprof3=ccl_trB1['normed'],
                                             normprof4=ccl_trB2['normed'],
-                                            a_arr=a_s, lk_arr=lk_s)
+                                            a_arr=self.a_s, lk_arr=self.lk_s)
         elif kind == 'SSC':
             tkk = ccl.halos.halomod_Tk3D_SSC(cosmo, hm_par['calculator'],
                                              prof1=pA1, prof2=pA2,
@@ -213,7 +213,7 @@ class Theory():
                                              normprof2=ccl_trA2['normed'],
                                              normprof3=ccl_trB1['normed'],
                                              normprof4=ccl_trB2['normed'],
-                                             a_arr=a_s, lk_arr=lk_s)
+                                             a_arr=self.a_s, lk_arr=self.lk_s)
         return tkk
 
     def get_ccl_pk(self, ccl_tr1, ccl_tr2):
@@ -228,16 +228,13 @@ class Theory():
                 p2 = p1
             else:
                 pr2pt = None
-            k_s = np.geomspace(1E-4, 1E2, 512)
-            lk_s = np.log(k_s)
-            a_s = 1./(1+np.linspace(0., 6., 30)[::-1])
 
             pk = ccl.halos.halomod_Pk2D(cosmo,
                                         hm_par['calculator'],
                                         p1, prof_2pt=pr2pt, prof2=p2,
                                         normprof1=ccl_tr1['normed'],
                                         normprof2=ccl_tr2['normed'],
-                                        lk_arr=lk_s, a_arr=a_s)
+                                        lk_arr=self.lk_s, a_arr=self.a_s)
             # We comment this out for now because these features are
             # not present in the pip release of CCL
             # smooth_transition=hm_par['alpha'],
@@ -255,17 +252,25 @@ class Theory():
                               ccl_tr2['ccl_tr'],
                               ell, p_of_k_a=pk)
 
-    def get_ccl_cl_covNG(self, ccl_trA1, ccl_trA2, ellA,
-                         ccl_trB1, ccl_trB2, ellB, fsky,
-                         kind='1h'):
+    def get_ccl_cl_covNG(self, ccl_trA1, ccl_trA2, ellA, ccl_trB1, ccl_trB2,
+                         ellB, fsky, kind='1h', cl_masks=None):
         cosmo = self.get_cosmo_ccl()
 
         tkk = self.get_ccl_tkka(ccl_trA1, ccl_trA2,
                                 ccl_trB1, ccl_trB2,
                                 kind=kind)
         if kind == "SSC":
-            # a = 1./(1+np.linspace(0., 6., 30)[::-1])
-            # sigma2_B = ccl.sigma2_B_disc(cosmo, a=a, fsky=fsky)
+            if cl_masks is None:
+                raise ValueError("SSC requested but no cl_masks provided. You "
+                                 + "need to provide the angular power spectrum"
+                                 + "of the masks.")
+            # TODO: What do we do with the p_ok_k_a? It is used in get_ccl_cl
+            # but that's for just 2 tracers. Here we have 4. The underlying
+            # matter power spectrum should be the same for all, though.
+
+            # TODO: we potentially have 4 masks where. Which cl should we
+            # compute?
+            sigma2_B = ccl.sigma2_B_from_mask(cosmo, self.a_s, cl_masks)
             cov = ccl.angular_cl_cov_SSC(cosmo,
                                          cltracer1=ccl_trA1['ccl_tr'],
                                          cltracer2=ccl_trA2['ccl_tr'],
@@ -274,7 +279,7 @@ class Theory():
                                          cltracer3=ccl_trB1['ccl_tr'],
                                          cltracer4=ccl_trB2['ccl_tr'],
                                          ell2=ellB,
-                                         # sigma2_B=(a, sigma2_B),
+                                         sigma2_B=(self.a_s, sigma2_B),
                                          integration_method='qag_quad')
         else:
             cov = ccl.angular_cl_cov_cNG(cosmo,
