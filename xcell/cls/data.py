@@ -5,6 +5,7 @@ from warnings import warn
 import yaml
 import os
 import shutil
+import numpy as np
 
 
 class CustomLoader(yaml.SafeLoader):
@@ -40,9 +41,140 @@ class Data():
 
         os.makedirs(self.data['output'], exist_ok=True)
         self._check_yml_in_outdir(override, ignore_existing_yml)
-        self.tr_matrix = None
         self.cl_tracers = {'wsp': None, 'no_wsp': None}
         self.cov_tracers = {'wsp': None, 'no_wsp': None}
+        self.cls_legend = {'all': 2, 'auto': 1, 'none': 0, 'None': 0}
+        self.tr_matrix = self._init_tracer_matrix()
+
+    def _get_tracers_defined(self):
+        trs_section = self._get_section('tracers')
+        return trs_section.keys()
+
+    def _get_section(self, section):
+        return self.data.get(section, {})
+
+    def _int_to_bool_for_trs(self, tr1, tr2, value, default):
+        auto = tr1 == tr2
+        compute = default
+        if value == 0:
+            compute = False
+        elif ((value == 1) and auto) or (value > 1):
+            compute = True
+
+        return compute
+
+    def _init_tracer_matrix(self):
+        trs = self._get_tracers_defined()
+        cls_conf = self._get_section('cls')
+        cov_conf = self._get_section('cov')
+
+        # Default values should be True or False
+
+        compute_matrix, compute_default = self._get_requested_survey_cls_matrix()
+        clcov_from_data_matrix, clcov_from_data_default = \
+            self._get_clcov_from_data_matrix()
+
+        tr_matrix = {}
+        for i, tr1 in enumerate(trs):
+            for j, tr2 in enumerate(trs):
+                tr1_nn = self.get_tracer_bare_name(tr1)
+                tr2_nn = self.get_tracer_bare_name(tr2)
+                survey_comb = (tr1_nn, tr2_nn)
+
+                cmi = compute_matrix.get(survey_comb, compute_default)
+
+                clcov_mi = clcov_from_data_matrix.get(survey_comb,
+                                                      clcov_from_data_default)
+                # clcov_from_data_matrix can have keys as (survey1, survey2)
+                # or (tracer1, tracer2)
+                # If clcov_mi has the default value, try using the other
+                # keys
+                if clcov_mi == clcov_from_data_default:
+                    clcov_mi = clcov_from_data_matrix.get((tr1, tr2),
+                                                          clcov_from_data_default)
+
+
+                compute = self._int_to_bool_for_trs(tr1, tr2, cmi,
+                                                    compute_default)
+
+                clcov_from_data = self._int_to_bool_for_trs(tr1, tr2, clcov_mi,
+                                                            clcov_from_data_default)
+
+                tr_matrix[(tr1, tr2)] = {'compute': compute,
+                                         'clcov_from_data': clcov_from_data,
+                                         'inv': j < i}
+        return tr_matrix
+
+    def _get_clcov_from_data_matrix(self, return_default=True):
+        conf = self._get_section('cov').get('cls_from_data', {})
+        # Backwards compatibility
+        if isinstance(conf, str):
+            combs = []
+            default = self.cls_legend[conf]
+        elif isinstance(conf, list):
+            combs = conf
+            default = 0
+        else:
+            default = self.cls_legend[conf.get('default', 'None')]
+            combs = conf.keys()
+
+        survey_matrix = {}
+        for c in combs:
+            # Skip entries that are not a combination of pair of surveys
+            if '-' not in c:
+                continue
+            s1, s2 = c.split('-')
+            if isinstance(conf, dict):
+                val = self.cls_legend[conf[c].get('compute', default)]
+            else:
+                # If they're a list, note that s1, s2 can be tracer names,
+                # instead of survey names
+                val = 2
+            survey_matrix[(s1, s2)] = val
+            survey_matrix[(s2, s1)] = val
+
+        if return_default:
+            return survey_matrix, bool(default)
+
+        return survey_matrix
+
+    def _get_requested_survey_cls_matrix(self, return_default=True):
+        cls_conf = self._get_section('cls')
+        fname = cls_conf.get('file', None)
+        if fname is not None:
+            survey_matrix = self._load_survey_cls_matrix(fname)
+        else:
+            survey_matrix = self._read_cls_section_matrix()
+
+        if return_default:
+            default = bool(self.cls_legend[cls_conf.get('default', 'all')])
+            return survey_matrix, default
+
+        return survey_matrix
+
+    def _load_survey_cls_matrix(self, fname):
+            clsf = np.load(fname)
+            surveys = clsf['surveys']
+            survey_matrix = clsf['cls_matrix']
+
+            matrix = {}
+            for i, s1 in enumerate(surveys):
+                for j, s2 in enumerate(surveys):
+                    matrix[(s1, s2)] = survey_matrix[i, j]
+
+            return matrix
+
+    def _read_cls_section_matrix(self):
+        cls_conf = self._get_section('cls')
+        combs = cls_conf.keys()
+        survey_matrix = {}
+        for c in combs:
+            s1, s2 = c.split('-')
+            val = cls_conf[c]['compute']
+            survey_matrix[(s1, s2)] = self.cls_legend[val.lower()]
+            survey_matrix[(s2, s1)] = self.cls_legend[val.lower()]
+
+        return survey_matrix
 
     def get_bias(self, name):
         return self.data['tracers'][name].get('bias', 1.)
@@ -122,60 +254,7 @@ class Data():
                 return (tn1, tn2)
         return None
 
-    def _get_pair_reqs(self, tn1, tn2):
-        pname = self.get_tracers_bare_name_pair(tn1, tn2)
-        pname_inv = self.get_tracers_bare_name_pair(tn2, tn1)
-        compute = False
-        clcov_from_data = False
-
-        # Find if we want to compute this C_ell
-        if pname_inv in self.data['cls']:
-            pname = pname_inv
-        if pname in self.data['cls']:
-            comp = self.data['cls'][pname]['compute']
-            if ((comp == 'all') or
-                    ((comp == 'auto') and (tn1 == tn2))):
-                compute = True
-
-        cls_to_compute = self.get_cl_trs_names()
-        inv = (((tn2, tn1) in cls_to_compute) and
-               not ((tn1, tn2) in cls_to_compute))
-
-        # Find if this pair's C_ell should be computed
-        # from data for the covariance
-        clcovlist = self.data['cov'].get('cls_from_data', None)
-        if clcovlist:
-            if isinstance(clcovlist, str):
-                if clcovlist == 'all':
-                    # Should all cls be computed from data?
-                    clcov_from_data = True
-            elif isinstance(clcovlist, list):
-                if f'{tn1}-{tn2}' in clcovlist:
-                    # Should this particular cl be computed from data?
-                    clcov_from_data = True
-                if f'{tn2}-{tn1}' in clcovlist:
-                    # Should this particular cl be computed from data?
-                    clcov_from_data = True
-            elif isinstance(clcovlist, dict):
-                if pname_inv in clcovlist:
-                    pname = pname_inv
-                if pname in clcovlist:
-                    # Out of this group, should this cl be comp. from data?
-                    comp = clcovlist[pname]['compute']
-                    if ((comp == 'all') or
-                            ((comp == 'auto') and (tn1 == tn2))):
-                        clcov_from_data = True
-        return {'compute': compute,
-                'clcov_from_data': clcov_from_data,
-                'inv': inv}
-
     def get_tracer_matrix(self):
-        if self.tr_matrix is None:
-            tr_list = list(self.data['tracers'].keys())
-            self.tr_matrix = {}
-            for tn1 in tr_list:
-                for tn2 in tr_list:
-                    self.tr_matrix[(tn1, tn2)] = self._get_pair_reqs(tn1, tn2)
         return self.tr_matrix
 
     def get_tracers_bare_name_pair(self, tr1, tr2, connector='-'):
