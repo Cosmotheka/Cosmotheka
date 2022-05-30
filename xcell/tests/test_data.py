@@ -64,7 +64,7 @@ def test_input_from_another_file():
     remove_yml_file(d.data)
 
 
-def test_input_cls_npz():
+def test_input_cls_section():
     d = get_data()
     data = d.data.copy()
     tmat = d.get_tracer_matrix()
@@ -100,6 +100,7 @@ def test_input_cls_npz():
     remove_yml_file(data)
     remove_outdir(data)
 
+
 def test_will_be_computed():
     d = get_data()
     n1 = d.will_pair_be_computed('DESwl__0', 'DESwl__1')
@@ -110,7 +111,97 @@ def test_will_be_computed():
     assert not n3
 
 
+def test_init_to_bool_for_trs():
+    d = get_data()
+
+    assert d._int_to_bool_for_trs('DESgc__0', 'DESgc__1', 0) is True
+    assert d._int_to_bool_for_trs('DESgc__0', 'DESgc__1', 1) is False
+    assert d._int_to_bool_for_trs('DESgc__1', 'DESgc__1', 1) is True
+    assert d._int_to_bool_for_trs('DESgc__0', 'DESgc__1', 2) is True
+
+
+def test_get_section():
+    d = get_data()
+
+    assert d.data['cls'] == d._get_section('cls')
+
+
+def test_get_tracers_defined():
+    d = get_data()
+
+    # A bit absurd, but this is what it is
+    assert d._get_tracers_defined() == list(d.data['tracers'].keys())
+
+
+def test_get_requested_survey_cls_matrix():
+    d = get_data()
+    data = d.data
+    fname = './xcell/tests/cls/mat.npz'
+
+    surveys= ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
+    cls_matrix = [[1, 2, 0, 2], [2, 2, 0, 2], [0, 0, 0, 0], [2, 2, 0, 0]]
+    np.savez(fname, surveys=surveys, cls_matrix=cls_matrix)
+
+    mat = {}
+    for i, s1 in enumerate(surveys):
+        for j, s2 in enumerate(surveys):
+            mat[(s1, s2)] = cls_matrix[i][j]
+
+    # Test cls defined in the yaml file
+    assert mat == d._get_requested_survey_cls_matrix(return_default=False)
+
+    # cls = fname
+    data['cls'] = fname
+    d2 = Data(data=data, ignore_existing_yml=True)
+    assert d2.data['cls'] == data['cls']
+    assert mat == d2._get_requested_survey_cls_matrix(return_default=False)
+
+    # Set file = fname
+    data['cls'] = {'default': 'all', 'file': fname}
+    d2 = Data(data=data, ignore_existing_yml=True)
+    assert d2.data['cls'] == data['cls']
+    assert mat == d2._get_requested_survey_cls_matrix(return_default=False)
+
+    os.remove(fname)
+    remove_yml_file(data)
+    remove_outdir(data)
+
+
+def test_load_survey_cls_matrix():
+    d = get_data()
+    fname = './xcell/tests/cls/mat.npz'
+
+    # Normal use: pass a matrix with everything
+    surveys= ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
+    cls_matrix = [[1, 2, 0, 2], [2, 2, 0, 2], [0, 0, 0, 0], [2, 2, 0, 0]]
+    np.savez(fname, surveys=surveys, cls_matrix=cls_matrix)
+
+    mat = d._load_survey_cls_matrix(fname)
+    mat2 = {}
+    for i, s1 in enumerate(surveys):
+        for j, s2 in enumerate(surveys):
+            mat2[(s1, s2)] = cls_matrix[i][j]
+
+    assert mat == mat2
+
+
+def test_read_cls_section_matrix():
+    d = get_data()
+    mat = d._read_cls_section_matrix()
+
+    surveys= ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
+    cls_matrix = [[1, 2, 0, 2], [2, 2, 0, 2], [0, 0, 0, 0], [2, 2, 0, 0]]
+
+    mat2 = {}
+    for i, s1 in enumerate(surveys):
+        for j, s2 in enumerate(surveys):
+            mat2[(s1, s2)] = cls_matrix[i][j]
+
+    assert mat == mat2
+
+
 def test_get_tracer_matrix():
+    # This function also tests _init_tracer_matrix
     # No cls from data
     c = get_config_dict()
     data = Data(data=c)

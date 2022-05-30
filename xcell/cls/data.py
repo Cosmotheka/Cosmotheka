@@ -53,7 +53,7 @@ class Data():
 
     def _get_tracers_defined(self):
         trs_section = self._get_section('tracers')
-        return trs_section.keys()
+        return list(trs_section.keys())
 
     def _get_section(self, section):
         return self.data.get(section, {})
@@ -162,16 +162,16 @@ class Data():
         return survey_matrix
 
     def _load_survey_cls_matrix(self, fname):
-            clsf = np.load(fname)
-            surveys = clsf['surveys']
-            survey_matrix = clsf['cls_matrix']
+        clsf = np.load(fname)
+        surveys = clsf['surveys']
+        survey_matrix = clsf['cls_matrix']
 
-            matrix = {}
-            for i, s1 in enumerate(surveys):
-                for j, s2 in enumerate(surveys):
-                    matrix[(s1, s2)] = survey_matrix[i, j]
+        matrix = {}
+        for i, s1 in enumerate(surveys):
+            for j, s2 in enumerate(surveys):
+                matrix[(s1, s2)] = survey_matrix[i, j]
 
-            return matrix
+        return matrix
 
     def _read_cls_section_matrix(self):
         cls_conf = self._get_section('cls')
