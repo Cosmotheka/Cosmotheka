@@ -41,6 +41,7 @@ class Data():
 
         os.makedirs(self.data['output'], exist_ok=True)
         self._check_yml_in_outdir(override, ignore_existing_yml)
+        self.tracers = {'wsp': None, 'no_wsp': None}
         self.cl_tracers = {'wsp': None, 'no_wsp': None}
         self.cov_tracers = {'wsp': None, 'no_wsp': None}
         self.tr_matrix = None
@@ -228,24 +229,25 @@ class Data():
         return data
 
     def get_tracers_used(self, wsp=False):
-        tracers = []
-        for trk, trv in self.data['cls'].items():
-            tr1, tr2 = trk.split('-')
-            if trv['compute'] != 'None':
-                tracers.append(tr1)
-                tracers.append(tr2)
+        lab = ['no_wsp', 'wsp'][wsp]
+        if self.tracers[lab] is None:
+            tr_names = self._get_tracers_defined()
+            tmat = self.get_tracer_matrix()
 
-        tracers_for_cl = []
-        for tr in self.data['tracers'].keys():
-            # Remove tracer number
-            tr_nn = self.get_tracer_bare_name(tr)
-            if tr_nn in tracers:
-                tracers_for_cl.append(tr)
+            # Saving only tr1 to keep order
+            tracers = []
+            for tr1 in tr_names:
+                for tr2 in tr_names:
+                    req = tmat[(tr1, tr2)]
+                    if req['compute'] and (tr1 not in tracers):
+                        tracers.append(tr1)
+                        break
+            if wsp:
+                tracers = self._filter_tracers_wsp(tracers)
 
-        if wsp:
-            tracers_for_cl = self.filter_tracers_wsp(tracers_for_cl)
+            self.tracers[lab] = tracers
 
-        return tracers_for_cl
+        return self.tracers[lab]
 
     def get_tracer_bare_name(self, tr):
         if '__' in tr:
@@ -273,52 +275,34 @@ class Data():
         trreq = connector.join([tr1_nn, tr2_nn])
         return trreq
 
-    def _get_cl_trs_names(self, wsp=False):
-        cl_tracers = []
-        tr_names = self.get_tracers_used(wsp)
-        for i, tr1 in enumerate(tr_names):
-            for tr2 in tr_names[i:]:
-                trreq = self.get_tracers_bare_name_pair(tr1, tr2)
-                trreq_inv = self.get_tracers_bare_name_pair(tr2, tr1)
-                if (trreq not in self.data['cls']) and \
-                   (trreq_inv in self.data['cls']):
-                    # If the inverse is in the data file, reverse it
-                    # internally
-                    self.data['cls'][trreq] = self.data['cls'][trreq_inv]
-                    del self.data['cls'][trreq_inv]
-                elif (trreq not in self.data['cls']) and \
-                     (trreq_inv not in self.data['cls']):
-                    # If still not present, skip
-                    continue
-                clreq = self.data['cls'][trreq]['compute']
-                if clreq == 'all':
-                    pass
-                elif (clreq == 'auto') and (tr1 != tr2):
-                    continue
-                elif clreq == 'None':
-                    continue
-                cl_tracers.append((tr1, tr2))
-        return cl_tracers
-
     def get_cl_trs_names(self, wsp=False):
         lab = ['no_wsp', 'wsp'][wsp]
         if self.cl_tracers[lab] is None:
-            self.cl_tracers[lab] = self._get_cl_trs_names(wsp)
+            cl_tracers = []
+            tr_names = self.get_tracers_used(wsp)
+            tmat = self.get_tracer_matrix()
+
+            for tr1 in tr_names:
+                for tr2 in tr_names:
+                    req = tmat[(tr1, tr2)]
+                    if req['inv'] or (req['compute'] is False):
+                        continue
+                    cl_tracers.append((tr1, tr2))
+
+            self.cl_tracers[lab] = cl_tracers
+
         return self.cl_tracers[lab]
-
-    def _get_cov_trs_names(self, wsp=False):
-        cl_tracers = self.get_cl_trs_names(wsp)
-        cov_tracers = []
-        for i, trs1 in enumerate(cl_tracers):
-            for trs2 in cl_tracers[i:]:
-                cov_tracers.append((*trs1, *trs2))
-
-        return cov_tracers
 
     def get_cov_trs_names(self, wsp=False):
         lab = ['no_wsp', 'wsp'][wsp]
         if self.cov_tracers[lab] is None:
-            self.cov_tracers[lab] = self._get_cov_trs_names(wsp)
+            cl_tracers = self.get_cl_trs_names(wsp)
+            cov_tracers = []
+            for i, trs1 in enumerate(cl_tracers):
+                for trs2 in cl_tracers[i:]:
+                    cov_tracers.append((*trs1, *trs2))
+
+            self.cov_tracers[lab] = cov_tracers
         return self.cov_tracers[lab]
 
     def get_cov_extra_cl_tracers(self):
@@ -346,7 +330,7 @@ class Data():
 
         return [item for sublist in cl_extra for item in sublist]
 
-    def filter_tracers_wsp(self, tracers):
+    def _filter_tracers_wsp(self, tracers):
         tracers_torun = []
         masks = []
         for tr in tracers:
@@ -392,14 +376,5 @@ class Data():
         return mapper_from_name(mapper_class)(config)
 
     def read_symmetric(self, tr1, tr2):
-        trs_names = self.get_cl_trs_names()
-        trs_used = self.get_tracers_used()
-        # Check if the symmetric Cell is requested or if
-        # it's a Cell for the covariance, to compute it keeping the order in
-        # the yaml file, to avoid duplications
-        if ((tr1, tr2) not in trs_names) and \
-           (((tr2, tr1) in trs_names) or
-           trs_used.index(tr1) > trs_used.index(tr2)):
-            return True
-        else:
-            return False
+        tmat = self.get_tracer_matrix()
+        return tmat[(tr1, tr2)]['inv']

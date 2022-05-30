@@ -393,9 +393,10 @@ def test_get_tracers_used():
         if tr.split('__')[0] in trs:
             tracers_for_cl_test.append(tr)
 
-    assert tracers_for_cl == tracers_for_cl_test
-    assert data.get_tracers_used(True) == ['DESgc__0', 'DESwl__0', 'DESwl__1',
-                                           'DESwl__2', 'DESwl__3', 'PLAcv']
+    assert sorted(tracers_for_cl) == sorted(tracers_for_cl_test)
+    assert sorted(data.get_tracers_used(True)) == \
+        sorted(['DESgc__0', 'DESwl__0', 'DESwl__1', 'DESwl__2', 'DESwl__3',
+                'PLAcv'])
     remove_yml_file(data.data)
 
 
@@ -428,7 +429,7 @@ def test_get_cl_trs_names(wsp):
             elif config['cls'][key]['compute'] == 'all':
                 cl_trs_test.append((tri, trj))
 
-    assert cl_trs == cl_trs_test
+    assert sorted(cl_trs) == sorted(cl_trs_test)
 
     remove_yml_file(config)
 
@@ -492,7 +493,7 @@ def test_filter_tracers_wsp():
             trs_wsp.append(tr)
             trs_mask.append(mask_name)
 
-    assert trs_wsp == data.filter_tracers_wsp(all_tracers)
+    assert trs_wsp == data._filter_tracers_wsp(all_tracers)
     remove_yml_file(config)
 
 
