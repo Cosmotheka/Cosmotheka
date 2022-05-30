@@ -4,6 +4,8 @@ import os
 import yaml
 from xcell.cls.data import Data
 from ..mappers import mapper_from_name
+import numpy as np
+import shutil
 
 
 def read_yaml_file(file):
@@ -43,9 +45,8 @@ def remove_outdir(config):
     outdir = config['output']
     if outdir != './xcell/tests/cls/':
         raise ValueError('Outdir looks odd. Not removing it as precaution')
-    # Using os.rmdir as it will only remove an empty directory
     elif os.path.isdir(outdir):
-        os.rmdir(outdir)
+        shutil.rmtree(outdir)
 
 
 def get_tracer_pair_iterator(data):
@@ -62,6 +63,42 @@ def test_input_from_another_file():
     assert d.data['tracers']['DESgc__1']['bias'] == 1.76
     remove_yml_file(d.data)
 
+
+def test_input_cls_npz():
+    d = get_data()
+    data = d.data.copy()
+    tmat = d.get_tracer_matrix()
+    fname = './xcell/tests/cls/mat.npz'
+
+    # Normal use: pass a matrix with everything
+    surveys= ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
+    cls_matrix = [[1, 2, 0, 2], [2, 2, 0, 2], [0, 0, 0, 0], [2, 2, 0, 0]]
+    np.savez(fname, surveys=surveys, cls_matrix=cls_matrix)
+
+    data['cls'] = fname
+    d2 = Data(data=data, ignore_existing_yml=True)
+    assert d2.data['cls'] == data['cls']
+    assert tmat == d2.get_tracer_matrix()
+
+    # Set default = all and check it is overriden correctly
+    data['cls'] = {'default': 'all', 'file': fname}
+    d2 = Data(data=data, ignore_existing_yml=True)
+    assert d2.data['cls'] == data['cls']
+    assert tmat == d2.get_tracer_matrix()
+
+    # Set default = 'None' (this is the default) and don't pass eBOSS
+    surveys= ['DESgc', 'DESwl', 'PLAcv']
+    cls_matrix = [[1, 2, 2], [2, 2, 2], [2, 2, 0]]
+    np.savez(fname, surveys=surveys, cls_matrix=cls_matrix)
+
+    data['cls'] = {'default': 'None', 'file': fname}
+    d2 = Data(data=data, ignore_existing_yml=True)
+    assert d2.data['cls'] == data['cls']
+    assert tmat == d2.get_tracer_matrix()
+
+    os.remove(fname)
+    remove_yml_file(data)
+    remove_outdir(data)
 
 def test_will_be_computed():
     d = get_data()

@@ -44,7 +44,12 @@ class Data():
         self.cl_tracers = {'wsp': None, 'no_wsp': None}
         self.cov_tracers = {'wsp': None, 'no_wsp': None}
         self.cls_legend = {'all': 2, 'auto': 1, 'none': 0, 'None': 0}
-        self.tr_matrix = self._init_tracer_matrix()
+        self.tr_matrix = None
+
+
+        # What the code will do if not specified
+        self.default_cls_to_compute = 'None'
+        self.default_clcov_from_data = 'None'
 
     def _get_tracers_defined(self):
         trs_section = self._get_section('tracers')
@@ -53,10 +58,9 @@ class Data():
     def _get_section(self, section):
         return self.data.get(section, {})
 
-    def _int_to_bool_for_trs(self, tr1, tr2, value, default):
+    def _int_to_bool_for_trs(self, tr1, tr2, value):
         auto = tr1 == tr2
-        compute = default
-        if value == 0:
+        if (value == 0) or ((value == 1) and not auto):
             compute = False
         elif ((value == 1) and auto) or (value > 1):
             compute = True
@@ -82,7 +86,6 @@ class Data():
                 survey_comb = (tr1_nn, tr2_nn)
 
                 cmi = compute_matrix.get(survey_comb, compute_default)
-
                 clcov_mi = clcov_from_data_matrix.get(survey_comb,
                                                       clcov_from_data_default)
                 # clcov_from_data_matrix can have keys as (survey1, survey2)
@@ -94,11 +97,11 @@ class Data():
                                                           clcov_from_data_default)
 
 
-                compute = self._int_to_bool_for_trs(tr1, tr2, cmi,
-                                                    compute_default)
+                compute = self._int_to_bool_for_trs(tr1, tr2, cmi)
 
-                clcov_from_data = self._int_to_bool_for_trs(tr1, tr2, clcov_mi,
-                                                            clcov_from_data_default)
+
+                clcov_from_data = self._int_to_bool_for_trs(tr1, tr2, clcov_mi)
+
 
                 tr_matrix[(tr1, tr2)] = {'compute': compute,
                                          'clcov_from_data': clcov_from_data,
@@ -113,9 +116,10 @@ class Data():
             default = self.cls_legend[conf]
         elif isinstance(conf, list):
             combs = conf
-            default = 0
+            default = self.cls_legend[self.default_clcov_from_data]
         else:
-            default = self.cls_legend[conf.get('default', 'None')]
+            default = self.cls_legend[conf.get('default',
+                                               self.default_clcov_from_data)]
             combs = conf.keys()
 
         survey_matrix = {}
@@ -140,14 +144,19 @@ class Data():
 
     def _get_requested_survey_cls_matrix(self, return_default=True):
         cls_conf = self._get_section('cls')
-        fname = cls_conf.get('file', None)
-        if fname is not None:
-            survey_matrix = self._load_survey_cls_matrix(fname)
+        if isinstance(cls_conf, str):
+            survey_matrix = self._load_survey_cls_matrix(cls_conf)
+            default = bool(self.cls_legend[self.default_cls_to_compute])
+        elif 'file' in cls_conf:
+            survey_matrix = self._load_survey_cls_matrix(cls_conf['file'])
+            default = bool(self.cls_legend[cls_conf.get('default',
+                                                        self.default_cls_to_compute)])
         else:
             survey_matrix = self._read_cls_section_matrix()
+            default = bool(self.cls_legend[cls_conf.get('default',
+                                                        self.default_cls_to_compute)])
 
         if return_default:
-            default = bool(self.cls_legend[cls_conf.get('default', 'all')])
             return survey_matrix, default
 
         return survey_matrix
@@ -255,6 +264,8 @@ class Data():
         return None
 
     def get_tracer_matrix(self):
+        if self.tr_matrix is None:
+            self.tr_matrix = self._init_tracer_matrix()
         return self.tr_matrix
 
     def get_tracers_bare_name_pair(self, tr1, tr2, connector='-'):
