@@ -71,7 +71,7 @@ def test_input_cls_section():
     fname = './xcell/tests/cls/mat.npz'
 
     # Normal use: pass a matrix with everything
-    surveys= ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
+    surveys = ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
     cls_matrix = [[1, 2, 0, 2], [2, 2, 0, 2], [0, 0, 0, 0], [2, 2, 0, 0]]
     np.savez(fname, surveys=surveys, cls_matrix=cls_matrix)
 
@@ -87,7 +87,7 @@ def test_input_cls_section():
     assert tmat == d2.get_tracer_matrix()
 
     # Set default = 'None' (this is the default) and don't pass eBOSS
-    surveys= ['DESgc', 'DESwl', 'PLAcv']
+    surveys = ['DESgc', 'DESwl', 'PLAcv']
     cls_matrix = [[1, 2, 2], [2, 2, 2], [2, 2, 0]]
     np.savez(fname, surveys=surveys, cls_matrix=cls_matrix)
 
@@ -111,10 +111,10 @@ def test_will_be_computed():
     assert not n3
 
 
-def test_init_to_bool_for_trs():
+def test_int_to_bool_for_trs():
     d = get_data()
 
-    assert d._int_to_bool_for_trs('DESgc__0', 'DESgc__1', 0) is True
+    assert d._int_to_bool_for_trs('DESgc__0', 'DESgc__1', 0) is False
     assert d._int_to_bool_for_trs('DESgc__0', 'DESgc__1', 1) is False
     assert d._int_to_bool_for_trs('DESgc__1', 'DESgc__1', 1) is True
     assert d._int_to_bool_for_trs('DESgc__0', 'DESgc__1', 2) is True
@@ -138,7 +138,7 @@ def test_get_requested_survey_cls_matrix():
     data = d.data
     fname = './xcell/tests/cls/mat.npz'
 
-    surveys= ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
+    surveys = ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
     cls_matrix = [[1, 2, 0, 2], [2, 2, 0, 2], [0, 0, 0, 0], [2, 2, 0, 0]]
     np.savez(fname, surveys=surveys, cls_matrix=cls_matrix)
 
@@ -149,18 +149,24 @@ def test_get_requested_survey_cls_matrix():
 
     # Test cls defined in the yaml file
     assert mat == d._get_requested_survey_cls_matrix(return_default=False)
+    assert (mat, 0) == \
+        d._get_requested_survey_cls_matrix(return_default=True)
 
     # cls = fname
     data['cls'] = fname
     d2 = Data(data=data, ignore_existing_yml=True)
     assert d2.data['cls'] == data['cls']
     assert mat == d2._get_requested_survey_cls_matrix(return_default=False)
+    assert (mat, 0) == \
+        d2._get_requested_survey_cls_matrix(return_default=True)
 
     # Set file = fname
     data['cls'] = {'default': 'all', 'file': fname}
     d2 = Data(data=data, ignore_existing_yml=True)
     assert d2.data['cls'] == data['cls']
     assert mat == d2._get_requested_survey_cls_matrix(return_default=False)
+    assert (mat, 2) == \
+        d2._get_requested_survey_cls_matrix(return_default=True)
 
     os.remove(fname)
     remove_yml_file(data)
@@ -172,7 +178,7 @@ def test_load_survey_cls_matrix():
     fname = './xcell/tests/cls/mat.npz'
 
     # Normal use: pass a matrix with everything
-    surveys= ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
+    surveys = ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
     cls_matrix = [[1, 2, 0, 2], [2, 2, 0, 2], [0, 0, 0, 0], [2, 2, 0, 0]]
     np.savez(fname, surveys=surveys, cls_matrix=cls_matrix)
 
@@ -189,7 +195,7 @@ def test_read_cls_section_matrix():
     d = get_data()
     mat = d._read_cls_section_matrix()
 
-    surveys= ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
+    surveys = ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
     cls_matrix = [[1, 2, 0, 2], [2, 2, 0, 2], [0, 0, 0, 0], [2, 2, 0, 0]]
 
     mat2 = {}

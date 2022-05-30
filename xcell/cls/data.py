@@ -46,7 +46,6 @@ class Data():
         self.cls_legend = {'all': 2, 'auto': 1, 'none': 0, 'None': 0}
         self.tr_matrix = None
 
-
         # What the code will do if not specified
         self.default_cls_to_compute = 'None'
         self.default_clcov_from_data = 'None'
@@ -69,13 +68,11 @@ class Data():
 
     def _init_tracer_matrix(self):
         trs = self._get_tracers_defined()
-        cls_conf = self._get_section('cls')
-        cov_conf = self._get_section('cov')
 
-        # Default values should be True or False
-
-        compute_matrix, compute_default = self._get_requested_survey_cls_matrix()
-        clcov_from_data_matrix, clcov_from_data_default = \
+        # Default values should be 0, 1, 2
+        compute_matrix, compute_default = \
+            self._get_requested_survey_cls_matrix()
+        clcov_from_data_matrix, clcov_fdata_default = \
             self._get_clcov_from_data_matrix()
 
         tr_matrix = {}
@@ -87,21 +84,17 @@ class Data():
 
                 cmi = compute_matrix.get(survey_comb, compute_default)
                 clcov_mi = clcov_from_data_matrix.get(survey_comb,
-                                                      clcov_from_data_default)
+                                                      clcov_fdata_default)
                 # clcov_from_data_matrix can have keys as (survey1, survey2)
                 # or (tracer1, tracer2)
                 # If clcov_mi has the default value, try using the other
                 # keys
-                if clcov_mi == clcov_from_data_default:
+                if clcov_mi == clcov_fdata_default:
                     clcov_mi = clcov_from_data_matrix.get((tr1, tr2),
-                                                          clcov_from_data_default)
-
-
+                                                          clcov_fdata_default)
                 compute = self._int_to_bool_for_trs(tr1, tr2, cmi)
 
-
                 clcov_from_data = self._int_to_bool_for_trs(tr1, tr2, clcov_mi)
-
 
                 tr_matrix[(tr1, tr2)] = {'compute': compute,
                                          'clcov_from_data': clcov_from_data,
@@ -138,23 +131,22 @@ class Data():
             survey_matrix[(s2, s1)] = val
 
         if return_default:
-            return survey_matrix, bool(default)
+            return survey_matrix, default
 
         return survey_matrix
 
     def _get_requested_survey_cls_matrix(self, return_default=True):
         cls_conf = self._get_section('cls')
+        default = self.default_cls_to_compute
         if isinstance(cls_conf, str):
             survey_matrix = self._load_survey_cls_matrix(cls_conf)
-            default = bool(self.cls_legend[self.default_cls_to_compute])
+            default = self.cls_legend[default]
         elif 'file' in cls_conf:
             survey_matrix = self._load_survey_cls_matrix(cls_conf['file'])
-            default = bool(self.cls_legend[cls_conf.get('default',
-                                                        self.default_cls_to_compute)])
+            default = self.cls_legend[cls_conf.get('default', default)]
         else:
             survey_matrix = self._read_cls_section_matrix()
-            default = bool(self.cls_legend[cls_conf.get('default',
-                                                        self.default_cls_to_compute)])
+            default = self.cls_legend[cls_conf.get('default', default)]
 
         if return_default:
             return survey_matrix, default
