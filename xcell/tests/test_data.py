@@ -143,6 +143,60 @@ def test_get_tracers_defined():
     assert d._get_tracers_defined() == list(d.data['tracers'].keys())
 
 
+def test_get_clcov_from_data_matrix():
+    c = get_config_dict()
+
+    # Empty
+    d = get_data()
+    mat = {}
+    assert mat == d._get_clcov_from_data_matrix(return_default=False)
+    assert (mat, 'None') == d._get_clcov_from_data_matrix()
+    remove_yml_file(c)
+
+    # Pass string ('all', 'cross', 'None')
+    c['cov']['cls_from_data'] = 'all'
+    d = Data(data=c)
+    mat = {}
+    assert mat == d._get_clcov_from_data_matrix(return_default=False)
+    assert (mat, 'all') == d._get_clcov_from_data_matrix()
+    remove_yml_file(c)
+
+    # Pass dictionary
+    c['cov']['cls_from_data'] = {'DESgc-DESgc': {'compute': 'all'}}
+    d = Data(data=c)
+    mat = {('DESgc', 'DESgc'): 'all'}
+    assert mat == d._get_clcov_from_data_matrix(return_default=False)
+    assert (mat, 'None') == d._get_clcov_from_data_matrix()
+    remove_yml_file(c)
+
+    # Pass dictionary with different value and change default
+    c['cov']['cls_from_data'] = {'DESgc-DESgc': {'compute': 'auto'},
+                                 'default': 'all'}
+    d = Data(data=c)
+    mat = {('DESgc', 'DESgc'): 'auto'}
+    assert mat == d._get_clcov_from_data_matrix(return_default=False)
+    assert (mat, 'all') == d._get_clcov_from_data_matrix()
+    remove_yml_file(c)
+
+    # Pass dictionary with no compute. It should use the default
+    c['cov']['cls_from_data'] = {'DESgc-DESgc': {},
+                                 'default': 'all'}
+    d = Data(data=c)
+    mat = {('DESgc', 'DESgc'): 'all'}
+    assert mat == d._get_clcov_from_data_matrix(return_default=False)
+    assert (mat, 'all') == d._get_clcov_from_data_matrix()
+    remove_yml_file(c)
+
+    # Pass list of tracers
+    c['cov']['cls_from_data'] = ['DESgc__0-DESgc__0', 'DESgc__1-DESwl__1']
+    d = Data(data=c)
+    mat = {('DESgc__0', 'DESgc__0'): 'all', ('DESgc__1', 'DESwl__1'): 'all',
+           ('DESwl__1', 'DESgc__1'): 'all'}
+    assert mat == d._get_clcov_from_data_matrix(return_default=False)
+    assert (mat, 'None') == d._get_clcov_from_data_matrix()
+    remove_yml_file(c)
+
+
 def test_get_requested_survey_cls_matrix():
     d = get_data()
     data = d.data
