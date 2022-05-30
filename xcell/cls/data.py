@@ -43,7 +43,6 @@ class Data():
         self._check_yml_in_outdir(override, ignore_existing_yml)
         self.cl_tracers = {'wsp': None, 'no_wsp': None}
         self.cov_tracers = {'wsp': None, 'no_wsp': None}
-        self.cls_legend = {'all': 2, 'auto': 1, 'none': 0, 'None': 0}
         self.tr_matrix = None
 
         # What the code will do if not specified
@@ -57,12 +56,16 @@ class Data():
     def _get_section(self, section):
         return self.data.get(section, {})
 
-    def _int_to_bool_for_trs(self, tr1, tr2, value):
+    def _map_compute_to_bool_for_trs(self, tr1, tr2, value):
         auto = tr1 == tr2
-        if (value == 0) or ((value == 1) and not auto):
+        value = value.lower()
+        if (value == 'none') or ((value == 'auto') and not auto):
             compute = False
-        elif ((value == 1) and auto) or (value > 1):
+        elif ((value == 'auto') and auto) or (value == 'all'):
             compute = True
+        else:
+            raise ValueError("Compute value = {value} not understood. It " +
+                             "has to be one of 'all', 'None' or 'auto'")
 
         return compute
 
@@ -92,9 +95,11 @@ class Data():
                 if clcov_mi == clcov_fdata_default:
                     clcov_mi = clcov_from_data_matrix.get((tr1, tr2),
                                                           clcov_fdata_default)
-                compute = self._int_to_bool_for_trs(tr1, tr2, cmi)
+                compute = \
+                    self._map_compute_to_bool_for_trs(tr1, tr2, cmi)
 
-                clcov_from_data = self._int_to_bool_for_trs(tr1, tr2, clcov_mi)
+                clcov_from_data = \
+                    self._map_compute_to_bool_for_trs(tr1, tr2, clcov_mi)
 
                 tr_matrix[(tr1, tr2)] = {'compute': compute,
                                          'clcov_from_data': clcov_from_data,
@@ -106,13 +111,12 @@ class Data():
         # Backwards compatibility
         if isinstance(conf, str):
             combs = []
-            default = self.cls_legend[conf]
+            default = conf
         elif isinstance(conf, list):
             combs = conf
-            default = self.cls_legend[self.default_clcov_from_data]
+            default = self.default_clcov_from_data
         else:
-            default = self.cls_legend[conf.get('default',
-                                               self.default_clcov_from_data)]
+            default = conf.get('default', self.default_clcov_from_data)
             combs = conf.keys()
 
         survey_matrix = {}
@@ -122,11 +126,11 @@ class Data():
                 continue
             s1, s2 = c.split('-')
             if isinstance(conf, dict):
-                val = self.cls_legend[conf[c].get('compute', default)]
+                val = conf[c].get('compute', default)
             else:
                 # If they're a list, note that s1, s2 can be tracer names,
                 # instead of survey names
-                val = 2
+                val = 'all'
             survey_matrix[(s1, s2)] = val
             survey_matrix[(s2, s1)] = val
 
@@ -140,13 +144,12 @@ class Data():
         default = self.default_cls_to_compute
         if isinstance(cls_conf, str):
             survey_matrix = self._load_survey_cls_matrix(cls_conf)
-            default = self.cls_legend[default]
         elif 'file' in cls_conf:
             survey_matrix = self._load_survey_cls_matrix(cls_conf['file'])
-            default = self.cls_legend[cls_conf.get('default', default)]
+            default = cls_conf.get('default', default)
         else:
             survey_matrix = self._read_cls_section_matrix()
-            default = self.cls_legend[cls_conf.get('default', default)]
+            default = cls_conf.get('default', default)
 
         if return_default:
             return survey_matrix, default
@@ -158,10 +161,14 @@ class Data():
         surveys = clsf['surveys']
         survey_matrix = clsf['cls_matrix']
 
+        # The matrix will have values 0, 1, 2 and we will map them to the human
+        # friendly 'all', 'auto', 'None'
+        cls_legend = {2:'all', 1:'auto', 0:'None'}
+
         matrix = {}
         for i, s1 in enumerate(surveys):
             for j, s2 in enumerate(surveys):
-                matrix[(s1, s2)] = survey_matrix[i, j]
+                matrix[(s1, s2)] = cls_legend[survey_matrix[i, j]]
 
         return matrix
 
@@ -172,8 +179,8 @@ class Data():
         for c in combs:
             s1, s2 = c.split('-')
             val = cls_conf[c]['compute']
-            survey_matrix[(s1, s2)] = self.cls_legend[val.lower()]
-            survey_matrix[(s2, s1)] = self.cls_legend[val.lower()]
+            survey_matrix[(s1, s2)] = val
+            survey_matrix[(s2, s1)] = val
 
         return survey_matrix
 

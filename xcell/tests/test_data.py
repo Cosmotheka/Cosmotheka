@@ -111,13 +111,18 @@ def test_will_be_computed():
     assert not n3
 
 
-def test_int_to_bool_for_trs():
+def test_map_compute_to_bool_for_trs():
     d = get_data()
 
-    assert d._int_to_bool_for_trs('DESgc__0', 'DESgc__1', 0) is False
-    assert d._int_to_bool_for_trs('DESgc__0', 'DESgc__1', 1) is False
-    assert d._int_to_bool_for_trs('DESgc__1', 'DESgc__1', 1) is True
-    assert d._int_to_bool_for_trs('DESgc__0', 'DESgc__1', 2) is True
+    assert d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'None') is False
+    assert d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'none') is False
+    assert d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'auto') is False
+    assert d._map_compute_to_bool_for_trs('DESgc__1', 'DESgc__1', 'auto') is True
+    assert d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'all') is True
+
+    # Check that it raises an Error if compute is wrong
+    with pytest.raises(ValueError):
+        d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'pepito')
 
 
 def test_get_section():
@@ -142,14 +147,15 @@ def test_get_requested_survey_cls_matrix():
     cls_matrix = [[1, 2, 0, 2], [2, 2, 0, 2], [0, 0, 0, 0], [2, 2, 0, 0]]
     np.savez(fname, surveys=surveys, cls_matrix=cls_matrix)
 
+    cls_legend = {2:'all', 1:'auto', 0:'None'}
     mat = {}
     for i, s1 in enumerate(surveys):
         for j, s2 in enumerate(surveys):
-            mat[(s1, s2)] = cls_matrix[i][j]
+            mat[(s1, s2)] = cls_legend[cls_matrix[i][j]]
 
     # Test cls defined in the yaml file
     assert mat == d._get_requested_survey_cls_matrix(return_default=False)
-    assert (mat, 0) == \
+    assert (mat, 'None') == \
         d._get_requested_survey_cls_matrix(return_default=True)
 
     # cls = fname
@@ -157,7 +163,7 @@ def test_get_requested_survey_cls_matrix():
     d2 = Data(data=data, ignore_existing_yml=True)
     assert d2.data['cls'] == data['cls']
     assert mat == d2._get_requested_survey_cls_matrix(return_default=False)
-    assert (mat, 0) == \
+    assert (mat, 'None') == \
         d2._get_requested_survey_cls_matrix(return_default=True)
 
     # Set file = fname
@@ -165,7 +171,7 @@ def test_get_requested_survey_cls_matrix():
     d2 = Data(data=data, ignore_existing_yml=True)
     assert d2.data['cls'] == data['cls']
     assert mat == d2._get_requested_survey_cls_matrix(return_default=False)
-    assert (mat, 2) == \
+    assert (mat, 'all') == \
         d2._get_requested_survey_cls_matrix(return_default=True)
 
     os.remove(fname)
@@ -182,11 +188,12 @@ def test_load_survey_cls_matrix():
     cls_matrix = [[1, 2, 0, 2], [2, 2, 0, 2], [0, 0, 0, 0], [2, 2, 0, 0]]
     np.savez(fname, surveys=surveys, cls_matrix=cls_matrix)
 
+    cls_legend = {2:'all', 1:'auto', 0:'None'}
     mat = d._load_survey_cls_matrix(fname)
     mat2 = {}
     for i, s1 in enumerate(surveys):
         for j, s2 in enumerate(surveys):
-            mat2[(s1, s2)] = cls_matrix[i][j]
+            mat2[(s1, s2)] = cls_legend[cls_matrix[i][j]]
 
     assert mat == mat2
 
@@ -198,10 +205,12 @@ def test_read_cls_section_matrix():
     surveys = ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
     cls_matrix = [[1, 2, 0, 2], [2, 2, 0, 2], [0, 0, 0, 0], [2, 2, 0, 0]]
 
+    cls_legend = {2:'all', 1:'auto', 0:'None'}
+
     mat2 = {}
     for i, s1 in enumerate(surveys):
         for j, s2 in enumerate(surveys):
-            mat2[(s1, s2)] = cls_matrix[i][j]
+            mat2[(s1, s2)] = cls_legend[cls_matrix[i][j]]
 
     assert mat == mat2
 
