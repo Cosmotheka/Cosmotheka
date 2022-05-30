@@ -163,7 +163,7 @@ class Data():
 
         # The matrix will have values 0, 1, 2 and we will map them to the human
         # friendly 'all', 'auto', 'None'
-        cls_legend = {2:'all', 1:'auto', 0:'None'}
+        cls_legend = {2: 'all', 1: 'auto', 0: 'None'}
 
         matrix = {}
         for i, s1 in enumerate(surveys):

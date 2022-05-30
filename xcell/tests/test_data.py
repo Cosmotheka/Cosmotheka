@@ -114,11 +114,16 @@ def test_will_be_computed():
 def test_map_compute_to_bool_for_trs():
     d = get_data()
 
-    assert d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'None') is False
-    assert d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'none') is False
-    assert d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'auto') is False
-    assert d._map_compute_to_bool_for_trs('DESgc__1', 'DESgc__1', 'auto') is True
-    assert d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'all') is True
+    assert(d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'None') is
+           False)
+    assert(d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'none') is
+           False)
+    assert(d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'auto') is
+           False)
+    assert(d._map_compute_to_bool_for_trs('DESgc__1', 'DESgc__1', 'auto') is
+           True)
+    assert(d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'all') is
+           True)
 
     # Check that it raises an Error if compute is wrong
     with pytest.raises(ValueError):
@@ -147,7 +152,7 @@ def test_get_requested_survey_cls_matrix():
     cls_matrix = [[1, 2, 0, 2], [2, 2, 0, 2], [0, 0, 0, 0], [2, 2, 0, 0]]
     np.savez(fname, surveys=surveys, cls_matrix=cls_matrix)
 
-    cls_legend = {2:'all', 1:'auto', 0:'None'}
+    cls_legend = {2: 'all', 1: 'auto', 0: 'None'}
     mat = {}
     for i, s1 in enumerate(surveys):
         for j, s2 in enumerate(surveys):
@@ -188,7 +193,7 @@ def test_load_survey_cls_matrix():
     cls_matrix = [[1, 2, 0, 2], [2, 2, 0, 2], [0, 0, 0, 0], [2, 2, 0, 0]]
     np.savez(fname, surveys=surveys, cls_matrix=cls_matrix)
 
-    cls_legend = {2:'all', 1:'auto', 0:'None'}
+    cls_legend = {2: 'all', 1: 'auto', 0: 'None'}
     mat = d._load_survey_cls_matrix(fname)
     mat2 = {}
     for i, s1 in enumerate(surveys):
@@ -205,7 +210,7 @@ def test_read_cls_section_matrix():
     surveys = ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
     cls_matrix = [[1, 2, 0, 2], [2, 2, 0, 2], [0, 0, 0, 0], [2, 2, 0, 0]]
 
-    cls_legend = {2:'all', 1:'auto', 0:'None'}
+    cls_legend = {2: 'all', 1: 'auto', 0: 'None'}
 
     mat2 = {}
     for i, s1 in enumerate(surveys):
