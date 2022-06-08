@@ -186,7 +186,7 @@ class MapperDELS(MapperBase):
             comp_map = rotate_mask(comp_map, self.rot)
             self.comp_map = hp.ud_grade(comp_map,
                                         nside_out=self.nside)
-            self.comp_map[comp_map < 0.1] = 0.
+            self.comp_map[self.comp_map < 0.1] = 0.
         return self.comp_map
 
     def _get_binary_mask(self):
