@@ -3,9 +3,11 @@ from .cl import Cl, ClFid
 from .data import Data
 from .theory import Theory
 import os
+import warnings
+import time
+import healpy as hp
 import numpy as np
 import pymaster as nmt
-import time
 
 
 class Cov():
@@ -47,6 +49,8 @@ class Cov():
         self.m_marg = self.data.data['cov'].get('m_marg', False)
         self.do_NG = self.data.data['cov'].get('non_Gaussian', False)
         self._fsky = None
+        # Cl of the footprint needed for the SSC
+        self._cl_footprint = None
 
     def _load_Cls(self):
         data = self.data.data
@@ -85,6 +89,20 @@ class Cov():
                 clfid_dic[trs] = cl
 
         return cl_dic, clfid_dic
+
+    def _get_cl_footprint(self):
+        if self._cl_footprint is None:
+            ma1, ma2 = self.clA1A2.get_masks()
+            mb1, mb2 = self.clB1B2.get_masks()
+
+            alm = hp.map2alm(ma1 * ma2)
+            blm = hp.map2alm(mb1 * mb2)
+
+            ell = np.range(alm.shape[0])
+
+            self._cl_footprint = (2 * ell + 1) * np.sum(alm * blm, axis=1)
+
+        return sel._cl_footprint
 
     def get_outdir(self):
         root = self.data.data['output']
@@ -567,9 +585,20 @@ class Cov():
                                          mpB2)
         bB2 = self.data.get_bias(self.trB2)
 
+        cl_masks = None
+        if (kind == 'SSC')
+            cl_masks = self._get_cl_footprint()
+            if not (self.data.get_tracer_bare_name(self.trA1) ==
+                    self.data.get_tracer_bare_name(self.trA2) ==
+                    self.data.get_tracer_bare_name(self.trB1) ==
+                    self.data.get_tracer_bare_name(self.trB2)):
+                warnings.warn('Current SSC implementation is only known to ' +
+                              'be valid for observables with the same ' +
+                              'footprint.')
+
         covNG = th.get_ccl_cl_covNG(ccl_trA1, ccl_trA2, ellA,
                                     ccl_trB1, ccl_trB2, ellB,
-                                    fsky, kind=kind)
+                                    fsky, kind=kind, cl_masks=cl_masks)
         # NG covariances can only be calculated for E-modes
         cov[:, 0, :, 0] = covNG*bA1*bA2*bB1*bB2
         return cov.reshape([clA1A2.size, clB1B2.size])
