@@ -586,7 +586,7 @@ class Cov():
         bB2 = self.data.get_bias(self.trB2)
 
         cl_masks = None
-        if (kind == 'SSC')
+        if (kind == 'SSC'):
             cl_masks = self._get_cl_footprint()
             if not (self.data.get_tracer_bare_name(self.trA1) ==
                     self.data.get_tracer_bare_name(self.trA2) ==
