@@ -1,10 +1,10 @@
 tracers:
-  ACT__CMBBN: !include input/ACTCMB__BN.yml
-  ACT__CMBD56: !include input/ACTCMB__D56.yml
-  ACT__kappaBN: !include input/ACTk__BN.yml
-  ACT__kappaD56: !include input/ACTk__D56.yml
-  ACT__tSZBN: !include input/ACTtSZ__BN.yml
-  ACT__tSZD56: !include input/ACTtSZ__D56.yml
+  ACTBN__CMB: !include input/ACTBN__CMB.yml
+  ACTBN__kappa: !include input/ACTBN__kappa.yml
+  ACTBN__tSZ: !include input/ACTBN__tSZ.yml
+  ACTD56__CMB: !include input/ACTD56__CMB.yml
+  ACTD56__kappa: !include input/ACTD56__kappa.yml
+  ACTD56__tSZ: !include input/ACTD56__tSZ.yml
   CatWISE: !include input/CatWISE.yml
   CIBLenz__353: !include input/CIBLenz__353.yml
   CIBLenz__545: !include input/CIBLenz__545.yml

@@ -56,6 +56,7 @@ class MapperDESY1gc(MapperBase):
 
     def _get_mask(self):
         mask = hp.read_map(self.config['file_mask'])
+        mask[mask == hp.UNSEEN] = 0
         mask = rotate_mask(mask, self.rot)
         mask = hp.ud_grade(mask, nside_out=self.nside)
         # Cap it
