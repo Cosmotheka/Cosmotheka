@@ -41,9 +41,18 @@ class Data():
 
         os.makedirs(self.data['output'], exist_ok=True)
         self._check_yml_in_outdir(override, ignore_existing_yml)
-        self.tracers = {'wsp': None, 'no_wsp': None}
-        self.cl_tracers = {'wsp': None, 'no_wsp': None}
-        self.cov_tracers = {'wsp': None, 'no_wsp': None}
+        # Bellow define dictionaries with keys:
+        # 'all': for lists of all considered cases (tracers, pairs of tracers,
+        # etc.)
+        # 'wsp': for the minimal subset that will produce the relevant
+        # workspaces. In the case of self.tracers this is the subset with
+        # different masks.
+        # tracers are the tracer used
+        self.tracers = {'wsp': None, 'all': None}
+        # cl_tracers are pair of tracers used to compute the cl
+        self.cl_tracers = {'wsp': None, 'all': None}
+        # cov_tracers are tuples of 4 tracers
+        self.cov_tracers = {'wsp': None, 'all': None}
         self.tr_matrix = None
 
         # What the code will do if not specified
@@ -114,6 +123,9 @@ class Data():
             combs = []
             default = conf
         elif isinstance(conf, list):
+            # The default here is the one will be used when constructing the
+            # info matrix. This default is not used in the for loop and 'all'
+            # where automatically assigned for all non-dictionary instances.
             combs = conf
             default = self.default_clcov_from_data
         else:
@@ -229,9 +241,11 @@ class Data():
         return data
 
     def get_tracers_used(self, wsp=False):
-        lab = ['no_wsp', 'wsp'][wsp]
+        lab = ['all', 'wsp'][wsp]
         if self.tracers[lab] is None:
+            # Get all tracers in the yaml file
             tr_names = self._get_tracers_defined()
+            # Get info matrix: this will let us know if a cl is computed or not
             tmat = self.get_tracer_matrix()
 
             # Saving only tr1 to keep order
@@ -243,6 +257,7 @@ class Data():
                         tracers.append(tr1)
                         break
             if wsp:
+                # We only keep those with different masks
                 tracers = self._filter_tracers_wsp(tracers)
 
             self.tracers[lab] = tracers
@@ -276,7 +291,18 @@ class Data():
         return trreq
 
     def get_cl_trs_names(self, wsp=False):
-        lab = ['no_wsp', 'wsp'][wsp]
+        """
+        Return a list of pair of tracers for which to compute the Cell.
+
+
+        Args:
+            wsp (bool): If True, return the minimal subset of tracers pairs
+            to compute all the needed workspaces. Default False.
+
+        Returns:
+            cl_tracers (list): List of pair of tracers.
+        """
+        lab = ['all', 'wsp'][wsp]
         if self.cl_tracers[lab] is None:
             cl_tracers = []
             tr_names = self.get_tracers_used(wsp)
@@ -294,7 +320,18 @@ class Data():
         return self.cl_tracers[lab]
 
     def get_cov_trs_names(self, wsp=False):
-        lab = ['no_wsp', 'wsp'][wsp]
+        """
+        Return a list of tuples with four tracers for which to compute the
+        covariance matrix.
+
+        Args:
+            wsp (bool): If True, return the minimal subset of tracers pairs
+            to compute all the needed workspaces. Default False.
+
+        Returns:
+            cov_tracers (list): List of tuples of 4 tracers.
+        """
+        lab = ['all', 'wsp'][wsp]
         if self.cov_tracers[lab] is None:
             cl_tracers = self.get_cl_trs_names(wsp)
             cov_tracers = []
