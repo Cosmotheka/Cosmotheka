@@ -91,6 +91,10 @@ class Cov():
         return cl_dic, clfid_dic
 
     def _get_cl_footprint(self):
+        """
+        Returns the angular power spectrum of the product of the masks of each
+        cl (i.e. <(A1xA2) (B1xB2)>), as given by healpy.alm2cl.
+        """
         if self._cl_footprint is None:
             ma1, ma2 = self.clA1A2.get_masks()
             mb1, mb2 = self.clB1B2.get_masks()
@@ -98,11 +102,11 @@ class Cov():
             alm = hp.map2alm(ma1 * ma2)
             blm = hp.map2alm(mb1 * mb2)
 
-            ell = np.range(alm.shape[0])
+            cl = hp.alm2cl(alm * blm)
 
-            self._cl_footprint = (2 * ell + 1) * np.sum(alm * blm, axis=1)
+            self._cl_footprint = cl
 
-        return sel._cl_footprint
+        return self._cl_footprint
 
     def get_outdir(self):
         root = self.data.data['output']
@@ -556,9 +560,6 @@ class Cov():
         return fsky
 
     def get_covariance_ng_halomodel(self, kind, fsky=None):
-        if fsky is None:
-            fsky = self.get_fsky()
-
         ellA, clA1A2 = self.clA1A2.get_ell_cl()
         ellB, clB1B2 = self.clB1B2.get_ell_cl()
         nclsa = clA1A2.shape[0]
@@ -586,8 +587,14 @@ class Cov():
         bB2 = self.data.get_bias(self.trB2)
 
         cl_masks = None
-        if (kind == 'SSC'):
-            cl_masks = self._get_cl_footprint()
+        biases = None
+        if kind == 'SSC':
+            # We copy the array to avoid modifying it in the next line
+            cl_masks = self._get_cl_footprint().copy()
+            # We multiply by (ell + 1)^2 to put the cl in the correct
+            # normalization
+            cl_masks *= (2 * np.arange(cl_masks.size) + 1)**2
+            biases = [bA1, bA2, bB1, bB2]
             if not (self.data.get_tracer_bare_name(self.trA1) ==
                     self.data.get_tracer_bare_name(self.trA2) ==
                     self.data.get_tracer_bare_name(self.trB1) ==
@@ -595,10 +602,14 @@ class Cov():
                 warnings.warn('Current SSC implementation is only known to ' +
                               'be valid for observables with the same ' +
                               'footprint.')
+        else:
+            if fsky is None:
+                fsky = self.get_fsky()
 
         covNG = th.get_ccl_cl_covNG(ccl_trA1, ccl_trA2, ellA,
                                     ccl_trB1, ccl_trB2, ellB,
-                                    fsky, kind=kind, cl_masks=cl_masks)
+                                    fsky, kind=kind, cl_masks=cl_masks,
+                                    biases=biases)
         # NG covariances can only be calculated for E-modes
         cov[:, 0, :, 0] = covNG*bA1*bA2*bB1*bB2
         return cov.reshape([clA1A2.size, clB1B2.size])
