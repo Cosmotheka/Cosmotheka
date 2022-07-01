@@ -6,7 +6,7 @@ astropy
 healpy
 pandas
 git+https://github.com/LSSTDESC/NaMaster
-pyccl
+git+https://github.com/LSSTDESC/CCL
 camb
 sacc
 fitsio
