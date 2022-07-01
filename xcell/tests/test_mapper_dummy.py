@@ -201,15 +201,3 @@ def test_get_beam():
         beamm = beam_outputs[mode]
         beam = m.get_beam()
         assert ((beam - beamm) < 1e-30).all
-
-
-def test_get_mask_lm():
-    mapper = get_mapper()
-
-    # Test default n_iter
-    mask_lm = mapper.get_mask_lm()
-    assert np.max(np.abs(hp.map2alm(mask_lm, iter=0) / mask_lm - 1)) < 1e-5
-
-    # Test input n_iter
-    mask_lm = mapper.get_mask_lm(n_iter=3)
-    assert np.max(np.abs(hp.map2alm(mask_lm, iter=3) / mask_lm - 1)) < 1e-5

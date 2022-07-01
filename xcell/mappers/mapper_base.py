@@ -23,7 +23,7 @@ class MapperBase(object):
         self.mask_power = config.get('mask_power', 1)
         self.coords = config['coords']
         self.mask = None
-        # For the field and mask_lm
+        # Moved here to see the default more clearly
         self.n_iter = config.get('n_iter', 0)
 
     def _get_rotator(self, coord_default):
@@ -131,10 +131,3 @@ class MapperBase(object):
         if self.nmt_field is None:
             self.nmt_field = self._get_nmt_field(signal=None, **kwargs)
         return self.nmt_field
-
-    def get_mask_lm(self, **kwargs):
-        mask = self.get_mask(**kwargs)
-        n_iter = kwargs.get('n_iter', 0)
-        mask_lm = hp.map2alm(mask, iter=n_iter)
-
-        return mask_lm
