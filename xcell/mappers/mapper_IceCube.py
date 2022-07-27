@@ -137,8 +137,8 @@ class MapperIceCube(MapperBase):
                 Aeff_i = self._get_aeff(i)
                 for j, cat in enumerate(cats):
                     lon, lat = self.r_c2g(cat[self.ra_name],
-                                            cat[self.dec_name],
-                                            lonlat=True)
+                                          cat[self.dec_name],
+                                          lonlat=True)
                     ipix = hp.ang2pix(self.nside, lon, lat, lonlat=True)
                     ncount = np.bincount(ipix, minlength=self.npix)
                     _, AeffMap = self._get_aeff_mask(Aeff_i[j])
