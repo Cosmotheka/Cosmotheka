@@ -1,9 +1,10 @@
 from .mapper_base import MapperBase
-from .utils import get_map_from_points, rotate_mask
+# from .utils import get_map_from_points, rotate_mask
 from astropy.table import Table
 import numpy as np
 import healpy as hp
 from scipy.interpolate import interp1d
+
 
 class MapperIceCube(MapperBase):
     def __init__(self, config, logE_ranges=[2.0, 3.0, 4.0, 5.0, 6.0]):
@@ -29,48 +30,47 @@ class MapperIceCube(MapperBase):
 
     def _get_events(self, season):
         if None in self.cat_data[season]:
-            #loads in data
-            event_name = f'{self.seasons[season]}_exp.csv'
+            # loads in data
+            EventDir = self.config['EventDir']
+            event_name = f'{EventDir}/IC{self.seasons[season]}_exp.csv'
             self.cats_data = Table.read(event_name)
-            #minimum declination condition
-            self.cats_data = self.cats_data[self.cats_data[self.dec_name] >= self.config.get('ICDecMin', -5)]
-            #galactic coordinates
-            r = hp.Rotator(coord=['C', 'G'])
-            GLON, GLAT = r(self.cats_data[self.ra_name], self.cats_data[self.dec_name],
-                        lonlat=True)
-            self.cats_data['GLON'] = GLON
-            self.cats_data['GLAT'] = GLAT
-            #split into energy bins
+            # split into energy bins
             for i in range(self.nEbins):
                 self.cat_data[season][i] = self.cats_data[
                     (self.cats_data[self.E_name] >= self.lE_ranges[i]) &
                     (self.cats_data[self.E_name] < self.lE_ranges[i+1])]
         return self.cat_data[season]
-    
+
     def _get_aeff(self, season, alpha=3.7):
-        #loads in data
-        season_name = f'{self.seasons[season]}_effectiveArea.csv'
-        logE_min, logE_max, Dec_min, Dec_max, Aeff = np.loadtxt(season_name, unpack=True)
-        #convert Aeff to m^2
+        # loads in data
+        AeffDir = self.config['AeffDir']
+        if season >= 4:
+            season_name = f'{AeffDir}/IC86_II_effectiveArea.csv'
+        else:
+            season_name = (f'{AeffDir}/IC{self.seasons[season]}' +
+                           '_effectiveArea.csv')
+        logE_min, logE_max, Dec_min, Dec_max, Aeff = np.loadtxt(season_name,
+                                                                unpack=True)
+        # convert Aeff to m^2
         Aeff *= 10**(-4)
-        #get unique E values
+        # get unique E values
         logE_min_u = np.unique(logE_min)
         logE_max_u = np.unique(logE_max)
         lenE = len(logE_min_u)
         assert lenE == len(logE_max_u)
-        #get unique dec values
+        # get unique dec values
         decvals = (Dec_min + Dec_max)/2
         sindecvals_u = np.sin(np.radians(np.unique(decvals)))
         lenDec = len(sindecvals_u)
-        #convert aeff to rectangular matrix
+        # convert aeff to rectangular matrix
         assert lenE*lenDec == len(Aeff)
-        Aeff = Aeff.reshape([lenE, lenDec]).T
-        #get effective area interpolation function for each energy bin
+        Aeff = Aeff.reshape([lenDec, lenE]).T
+        # get effective area interpolation function for each energy bin
         Aeff_inters = []
         for i in range(self.nEbins):
             lE_l = self.lE_ranges[i]
             lE_r = self.lE_ranges[i+1]
-            #only keeps relevant fine energy bins
+            # only keeps relevant fine energy bins
             msk = (logE_min_u > lE_l) & (logE_max_u < lE_r)
             Aeff_h = list(Aeff[msk])
             lEmin_h = list(logE_min_u[msk])
@@ -84,53 +84,54 @@ class MapperIceCube(MapperBase):
             lEmax_h.append(lE_r)
             lEmin_h = np.array(lEmin_h)
             lEmax_h = np.array(lEmax_h)
-            #calculates weighted effective area
-            WeightedAeffs = np.sum(Aeff_h[:, :]*(10**(lEmax_h*(1-alpha))-
-                                              10**(lEmin_h*(1-alpha)))[:, None],
-                                axis=0)/(10**(lE_r*(1-alpha))-
-                                         10**(lE_l*(1-alpha)))
-            #creates interpolation function
-            Aeff_inter = interp1d(sindecvals_u, WeightedAeffs, 
-                                                 bounds_error=False, fill_value=0.0)
+            # calculates weighted effective area
+            WeightedAeffs = np.sum(Aeff_h[:, :]*(10**(lEmax_h*(1-alpha)) -
+                                   10**(lEmin_h*(1-alpha)))[:, None],
+                                   axis=0)/(10**(lE_r*(1-alpha)) -
+                                            10**(lE_l*(1-alpha)))
+            # creates interpolation function
+            Aeff_inter = interp1d(sindecvals_u, WeightedAeffs,
+                                  bounds_error=False, fill_value=0.0)
             Aeff_inters.append(Aeff_inter)
         return Aeff_inters
 
     def _get_aeff_mask(self, Aeff):
-        #finds dec of all map pixels
-        lon, lat = hp.pix2ang(self.nside, np.arange(self.npix), lonlat = True)
-        _, dec = self.r_g2c(lon, lat, lonlat = True)
-        #builds Aeff maps and masks
+        # finds dec of all map pixels
+        lon, lat = hp.pix2ang(self.nside, np.arange(self.npix), lonlat=True)
+        _, dec = self.r_g2c(lon, lat, lonlat=True)
+        # builds Aeff maps and masks
         Aeff_map = Aeff(np.sin(np.radians(dec)))
-        Aeff_mask = Aeff_map > np.amax(Aeff_map)*self.config.get('Aeff_Threshold', 0.1)
-        #removes pixels below declination threshold
+        Aeff_mask = Aeff_map > np.amax(Aeff_map)*self.config.get(
+            'Aeff_Threshold', 0.1)
+        # removes pixels below declination threshold
         Aeff_mask[dec < self.config.get('ICDecMin', -5)] = 0
         Aeff_map[dec < self.config.get('ICDecMin', -5)] = 0
         return Aeff_mask, Aeff_map
 
-    def get_mask(self, seasons = 'all'):
+    def get_mask(self, seasons='all'):
         if seasons == 'all':
             seasons = range(self.nseasons)
         if self.mask is None or seasons != self.LastMaskSeasons:
-            #creates base mask
-            self.mask = np.ones(np.arange(self.npix))
+            # creates base mask
+            self.mask = np.ones(self.npix, dtype=bool)
             for i in seasons:
                 Aeff = self._get_aeff(i)
-                #finds and combines aeff masks for each season and energy bin
+                # finds and combines aeff masks for each season and energy bin
                 for j in range(self.nEbins):
                     AeffMask, _ = self._get_aeff_mask(Aeff[j])
                     self.mask *= AeffMask
             self.LastMaskSeasons = seasons
         return self.mask
 
-    def get_signal_map(self, seasons = 'all'):
+    def get_signal_map(self, seasons='all'):
         if seasons == 'all':
             seasons = range(self.nseasons)
         if None in self.delta_map or seasons != self.LastMapSeasons:
-            #creates base maps and inverse Aeff sums
+            # creates base maps and inverse Aeff sums
             nmap_t = np.zeros([self.nEbins, self.npix])
             inv_aeff_t = np.zeros([self.nEbins, self.npix])
             mask = self.get_mask(seasons)
-            #creates number count maps for each energy bin
+            # creates number count maps for each energy bin
             for i in seasons:
                 cats = self._get_events(i)
                 Aeff_i = self._get_aeff(i)
@@ -143,7 +144,7 @@ class MapperIceCube(MapperBase):
                     _, AeffMap = self._get_aeff_mask(Aeff_i[j])
                     nmap_t[j, mask] += ncount[mask]/AeffMap[mask]
                     inv_aeff_t[j, mask] += 1/AeffMap[mask]
-            #creates delta maps and normalises with inv_aeff_t
+            # creates delta maps and normalises with inv_aeff_t
             self.delta_map = np.zeros([self.nEbins, self.npix])
             for i in range(self.nEbins):
                 nmap = np.zeros(self.npix)
@@ -152,24 +153,3 @@ class MapperIceCube(MapperBase):
                 self.delta_map[j, :] = (nmap/nmean-1)*mask
             self.LastMapSeasons = seasons
         return self.delta_map
-
-
-        
-
-
-        
-
-
-
-            
-
-
-
-
-
-
-
-    
-
-        
-

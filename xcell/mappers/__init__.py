@@ -30,6 +30,7 @@ from .mapper_dummy import MapperDummy
 from .utils import (get_map_from_points, get_DIR_Nz,
                     get_rerun_data, save_rerun_data,
                     rotate_mask, rotate_map)
+from .mapper_IceCube import MapperIceCube
 
 def mapper_from_name(name):
     def all_subclasses(cls):
