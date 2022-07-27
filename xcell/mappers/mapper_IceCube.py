@@ -110,7 +110,7 @@ class MapperIceCube(MapperBase):
     def get_mask(self, seasons = 'all'):
         if seasons == 'all':
             seasons = range(self.nseasons)
-        if self.mask is None or seasons != self.LastMaskSeasos:
+        if self.mask is None or seasons != self.LastMaskSeasons:
             #creates base mask
             self.mask = np.ones(np.arange(self.npix))
             for i in seasons:
