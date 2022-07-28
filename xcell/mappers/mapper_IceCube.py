@@ -22,18 +22,18 @@ class MapperIceCube(MapperBase):
         self.ra_name = 'RA[deg]'
         self.dec_name = 'Dec[deg]'
         self.E_name = 'log10(E/GeV)'
-        self.cat_data = [[None] * self.nEbins] * self.nseasons
+        self.cat_data = np.full((self.nseasons, self.nEbins), None)
         self.LastMaskSeasons = None
         self.mask = None
         self.LastMapSeasons = None
-        self.delta_map = [None] * self.nEbins
+        self.delta_map = np.full(self.nEbins, None)
 
     def _get_events(self, season):
         if None in self.cat_data[season]:
             # loads in data
             EventDir = self.config['EventDir']
             event_name = f'{EventDir}/IC{self.seasons[season]}_exp.csv'
-            self.cats_data = Table.read(event_name, format = 'ascii')
+            self.cats_data = Table.read(event_name, format='ascii')
             # split into energy bins
             for i in range(self.nEbins):
                 self.cat_data[season][i] = self.cats_data[
@@ -137,8 +137,8 @@ class MapperIceCube(MapperBase):
                 cats = self._get_events(i)
                 Aeff_i = self._get_aeff(i)
                 lon, lat = self.r_c2g(cats[Ebin][self.ra_name],
-                                        cats[Ebin][self.dec_name],
-                                        lonlat=True)
+                                      cats[Ebin][self.dec_name],
+                                      lonlat=True)
                 ipix = hp.ang2pix(self.nside, lon, lat, lonlat=True)
                 ncount = np.bincount(ipix, minlength=self.npix)
                 _, AeffMap = self._get_aeff_mask(Aeff_i[Ebin])
