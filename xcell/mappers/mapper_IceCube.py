@@ -41,7 +41,7 @@ class MapperIceCube(MapperBase):
                     (self.cats_data[self.E_name] < self.lE_ranges[i+1])]
         return self.cat_data[season]
 
-    def _get_aeff(self, season, alpha=3.7):
+    def _get_aeff(self, season):
         # loads in data
         AeffDir = self.config['AeffDir']
         if season >= 4:
@@ -86,6 +86,7 @@ class MapperIceCube(MapperBase):
             lEmin_h = np.array(lEmin_h)
             lEmax_h = np.array(lEmax_h)
             # calculates weighted effective area
+            alpha = self.config.get('alpha', 3.7)
             WeightedAeffs = np.sum(Aeff_h[:, :]*(10**(lEmax_h*(1-alpha)) -
                                    10**(lEmin_h*(1-alpha)))[:, None],
                                    axis=0)/(10**(lE_r*(1-alpha)) -
