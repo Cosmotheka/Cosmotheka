@@ -33,7 +33,7 @@ class MapperIceCube(MapperBase):
             # loads in data
             EventDir = self.config['EventDir']
             event_name = f'{EventDir}/IC{self.seasons[season]}_exp.csv'
-            self.cats_data = Table.read(event_name)
+            self.cats_data = Table.read(event_name, format = 'ascii')
             # split into energy bins
             for i in range(self.nEbins):
                 self.cat_data[season][i] = self.cats_data[
@@ -50,7 +50,8 @@ class MapperIceCube(MapperBase):
             season_name = (f'{AeffDir}/IC{self.seasons[season]}' +
                            '_effectiveArea.csv')
         logE_min, logE_max, Dec_min, Dec_max, Aeff = np.loadtxt(season_name,
-                                                                unpack=True)
+                                                                unpack=True,
+                                                                skiprows=1)
         # convert Aeff to m^2
         Aeff *= 10**(-4)
         # get unique E values
@@ -123,33 +124,31 @@ class MapperIceCube(MapperBase):
             self.LastMaskSeasons = seasons
         return self.mask
 
-    def get_signal_map(self, seasons='all'):
+    def get_signal_map(self, Ebin, seasons='all'):
         if seasons == 'all':
             seasons = range(self.nseasons)
-        if None in self.delta_map or seasons != self.LastMapSeasons:
+        if self.delta_map[Ebin] is None or seasons != self.LastMapSeasons:
             # creates base maps and inverse Aeff sums
-            nmap_t = np.zeros([self.nEbins, self.npix])
-            inv_aeff_t = np.zeros([self.nEbins, self.npix])
+            nmap_t = np.zeros(self.npix)
+            inv_aeff_t = np.zeros(self.npix)
             mask = self.get_mask(seasons)
             # creates number count maps for each energy bin
             for i in seasons:
                 cats = self._get_events(i)
                 Aeff_i = self._get_aeff(i)
-                for j, cat in enumerate(cats):
-                    lon, lat = self.r_c2g(cat[self.ra_name],
-                                          cat[self.dec_name],
-                                          lonlat=True)
-                    ipix = hp.ang2pix(self.nside, lon, lat, lonlat=True)
-                    ncount = np.bincount(ipix, minlength=self.npix)
-                    _, AeffMap = self._get_aeff_mask(Aeff_i[j])
-                    nmap_t[j, mask] += ncount[mask]/AeffMap[mask]
-                    inv_aeff_t[j, mask] += 1/AeffMap[mask]
+                lon, lat = self.r_c2g(cats[Ebin][self.ra_name],
+                                        cats[Ebin][self.dec_name],
+                                        lonlat=True)
+                ipix = hp.ang2pix(self.nside, lon, lat, lonlat=True)
+                ncount = np.bincount(ipix, minlength=self.npix)
+                _, AeffMap = self._get_aeff_mask(Aeff_i[Ebin])
+                nmap_t[mask] += ncount[mask]/AeffMap[mask]
+                inv_aeff_t[mask] += 1/AeffMap[mask]
             # creates delta maps and normalises with inv_aeff_t
-            self.delta_map = np.zeros([self.nEbins, self.npix])
-            for i in range(self.nEbins):
-                nmap = np.zeros(self.npix)
-                nmap[mask] = nmap_t[j][mask]/inv_aeff_t[j][mask]
-                nmean = np.sum(nmap*mask)/np.sum(mask)
-                self.delta_map[j, :] = (nmap/nmean-1)*mask
+            self.delta_map[Ebin] = np.zeros(self.npix)
+            nmap = np.zeros(self.npix)
+            nmap[mask] = nmap_t[mask]/inv_aeff_t[mask]
+            nmean = np.sum(nmap*mask)/np.sum(mask)
+            self.delta_map[Ebin] = (nmap/nmean-1)*mask
             self.LastMapSeasons = seasons
-        return self.delta_map
+        return self.delta_map[Ebin]
