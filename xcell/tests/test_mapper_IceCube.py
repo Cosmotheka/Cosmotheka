@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 import healpy as hp
 from astropy.table import Table
@@ -7,31 +8,33 @@ import shutil
 
 
 def get_config():
-    return {'EventDir': '/Users/pattersonb/Documents/Internship_Project' +
-            '/xCell/xcell/tests/data/FakeICEvents',
-            'AeffDir': '/Users/pattersonb/Documents/Internship_Project' +
-            '/xCell/xcell/tests/data/FakeICAeff',
-            'nside': 128,
-            'coords': 'G'}
+    return {'Ebin': 0,
+            'event_dir': 'FakeICEvents',
+            'Aeff_dir': 'FakeICAeff',
+            'nside': 32,
+            'coords': 'C'}
 
 
-def _make_fake_data():
+def _make_fake_data(coord='C'):
     config = get_config()
-    EventDir = config['EventDir']
-    AeffDir = config['AeffDir']
-    if not os.path.exists(EventDir):
-        os.mkdir(EventDir)
-    if not os.path.exists(AeffDir):
-        os.mkdir(AeffDir)
+    event_dir = config['event_dir']
+    Aeff_dir = config['Aeff_dir']
+    if not os.path.exists(event_dir):
+        os.mkdir(event_dir)
+    if not os.path.exists(Aeff_dir):
+        os.mkdir(Aeff_dir)
     seasons = ['40', '59', '79', '86_I', '86_II',
                '86_III', '86_IV', '86_V', '86_VI', '86_VII']
     nside = config['nside']
     npix = hp.nside2npix(nside)
     # one event per pixel (per season per energy bin)
-    r_g2c = hp.Rotator(coord=['G', 'C'])
-    ra, dec = r_g2c(hp.pix2ang(nside, np.arange(npix), lonlat=True),
-                    lonlat=True)
+    ra, dec = hp.pix2ang(nside, np.arange(npix), lonlat=True)
+    if coord == 'G':
+        r = hp.Rotator(coord=['G', 'C'])
+        ra, dec = r(ra, dec, lonlat=True)
+
     for i, season in enumerate(seasons):
+        print(i)
         # generates fake event data
         logEcol = ([2.01+0.01*i]*len(ra) + [3.01+0.01*i]*len(ra) +
                    [4.01+0.01*i]*len(ra) + [5.01+0.01*i]*len(ra))
@@ -40,7 +43,7 @@ def _make_fake_data():
         e = Table({'log10(E/GeV)': logEcol,
                    'RA[deg]': racol,
                    'Dec[deg]': deccol})
-        e.write(f'{EventDir}/IC{season}_exp.csv', overwrite=True,
+        e.write(f'{event_dir}/IC{season}_exp.csv', overwrite=True,
                 delimiter='\t')
 
         # generates fake aeff data with aeff = 1 everywhere
@@ -65,21 +68,23 @@ def _make_fake_data():
                        'Dec_nu_min[deg]': DecMin,
                        'Dec_nu_max[deg]': DecMax,
                        'A_Eff[cm^2]': AeffCol})
-            a.write(f'{AeffDir}/IC{season}_effectiveArea.csv',
+            a.write(f'{Aeff_dir}/IC{season}_effectiveArea.csv',
                     overwrite=True, delimiter='\t')
 
 
 def _clean_fake_data():
     config = get_config()
-    EventDir = config['EventDir']
-    AeffDir = config['AeffDir']
-    shutil.rmtree(EventDir)
-    shutil.rmtree(AeffDir)
+    event_dir = config['event_dir']
+    Aeff_dir = config['Aeff_dir']
+    shutil.rmtree(event_dir)
+    shutil.rmtree(Aeff_dir)
 
 
-def test_get_events():
-    _make_fake_data()
+@pytest.mark.parametrize('coords', ['G', 'C'])
+def test_get_events(coords):
+    _make_fake_data(coords)
     config = get_config()
+    config['coords'] = coords
     mapper = xc.mappers.MapperIceCube(config)
     cats = []
     for i in range(10):
@@ -119,6 +124,7 @@ def test_get_signal_map():
     config = get_config()
     mapper = xc.mappers.MapperIceCube(config)
     for i in range(3):
-        map = mapper.get_signal_map(i)
+        mapper.Ebin = i
+        map = mapper.get_signal_map()
         assert np.all(np.fabs(map) < 1E-15)
     _clean_fake_data()
