@@ -166,7 +166,7 @@ def test_get_mask(cls, mode, frac):
     m = cls(get_config(mode))
     npix = hp.nside2npix(m.nside)
     mask = m.get_mask()
-    assert(np.fabs(sum(mask)-npix*frac) < 1E-5)
+    assert (np.fabs(sum(mask)-npix*frac) < 1E-5)
 
 
 @pytest.mark.parametrize('cls,mode,typ', [(xc.mappers.MapperP15tSZ,
