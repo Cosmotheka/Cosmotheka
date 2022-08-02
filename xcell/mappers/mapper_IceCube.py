@@ -7,7 +7,7 @@ from scipy.interpolate import interp1d
 
 
 class MapperIceCube(MapperBase):
-    def __init__(self, config, logE_ranges=[2.0, 3.0, 4.0, 5.0, 6.0]):
+    def __init__(self, config, logE_ranges=[np.log10(300), np.log10(300)+1, np.log10(300)+2, np.log10(300)+3]):
 
         self._get_defaults(config)
         self.npix = hp.nside2npix(self.nside)

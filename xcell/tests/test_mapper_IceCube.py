@@ -94,7 +94,7 @@ def test_get_aeff_mask():
     mapper = xc.mappers.MapperIceCube(config)
     for i in range(10):
         Aeff = mapper._get_aeff(i)
-        for j in range(4):
+        for j in range(3):
             AeffMask, AeffMap = mapper._get_aeff_mask(Aeff[j])
             assert (len(np.where(AeffMask == 0)[0]) +
                     len(np.where(AeffMask == 1)[0]) == len(AeffMask))
@@ -118,7 +118,7 @@ def test_get_mask():
 def test_get_signal_map():
     config = get_config()
     mapper = xc.mappers.MapperIceCube(config)
-    for i in range(4):
+    for i in range(3):
         map = mapper.get_signal_map(i)
         assert np.all(np.fabs(map) < 1E-15)
     _clean_fake_data()
