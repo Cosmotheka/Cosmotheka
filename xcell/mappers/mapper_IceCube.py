@@ -27,6 +27,7 @@ class MapperIceCube(MapperBase):
         self.cat_data = np.full((self.nseasons, self.nEbins), None)
         self.mask = None
         self.delta_map = np.full(self.nEbins, None)
+        self.nl_coupled = None
 
     def _get_events(self, season):
         if None in self.cat_data[season]:
@@ -112,41 +113,58 @@ class MapperIceCube(MapperBase):
         Aeff_mask = Aeff_map > np.amax(Aeff_map)*A_thr
         return Aeff_mask, Aeff_map
 
-    def get_mask(self):
-        if self.mask is None:
-            # creates base mask
-            msk = np.ones(self.npix, dtype=bool)
-            for i in range(self.nseasons):
-                Aeff = self._get_aeff(i)
-                # finds and combines aeff masks for each season and energy bin
-                for j in range(self.nEbins):
-                    Aeff_mask, _ = self._get_aeff_mask(Aeff[j])
-                    msk *= Aeff_mask
-            self.mask = msk.astype(float)
-        return self.mask
+    def _get_mask(self):
+        # creates base mask
+        msk = np.ones(self.npix, dtype=bool)
+        for i in range(self.nseasons):
+            Aeff = self._get_aeff(i)
+            # finds and combines aeff masks for each season and energy bin
+            for j in range(self.nEbins):
+                Aeff_mask, _ = self._get_aeff_mask(Aeff[j])
+                msk *= Aeff_mask
+        return msk.astype(float)
+
+    def _get_nmap_and_mask(self):
+        # creates base maps and inverse Aeff sums
+        nmap_t = np.zeros(self.npix)
+        inv_aeff_t = np.zeros(self.npix)
+        mask = self.get_mask()
+        mskbin = mask > 0
+        # creates number count maps for each energy bin
+        for i in range(self.nseasons):
+            cats = self._get_events(i)
+            Aeff_i = self._get_aeff(i)
+            ncount = get_map_from_points(cats[self.Ebin], self.nside,
+                                         ra_name=self.ra_name,
+                                         dec_name=self.dec_name,
+                                         rot=self.rot)
+            _, Aeff_map = self._get_aeff_mask(Aeff_i[self.Ebin])
+            nmap_t[mskbin] += ncount[mskbin]/Aeff_map[mskbin]
+            inv_aeff_t[mskbin] += 1/Aeff_map[mskbin]
+        # creates delta maps and normalises with inv_aeff_t
+        nmap = np.zeros(self.npix)
+        nmap[mskbin] = nmap_t[mskbin]/inv_aeff_t[mskbin]
+        return nmap, mask
 
     def get_signal_map(self):
         if self.delta_map[self.Ebin] is None:
-            # creates base maps and inverse Aeff sums
-            nmap_t = np.zeros(self.npix)
-            inv_aeff_t = np.zeros(self.npix)
-            mask = self.get_mask()
+            nmap, mask = self._get_nmap_and_mask()
             mskbin = mask > 0
-            # creates number count maps for each energy bin
-            for i in range(self.nseasons):
-                cats = self._get_events(i)
-                Aeff_i = self._get_aeff(i)
-                ncount = get_map_from_points(cats[self.Ebin], self.nside,
-                                             ra_name=self.ra_name,
-                                             dec_name=self.dec_name,
-                                             rot=self.rot)
-                _, Aeff_map = self._get_aeff_mask(Aeff_i[self.Ebin])
-                nmap_t[mskbin] += ncount[mskbin]/Aeff_map[mskbin]
-                inv_aeff_t[mskbin] += 1/Aeff_map[mskbin]
-            # creates delta maps and normalises with inv_aeff_t
-            self.delta_map[self.Ebin] = np.zeros(self.npix)
-            nmap = np.zeros(self.npix)
-            nmap[mskbin] = nmap_t[mskbin]/inv_aeff_t[mskbin]
             nmean = np.sum(nmap*mask)/np.sum(mask)
             self.delta_map[self.Ebin] = (nmap/nmean-1)*mask
-        return self.delta_map[self.Ebin]
+        return [self.delta_map[self.Ebin]]
+
+    def get_nl_coupled(self):
+        if self.nl_coupled is None:
+            nmap, mask = self._get_nmap_and_mask()
+            nmean = np.sum(nmap*mask)/np.sum(mask)
+            nmean_srad = nmean*self.npix/(4*np.pi)
+            N_ell = np.mean(mask)/nmean_srad
+            self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
+        return self.nl_coupled
+
+    def get_spin(self):
+        return 0
+
+    def get_dtype(self):
+        return 'generic'
