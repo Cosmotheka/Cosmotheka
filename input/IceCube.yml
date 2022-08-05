@@ -1,0 +1,160 @@
+tracers:
+  IceCube__0:
+    Ebin: 0
+    event_dir: '/home/damonge/Science/Datasets/IceCube_dataset10/events'
+    Aeff_dir: '/home/damonge/Science/Datasets/IceCube_dataset10/irfs'
+    path_rerun: 'icecube/reruns'
+    mask_name: 'mask_IceCube'
+    mapper_class: 'MapperIceCube'
+  IceCube__1:
+    Ebin: 1
+    event_dir: '/home/damonge/Science/Datasets/IceCube_dataset10/events'
+    Aeff_dir: '/home/damonge/Science/Datasets/IceCube_dataset10/irfs'
+    path_rerun: 'icecube/reruns'
+    mask_name: 'mask_IceCube'
+    mapper_class: 'MapperIceCube'
+  IceCube__2:
+    Ebin: 2
+    event_dir: '/home/damonge/Science/Datasets/IceCube_dataset10/events'
+    Aeff_dir: '/home/damonge/Science/Datasets/IceCube_dataset10/irfs'
+    path_rerun: 'icecube/reruns'
+    mask_name: 'mask_IceCube'
+    mapper_class: 'MapperIceCube'
+  LOWZ__0:
+    mapper_class: Mapper2MPZ
+    mask_name: mask_2MPZWISC
+    path_rerun: 'icecube/reruns'
+    z_edges: [0.0, 0.1]
+    data_catalog: '/home/damonge/Science/Datasets/2MPZ_WIxSC/2MPZ.fits'
+    n_jk_dir: 100
+    mask: '/home/damonge/Science/Datasets/2MPZ_WIxSC/WISExSCOSmask.fits.gz'
+  LOWZ__1:
+    mapper_class: MapperWIxSC
+    mask_name: mask_2MPZWISC
+    path_rerun: 'icecube/reruns'
+    z_edges: [0.1, 0.15]
+    bin_name: 'z0p10_0p15'
+    nside_nl_threshold: 8129
+    lmin_nl_from_data: 8192
+    nl_analytic: True
+    data_catalog: '/home/damonge/Science/Datasets/2MPZ_WIxSC/WIxSC.fits'
+    spec_sample: '/home/damonge/Science/Datasets/2MPZ_WIxSC/zSpec-comp-WIxSC.csv'
+    n_jk_dir: 100
+    apply_galactic_correction: True
+    mask: '/home/damonge/Science/Datasets/2MPZ_WIxSC/WISExSCOSmask.fits.gz'
+    star_map: '/home/damonge/Science/Datasets/2MPZ_WIxSC/allwise_total_galactic_1024.fits'
+  LOWZ__2:
+    mapper_class: MapperWIxSC
+    mask_name: mask_2MPZWISC
+    path_rerun: 'icecube/reruns'
+    z_edges: [0.15, 0.2]
+    bin_name: 'z0p15_0p20'
+    nside_nl_threshold: 8129
+    lmin_nl_from_data: 8192
+    nl_analytic: True
+    data_catalog: '/home/damonge/Science/Datasets/2MPZ_WIxSC/WIxSC.fits'
+    spec_sample: '/home/damonge/Science/Datasets/2MPZ_WIxSC/zSpec-comp-WIxSC.csv'
+    n_jk_dir: 100
+    apply_galactic_correction: True
+    mask: '/home/damonge/Science/Datasets/2MPZ_WIxSC/WISExSCOSmask.fits.gz'
+    star_map: '/home/damonge/Science/Datasets/2MPZ_WIxSC/allwise_total_galactic_1024.fits'
+  LOWZ__3:
+    mapper_class: MapperWIxSC
+    mask_name: mask_2MPZWISC
+    path_rerun: 'icecube/reruns'
+    z_edges: [0.2, 0.25]
+    bin_name: 'z0p20_0p25'
+    nside_nl_threshold: 8129
+    lmin_nl_from_data: 8192
+    nl_analytic: True
+    data_catalog: '/home/damonge/Science/Datasets/2MPZ_WIxSC/WIxSC.fits'
+    spec_sample: '/home/damonge/Science/Datasets/2MPZ_WIxSC/zSpec-comp-WIxSC.csv'
+    n_jk_dir: 100
+    apply_galactic_correction: True
+    mask: '/home/damonge/Science/Datasets/2MPZ_WIxSC/WISExSCOSmask.fits.gz'
+    star_map: '/home/damonge/Science/Datasets/2MPZ_WIxSC/allwise_total_galactic_1024.fits'
+  LOWZ__4:
+    mapper_class: MapperWIxSC
+    mask_name: mask_2MPZWISC
+    path_rerun: 'icecube/reruns'
+    z_edges: [0.25, 0.30]
+    bin_name: 'z0p25_0p30'
+    nside_nl_threshold: 8129
+    lmin_nl_from_data: 8192
+    nl_analytic: True
+    data_catalog: '/home/damonge/Science/Datasets/2MPZ_WIxSC/WIxSC.fits'
+    spec_sample: '/home/damonge/Science/Datasets/2MPZ_WIxSC/zSpec-comp-WIxSC.csv'
+    n_jk_dir: 100
+    apply_galactic_correction: True
+    mask: '/home/damonge/Science/Datasets/2MPZ_WIxSC/WISExSCOSmask.fits.gz'
+    star_map: '/home/damonge/Science/Datasets/2MPZ_WIxSC/allwise_total_galactic_1024.fits'
+  LOWZ__5:
+    mapper_class: MapperWIxSC
+    mask_name: mask_2MPZWISC
+    path_rerun: 'icecube/reruns'
+    z_edges: [0.3, 0.35]
+    bin_name: 'z0p30_0p35'
+    nside_nl_threshold: 8129
+    lmin_nl_from_data: 8192
+    nl_analytic: True
+    data_catalog: '/home/damonge/Science/Datasets/2MPZ_WIxSC/WIxSC.fits'
+    spec_sample: '/home/damonge/Science/Datasets/2MPZ_WIxSC/zSpec-comp-WIxSC.csv'
+    n_jk_dir: 100
+    apply_galactic_correction: True
+    mask: '/home/damonge/Science/Datasets/2MPZ_WIxSC/WISExSCOSmask.fits.gz'
+    star_map: '/home/damonge/Science/Datasets/2MPZ_WIxSC/allwise_total_galactic_1024.fits'
+
+
+cls:
+  IceCube-IceCube:
+    compute: 'all'
+  IceCube-LOWZ:
+    compute: 'all'
+  LOWZ-LOWZ:
+    compute: 'all'
+
+bpw_edges: [2, 52, 102, 152, 202, 252, 302, 352, 383]
+
+cov:
+  fiducial:
+    cosmo:
+      Omega_c: 0.26066676
+      Omega_b: 0.048974682
+      h: 0.6766
+      sigma8: 0.8102
+      n_s: 0.9665
+
+  cls_from_data:
+    IceCube-IceCube:
+      compute: 'all'
+    IceCube-LOWZ:
+      compute: 'all'
+    LOWZ-LOWZ:
+      compute: 'all'
+
+  non_Gaussian: False
+
+toeplitz:
+  cls:
+    l_toeplitz: -1
+    l_exact: -1
+    dl_band: -1
+  cov:
+    l_toeplitz: -1
+    l_exact: -1
+    dl_band: -1
+
+sphere:
+  n_iter_sht: 0
+  n_iter_mcm: 3
+  n_iter_cmcm: 3
+  nside: 128
+  coords: 'G'
+
+recompute:
+  cls: False
+  cov: False
+  mcm: False
+  cmcm: False
+
+output: 'icecube/output'
