@@ -11,6 +11,9 @@ class MapperVorticity(MapperBase):
     def __init__(self, config):
         self._get_defaults(config)
         self.npix = hp.nside2npix(self.nside)
+        self.rot = self._get_rotator('C')
+        if self.rot is not None:
+            raise NotADirectoryError('MapperVorticity only available for Celestial Coordinates')
 
         # Angular mask
         self.vort = None
@@ -34,7 +37,7 @@ class MapperVorticity(MapperBase):
         z = r*np.cos(theta)
         coords = np.array([x, y, z]).T
         return cats, coords
-    
+
     def _get_vorticity_maps_and_mask(self):
         if self.vort is None:
             # Read the catalog
@@ -58,9 +61,9 @@ class MapperVorticity(MapperBase):
 
             seen = nc_map > 0
             vort1[seen] /= nc_map[seen]
-            vort1[~seen] = hp.UNSEEN
+            #vort1[~seen] = hp.UNSEEN
             vort2[seen] /= nc_map[seen]
-            vort2[~seen] = hp.UNSEEN
+            #vort2[~seen] = hp.UNSEEN
             self.vort = [vort1, vort2]
             self.mask = nc_map
         return self.vort, self.mask
@@ -74,24 +77,24 @@ class MapperVorticity(MapperBase):
         distances, indices = ball_tree.query(coords, 2, return_distance = True, sort_results = True)
         isolated_distances = []
         isolated_indices = []
-    
+
         for dist, ind in zip(distances, indices):
             if dist[1] <= radius:
                 isolated_distances.append(dist)
                 isolated_indices.append(ind)
-            
+
         isolated_indices = np.array(isolated_indices)
 
         pair_distances = []
         pair_indices = []
-    
+
         for i1, i2 in isolated_indices:
             if ((i1,i2) in pair_indices) or ((i2, i1) in pair_indices):
                 continue
             if indices[i2][1] == i1:
                 pair_indices.append((i1,i2))
                 pair_distances.append(distances[i1][1])
-            
+
         pair_indices = np.array(pair_indices)
         pair_distances = np.array(pair_distances)
         return pair_distances, pair_indices
@@ -117,10 +120,10 @@ class MapperVorticity(MapperBase):
             vort.append([dz*rphi/dr2,-dz*rtheta/dr2])
         vort = np.array(vort)
         return vort
-            
+
     def get_signal_map(self):
         return self._get_vorticity_maps_and_mask()[0]
-    
+
     def print_signal_maps(self):
         if self.vort is None:
             self.vort = self.get_vorticity_maps_and_mask()[0]
@@ -128,3 +131,27 @@ class MapperVorticity(MapperBase):
             hp.mollview(self.vort[0], title = "Vorticity Map 1")
             hp.mollview(self.vort_map[1], "Vorticity Map 2")
             hp.graticule()
+
+    def get_nl_coupled(self):
+        if self.nl_coupled is None:
+            cat, coords = self.get_catalog_and_coords()
+            pair_distances, pair_indices = self.get_pairs(cat, coords)
+            xyz_cm = 0.5*(coords[pair_indices[:, 0]]+
+                          coords[pair_indices[:, 1]])
+            ra_cm, dec_cm = hp.vec2ang(xyz_cm, lonlat=True)
+
+
+            vort = self.get_vorticity(cat, coords, pair_indices)
+            w2s2 = get_map_from_points({'RA': ra_cm, 'DEC': dec_cm},
+                                       self.nside,
+                                       w=0.5*np.sum(vort**2, axis=1),
+                                       ra_name='RA',
+                                       dec_name='DEC', rot=self.rot)
+            N_ell = hp.nside2pixarea(self.nside) * np.sum(w2s2) / self.npix
+            nl = N_ell * np.ones(3*self.nside)
+            nl[:1] = 0  # Ylm = for l < spin
+            self.nl_coupled = np.array([nl, 0*nl, 0*nl, nl])
+        return self.nl_coupled
+
+    def get_spin(self):
+        return 1

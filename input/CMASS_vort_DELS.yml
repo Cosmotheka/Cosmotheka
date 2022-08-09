@@ -1,0 +1,59 @@
+tracers:
+  DELS__0: !include /mnt/extraspace/damonge/Datasets/DELS/map_bin0.yml
+  DELS__1: !include /mnt/extraspace/damonge/Datasets/DELS/map_bin1.yml
+  DELS__2: !include /mnt/extraspace/damonge/Datasets/DELS/map_bin2.yml
+  DELS__3: !include /mnt/extraspace/damonge/Datasets/DELS/map_bin3.yml
+
+  CMASS_vort:
+    data_catalogs:
+        - '/mnt/extraspace/damonge/Datasets/BOSS/galaxy_DR12v5_CMASS_North.fits.gz'
+        - '/mnt/extraspace/damonge/Datasets/BOSS/galaxy_DR12v5_CMASS_South.fits.gz'
+    mask_name: 'mask_CMASS_vort_0'
+    mapper_class: 'MapperVorticity'
+    # bias obtained fitting the fiducial Cl between kmin = 0.02, kmax = 0.15
+    nl_marginalize: True
+    nl_prior: 0.1
+
+cls:
+  # Options: all, cross, None
+  DELS-DELS: 
+    compute: 'None'
+  DELS-CMASS_vort: 
+    compute: 'all'
+  CMASS_vort-CMASS_vort: 
+    compute: 'all'
+
+cov:
+  fiducial:
+    cosmo:
+      Omega_c: 0.26066676
+      Omega_b: 0.048974682
+      h: 0.6766
+      sigma8: 0.8102
+      n_s: 0.9665
+
+  cls_from_data:
+    CMASS-CMASS:
+      compute: 'auto'
+
+    DELS-CMASS:
+      compute: 'auto'
+
+  non_Gaussian: False
+
+bpw_edges: [0, 30, 60, 90, 120, 150, 180, 210, 240, 272, 309, 351, 384]
+
+sphere:
+  n_iter_sht: 0
+  n_iter_mcm: 3
+  n_iter_cmcm: 3
+  nside: 128
+  coords: 'C'
+
+recompute:
+  cls: False
+  cov: False
+  mcm: False
+  cmcm: False
+
+output:  '/mnt/extraspace/gravityls_3/xCell_output/128_CMASS_vort'
