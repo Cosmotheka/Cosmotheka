@@ -11,7 +11,7 @@ data_catalog: '/mnt/extraspace/damonge/Datasets/2MPZ_WIxSC/WIxSC.fits'
 spec_sample: '/mnt/extraspace/damonge/Datasets/2MPZ_WIxSC/zSpec-comp-WIxSC.csv'
 n_jk_dir: 100
 apply_galactic_correction: True
-mask: '/mnt/extraspace/damonge/Datasets/2MPZ_WIxSC/WISExSCOSmask.fits.gz'
+mask: '/mnt/extraspace/damonge/Datasets/2MPZ_WIxSC/WISExSCOSmask_galactic.fits.gz'
 star_map: '/mnt/extraspace/damonge/Datasets/2MPZ_WIxSC/allwise_total_galactic.fits'
 use_halo_model: True
 hod_params:
