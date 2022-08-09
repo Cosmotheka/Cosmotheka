@@ -114,16 +114,11 @@ def test_will_be_computed():
 def test_map_compute_to_bool_for_trs():
     d = get_data()
 
-    assert(d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'None') is
-           False)
-    assert(d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'none') is
-           False)
-    assert(d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'auto') is
-           False)
-    assert(d._map_compute_to_bool_for_trs('DESgc__1', 'DESgc__1', 'auto') is
-           True)
-    assert(d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'all') is
-           True)
+    assert not d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'None')
+    assert not d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'none')
+    assert not d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'auto')
+    assert d._map_compute_to_bool_for_trs('DESgc__1', 'DESgc__1', 'auto')
+    assert d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'all')
 
     # Check that it raises an Error if compute is wrong
     with pytest.raises(ValueError):
