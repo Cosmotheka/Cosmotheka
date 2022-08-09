@@ -155,3 +155,6 @@ class MapperVorticity(MapperBase):
 
     def get_spin(self):
         return 1
+
+    def get_dtype(self):
+        return 'generic'

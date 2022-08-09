@@ -34,11 +34,12 @@ cov:
 
   cls_from_data:
     CMASS-CMASS:
-      compute: 'auto'
+      compute: 'all'
 
     DELS-CMASS:
-      compute: 'auto'
+      compute: 'all'
 
+  data_fallback: True
   non_Gaussian: False
 
 bpw_edges: [0, 30, 60, 90, 120, 150, 180, 210, 240, 272, 309, 351, 384]
