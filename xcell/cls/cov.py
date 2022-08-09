@@ -99,10 +99,15 @@ class Cov():
             ma1, ma2 = self.clA1A2.get_masks()
             mb1, mb2 = self.clB1B2.get_masks()
 
-            alm = hp.map2alm(ma1 * ma2)
-            blm = hp.map2alm(mb1 * mb2)
+            ma12 = ma1 * ma2
+            mb12 = mb1 * mb2
+            alm = hp.map2alm(ma12)
+            blm = hp.map2alm(mb12)
 
             cl = hp.alm2cl(alm * blm)
+            # Normalize by the area
+            area = hp.nside2pixarea(hp.npix2nside(ma12.size))
+            cl /= np.sum(ma12) * np.sum(mb12) * area**2
 
             self._cl_footprint = cl
 
