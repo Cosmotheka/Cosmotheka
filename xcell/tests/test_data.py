@@ -4,6 +4,8 @@ import os
 import yaml
 from xcell.cls.data import Data
 from ..mappers import mapper_from_name
+import numpy as np
+import shutil
 
 
 def read_yaml_file(file):
@@ -43,9 +45,8 @@ def remove_outdir(config):
     outdir = config['output']
     if outdir != './xcell/tests/cls/':
         raise ValueError('Outdir looks odd. Not removing it as precaution')
-    # Using os.rmdir as it will only remove an empty directory
     elif os.path.isdir(outdir):
-        os.rmdir(outdir)
+        shutil.rmtree(outdir)
 
 
 def get_tracer_pair_iterator(data):
@@ -63,6 +64,43 @@ def test_input_from_another_file():
     remove_yml_file(d.data)
 
 
+def test_input_cls_section():
+    d = get_data()
+    data = d.data.copy()
+    tmat = d.get_tracer_matrix()
+    fname = './xcell/tests/cls/mat.npz'
+
+    # Normal use: pass a matrix with everything
+    surveys = ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
+    cls_matrix = [[1, 2, 0, 2], [2, 2, 0, 2], [0, 0, 0, 0], [2, 2, 0, 0]]
+    np.savez(fname, surveys=surveys, cls_matrix=cls_matrix)
+
+    data['cls'] = fname
+    d2 = Data(data=data, ignore_existing_yml=True)
+    assert d2.data['cls'] == data['cls']
+    assert tmat == d2.get_tracer_matrix()
+
+    # Set default = all and check it is overriden correctly
+    data['cls'] = {'default': 'all', 'file': fname}
+    d2 = Data(data=data, ignore_existing_yml=True)
+    assert d2.data['cls'] == data['cls']
+    assert tmat == d2.get_tracer_matrix()
+
+    # Set default = 'None' (this is the default) and don't pass eBOSS
+    surveys = ['DESgc', 'DESwl', 'PLAcv']
+    cls_matrix = [[1, 2, 2], [2, 2, 2], [2, 2, 0]]
+    np.savez(fname, surveys=surveys, cls_matrix=cls_matrix)
+
+    data['cls'] = {'default': 'None', 'file': fname}
+    d2 = Data(data=data, ignore_existing_yml=True)
+    assert d2.data['cls'] == data['cls']
+    assert tmat == d2.get_tracer_matrix()
+
+    os.remove(fname)
+    remove_yml_file(data)
+    remove_outdir(data)
+
+
 def test_will_be_computed():
     d = get_data()
     n1 = d.will_pair_be_computed('DESwl__0', 'DESwl__1')
@@ -73,7 +111,166 @@ def test_will_be_computed():
     assert not n3
 
 
+def test_map_compute_to_bool_for_trs():
+    d = get_data()
+
+    assert not d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'None')
+    assert not d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'none')
+    assert not d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'auto')
+    assert d._map_compute_to_bool_for_trs('DESgc__1', 'DESgc__1', 'auto')
+    assert d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'all')
+
+    # Check that it raises an Error if compute is wrong
+    with pytest.raises(ValueError):
+        d._map_compute_to_bool_for_trs('DESgc__0', 'DESgc__1', 'pepito')
+
+
+def test_get_section():
+    d = get_data()
+
+    assert d.data['cls'] == d._get_section('cls')
+
+
+def test_get_tracers_defined():
+    d = get_data()
+
+    # A bit absurd, but this is what it is
+    assert d._get_tracers_defined() == list(d.data['tracers'].keys())
+
+
+def test_get_clcov_from_data_matrix():
+    c = get_config_dict()
+
+    # Empty
+    d = get_data()
+    mat = {}
+    assert mat == d._get_clcov_from_data_matrix(return_default=False)
+    assert (mat, 'None') == d._get_clcov_from_data_matrix()
+    remove_yml_file(c)
+
+    # Pass string ('all', 'cross', 'None')
+    c['cov']['cls_from_data'] = 'all'
+    d = Data(data=c)
+    mat = {}
+    assert mat == d._get_clcov_from_data_matrix(return_default=False)
+    assert (mat, 'all') == d._get_clcov_from_data_matrix()
+    remove_yml_file(c)
+
+    # Pass dictionary
+    c['cov']['cls_from_data'] = {'DESgc-DESgc': {'compute': 'all'}}
+    d = Data(data=c)
+    mat = {('DESgc', 'DESgc'): 'all'}
+    assert mat == d._get_clcov_from_data_matrix(return_default=False)
+    assert (mat, 'None') == d._get_clcov_from_data_matrix()
+    remove_yml_file(c)
+
+    # Pass dictionary with different value and change default
+    c['cov']['cls_from_data'] = {'DESgc-DESgc': {'compute': 'auto'},
+                                 'default': 'all'}
+    d = Data(data=c)
+    mat = {('DESgc', 'DESgc'): 'auto'}
+    assert mat == d._get_clcov_from_data_matrix(return_default=False)
+    assert (mat, 'all') == d._get_clcov_from_data_matrix()
+    remove_yml_file(c)
+
+    # Pass dictionary with no compute. It should use the default
+    c['cov']['cls_from_data'] = {'DESgc-DESgc': {},
+                                 'default': 'all'}
+    d = Data(data=c)
+    mat = {('DESgc', 'DESgc'): 'all'}
+    assert mat == d._get_clcov_from_data_matrix(return_default=False)
+    assert (mat, 'all') == d._get_clcov_from_data_matrix()
+    remove_yml_file(c)
+
+    # Pass list of tracers
+    c['cov']['cls_from_data'] = ['DESgc__0-DESgc__0', 'DESgc__1-DESwl__1']
+    d = Data(data=c)
+    mat = {('DESgc__0', 'DESgc__0'): 'all', ('DESgc__1', 'DESwl__1'): 'all',
+           ('DESwl__1', 'DESgc__1'): 'all'}
+    assert mat == d._get_clcov_from_data_matrix(return_default=False)
+    assert (mat, 'None') == d._get_clcov_from_data_matrix()
+    remove_yml_file(c)
+
+
+def test_get_requested_survey_cls_matrix():
+    d = get_data()
+    data = d.data
+    fname = './xcell/tests/cls/mat.npz'
+
+    surveys = ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
+    cls_matrix = [[1, 2, 0, 2], [2, 2, 0, 2], [0, 0, 0, 0], [2, 2, 0, 0]]
+    np.savez(fname, surveys=surveys, cls_matrix=cls_matrix)
+
+    cls_legend = {2: 'all', 1: 'auto', 0: 'None'}
+    mat = {}
+    for i, s1 in enumerate(surveys):
+        for j, s2 in enumerate(surveys):
+            mat[(s1, s2)] = cls_legend[cls_matrix[i][j]]
+
+    # Test cls defined in the yaml file
+    assert mat == d._get_requested_survey_cls_matrix(return_default=False)
+    assert (mat, 'None') == \
+        d._get_requested_survey_cls_matrix(return_default=True)
+
+    # cls = fname
+    data['cls'] = fname
+    d2 = Data(data=data, ignore_existing_yml=True)
+    assert d2.data['cls'] == data['cls']
+    assert mat == d2._get_requested_survey_cls_matrix(return_default=False)
+    assert (mat, 'None') == \
+        d2._get_requested_survey_cls_matrix(return_default=True)
+
+    # Set file = fname
+    data['cls'] = {'default': 'all', 'file': fname}
+    d2 = Data(data=data, ignore_existing_yml=True)
+    assert d2.data['cls'] == data['cls']
+    assert mat == d2._get_requested_survey_cls_matrix(return_default=False)
+    assert (mat, 'all') == \
+        d2._get_requested_survey_cls_matrix(return_default=True)
+
+    os.remove(fname)
+    remove_yml_file(data)
+    remove_outdir(data)
+
+
+def test_load_survey_cls_matrix():
+    d = get_data()
+    fname = './xcell/tests/cls/mat.npz'
+
+    # Normal use: pass a matrix with everything
+    surveys = ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
+    cls_matrix = [[1, 2, 0, 2], [2, 2, 0, 2], [0, 0, 0, 0], [2, 2, 0, 0]]
+    np.savez(fname, surveys=surveys, cls_matrix=cls_matrix)
+
+    cls_legend = {2: 'all', 1: 'auto', 0: 'None'}
+    mat = d._load_survey_cls_matrix(fname)
+    mat2 = {}
+    for i, s1 in enumerate(surveys):
+        for j, s2 in enumerate(surveys):
+            mat2[(s1, s2)] = cls_legend[cls_matrix[i][j]]
+
+    assert mat == mat2
+
+
+def test_read_cls_section_matrix():
+    d = get_data()
+    mat = d._read_cls_section_matrix()
+
+    surveys = ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
+    cls_matrix = [[1, 2, 0, 2], [2, 2, 0, 2], [0, 0, 0, 0], [2, 2, 0, 0]]
+
+    cls_legend = {2: 'all', 1: 'auto', 0: 'None'}
+
+    mat2 = {}
+    for i, s1 in enumerate(surveys):
+        for j, s2 in enumerate(surveys):
+            mat2[(s1, s2)] = cls_legend[cls_matrix[i][j]]
+
+    assert mat == mat2
+
+
 def test_get_tracer_matrix():
+    # This function also tests _init_tracer_matrix
     # No cls from data
     c = get_config_dict()
     data = Data(data=c)
@@ -191,9 +388,10 @@ def test_get_tracers_used():
         if tr.split('__')[0] in trs:
             tracers_for_cl_test.append(tr)
 
-    assert tracers_for_cl == tracers_for_cl_test
-    assert data.get_tracers_used(True) == ['DESgc__0', 'DESwl__0', 'DESwl__1',
-                                           'DESwl__2', 'DESwl__3', 'PLAcv']
+    assert sorted(tracers_for_cl) == sorted(tracers_for_cl_test)
+    assert sorted(data.get_tracers_used(True)) == \
+        sorted(['DESgc__0', 'DESwl__0', 'DESwl__1', 'DESwl__2', 'DESwl__3',
+                'PLAcv'])
     remove_yml_file(data.data)
 
 
@@ -226,7 +424,7 @@ def test_get_cl_trs_names(wsp):
             elif config['cls'][key]['compute'] == 'all':
                 cl_trs_test.append((tri, trj))
 
-    assert cl_trs == cl_trs_test
+    assert sorted(cl_trs) == sorted(cl_trs_test)
 
     remove_yml_file(config)
 
@@ -290,7 +488,7 @@ def test_filter_tracers_wsp():
             trs_wsp.append(tr)
             trs_mask.append(mask_name)
 
-    assert trs_wsp == data.filter_tracers_wsp(all_tracers)
+    assert trs_wsp == data._filter_tracers_wsp(all_tracers)
     remove_yml_file(config)
 
 
