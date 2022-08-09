@@ -248,6 +248,8 @@ class Data():
             # Get info matrix: this will let us know if a cl is computed or not
             tmat = self.get_tracer_matrix()
 
+            # Tracers now will contain only the tracers for which we actually
+            # compute C_ells.
             # Saving only tr1 to keep order
             tracers = []
             for tr1 in tr_names:
