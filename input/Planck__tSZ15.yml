@@ -1,5 +1,5 @@
 mapper_class: MapperP15tSZ
-file_map: /mnt/extraspace/damonge/Datasets/Planck_tSZ/COM_CompMap_YSZ_R2.02/COM_CompMap_Compton-SZMap-milca-ymaps_2048_R2.00.fits
+file_map: /mnt/extraspace/damonge/Datasets/Planck_tSZ/COM_CompMap_YSZ_R2.02/milca_ymaps.fits
 file_gp_mask: /mnt/extraspace/damonge/Datasets/Planck_tSZ/COM_CompMap_YSZ_R2.02/COM_CompMap_Compton-SZMap-masks_2048_R2.01.fits
 file_ps_mask: /mnt/extraspace/damonge/Datasets/Planck_tSZ/COM_CompMap_YSZ_R2.02/COM_CompMap_Compton-SZMap-masks_2048_R2.01.fits
 gp_mask_mode: '0.6'
