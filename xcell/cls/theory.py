@@ -40,6 +40,9 @@ class Theory():
         self.config = data['cov']['fiducial']
         self._cosmo = None
         self._hm_par = None
+        k_s = np.geomspace(1E-4, 1E2, 512)
+        self.lk_s = np.log(k_s)
+        self.a_s = 1./(1+np.linspace(0., 6., 30)[::-1])
 
     def get_cosmo_ccl(self):
         if self._cosmo is None:
@@ -112,6 +115,7 @@ class Theory():
         ccl_pr_2pt = hm_par['prof_2pt']
         with_hm = tracer.get('use_halo_model', False)
         normed_profile = True
+        is_number_counts = False  # Used for the SSC
         # Get Tracers
         if dtype == 'galaxy_density':
             # Import z, pz
@@ -130,6 +134,8 @@ class Theory():
                 ccl_pr = ccl.halos.HaloProfileHOD(hm_par['cM'],
                                                   **hod_pars)
                 ccl_pr_2pt = ccl.halos.Profile2ptHOD()
+
+            is_number_counts = True
         elif dtype == 'galaxy_shear':
             # Import z, pz
             z, pz = mapper.get_nz(dz=0)
@@ -162,45 +168,70 @@ class Theory():
                 'ccl_pr': ccl_pr,
                 'ccl_pr_2pt': ccl_pr_2pt,
                 'with_hm': with_hm,
-                'normed': normed_profile}
+                'normed': normed_profile,
+                'type': dtype,
+                'is_number_counts': is_number_counts}
 
     def get_ccl_tkka(self, ccl_trA1, ccl_trA2, ccl_trB1, ccl_trB2,
-                     kind='1h'):
+                     kind='1h', biases=None):
         # Returns trispectrum for one of the non-Gaussian covariance terms.
-        if kind not in ['1h']:
+        if kind not in ['1h', 'SSC']:
             raise NotImplementedError(f"Non-Gaussian term {kind} "
                                       "not supported.")
 
         cosmo = self.get_cosmo_ccl()
         hm_par = self.get_halomodel_params()
 
-        pA1 = ccl_trA1['ccl_pr']
-        pA2 = ccl_trA2['ccl_pr']
-        if ccl_trA1['name'] == ccl_trA2['name']:
-            pr2ptA = ccl_trA1['ccl_pr_2pt']
-            pA2 = pA1
+        if kind == 'SSC':
+            if not (isinstance(biases, list) and len(biases) == 4):
+                raise ValueError("biases must be an array of length 4")
+            biasA1, biasA2, biasB1, biasB2 = biases
+
+            ncA1 = ccl_trA1['is_number_counts']
+            ncA2 = ccl_trA2['is_number_counts']
+            ncB1 = ccl_trB1['is_number_counts']
+            ncB2 = ccl_trB2['is_number_counts']
+            tkk = \
+                ccl.halos.halomod_Tk3D_SSC_linear_bias(cosmo,
+                                                       hm_par['calculator'],
+                                                       prof=hm_par['prof_NFW'],
+                                                       bias1=biasA1,
+                                                       bias2=biasA2,
+                                                       bias3=biasB1,
+                                                       bias4=biasB2,
+                                                       is_number_counts1=ncA1,
+                                                       is_number_counts2=ncA2,
+                                                       is_number_counts3=ncB1,
+                                                       is_number_counts4=ncB2,
+                                                       a_arr=self.a_s,
+                                                       lk_arr=self.lk_s)
+
         else:
-            pr2ptA = hm_par['prof_2pt']
-        pB1 = ccl_trB1['ccl_pr']
-        pB2 = ccl_trB2['ccl_pr']
-        if ccl_trB1['name'] == ccl_trB2['name']:
-            pr2ptB = ccl_trB1['ccl_pr_2pt']
-            pB2 = pB1
-        else:
-            pr2ptB = hm_par['prof_2pt']
-        k_s = np.geomspace(1E-4, 1E2, 512)
-        lk_s = np.log(k_s)
-        a_s = 1./(1+np.linspace(0., 6., 30)[::-1])
-        tkk = ccl.halos.halomod_Tk3D_1h(cosmo, hm_par['calculator'],
-                                        prof1=pA1, prof2=pA2,
-                                        prof12_2pt=pr2ptA,
-                                        prof3=pB1, prof4=pB2,
-                                        prof34_2pt=pr2ptB,
-                                        normprof1=ccl_trA1['normed'],
-                                        normprof2=ccl_trA2['normed'],
-                                        normprof3=ccl_trB1['normed'],
-                                        normprof4=ccl_trB2['normed'],
-                                        a_arr=a_s, lk_arr=lk_s)
+            pA1 = ccl_trA1['ccl_pr']
+            pA2 = ccl_trA2['ccl_pr']
+            if ccl_trA1['name'] == ccl_trA2['name']:
+                pr2ptA = ccl_trA1['ccl_pr_2pt']
+                pA2 = pA1
+            else:
+                pr2ptA = hm_par['prof_2pt']
+            pB1 = ccl_trB1['ccl_pr']
+            pB2 = ccl_trB2['ccl_pr']
+            if ccl_trB1['name'] == ccl_trB2['name']:
+                pr2ptB = ccl_trB1['ccl_pr_2pt']
+                pB2 = pB1
+            else:
+                pr2ptB = hm_par['prof_2pt']
+
+            tkk = ccl.halos.halomod_Tk3D_1h(cosmo, hm_par['calculator'],
+                                            prof1=pA1, prof2=pA2,
+                                            prof12_2pt=pr2ptA,
+                                            prof3=pB1, prof4=pB2,
+                                            prof34_2pt=pr2ptB,
+                                            normprof1=ccl_trA1['normed'],
+                                            normprof2=ccl_trA2['normed'],
+                                            normprof3=ccl_trB1['normed'],
+                                            normprof4=ccl_trB2['normed'],
+                                            a_arr=self.a_s, lk_arr=self.lk_s)
         return tkk
 
     def get_ccl_pk(self, ccl_tr1, ccl_tr2):
@@ -215,16 +246,13 @@ class Theory():
                 p2 = p1
             else:
                 pr2pt = None
-            k_s = np.geomspace(1E-4, 1E2, 512)
-            lk_s = np.log(k_s)
-            a_s = 1./(1+np.linspace(0., 6., 30)[::-1])
 
             pk = ccl.halos.halomod_Pk2D(cosmo,
                                         hm_par['calculator'],
                                         p1, prof_2pt=pr2pt, prof2=p2,
                                         normprof1=ccl_tr1['normed'],
                                         normprof2=ccl_tr2['normed'],
-                                        lk_arr=lk_s, a_arr=a_s)
+                                        lk_arr=self.lk_s, a_arr=self.a_s)
             # We comment this out for now because these features are
             # not present in the pip release of CCL
             # smooth_transition=hm_par['alpha'],
@@ -242,19 +270,41 @@ class Theory():
                               ccl_tr2['ccl_tr'],
                               ell, p_of_k_a=pk)
 
-    def get_ccl_cl_covNG(self, ccl_trA1, ccl_trA2, ellA,
-                         ccl_trB1, ccl_trB2, ellB, fsky,
-                         kind='1h'):
+    def get_ccl_cl_covNG(self, ccl_trA1, ccl_trA2, ellA, ccl_trB1, ccl_trB2,
+                         ellB, fsky=None, kind='1h', cl_masks=None,
+                         biases=None):
         cosmo = self.get_cosmo_ccl()
 
         tkk = self.get_ccl_tkka(ccl_trA1, ccl_trA2,
                                 ccl_trB1, ccl_trB2,
-                                kind=kind)
-        return ccl.angular_cl_cov_cNG(cosmo,
-                                      cltracer1=ccl_trA1['ccl_tr'],
-                                      cltracer2=ccl_trA2['ccl_tr'],
-                                      ell=ellA,
-                                      tkka=tkk, fsky=fsky,
-                                      cltracer3=ccl_trB1['ccl_tr'],
-                                      cltracer4=ccl_trB2['ccl_tr'],
-                                      ell2=ellB, integration_method='spline')
+                                kind=kind, biases=biases)
+        if kind == "SSC":
+            if cl_masks is None:
+                raise ValueError("SSC requested but no cl_masks provided. You "
+                                 + "need to provide the angular power spectrum"
+                                 + "of the masks.")
+
+            sigma2_B = ccl.sigma2_B_from_mask(cosmo, self.a_s, cl_masks)
+            cov = ccl.angular_cl_cov_SSC(cosmo,
+                                         cltracer1=ccl_trA1['ccl_tr'],
+                                         cltracer2=ccl_trA2['ccl_tr'],
+                                         ell=ellA,
+                                         tkka=tkk,
+                                         cltracer3=ccl_trB1['ccl_tr'],
+                                         cltracer4=ccl_trB2['ccl_tr'],
+                                         ell2=ellB,
+                                         sigma2_B=(self.a_s, sigma2_B),
+                                         integration_method='qag_quad')
+
+        else:
+            cov = ccl.angular_cl_cov_cNG(cosmo,
+                                         cltracer1=ccl_trA1['ccl_tr'],
+                                         cltracer2=ccl_trA2['ccl_tr'],
+                                         ell=ellA,
+                                         tkka=tkk, fsky=fsky,
+                                         cltracer3=ccl_trB1['ccl_tr'],
+                                         cltracer4=ccl_trB2['ccl_tr'],
+                                         ell2=ellB,
+                                         integration_method='spline')
+
+        return cov

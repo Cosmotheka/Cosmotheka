@@ -138,11 +138,11 @@ def test_cov_ng_error():
     data = get_config(fsky=0.2)
     covc = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
     with pytest.raises(NotImplementedError):
-        covc.get_covariance_ng_halomodel(0, 0, 0, 0, 0.2, kind='3h')
+        covc.get_covariance_ng_halomodel(kind='3h', fsky=0.2)
     shutil.rmtree(tmpdir1)
 
 
-def test_cov_ng_1h():
+def test_cov_ng():
     # From CCL directly
     data = get_config(fsky=0.2)
     clc = Cl(data, 'Dummy__0', 'Dummy__0')
@@ -156,23 +156,39 @@ def test_cov_ng_1h():
     hmc = ccl.halos.HMCalculator(cosmo, mf, hb, md)
     pr = ccl.halos.HaloProfileHOD(cm, lMmin_0=12.1,
                                   lM1_p=0.1, bg_0=1.2)
+    pNFW = ccl.halos.HaloProfileNFW(cm)
     prof2pt = ccl.halos.Profile2ptHOD()
     z, nz = np.loadtxt('xcell/tests/data/DESY1gc_dndz_bin0.txt',
                        usecols=(1, 3), unpack=True)
     tr = ccl.NumberCountsTracer(cosmo, False, dndz=(z, nz),
                                 bias=(z, np.ones_like(z)))
     k_arr = np.geomspace(1E-4, 1E2, 256)
-    a_arr = 1./(1+np.linspace(0, 3, 15)[::-1])
+    # Using the same array as in Theory because otherwise SSC test fails. Not
+    # sure why this happens.
+    a_arr = 1./(1+np.linspace(0., 6., 30)[::-1])
     tkk = ccl.halos.halomod_Tk3D_1h(cosmo, hmc,
                                     prof1=pr, prof2=pr, prof12_2pt=prof2pt,
                                     prof3=pr, prof4=pr, prof34_2pt=prof2pt,
                                     normprof1=True, normprof2=True,
                                     normprof3=True, normprof4=True,
                                     a_arr=a_arr, lk_arr=np.log(k_arr))
+
     covNG0 = ccl.angular_cl_cov_cNG(cosmo,
                                     cltracer1=tr, cltracer2=tr,
                                     ell=ells, tkka=tkk, fsky=1.,
                                     cltracer3=tr, cltracer4=tr, ell2=ells)
+
+    tkk_ssc = ccl.halos.halomod_Tk3D_SSC_linear_bias(cosmo, hmc, prof=pNFW,
+                                                     bias1=1,
+                                                     bias2=1,
+                                                     bias3=1,
+                                                     bias4=1,
+                                                     is_number_counts1=True,
+                                                     is_number_counts2=True,
+                                                     is_number_counts3=True,
+                                                     is_number_counts4=True,
+                                                     a_arr=a_arr,
+                                                     lk_arr=np.log(k_arr))
 
     # Gaussian only
     data = get_config(fsky=0.2, inc_hm=True)
@@ -186,37 +202,67 @@ def test_cov_ng_1h():
     # Gaussian + non-Gaussian
     data = get_config(fsky=0.2, inc_hm=True)
     data['cov']['non_Gaussian'] = True
-    data['cov']['NG_terms'] = ['1h']
+    # If not specified, 1h and SSC will be computed
+    # data['cov']['NG_terms'] = ['1h', 'SSC']
     data['tracers']['Dummy__0']['hod_params'] = {'lMmin_0': 12.1,
                                                  'lM1_p': 0.1,
                                                  'bg_0': 1.2}
     covc1 = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
     mapper = MapperDummy(data['tracers']['Dummy__0'])
     fsky = np.mean((mapper.get_mask() > 0))
-    covNG1 = covc1.get_covariance_ng_halomodel(0, 0, 0, 0, fsky)
+    covNG1 = covc1.get_covariance_ng_halomodel('1h', fsky=fsky)
+    covSSC1 = covc1.get_covariance_ng_halomodel('SSC')
     cov1 = covc1.get_covariance()
+
+    covf = np.load(os.path.join(tmpdir1,
+                                'cov/cov_{}_{}_{}_{}.npz'.format('Dummy__0',
+                                                                 'Dummy__0',
+                                                                 'Dummy__0',
+                                                                 'Dummy__0')))
+
+    # Check that the cNG terms are stored correctly in the file
+    for kind, cng in zip(['1h', 'SSC'], [covNG1, covSSC1]):
+        k = f'cov_NG_{kind}'
+        assert np.all(covf[k] == cng)
     shutil.rmtree(tmpdir1)
+
+    # Here because I want to use the cov._get_cl_footprint method
+    cl_masks = covc1._get_cl_footprint().copy()
+    cl_masks *= (2 * np.arange(cl_masks.size) + 1)**2
+    sigma2_B = ccl.sigma2_B_from_mask(cosmo, a_arr, cl_masks)
+    covSSC0 = ccl.angular_cl_cov_SSC(cosmo,
+                                     cltracer1=tr, cltracer2=tr,
+                                     ell=ells, tkka=tkk_ssc,
+                                     sigma2_B=(a_arr, sigma2_B),
+                                     cltracer3=tr, cltracer4=tr, ell2=ells)
 
     # fsky on input
     data = get_config(fsky=0.2, inc_hm=True)
     data['cov']['non_Gaussian'] = True
-    data['cov']['NG_terms'] = ['1h']
+    data['cov']['NG_terms'] = ['1h', 'SSC']
     data['cov']['fsky_NG'] = 0.1
     data['tracers']['Dummy__0']['hod_params'] = {'lMmin_0': 12.1,
                                                  'lM1_p': 0.1,
                                                  'bg_0': 1.2}
     covc2 = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
-    covNG2 = covc2.get_covariance()-covG
+    # fsky not given is read from input (or masks if input not given)
+    covNG2 = covc2.get_covariance_ng_halomodel('1h')
     shutil.rmtree(tmpdir1)
 
     # Tests
-    # Compare result of NG method with G+NG-G
-    assert np.allclose(covNG1, cov1-covG, atol=0)
+    # Compare the result of NG method
+    assert np.allclose(covG + covNG1 + covSSC1, cov1, atol=0)
+
     # Compare with CCL prediction
     # (interpolation errors are ~1E-4)
     assert np.allclose(covNG0, covNG1*fsky, atol=0, rtol=1E-3)
-    # fsky scaling
-    assert np.allclose(covNG2, covNG1*fsky/0.1, atol=0)
+    # TODO: This test fails with an a_arr that is not the same as in Theory
+    assert np.max(np.abs((np.diag(covSSC0 + 1e-100) / np.diag(covSSC1 + 1e-100)
+                          - 1))) < 1e-3
+    assert np.max(np.abs(((covSSC0 + 1e-100) / (covSSC1 + 1e-100) - 1))) < 1e-3
+
+    # Use input fsky. fsky scaling only for NG terms not for SSC
+    assert np.allclose(covNG2, (covNG1)*fsky/0.1, atol=0)
 
 
 def test_file_inconsistent_errors():

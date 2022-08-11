@@ -23,6 +23,8 @@ class MapperBase(object):
         self.mask_power = config.get('mask_power', 1)
         self.coords = config['coords']
         self.mask = None
+        # Moved here to see the default more clearly
+        self.n_iter = config.get('n_iter', 0)
 
     def _get_rotator(self, coord_default):
         if self.coords != coord_default:
@@ -121,7 +123,7 @@ class MapperBase(object):
         cont = self.get_contaminants(**kwargs)
         beam_eff = self.get_beam()
 
-        n_iter = kwargs.get('n_iter', 0)
+        n_iter = kwargs.get('n_iter', self.n_iter)
         return nmt.NmtField(mask, signal, beam=beam_eff,
                             templates=cont, n_iter=n_iter)
 
