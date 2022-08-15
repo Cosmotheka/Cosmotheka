@@ -14,32 +14,27 @@ class MapperIceCube(MapperBase):
                                   ['40', '59', '79', '86_I', '86_II',
                                    '86_III', '86_IV', '86_V', '86_VI',
                                    '86_VII'])
-        self.lE_ranges = config.get('logE_ranges',
-                                    [np.log10(300), np.log10(300)+1,
-                                     np.log10(300)+2, np.log10(300)+3])
-        self.nEbins = len(self.lE_ranges) - 1
-        self.Ebin = config['Ebin']
+        self.lE_range = config['lE_range']
         self.nseasons = len(self.seasons)
         self.rot = self._get_rotator('C')
         self.ra_name = 'RA[deg]'
         self.dec_name = 'Dec[deg]'
+        self.map_energy = config.get('map_energy', False)
         self.E_name = 'log10(E/GeV)'
-        self.cat_data = np.full((self.nseasons, self.nEbins), None)
-        self.mask = None
-        self.delta_map = np.full(self.nEbins, None)
+        self.cat_data = np.full(self.nseasons, None)
+        self.flux_map = None
         self.nl_coupled = None
 
     def _get_events(self, season):
-        if None in self.cat_data[season]:
+        if self.cat_data[season] is None:
             # loads in data
             event_dir = self.config['event_dir']
             event_name = f'{event_dir}/IC{self.seasons[season]}_exp.csv'
             self.cats_data = Table.read(event_name, format='ascii')
-            # split into energy bins
-            for i in range(self.nEbins):
-                self.cat_data[season][i] = self.cats_data[
-                    (self.cats_data[self.E_name] >= self.lE_ranges[i]) &
-                    (self.cats_data[self.E_name] < self.lE_ranges[i+1])]
+            # pick those in energy bin
+            lE = self.cats_data[self.E_name]
+            self.cat_data[season] = self.cats_data[(lE >= self.lE_range[0]) &
+                                                   (lE < self.lE_range[1])]
         return self.cat_data[season]
 
     def _get_aeff(self, season):
@@ -68,35 +63,66 @@ class MapperIceCube(MapperBase):
         assert lenE*lenDec == len(Aeff)
         Aeff = Aeff.reshape([lenDec, lenE]).T
         # get effective area interpolation function for each energy bin
-        Aeff_inters = []
-        for i in range(self.nEbins):
-            lE_l = self.lE_ranges[i]
-            lE_r = self.lE_ranges[i+1]
-            # only keeps relevant fine energy bins
-            msk = (logE_min_u > lE_l) & (logE_max_u < lE_r)
-            Aeff_h = list(Aeff[msk])
-            lEmin_h = list(logE_min_u[msk])
-            lEmax_h = list(logE_max_u[msk])
-            Aeff_h.insert(0, Aeff[np.min(np.where(msk)) - 1])
-            Aeff_h.append(Aeff[np.max(np.where(msk)) + 1])
-            Aeff_h = np.array(Aeff_h)
-            lEmax_h.insert(0, lEmin_h[0])
-            lEmin_h.insert(0, lE_l)
-            lEmin_h.append(lEmax_h[-1])
-            lEmax_h.append(lE_r)
-            lEmin_h = np.array(lEmin_h)
-            lEmax_h = np.array(lEmax_h)
-            # calculates weighted effective area
-            alpha = self.config.get('alpha', 3.7)
-            wAeff = np.sum(Aeff_h[:, :]*(10**(lEmax_h*(1-alpha)) -
-                                         10**(lEmin_h*(1-alpha)))[:, None],
-                           axis=0)/(10**(lE_r*(1-alpha)) -
-                                    10**(lE_l*(1-alpha)))
-            # creates interpolation function
-            Aeff_inter = interp1d(sindecvals_u, wAeff,
-                                  bounds_error=False, fill_value=0.0)
-            Aeff_inters.append(Aeff_inter)
-        return Aeff_inters
+        lE_l, lE_r = self.lE_range
+        # only keeps relevant fine energy bins
+        msk = (logE_min_u > lE_l) & (logE_max_u < lE_r)
+        Aeff_h = list(Aeff[msk])
+        lEmin_h = list(logE_min_u[msk])
+        lEmax_h = list(logE_max_u[msk])
+        Aeff_h.insert(0, Aeff[np.min(np.where(msk)) - 1])
+        Aeff_h.append(Aeff[np.max(np.where(msk)) + 1])
+        Aeff_h = np.array(Aeff_h)
+        lEmax_h.insert(0, lEmin_h[0])
+        lEmin_h.insert(0, lE_l)
+        lEmin_h.append(lEmax_h[-1])
+        lEmax_h.append(lE_r)
+        lEmin_h = np.array(lEmin_h)
+        lEmax_h = np.array(lEmax_h)
+        # calculates weighted effective area
+        alpha = self.config.get('alpha', 3.7)
+        wAeff = np.sum(Aeff_h[:, :]*(10**(lEmax_h*(1-alpha)) -
+                                     10**(lEmin_h*(1-alpha)))[:, None],
+                       axis=0)/(10**(lE_r*(1-alpha)) -
+                                10**(lE_l*(1-alpha)))
+        # creates interpolation function
+        Aeff_inter = interp1d(sindecvals_u, wAeff,
+                              bounds_error=False, fill_value=0.0)
+        return Aeff_inter
+
+    def _get_flux_and_mask(self):
+        # creates base maps and inverse Aeff sums
+        n_sum_map = np.zeros(self.npix)
+        aeff_sum_map = np.zeros(self.npix)
+        mask_bin = np.ones(self.npix, dtype=bool)
+        # creates number count maps for each energy bin
+        for i in range(self.nseasons):
+            cats = self._get_events(i)
+            Aeff_i = self._get_aeff(i)
+            if self.map_energy:
+                w = 10**cats[self.E_name]
+            else:
+                w = None
+            ncount = get_map_from_points(cats, self.nside,
+                                         ra_name=self.ra_name,
+                                         dec_name=self.dec_name,
+                                         rot=self.rot, w=w)
+            mskbin, Aeff_map = self._get_aeff_mask(Aeff_i)
+            n_sum_map[mskbin] += ncount[mskbin]
+            aeff_sum_map[mskbin] += Aeff_map[mskbin]
+            mask_bin *= mskbin
+        # creates flux map
+        goodpix = mask_bin * (aeff_sum_map > 0)
+        flux = np.zeros(self.npix)
+        flux[goodpix] = n_sum_map[goodpix]/aeff_sum_map[goodpix]
+        time = 1.0
+        Ompix = 4*np.pi/self.npix
+        flux /= time*Ompix
+        # mask propto area
+        mask = mask_bin*aeff_sum_map/np.amax(aeff_sum_map)
+        # Remove monopole
+        flux_mean = np.sum(flux*mask)/np.sum(mask)
+        flux[goodpix] = flux[goodpix]-flux_mean
+        return flux, mask, n_sum_map, aeff_sum_map
 
     def _get_aeff_mask(self, Aeff):
         # finds dec of all map pixels
@@ -114,54 +140,22 @@ class MapperIceCube(MapperBase):
         return Aeff_mask, Aeff_map
 
     def _get_mask(self):
-        # creates base mask
-        msk = np.ones(self.npix, dtype=bool)
-        for i in range(self.nseasons):
-            Aeff = self._get_aeff(i)
-            # finds and combines aeff masks for each season and energy bin
-            for j in range(self.nEbins):
-                Aeff_mask, _ = self._get_aeff_mask(Aeff[j])
-                msk *= Aeff_mask
-        return msk.astype(float)
-
-    def _get_nmap_and_mask(self):
-        # creates base maps and inverse Aeff sums
-        nmap_t = np.zeros(self.npix)
-        inv_aeff_t = np.zeros(self.npix)
-        mask = self.get_mask()
-        mskbin = mask > 0
-        # creates number count maps for each energy bin
-        for i in range(self.nseasons):
-            cats = self._get_events(i)
-            Aeff_i = self._get_aeff(i)
-            ncount = get_map_from_points(cats[self.Ebin], self.nside,
-                                         ra_name=self.ra_name,
-                                         dec_name=self.dec_name,
-                                         rot=self.rot)
-            _, Aeff_map = self._get_aeff_mask(Aeff_i[self.Ebin])
-            nmap_t[mskbin] += ncount[mskbin]/Aeff_map[mskbin]
-            inv_aeff_t[mskbin] += 1/Aeff_map[mskbin]
-        # creates delta maps and normalises with inv_aeff_t
-        nmap = np.zeros(self.npix)
-        nmap[mskbin] = nmap_t[mskbin]/inv_aeff_t[mskbin]
-        return nmap, mask
+        return self._get_flux_and_mask()[1]
 
     def get_signal_map(self):
-        if self.delta_map[self.Ebin] is None:
-            nmap, mask = self._get_nmap_and_mask()
-            mskbin = mask > 0
-            nmean = np.sum(nmap*mask)/np.sum(mask)
-            self.delta_map[self.Ebin] = (nmap/nmean-1)*mask
-        return [self.delta_map[self.Ebin]]
+        if self.flux_map is None:
+            self.flux_map = self._get_flux_and_mask()[0]
+        return [self.flux_map]
 
     def get_nl_coupled(self):
-        if self.nl_coupled is None:
-            nmap, mask = self._get_nmap_and_mask()
-            nmean = np.sum(nmap*mask)/np.sum(mask)
-            nmean_srad = nmean*self.npix/(4*np.pi)
-            N_ell = np.mean(mask)/nmean_srad
-            self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
-        return self.nl_coupled
+        return np.zeros((1, 3*self.nside))
+        #if self.nl_coupled is None:
+        #    nmap, mask = self._get_nmap_and_mask()
+        #    nmean = np.sum(nmap*mask)/np.sum(mask)
+        #    nmean_srad = nmean*self.npix/(4*np.pi)
+        #    N_ell = np.mean(mask)/nmean_srad
+        #    self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
+        #return self.nl_coupled
 
     def get_spin(self):
         return 0
