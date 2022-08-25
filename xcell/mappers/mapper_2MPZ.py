@@ -28,7 +28,7 @@ class Mapper2MPZ(MapperBase):
         self.delta_map = None
         self.nl_coupled = None
 
-    def _get_coords(self, config):
+    def _get_coords(self):
         if self.coords == 'G':  # Galactic
             return 'L', 'B'
         elif self.coords == 'C':  # Celestial/Equatorial
@@ -92,7 +92,7 @@ class Mapper2MPZ(MapperBase):
             self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz, return_jk_error=return_jk_error)
 
-    def get_signal_map(self, apply_galactic_correction=True):
+    def get_signal_map(self):
         if self.delta_map is None:
             d = np.zeros(self.npix)
             self.cat_data = self.get_catalog()
