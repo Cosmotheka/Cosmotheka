@@ -63,8 +63,8 @@ def test_load_catalog():
     cat_data.remove_rows(cat_data['dec'] < -90)
     cat_data.remove_rows(cat_data['dec'] > -35)
 
-    assert (len(cat_data) == len(cat))
-    assert (np.all(cat_data == cat))
+    assert len(cat_data) == len(cat)
+    assert np.all(cat_data == cat)
 
 
 def test_rerun():

@@ -265,6 +265,8 @@ def test_covariance_extra():
     ix_reorder_d = {k: [] for k in s.data.data['cls'].keys()}
     for trs in s.s.get_tracer_combinations():
         key = s.data.get_tracers_bare_name_pair(*trs)
+        if key not in ix_reorder_d:
+            key = '-'.join(key.split('-')[::-1])
         ix_reorder_d[key].extend(s.s.indices(tracers=trs))
 
     ix_reorder = []
