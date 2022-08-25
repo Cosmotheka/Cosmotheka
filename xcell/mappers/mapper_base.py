@@ -6,6 +6,10 @@ from .utils import get_rerun_data, save_rerun_data
 
 
 class MapperBase(object):
+     """ Base class for other mappers. \
+         
+         Containes
+     """
     def __init__(self, config):
         self._get_defaults(config)
 
