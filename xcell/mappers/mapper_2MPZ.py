@@ -49,10 +49,7 @@ class Mapper2MPZ(MapperBase):
             raise NotImplementedError(f"Unknown coordinates {self.coords}")
 
     def get_catalog(self):
-        """Obtains the catalog's file path from the \
-        mapper's configuration dictionary. Reads the \
-        .fits file, bins the catalog in redshift, \
-        masks it and returns it. \
+        """Returns the mapper catalog of sources. \
     
         Args:
             None

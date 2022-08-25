@@ -3,6 +3,10 @@ import numpy as np
 
 
 class MapperBOSS(MapperSDSS):
+    """
+    Mapper for the BOSS DR12 data set. \
+    Child class of "MapperSDSS". \
+    """
     def __init__(self, config):
         """
         config - dict
@@ -17,6 +21,18 @@ class MapperBOSS(MapperSDSS):
         self.z_edges = config.get('z_edges', [0, 1])
 
     def _get_w(self, mod='data'):
+        """
+        Returns the weights for the sources of \
+        the mapper's data or randoms catalog. \
+        
+        Args:
+            None
+        Kwargs:
+            mod='data'
+        Returns:
+            ws (Array)
+        
+        """
         if self.ws[mod] is None:
             cat = self.get_catalog(mod=mod)
             if mod == 'data':
@@ -31,4 +47,14 @@ class MapperBOSS(MapperSDSS):
         return self.ws[mod]
 
     def _get_random_cols(self):
+        """
+        Returns the names of the columns \
+        of interest for the mapper. \
+        
+        Args:
+            None
+        Returns:
+            ['RA', 'DEC', 'Z'] (Array)
+        
+        """
         return ['RA', 'DEC', 'Z']

@@ -8,6 +8,9 @@ from .mapper_base import MapperBase
 
 
 class MapperSDSS(MapperBase):
+    """
+    Base mapper class for the SDSS data sets mappers. \
+    """
     def __init__(self, config):
         raise NotImplementedError("Do not use base class")
 
@@ -30,6 +33,16 @@ class MapperSDSS(MapperBase):
         self.rot = self._get_rotator('C')
 
     def get_catalog(self, mod='data'):
+        """Returns the mapper's data or \
+        random catalog \
+        
+        Args:
+            None
+        Kwargs:
+            mode='data'
+        Returns:
+            catalog (Array)
+        """
         if mod == 'data':
             data_file = self.config['data_catalogs']
             cols = ['RA', 'DEC', 'Z', 'WEIGHT_SYSTOT',
@@ -48,6 +61,15 @@ class MapperSDSS(MapperBase):
         return self.cats[mod]
 
     def _get_nz(self):
+        """Builds the redshift distributions of \
+        the sources of the mapper's catalog. \
+        
+        Args:
+            None
+        Returns:
+            {'z_mid': zm, 'nz': nz} (Dict)
+        
+        """
         cat_data = self.get_catalog(mod='data')
         w_data = self._get_w(mod='data')
         h, b = np.histogram(cat_data['Z'], bins=self.num_z_bins,
@@ -57,12 +79,32 @@ class MapperSDSS(MapperBase):
         return {'z_mid': zm, 'nz': nz}
 
     def get_nz(self, dz=0):
+        """Checks if mapper has precomputed the redshift \
+        distribution. If not, it uses "_get_nz()" to obtain it. \
+        Then, it shifts the distribution by "dz" (default dz=0). \
+        
+        Args:
+            None
+        Kwargs:
+            dz=0
+        Returns:
+            [z, nz] (Array)
+        """
         if self.dndz is None:
             fn = f'SDSS_{self.SDSS_name}_dndz.npz'
             self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz)
 
     def _get_alpha(self):
+        """Returns the ration between the \
+        sum of the weights of the data catalog \
+        and the weights of the random catalog.
+        
+        Args:
+            None 
+        Return:
+            alpha (Float)
+        """
         if self.alpha is None:
             w_data = self._get_w(mod='data')
             w_random = self._get_w(mod='random')
@@ -70,6 +112,15 @@ class MapperSDSS(MapperBase):
         return self.alpha
 
     def _get_signal_map(self):
+        """
+        Calculates the signal map of the mappper. \
+        
+        Args:
+            None
+        Returns:
+            delta_map (Array)
+        
+        """
         delta_map = np.zeros(self.npix)
         cat_data = self.get_catalog(mod='data')
         cat_random = self.get_catalog(mod='random')
@@ -87,6 +138,18 @@ class MapperSDSS(MapperBase):
         return delta_map
 
     def get_signal_map(self):
+        """
+        Checks if mapper has already computed \
+        the signal map. If so, loads the map from \
+        file. Otherwise, it calls "_get_signal_map()" \
+        to calculate it. \
+        
+        Args:
+            None
+        Returns:
+            delta_map (Array)
+        
+        """
         if self.signal_map is None:
             fn = '_'.join([f'SDSS_{self.SDSS_name}_signal',
                            f'coord{self.coords}',
@@ -97,6 +160,15 @@ class MapperSDSS(MapperBase):
         return self.signal_map
 
     def _get_mask(self):
+        """Calculates the mask of the SDSS \
+        data sets based on their random \
+        catalogs. \
+        Args:
+            None
+        Returns
+            mask (Array)
+        
+        """
         cat_random = self.get_catalog(mod='random')
         w_random = self._get_w(mod='random')
         alpha = self._get_alpha()
@@ -110,6 +182,18 @@ class MapperSDSS(MapperBase):
         return mask
 
     def _get_nl_coupled(self):
+        """Calculates the noise power spectrum \
+        for SDSS mappers. If the chosen resolution \
+        is below a 4096, the random catalog is used \
+        to compute the noise power spectrum. Otherwise, \
+        the high multipole tail of the signal power \
+        spectrum is used to estimate the noise power spectrum. \
+        
+        Args:
+            None
+        Returns:
+            nl (Array)
+        """
         if self.nside < self.nside_nl_threshold:
             print('calculing nl from weights')
             cat_data = self.get_catalog(mod='data')
@@ -139,6 +223,16 @@ class MapperSDSS(MapperBase):
         return {'nls': nl_coupled}
 
     def get_nl_coupled(self):
+        """Checks if mapper has already computed \
+        the noise power spectrum. If so, loads it from \
+        a the save file. Otherwise, it calls "_get_nl_coupled()" \
+        to compute it. \
+        
+        Args:
+            None
+        Returns:
+            nl (Array)
+        """
         if self.nl_coupled is None:
             fn = '_'.join([f'SDSS_{self.SDSS_name}_Nell',
                            f'coord{self.coords}',
@@ -149,11 +243,35 @@ class MapperSDSS(MapperBase):
         return self.nl_coupled
 
     def _bin_z(self, cat):
+        """Removes all but the catalog sources \
+        inside the chosen redshift bin. \
+    
+        Args:
+            catalog (Array)
+        Returns:
+            catalog (Array)
+        """
         return cat[(cat['Z'] >= self.z_edges[0]) &
                    (cat['Z'] < self.z_edges[1])]
 
     def get_dtype(self):
+        """
+        Returns the type of the mapper. \
+        
+        Args:
+            None
+        Returns:
+            mapper_type (String)
+        """
         return 'galaxy_density'
 
     def get_spin(self):
+        """
+        Returns the spin of the mapper. \
+        
+        Args:
+            None
+        Returns:
+            spin (Int)
+        """
         return 0

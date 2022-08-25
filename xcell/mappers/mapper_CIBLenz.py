@@ -5,6 +5,10 @@ from .mapper_P15CIB import MapperP15CIB
 
 
 class MapperCIBLenz(MapperP15CIB):
+    """
+    Mapper for the P15 CIB data set. \
+    Child of Mapperp15CIB. \
+    """
     def __init__(self, config):
         """
         config - dict
@@ -19,6 +23,16 @@ class MapperCIBLenz(MapperP15CIB):
                                       'FWHM_arcmin': 5.0}])
 
     def _get_custom_beam(self, info):
+        """
+        Returns the custom beam of the mapper \
+        given an information dictionary. \
+        
+        Args:
+            info (Dict)
+        Returns:
+            beam (Array)
+        
+        """
         fname = info['file']
         field = info['field']
         windowfuncs = pd.read_csv(fname, comment='#')

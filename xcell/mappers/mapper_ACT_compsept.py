@@ -8,7 +8,7 @@ from scipy.interpolate import interp1d
 class MapperACTCompSept(MapperACTBase):
     """
     Base mapper class for the ACT \
-    component separated data sets. \
+    component separated mappers. \
     """
     def __init__(self, config):
         """
