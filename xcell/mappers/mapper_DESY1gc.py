@@ -7,6 +7,9 @@ import healpy as hp
 
 
 class MapperDESY1gc(MapperBase):
+    """
+    Mapper of the DESY1 clustering data set. \
+    """
     def __init__(self, config):
         """
         Data source:
@@ -38,23 +41,57 @@ class MapperDESY1gc(MapperBase):
         self.nl_coupled = None
 
     def get_catalog(self):
+        """
+        Returns the mapper's binned catalog. \
+        Args:
+            None
+        Returns:
+            catalog (Array)
+        """
         if self.cat_data is None:
             self.cat_data = Table.read(self.config['data_catalog'])
             self.cat_data = self._bin_z(self.cat_data)
         return self.cat_data
 
     def _bin_z(self, cat):
+        """Removes all but the catalog sources \
+        inside the chosen redshift bin. \
+    
+        Args:
+            catalog (Array)
+        Returns:
+            catalog (Array)
+        """
         z_key = 'ZREDMAGIC'
         return cat[(cat[z_key] >= self.z_edges[0]) &
                    (cat[z_key] < self.z_edges[1])]
 
     def _get_w(self):
+        """
+        Returns the weights for the sources of \
+        the mapper's catalog. \
+        
+        Args:
+            None
+        Returns:
+            w (Array)
+        
+        """
         if self.w is None:
             cat_data = self.get_catalog()
             self.w = np.array(cat_data['weight'])
         return self.w
 
     def _get_mask(self):
+        """
+        Returns the mapper's mask after applying. \
+        the mapper's threshold. \
+        
+        Args:
+            None
+        Returns:
+            mask (Array)
+        """
         mask = hp.read_map(self.config['file_mask'])
         mask = rotate_mask(mask, self.rot)
         mask = hp.ud_grade(mask, nside_out=self.nside)
@@ -64,6 +101,16 @@ class MapperDESY1gc(MapperBase):
         return mask
 
     def get_nz(self, dz=0):
+        """Returns the mappers redshift \
+        distribtuion of sources from a file. \
+        
+        Args:
+            None
+        Kwargs:
+            dz=0
+        Returns:
+            [z, nz] (Array)
+        """
         if self.dndz is None:
             f = fits.open(self.config['file_nz'])[7].data
             self.dndz = {'z_mid': f['Z_MID'],
@@ -71,6 +118,14 @@ class MapperDESY1gc(MapperBase):
         return self._get_shifted_nz(dz)
 
     def get_signal_map(self):
+        """
+        Returns the masked signal map. \
+
+        Args:
+            None
+        Returns:
+            signal_map (Array)
+        """
         if self.delta_map is None:
             mask = self.get_mask()
             cat_data = self.get_catalog()
@@ -85,6 +140,14 @@ class MapperDESY1gc(MapperBase):
         return [self.delta_map]
 
     def get_nl_coupled(self):
+        """
+        Returns the coupled noise power spectrum \
+        of the mapper's data set. \
+        Args:
+            None
+        Returns:
+            nl_coupled (Array)
+        """
         if self.nl_coupled is None:
             cat_data = self.get_catalog()
             w = self._get_w()
@@ -102,7 +165,21 @@ class MapperDESY1gc(MapperBase):
         return self.nl_coupled
 
     def get_dtype(self):
+        """Returns the type of the mapper. \
+        
+        Args:
+            None
+        Returns:
+            mapper_type (String)
+        """
         return 'galaxy_density'
 
     def get_spin(self):
+        """Returns the spin of the mapper. \
+        
+        Args:
+            None
+        Returns:
+            spin (Int)
+        """
         return 0
