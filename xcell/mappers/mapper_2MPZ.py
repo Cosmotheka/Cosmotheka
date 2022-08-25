@@ -7,6 +7,9 @@ import os
 
 
 class Mapper2MPZ(MapperBase):
+    """
+    Mapper for the 2MPZ data set.
+    """
     def __init__(self, config):
         """
         config - dict
@@ -160,7 +163,7 @@ class Mapper2MPZ(MapperBase):
 
     def get_signal_map(self, apply_galactic_correction=True):
         """
-        Returns the signal map of the mappper.
+        Returns the signal map of the mappper. \
         
         Args:
             None

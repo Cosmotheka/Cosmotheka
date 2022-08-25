@@ -2,6 +2,10 @@ from .mapper_ACT_compsept import MapperACTCompSept
 
 
 class MapperACTCMB(MapperACTCompSept):
+    """
+    Mapper for the ACT CMB data set. \
+    Child class of "MapperACTCompSept". \
+    """
     def __init__(self, config):
         """
         config - dict
@@ -16,7 +20,23 @@ class MapperACTCMB(MapperACTCompSept):
         self._get_ACT_defaults(config)
 
     def get_dtype(self):
+        """
+        Returns the type of the mapper. \
+        
+        Args:
+            None
+        Returns:
+            mapper_type (String)
+        """
         return 'cmb_kSZ'
 
     def get_spin(self):
+        """
+        Returns the spin of the mapper. \
+        
+        Args:
+            None
+        Returns:
+            spin (Int)
+        """
         return 0

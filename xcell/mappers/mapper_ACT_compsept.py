@@ -6,6 +6,10 @@ from scipy.interpolate import interp1d
 
 
 class MapperACTCompSept(MapperACTBase):
+    """
+    Base mapper class for the ACT \
+    component separated data sets. \
+    """
     def __init__(self, config):
         """
         config - dict
@@ -20,6 +24,15 @@ class MapperACTCompSept(MapperACTBase):
         self._get_ACT_defaults(config)
 
     def _get_signal_map(self):
+        """
+        Returns the signal map of the mappper.
+        
+        Args:
+            None
+        Returns:
+            delta_map (Array)
+        
+        """
         if self.signal_map is None:
             # The 'Weights' FITS file contains the 2D Fourier space
             # weight for each pixel corresponding to the detector array.
@@ -31,6 +44,15 @@ class MapperACTCompSept(MapperACTBase):
         return signal_map
 
     def _get_mask(self):
+        """
+        Returns the mask of the mappper.
+        
+        Args:
+            None
+        Returns:
+            mask (Array)
+        
+        """
         # It [The mask] has already been applied to the map.
         # If you are doing a real-space analysis, you should
         # exclude any pixels where the value in the mask is
@@ -49,6 +71,16 @@ class MapperACTCompSept(MapperACTBase):
         raise NotImplementedError("No noise model for the ACT maps")
 
     def _get_custom_beam(self, info):
+         """
+        Returns the custom beam of the mapper \
+        given an information dictionary. \
+        
+        Args:
+            info (Dict)
+        Returns:
+            beam (Array)
+        
+        """
         fname = info['file']
         beam_file = np.transpose(np.loadtxt(fname))
         ells = beam_file[0]

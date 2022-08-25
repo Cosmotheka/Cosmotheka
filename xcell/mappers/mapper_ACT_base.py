@@ -3,6 +3,9 @@ from pixell import enmap
 
 
 class MapperACTBase(MapperBase):
+    """ Base ACT mapper class used as foundation \
+     for the rest of ACT mappers. 
+     """
     def __init__(self, config):
         self._get_ACT_defaults(config)
 
@@ -18,6 +21,21 @@ class MapperACTBase(MapperBase):
         self.nl_coupled = None
 
     def get_signal_map(self):
+        """
+        Returns the signal map of the children \
+        mapppers of the base class. \
+        If children mappers have already calculated \
+        the signal mapper, the function loads it \
+        from a file. \
+        Otherwise, each mapper's "_get_signal_map()" \
+        is used to calculate it. \
+        
+        Args:
+            None
+        Returns:
+            delta_map (Array)
+        
+        """
         if self.signal_map is None:
             fn = '_'.join([f'ACT_{self.map_name}_signal',
                            f'coord{self.coords}',
@@ -27,6 +45,16 @@ class MapperACTBase(MapperBase):
         return self.signal_map
 
     def _get_pixell_mask(self):
+        """
+        Returns the mask of the mapper \
+        in pixell format.
+        
+        Args:
+            None
+        Returns
+            pixel_mask (Array)
+        
+        """
         if self.pixell_mask is None:
             self.pixell_mask = enmap.read_map(self.file_mask)
         return self.pixell_mask
