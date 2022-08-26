@@ -4,6 +4,9 @@ import healpy as hp
 
 
 class MapperP18SMICA(MapperPlanckBase):
+    """
+    Mapper for the Planck 18 SMICA component separated CMB map.
+    """
     def __init__(self, config):
         """
         config - dict
@@ -26,6 +29,16 @@ class MapperP18SMICA(MapperPlanckBase):
                               '0.99': 7}
 
     def _get_hm_maps(self):
+        """
+        Returns the half mission maps of the mapper \
+        after applying the \
+        neccesary coordinate rotations. \
+        Args:
+            None
+        Returns:
+            hm1_map (Array)
+            hm2_map (Array) 
+        """
         if self.hm1_map is None:
             hm1_map = hp.read_map(self.file_hm1)
             hm1_map = rotate_map(hm1_map, self.rot)
@@ -39,4 +52,12 @@ class MapperP18SMICA(MapperPlanckBase):
         return self.hm1_map, self.hm2_map
 
     def get_dtype(self):
+        """
+        Returns the type of the mapper. \
+        
+        Args:
+            None
+        Returns:
+            mapper_type (String)
+        """
         return 'cmb_temperature'

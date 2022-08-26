@@ -35,6 +35,16 @@ class MapperP15CIB(MapperPlanckBase):
                               '857': 5}
 
     def _get_hm_maps(self):
+        """
+        Returns the half mission maps of the mapper \
+        after masking NaN values and applying the \
+        neccesary coordinate rotations. \
+        Args:
+            None
+        Returns:
+            hm1_map (Array)
+            hm2_map (Array) 
+        """
         if self.hm1_map is None:
             hm1_map = hp.read_map(self.file_hm1)
             hm1_map[hm1_map == hp.UNSEEN] = 0.0
@@ -53,4 +63,12 @@ class MapperP15CIB(MapperPlanckBase):
         return self.hm1_map, self.hm2_map
 
     def get_dtype(self):
+        """
+        Returns the type of the mapper. \
+        
+        Args:
+            None
+        Returns:
+            mapper_type (String)
+        """
         return 'generic'

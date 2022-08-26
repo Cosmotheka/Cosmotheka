@@ -4,6 +4,9 @@ import healpy as hp
 
 
 class MapperP15tSZ(MapperPlanckBase):
+    """
+    Mapper for the Planck 15 thermal Suyaev-Zeldovich data set. 
+    """
     def __init__(self, config):
         """
         config - dict
@@ -28,6 +31,16 @@ class MapperP15tSZ(MapperPlanckBase):
                               'default': 4}
 
     def _get_hm_maps(self):
+        """
+        Returns the half mission maps of the mapper \
+        after applying the \
+        neccesary coordinate rotations. \
+        Args:
+            None
+        Returns:
+            hm1_map (Array)
+            hm2_map (Array) 
+        """
         if self.hm1_map is None:
             hm1_map = hp.read_map(self.file_hm1, 1)
             hm1_map = rotate_map(hm1_map, self.rot)
@@ -41,4 +54,12 @@ class MapperP15tSZ(MapperPlanckBase):
         return self.hm1_map, self.hm2_map
 
     def get_dtype(self):
+        """
+        Returns the type of the mapper. \
+        
+        Args:
+            None
+        Returns:
+            mapper_type (String)
+        """
         return 'cmb_tSZ'
