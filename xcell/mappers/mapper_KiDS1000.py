@@ -177,6 +177,17 @@ class MapperKiDS1000(MapperBase):
         cat[self.e2_flag][sel_gals] /= 1 + self.m[zbin]
 
     def _get_gals_or_stars(self, kind='galaxies'):
+        """
+        Returns the sources of the catalog \
+        corresponding to the chosen kind \
+        of source ('galaxies' or 'stars'). \
+        Args:
+            None
+        Kwargs:
+            kind='galaxies'
+        Returns:
+            cat (Array)
+        """
         cat_data = self.get_catalog()
         sel = cat_data['SG_FLAG'] == self.sel[kind]
         return cat_data[sel]
