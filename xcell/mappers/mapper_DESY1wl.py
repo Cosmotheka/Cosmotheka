@@ -6,6 +6,9 @@ import healpy as hp
 
 
 class MapperDESY1wl(MapperBase):
+    """
+    Mapper of the DESY1 weak lensing data set.
+    """
     def __init__(self, config):
         """
         Data source:
@@ -40,6 +43,15 @@ class MapperDESY1wl(MapperBase):
         self.nls = {'PSF': None, 'shear': None}
 
     def get_catalog(self):
+        """
+        Returns the chosen redshift bin of the \
+        mappers catalog after removing the \
+        additive and multiplicative bias. \
+        Args:
+            None
+        Returns:
+            cat_data (Array)
+        """
         if self.cat_data is None:
             # load cat
             self.cat_data = self._load_catalog()
@@ -54,6 +66,16 @@ class MapperDESY1wl(MapperBase):
         return self.cat_data
 
     def _load_catalog_from_raw(self):
+        """
+        Loads the raw DESY1 catalog and \
+        produces a lite version only with the \
+        columns of interest and after applying \
+        a -90 < DEC < 35 filter.
+        Args:
+            None
+        Returns:
+            cat (Array)
+        """
         # Read catalogs
         # Columns explained in
         #
@@ -91,12 +113,31 @@ class MapperDESY1wl(MapperBase):
         return cat.as_array()
 
     def _load_catalog(self):
+        """
+        Loads the lite DESY1 catalog.
+        Args:
+            None
+        Returns:
+            cat (Table)
+        """
         fn = f'DESY1wl_catalog_rerun_bin{self.zbin}.fits'
         cat = self._rerun_read_cycle(fn, 'FITSTable',
                                      self._load_catalog_from_raw)
         return Table(cat)
 
     def _set_mode(self, mode=None):
+        """
+        Given the chose mapper mode ('shear' or 'PSF'), \
+        it returns the corresponding name of the \
+        ellipticity fields in the catalog. \
+        
+        Args:
+            None
+        Kwargs:
+            mode=None
+        Returns:
+            e1_flag (String), e2_flag (String), mode (String)
+        """
         if mode is None:
             mode = self.mode
 
@@ -111,6 +152,14 @@ class MapperDESY1wl(MapperBase):
         return e1_flag, e2_flag, mode
 
     def _get_Rs(self):
+        """
+        Computes the R factor used to calculate \
+        the multiplicative bias of the maps. \
+        Args:
+            None
+        Returns:
+            R (Float)
+        """
         if self.Rs is None:
             data_1p = self.cat_data[self.cat_data['zbin_mcal_1p'] == self.zbin]
             data_1m = self.cat_data[self.cat_data['zbin_mcal_1m'] == self.zbin]
@@ -133,11 +182,25 @@ class MapperDESY1wl(MapperBase):
         return self.Rs
 
     def _remove_additive_bias(self):
+        """
+        Removes the additive bias from the ellipticity maps. \
+        Args:
+            None
+        Returns:
+            None
+        """
         self.cat_data['e1'] -= np.mean(self.cat_data['e1'])
         self.cat_data['e2'] -= np.mean(self.cat_data['e2'])
         return
 
     def _remove_multiplicative_bias(self):
+        """
+        Removes the multiplicative bias from the ellipticity maps. \
+        Args:
+            None
+        Returns:
+            None
+        """
         # Should be done only with galaxies truly in zbin
         Rg = np.array([[np.mean(self.cat_data['R11']),
                         np.mean(self.cat_data['R12'])],
@@ -151,6 +214,16 @@ class MapperDESY1wl(MapperBase):
         return
 
     def _get_ellipticity_maps(self, mode=None):
+        """
+        Returns the ellipticity maps of the \
+        chose mode ('shear' or 'PSF').
+        Args:
+            None
+        Kwargs:
+            mode=None
+        Returns:
+            we1 (Array), we2 (Array)
+        """
         e1f, e2f, mod = self._set_mode(mode)
         print('Computing bin{} signal map'.format(self.zbin))
         cat_data = self.get_catalog()
@@ -166,6 +239,14 @@ class MapperDESY1wl(MapperBase):
         return we1, we2
 
     def get_signal_map(self, mode=None):
+        """
+        Returns the masked signal map. \
+
+        Args:
+            None
+        Returns:
+            signal_map (Array)
+        """
         e1f, e2f, mod = self._set_mode(mode)
         if self.maps[mod] is not None:
             self.signal_map = self.maps[mod]
@@ -185,6 +266,16 @@ class MapperDESY1wl(MapperBase):
         return self.signal_map
 
     def get_nz(self, dz=0):
+        """Returns the mappers redshift \
+        distribtuion of sources from a file. \
+        
+        Args:
+            None
+        Kwargs:
+            dz=0
+        Returns:
+            [z, nz] (Array)
+        """
         if self.dndz is None:
             f = Table.read(self.config['file_nz'], format='fits',
                            hdu=1)['Z_MID', 'BIN{}'.format(self.zbin + 1)]
@@ -193,6 +284,15 @@ class MapperDESY1wl(MapperBase):
         return self._get_shifted_nz(dz)
 
     def _get_mask(self):
+        """
+        Returns the mapper's mask after applying. \
+        the mapper's threshold. \
+        
+        Args:
+            None
+        Returns:
+            mask (Array)
+        """
         cat_data = self.get_catalog()
         msk = get_map_from_points(cat_data, self.nside,
                                   ra_name='ra', dec_name='dec',
@@ -200,6 +300,14 @@ class MapperDESY1wl(MapperBase):
         return msk
 
     def get_nl_coupled(self, mode=None):
+        """
+        Returns the coupled noise power spectrum \
+        of the mapper's data set. \
+        Args:
+            None
+        Returns:
+            nl_coupled (Array)
+        """
         e1f, e2f, mod = self._set_mode(mode)
         if self.nls[mod] is not None:
             self.nl_coupled = self.nls[mod]
@@ -229,7 +337,21 @@ class MapperDESY1wl(MapperBase):
         return self.nl_coupled
 
     def get_dtype(self):
+        """Returns the type of the mapper. \
+        
+        Args:
+            None
+        Returns:
+            mapper_type (String)
+        """
         return 'galaxy_shear'
 
     def get_spin(self):
+        """Returns the spin of the mapper. \
+        
+        Args:
+            None
+        Returns:
+            spin (Int)
+        """
         return 2
