@@ -6,6 +6,9 @@ import healpy as hp
 
 
 class MapperNVSS(MapperBase):
+    """
+    Mapper for the NVSS data set. 
+    """
     def __init__(self, config):
         """
         config - dict
@@ -29,6 +32,14 @@ class MapperNVSS(MapperBase):
         self.cat_redshift = None
 
     def get_catalog(self):
+        """
+        Returns the mapper's catalog of sources \
+        (RA & DEC) after applying flux filters. \
+        Args:
+            None
+        Returns:
+            cat_data (Array)
+        """
         if self.cat_data is None:
             file_data = self.config['data_catalog']
             self.cat_data = Table.read(file_data)
@@ -51,6 +62,14 @@ class MapperNVSS(MapperBase):
         return self.cat_data
 
     def get_catalog_redshift(self):
+        """
+        Returns the mapper's catalog of redshifts \
+        after applying flux filters. \
+        Args:
+            None
+        Returns:
+            cat_redshift (Array)
+        """
         if self.cat_redshift is None:
             file_data = self.config['redshift_catalog']
             self.cat_redshift = Table.read(file_data)
@@ -65,6 +84,18 @@ class MapperNVSS(MapperBase):
         return self.cat_redshift
 
     def get_signal_map(self, apply_galactic_correction=True):
+        """
+        Returns the mapper's signal map. \
+        If 'apply_galactic_correction = True' \
+        it applies the galactic correction to \
+        the signal map. \
+        Args:
+            None
+        Kwargs:
+            apply_galactic_correcting = True
+        Returns:
+            signal_map (Array)
+        """
         if self.delta_map is None:
             d = np.zeros(self.npix)
             self.cat_data = self.get_catalog()
@@ -81,6 +112,13 @@ class MapperNVSS(MapperBase):
         return self.delta_map
 
     def _get_mask(self):
+        """
+        Returns the mapper's mask. \
+        Args:
+            None
+        Returns:
+            mask (Array)
+        """
         if self.config.get('mask_file', None) is not None:
             mask = hp.read_map(self.config['mask_file'])
             mask = hp.ud_grade(rotate_mask(mask, self.rot),
@@ -110,6 +148,14 @@ class MapperNVSS(MapperBase):
         return mask
 
     def get_nl_coupled(self):
+        """
+        Returns the mapper's coupled noise \
+        noise power spectrum. \
+        Args:
+            None
+        Returns:
+            nl_coupled (Array)
+        """
         if self.nl_coupled is None:
             self.cat_data = self.get_catalog()
             self.mask = self.get_mask()
@@ -124,6 +170,18 @@ class MapperNVSS(MapperBase):
         return self.nl_coupled
 
     def get_nz(self, dz=0):
+        """
+        Loads the redshift distribution catalog. \
+        Then, it shifts the distribution by "dz" (default dz=0). \
+        Finally, it returns the redshift distribtuion. \
+        
+        Args:
+            None
+        Kwargs:
+            dz=0
+        Returns:
+            [z, nz] (Array)
+        """
         if self.dndz is None:
             self.cat_redshift = self.get_catalog_redshift()
             bins = np.arange(0, max(self.cat_redshift['redshift'])+0.1, 0.1)
@@ -133,7 +191,23 @@ class MapperNVSS(MapperBase):
         return self._get_shifted_nz(dz)
 
     def get_dtype(self):
+        """
+        Returns the type of the mapper. \
+        
+        Args:
+            None
+        Returns:
+            mapper_type (String)
+        """
         return 'galaxy_density'
 
     def get_spin(self):
+        """
+        Returns the spin of the mapper. \
+        
+        Args:
+            None
+        Returns:
+            spin (Int)
+        """
         return 0

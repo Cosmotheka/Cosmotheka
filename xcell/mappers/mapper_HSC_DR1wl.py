@@ -7,6 +7,9 @@ import healpy as hp
 
 
 class MapperHSCDR1wl(MapperBase):
+    """
+    Mapper for the HSC DR1 weak lensing data set.
+    """
     def __init__(self, config):
         """ Inputs:
         {'depth_cut': i-band magnitude cut (24.5)
@@ -34,6 +37,17 @@ class MapperHSCDR1wl(MapperBase):
         self.signal_map = None
 
     def _get_catalog_from_raw(self):
+        """
+        Loads the mappper raw catalog, cleans it,\
+        applies shear cuts, removes all but the \
+        chosen redshift bin and calibrates \
+        elipticities. \
+        Finally, it returns the processed catalog. \
+        Args:
+            None
+        Retunrs
+            cat (Array)
+        """
         cats = []
         for f in self.config['data_catalogs']:
             cat = self._clean_raw_catalog(f)
@@ -84,6 +98,15 @@ class MapperHSCDR1wl(MapperBase):
         return vstack(cats).as_array()
 
     def get_catalog(self):
+        """
+        If lite catalog exists, loads it from save file. \
+        Otherwise, it uses '_get_catalog_from_raw' \
+        to produce a lite catalog. \
+        Args:
+            None
+        Returns:
+            cat (Array)
+        """
         if self.cat is None:
             fn = f'HSCDR1wl_{self.bn}.fits'
             self.cat = self._rerun_read_cycle(fn, 'FITSTable',
@@ -91,6 +114,13 @@ class MapperHSCDR1wl(MapperBase):
         return self.cat
 
     def _clean_raw_catalog(self, fnames):
+        """
+        Cleans the raw HSC DR1 catalog. \
+        Args:
+            fnames (Array(String))
+        Returns:
+            cat (Array)
+        """
         cats = []
         for fname in fnames:
             if not os.path.isfile(fname):
@@ -154,6 +184,13 @@ class MapperHSCDR1wl(MapperBase):
         return vstack(cats)
 
     def _get_ellip_maps(self):
+        """
+        Returns the ellipticity fields of the mapper's catalog.\
+        Args:
+            None
+        Returns:
+            we1 (Array), we2 (Array)
+        """
         print(f'Computing bin {self.bn} signal map')
         cat = self.get_catalog()
         we1, we2 = get_map_from_points(cat, self.nside,
@@ -169,6 +206,13 @@ class MapperHSCDR1wl(MapperBase):
         return we1, we2
 
     def get_signal_map(self):
+        """
+        Returns the mapper's signal map. \
+        Args:
+            None
+        Returns:
+            signal_map (Array)
+        """
         if self.signal_map is None:
             fn = '_'.join([f'HSCDR1wl_signal_{self.bn}',
                            f'coord{self.coords}',
@@ -180,6 +224,13 @@ class MapperHSCDR1wl(MapperBase):
         return self.signal_map
 
     def _get_mask(self):
+        """
+        Returns the mapper's mask. \
+        Args:
+            None
+        Returns:
+            signal_map (Array)
+        """
         print(f'Computing bin {self.bn} mask')
         cat = self.get_catalog()
         msk = get_map_from_points(cat, self.nside,
@@ -190,6 +241,14 @@ class MapperHSCDR1wl(MapperBase):
         return msk
 
     def _get_w2s2(self):
+        """
+        Computes map for noise power spectrum \
+        estimation. \
+        Args:
+            None
+        Returns:
+            w2s2_map (Array)
+        """
         print('Computing w2s2 map')
         cat = self.get_catalog()
         w2s2 = get_map_from_points(cat, self.nside,
@@ -200,6 +259,14 @@ class MapperHSCDR1wl(MapperBase):
         return w2s2
 
     def get_nl_coupled(self):
+        """
+        Returns the mapper's coupled noise \
+        noise power spectrum. 
+        Args:
+            None
+        Returns:
+            nl_coupled (Array)
+        """
         if self.nl_coupled is not None:
             return self.nl_coupled
 
@@ -240,13 +307,41 @@ class MapperHSCDR1wl(MapperBase):
         return {'z_mid': zm, 'nz': dndz}
 
     def get_nz(self, dz=0):
+        """
+        Checks if mapper has precomputed the redshift \
+        distribution. If not, it uses "_get_nz()" to obtain it. \
+        Then, it shifts the distribution by "dz" (default dz=0). \
+        
+        Args:
+            None
+        Kwargs:
+            dz=0
+        Returns:
+            [z, nz] (Array)
+        """
         if self.dndz is None:
             fname = f'HSCDR1wl_nz_{self.bn}.npz'
             self.dndz = self._rerun_read_cycle(fname, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz)
 
     def get_dtype(self):
+        """
+        Returns the type of the mapper. \
+        
+        Args:
+            None
+        Returns:
+            mapper_type (String)
+        """
         return 'galaxy_shear'
 
     def get_spin(self):
+        """
+        Returns the spin of the mapper. \
+        
+        Args:
+            None
+        Returns:
+            spin (Int)
+        """
         return 2
