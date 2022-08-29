@@ -3,9 +3,10 @@ from pixell import enmap
 
 
 class MapperACTBase(MapperBase):
-    """ Base ACT mapper class used as foundation \
-     for the rest of ACT mappers. 
-     """
+    """
+    Base ACT mapper class used as foundation \
+    for the rest of ACT mappers.
+    """
     def __init__(self, config):
         self._get_ACT_defaults(config)
 
@@ -29,12 +30,12 @@ class MapperACTBase(MapperBase):
         from a file. \
         Otherwise, each mapper's "_get_signal_map()" \
         is used to calculate it. \
-        
+
         Args:
             None
         Returns:
             delta_map (Array)
-        
+
         """
         if self.signal_map is None:
             fn = '_'.join([f'ACT_{self.map_name}_signal',

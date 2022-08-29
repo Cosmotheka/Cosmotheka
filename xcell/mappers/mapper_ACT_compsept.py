@@ -26,12 +26,12 @@ class MapperACTCompSept(MapperACTBase):
     def _get_signal_map(self):
         """
         Returns the signal map of the mappper.
-        
+
         Args:
             None
         Returns:
             delta_map (Array)
-        
+
         """
         if self.signal_map is None:
             # The 'Weights' FITS file contains the 2D Fourier space
@@ -46,12 +46,12 @@ class MapperACTCompSept(MapperACTBase):
     def _get_mask(self):
         """
         Returns the mask of the mappper.
-        
+
         Args:
             None
         Returns:
             mask (Array)
-        
+
         """
         # It [The mask] has already been applied to the map.
         # If you are doing a real-space analysis, you should
@@ -71,15 +71,15 @@ class MapperACTCompSept(MapperACTBase):
         raise NotImplementedError("No noise model for the ACT maps")
 
     def _get_custom_beam(self, info):
-         """
+        """
         Returns the custom beam of the mapper \
         given an information dictionary. \
-        
+
         Args:
             info (Dict)
         Returns:
             beam (Array)
-        
+
         """
         fname = info['file']
         beam_file = np.transpose(np.loadtxt(fname))

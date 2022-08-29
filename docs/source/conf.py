@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('../xcell/mappers/'))
 
 project = 'COSMOTECA'
 copyright = '2022, Jaime'
-author = 'Jaime'
+author = 'Oxford Spanish mafia'
 
 
 # -- General configuration ---------------------------------------------------

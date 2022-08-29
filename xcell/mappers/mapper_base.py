@@ -7,7 +7,7 @@ from .utils import get_rerun_data, save_rerun_data
 
 class MapperBase(object):
      """ Base mapper class used as foundation \
-     for the rest of mappers. 
+     for the rest of mappers.
      """
     def __init__(self, config):
         self._get_defaults(config)
@@ -46,12 +46,11 @@ class MapperBase(object):
         loaded from the file. \
         Otherwise, the map is calculated using the \
         the prescription of each mapper. \
-    
         Args:
             None
 
         Returns:
-            mask (Array): mapper's mask 
+            mask (Array): mapper's mask
         """
         if self.mask is None:
             fn = '_'.join([f'mask_{self.mask_name}',
@@ -99,7 +98,7 @@ class MapperBase(object):
                 None
 
             Returns:
-                ells (Array): multipoles array.  
+                ells (Array): multipoles array.
         """
         return np.arange(3 * self.nside)
 
@@ -111,7 +110,7 @@ class MapperBase(object):
             multipole. The beam is calculated following the \
             information contained in "self.beam_info". \
             Currently three types of beam are implemented: \
-                a) Gaussian: a Gaussian beam defined by a FWHM \ 
+                a) Gaussian: a Gaussian beam defined by a FWHM \
                    in arcmin.
                 b) PixWin: the pixel window function associated \
                    resolution down/up-scalings.
@@ -124,7 +123,7 @@ class MapperBase(object):
                 None
 
             Returns:
-                beam (Array): value of the beam at each multipole.  
+                beam (Array): value of the beam at each multipole.
         """
         if self.beam is not None:
             return self.beam
@@ -168,8 +167,8 @@ class MapperBase(object):
                             templates=cont, n_iter=n_iter)
 
     def get_nmt_field(self, **kwargs):
-        """Returns an instance of Namaster field given a mapper's \ 
-           signal map, mask and beam. 
+        """Returns an instance of Namaster field given a mapper's \
+           signal map, mask and beam.
 
             Args:
                 None
