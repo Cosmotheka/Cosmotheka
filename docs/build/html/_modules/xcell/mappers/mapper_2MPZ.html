@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>xcell.mappers.mapper_2MPZ &mdash; xCell  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> xCell
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../help.html">Help</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../xcell.html">Python API documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">xCell</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>xcell.mappers.mapper_2MPZ</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for xcell.mappers.mapper_2MPZ</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">.mapper_base</span> <span class="kn">import</span> <span class="n">MapperBase</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">get_map_from_points</span><span class="p">,</span> <span class="n">get_DIR_Nz</span>
+<span class="kn">import</span> <span class="nn">fitsio</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">healpy</span> <span class="k">as</span> <span class="nn">hp</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+
+<div class="viewcode-block" id="Mapper2MPZ"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ">[docs]</a><span class="k">class</span> <span class="nc">Mapper2MPZ</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Mapper for the 2MPZ data set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        config - dict</span>
+<span class="sd">          {&#39;data_catalog&#39;: &#39;Legacy_Survey_BASS-MZLS_galaxies-selection.fits&#39;,</span>
+<span class="sd">           &#39;mask&#39;: &#39;mask.fits&#39;,</span>
+<span class="sd">           &#39;z_edges&#39;: [0, 0.5],</span>
+<span class="sd">           &#39;n_jk_dir&#39;: 100,</span>
+<span class="sd">           &#39;mask_name&#39;: &#39;mask_2MPZ&#39;}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_defaults</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z_edges</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;z_edges&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ra_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dec_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_coords</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">npix</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">nside2npix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">)</span>
+
+        <span class="c1"># Angular mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dndz</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delta_map</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_get_coords</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns mapper&#39;s ra and dec names \</span>
+<span class="sd">        in the mapper&#39;s catalog given the coordinates \</span>
+<span class="sd">        designated in the cofiguration file</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config (Dict): mapper&#39;s configuration file</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ra_name (String), dec_name (String)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span> <span class="o">==</span> <span class="s1">&#39;G&#39;</span><span class="p">:</span>  <span class="c1"># Galactic</span>
+            <span class="k">return</span> <span class="s1">&#39;L&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span>  <span class="c1"># Celestial/Equatorial</span>
+            <span class="k">return</span> <span class="s1">&#39;SUPRA&#39;</span><span class="p">,</span> <span class="s1">&#39;SUPDEC&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown coordinates </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Mapper2MPZ.get_catalog"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the mapper catalog of sources.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            catalog (Array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">file_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;data_catalog&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_data</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">file_data</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span> <span class="o">=</span> <span class="n">fitsio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">file_data</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bin_z</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_catalog</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span></div>
+
+    <span class="k">def</span> <span class="nf">_mask_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cat</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Applies binary mask to catalog</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            catalog (Array)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            catalog (Array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mask</span><span class="p">()</span>
+        <span class="n">ipix</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">ang2pix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span> <span class="n">cat</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ra_name</span><span class="p">],</span>
+                          <span class="n">cat</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dec_name</span><span class="p">],</span> <span class="n">lonlat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># Mask is binary, so 0.1 or 0.00001 doesn&#39;t really matter.</span>
+        <span class="k">return</span> <span class="n">cat</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">[</span><span class="n">ipix</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_bin_z</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cat</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Removes all but the catalog sources \</span>
+<span class="sd">        inside the chosen redshift bin.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            catalog (Array)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            catalog (Array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cat</span><span class="p">[(</span><span class="n">cat</span><span class="p">[</span><span class="s1">&#39;ZPHOTO&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_edges</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span>
+                   <span class="p">(</span><span class="n">cat</span><span class="p">[</span><span class="s1">&#39;ZPHOTO&#39;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+
+    <span class="k">def</span> <span class="nf">_get_specsample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cat</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Selects the spectroscopic samples \</span>
+<span class="sd">        in the catalog</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            catalog (Array)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            catalog (Array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="n">cat</span><span class="p">[</span><span class="s1">&#39;ZSPEC&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">return</span> <span class="n">cat</span><span class="p">[</span><span class="n">ids</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Employs the DIR algorithm to build \</span>
+<span class="sd">        the sources redshift distribution of the \</span>
+<span class="sd">        catalog and returns it in the shape of a \</span>
+<span class="sd">        dictionary containing &quot;z_mid&quot;; the mid redshift \</span>
+<span class="sd">        of the redshift histogram, &quot;nz&quot;; the heights of \</span>
+<span class="sd">        the histogram, and &quot;nz_jk&quot;.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dndz (Dict)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">c_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
+        <span class="n">c_s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_specsample</span><span class="p">(</span><span class="n">c_p</span><span class="p">)</span>
+        <span class="c1"># Sort spec sample by nested pixel index so jackknife</span>
+        <span class="c1"># samples are spatially correlated.</span>
+        <span class="n">ip_s</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">ring2nest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span>
+                            <span class="n">hp</span><span class="o">.</span><span class="n">ang2pix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span>
+                                       <span class="n">c_s</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ra_name</span><span class="p">],</span>
+                                       <span class="n">c_s</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dec_name</span><span class="p">],</span>
+                                       <span class="n">lonlat</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+        <span class="n">idsort</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">ip_s</span><span class="p">)</span>
+        <span class="n">c_s</span> <span class="o">=</span> <span class="n">c_s</span><span class="p">[</span><span class="n">idsort</span><span class="p">]</span>
+        <span class="c1"># Compute DIR N(z)</span>
+        <span class="n">z</span><span class="p">,</span> <span class="n">nz</span><span class="p">,</span> <span class="n">nz_jk</span> <span class="o">=</span> <span class="n">get_DIR_Nz</span><span class="p">(</span><span class="n">c_s</span><span class="p">,</span> <span class="n">c_p</span><span class="p">,</span>
+                                  <span class="p">[</span><span class="s1">&#39;JCORR&#39;</span><span class="p">,</span> <span class="s1">&#39;KCORR&#39;</span><span class="p">,</span> <span class="s1">&#39;HCORR&#39;</span><span class="p">,</span>
+                                   <span class="s1">&#39;W1MCORR&#39;</span><span class="p">,</span> <span class="s1">&#39;W2MCORR&#39;</span><span class="p">,</span>
+                                   <span class="s1">&#39;BCALCORR&#39;</span><span class="p">,</span> <span class="s1">&#39;RCALCORR&#39;</span><span class="p">,</span> <span class="s1">&#39;ICALCORR&#39;</span><span class="p">],</span>
+                                  <span class="n">zflag</span><span class="o">=</span><span class="s1">&#39;ZSPEC&#39;</span><span class="p">,</span>
+                                  <span class="n">zrange</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">],</span>
+                                  <span class="n">nz</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                                  <span class="n">njk</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;n_jk_dir&#39;</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span>
+        <span class="n">zm</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">z</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">z</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;z_mid&#39;</span><span class="p">:</span> <span class="n">zm</span><span class="p">,</span> <span class="s1">&#39;nz&#39;</span><span class="p">:</span> <span class="n">nz</span><span class="p">,</span> <span class="s1">&#39;nz_jk&#39;</span><span class="p">:</span> <span class="n">nz_jk</span><span class="p">}</span>
+
+<div class="viewcode-block" id="Mapper2MPZ.get_nz"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_nz">[docs]</a>    <span class="k">def</span> <span class="nf">get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">return_jk_error</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if mapper has precomputed the redshift \</span>
+<span class="sd">        distribution. If not, it uses &quot;_get_nz()&quot; to obtain it. \</span>
+<span class="sd">        Then, it shifts the distribution by &quot;dz&quot; (default dz=0).</span>
+
+<span class="sd">        Kwargs:</span>
+<span class="sd">            dz=0</span>
+<span class="sd">            return_jk_error=False</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            [z, nz] (Array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dndz</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="s1">&#39;nz_2MPZ.npz&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dndz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rerun_read_cycle</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">&#39;NPZ&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_nz</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shifted_nz</span><span class="p">(</span><span class="n">dz</span><span class="p">,</span> <span class="n">return_jk_error</span><span class="o">=</span><span class="n">return_jk_error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Mapper2MPZ.get_signal_map"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">apply_galactic_correction</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the signal map of the mappper.</span>
+
+<span class="sd">        Kwargs:</span>
+<span class="sd">            apply_galactic_correction=True</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            delta_map (Array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npix</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mask</span><span class="p">()</span>
+            <span class="n">nmap_data</span> <span class="o">=</span> <span class="n">get_map_from_points</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span>
+                                            <span class="n">ra_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ra_name</span><span class="p">,</span>
+                                            <span class="n">dec_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dec_name</span><span class="p">)</span>
+            <span class="n">mean_n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">nmap_data</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span>
+            <span class="n">goodpix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="c1"># Division by mask not really necessary, since it&#39;s binary.</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">goodpix</span><span class="p">]</span> <span class="o">=</span> <span class="n">nmap_data</span><span class="p">[</span><span class="n">goodpix</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">mean_n</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">[</span><span class="n">goodpix</span><span class="p">])</span><span class="o">-</span><span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delta_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">d</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_map</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads the mask of the mappper from a file \</span>
+<span class="sd">        and upgrades it to the chosen resolution.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            mask (Array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># We will assume the mask has been provided in the right</span>
+        <span class="c1"># coordinates, so no further conversion is needed.</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">ud_grade</span><span class="p">(</span><span class="n">hp</span><span class="o">.</span><span class="n">read_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;mask&#39;</span><span class="p">]),</span>
+                           <span class="n">nside_out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mask</span>
+
+<div class="viewcode-block" id="Mapper2MPZ.get_nl_coupled"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the noise power spectrum \</span>
+<span class="sd">        of the mapper&#39;s catalog.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            nl_coupled (Array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mask</span><span class="p">()</span>
+            <span class="n">nmap_data</span> <span class="o">=</span> <span class="n">get_map_from_points</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span>
+                                            <span class="n">ra_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ra_name</span><span class="p">,</span>
+                                            <span class="n">dec_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dec_name</span><span class="p">)</span>
+            <span class="n">N_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">nmap_data</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span>
+            <span class="n">N_mean_srad</span> <span class="o">=</span> <span class="n">N_mean</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">npix</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+            <span class="n">N_ell</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span> <span class="o">/</span> <span class="n">N_mean_srad</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="o">=</span> <span class="n">N_ell</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span></div>
+
+<div class="viewcode-block" id="Mapper2MPZ.get_dtype"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the type of the mapper.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            mapper_type (String)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;galaxy_density&#39;</span></div>
+
+<div class="viewcode-block" id="Mapper2MPZ.get_spin"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the spin of the mapper.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            spin (Int)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">0</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Jaime.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

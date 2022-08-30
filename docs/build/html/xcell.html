@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python API documentation &mdash; xCell  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Help" href="help.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> xCell
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="help.html">Help</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Python API documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">xCell</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Python API documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/xcell.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="python-api-documentation">
+<h1>Python API documentation<a class="headerlink" href="#python-api-documentation" title="Permalink to this heading"></a></h1>
+<dl class="simple">
+<dt><code class="xref py py-mod docutils literal notranslate"><span class="pre">COSMOTECA</span></code> contains the following mappers:</dt><dd><ul class="simple">
+<li><p><a class="reference internal" href="#module-xcell.mappers.mapper_ACTk" title="xcell.mappers.mapper_ACTk"><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_ACTk</span></code></a></p></li>
+<li><p><a class="reference internal" href="#module-xcell.mappers.mapper_ACTtSZ" title="xcell.mappers.mapper_ACTtSZ"><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_ACTtSZ</span></code></a></p></li>
+<li><p><a class="reference internal" href="#module-xcell.mappers.mapper_ACTCMB" title="xcell.mappers.mapper_ACTCMB"><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_ACTCMB</span></code></a></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_DESgc</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_DESwl</span></code></p></li>
+<li><p><a class="reference internal" href="#module-xcell.mappers.mapper_BOSS" title="xcell.mappers.mapper_BOSS"><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_BOSS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#module-xcell.mappers.mapper_eBOSS" title="xcell.mappers.mapper_eBOSS"><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_eBOSS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#module-xcell.mappers.mapper_KV450" title="xcell.mappers.mapper_KV450"><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_KV450</span></code></a></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_KiDS1000</span></code></p></li>
+<li><p><a class="reference internal" href="#module-xcell.mappers.mapper_SPT" title="xcell.mappers.mapper_SPT"><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_SPT</span></code></a></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_P18CMBk</span></code></p></li>
+<li><p><a class="reference internal" href="#module-xcell.mappers.mapper_P15tSZ" title="xcell.mappers.mapper_P15tSZ"><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_P15tSZ</span></code></a></p></li>
+<li><p><a class="reference internal" href="#module-xcell.mappers.mapper_P18SMICA" title="xcell.mappers.mapper_P18SMICA"><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_P18SMICA</span></code></a></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_P15CIB</span></code></p></li>
+<li><p><a class="reference internal" href="#module-xcell.mappers.mapper_CIBLenz" title="xcell.mappers.mapper_CIBLenz"><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_CIBLenz</span></code></a></p></li>
+<li><p><a class="reference internal" href="#module-xcell.mappers.mapper_DELS" title="xcell.mappers.mapper_DELS"><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_DELS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#module-xcell.mappers.mapper_2MPZ" title="xcell.mappers.mapper_2MPZ"><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_2MPZ</span></code></a></p></li>
+<li><p><a class="reference internal" href="#module-xcell.mappers.mapper_WIxSC" title="xcell.mappers.mapper_WIxSC"><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_WIxSC</span></code></a></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_HSCDR1wl</span></code></p></li>
+<li><p><a class="reference internal" href="#module-xcell.mappers.mapper_NVSS" title="xcell.mappers.mapper_NVSS"><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_NVSS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#module-xcell.mappers.mapper_CatWISE" title="xcell.mappers.mapper_CatWISE"><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_CatWISE</span></code></a></p></li>
+<li><p><a class="reference internal" href="#module-xcell.mappers.mapper_ROSAT" title="xcell.mappers.mapper_ROSAT"><code class="xref py py-class docutils literal notranslate"><span class="pre">xcell.mappers.mapper_ROSAT</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+<span class="target" id="module-xcell.mappers.mapper_ACT_compsept"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_ACT_compsept.MapperACTCompSept">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_ACT_compsept.</span></span><span class="sig-name descname"><span class="pre">MapperACTCompSept</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_ACT_compsept.html#MapperACTCompSept"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_ACT_compsept.MapperACTCompSept" title="Permalink to this definition"></a></dt>
+<dd><p>Base mapper class for the ACT     component separated mappers.</p>
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_ACTk"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_ACTk.MapperACTk">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_ACTk.</span></span><span class="sig-name descname"><span class="pre">MapperACTk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_ACTk.html#MapperACTk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_ACTk.MapperACTk" title="Permalink to this definition"></a></dt>
+<dd><p>Mapper for the ACT lensing data set.     Child class of “MapperACTBase”.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_ACTk.MapperACTk.get_dtype">
+<span class="sig-name descname"><span class="pre">get_dtype</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_ACTk.html#MapperACTk.get_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_ACTk.MapperACTk.get_dtype" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the type of the mapper.
+:param None:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>mapper_type (String)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_ACTk.MapperACTk.get_spin">
+<span class="sig-name descname"><span class="pre">get_spin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_ACTk.html#MapperACTk.get_spin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_ACTk.MapperACTk.get_spin" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the spin of the mapper.
+:param None:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>spin (Int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_ACTtSZ"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_ACTtSZ.MapperACTtSZ">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_ACTtSZ.</span></span><span class="sig-name descname"><span class="pre">MapperACTtSZ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_ACTtSZ.html#MapperACTtSZ"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_ACTtSZ.MapperACTtSZ" title="Permalink to this definition"></a></dt>
+<dd><p>Mapper for the ACT CMB data set.     Child class of “MapperACTCompSept”.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_ACTtSZ.MapperACTtSZ.get_dtype">
+<span class="sig-name descname"><span class="pre">get_dtype</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_ACTtSZ.html#MapperACTtSZ.get_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_ACTtSZ.MapperACTtSZ.get_dtype" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the type of the mapper.
+:param None:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>mapper_type (String)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_ACTtSZ.MapperACTtSZ.get_spin">
+<span class="sig-name descname"><span class="pre">get_spin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_ACTtSZ.html#MapperACTtSZ.get_spin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_ACTtSZ.MapperACTtSZ.get_spin" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the spin of the mapper.
+:param None:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>spin (Int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_ACTCMB"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_ACTCMB.MapperACTCMB">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_ACTCMB.</span></span><span class="sig-name descname"><span class="pre">MapperACTCMB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_ACTCMB.html#MapperACTCMB"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_ACTCMB.MapperACTCMB" title="Permalink to this definition"></a></dt>
+<dd><p>Mapper for the ACT CMB data set.     Child class of “MapperACTCompSept”.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_ACTCMB.MapperACTCMB.get_dtype">
+<span class="sig-name descname"><span class="pre">get_dtype</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_ACTCMB.html#MapperACTCMB.get_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_ACTCMB.MapperACTCMB.get_dtype" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the type of the mapper.
+:param None:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>mapper_type (String)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_ACTCMB.MapperACTCMB.get_spin">
+<span class="sig-name descname"><span class="pre">get_spin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_ACTCMB.html#MapperACTCMB.get_spin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_ACTCMB.MapperACTCMB.get_spin" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the spin of the mapper.
+:param None:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>spin (Int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_DESY1gc"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DESY1gc.MapperDESY1gc">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_DESY1gc.</span></span><span class="sig-name descname"><span class="pre">MapperDESY1gc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DESY1gc.html#MapperDESY1gc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DESY1gc.MapperDESY1gc" title="Permalink to this definition"></a></dt>
+<dd><p>Mapper of the DESY1 clustering data set.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DESY1gc.MapperDESY1gc.get_catalog">
+<span class="sig-name descname"><span class="pre">get_catalog</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DESY1gc.html#MapperDESY1gc.get_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DESY1gc.MapperDESY1gc.get_catalog" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the mapper’s binned catalog.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>catalog (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DESY1gc.MapperDESY1gc.get_dtype">
+<span class="sig-name descname"><span class="pre">get_dtype</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DESY1gc.html#MapperDESY1gc.get_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DESY1gc.MapperDESY1gc.get_dtype" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the type of the mapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>mapper_type (String)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DESY1gc.MapperDESY1gc.get_nl_coupled">
+<span class="sig-name descname"><span class="pre">get_nl_coupled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DESY1gc.html#MapperDESY1gc.get_nl_coupled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DESY1gc.MapperDESY1gc.get_nl_coupled" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the coupled noise power spectrum         of the mapper’s data set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>nl_coupled (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DESY1gc.MapperDESY1gc.get_nz">
+<span class="sig-name descname"><span class="pre">get_nz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DESY1gc.html#MapperDESY1gc.get_nz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DESY1gc.MapperDESY1gc.get_nz" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the mappers redshift         distribtuion of sources from a file.</p>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><p>dz=0</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>[z, nz] (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DESY1gc.MapperDESY1gc.get_signal_map">
+<span class="sig-name descname"><span class="pre">get_signal_map</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DESY1gc.html#MapperDESY1gc.get_signal_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DESY1gc.MapperDESY1gc.get_signal_map" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the masked signal map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>signal_map (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DESY1gc.MapperDESY1gc.get_spin">
+<span class="sig-name descname"><span class="pre">get_spin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DESY1gc.html#MapperDESY1gc.get_spin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DESY1gc.MapperDESY1gc.get_spin" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the spin of the mapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>spin (Int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_DESY1wl"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DESY1wl.MapperDESY1wl">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_DESY1wl.</span></span><span class="sig-name descname"><span class="pre">MapperDESY1wl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DESY1wl.html#MapperDESY1wl"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DESY1wl.MapperDESY1wl" title="Permalink to this definition"></a></dt>
+<dd><p>Mapper of the DESY1 weak lensing data set.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_catalog">
+<span class="sig-name descname"><span class="pre">get_catalog</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DESY1wl.html#MapperDESY1wl.get_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_catalog" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the chosen redshift bin of the         mappers catalog after removing the         additive and multiplicative bias.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>cat_data (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_dtype">
+<span class="sig-name descname"><span class="pre">get_dtype</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DESY1wl.html#MapperDESY1wl.get_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_dtype" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the type of the mapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>mapper_type (String)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_nl_coupled">
+<span class="sig-name descname"><span class="pre">get_nl_coupled</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DESY1wl.html#MapperDESY1wl.get_nl_coupled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_nl_coupled" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the coupled noise power spectrum         of the mapper’s data set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>nl_coupled (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_nz">
+<span class="sig-name descname"><span class="pre">get_nz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DESY1wl.html#MapperDESY1wl.get_nz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_nz" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the mappers redshift         distribtuion of sources from a file.</p>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><p>dz=0</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>[z, nz] (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_signal_map">
+<span class="sig-name descname"><span class="pre">get_signal_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DESY1wl.html#MapperDESY1wl.get_signal_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_signal_map" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the masked signal map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>signal_map (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_spin">
+<span class="sig-name descname"><span class="pre">get_spin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DESY1wl.html#MapperDESY1wl.get_spin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_spin" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the spin of the mapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>spin (Int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_BOSS"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_BOSS.MapperBOSS">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_BOSS.</span></span><span class="sig-name descname"><span class="pre">MapperBOSS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_BOSS.html#MapperBOSS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_BOSS.MapperBOSS" title="Permalink to this definition"></a></dt>
+<dd><p>Mapper for the BOSS DR12 data set.     Child class of “MapperSDSS”.</p>
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_eBOSS"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_eBOSS.MappereBOSS">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_eBOSS.</span></span><span class="sig-name descname"><span class="pre">MappereBOSS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_eBOSS.html#MappereBOSS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_eBOSS.MappereBOSS" title="Permalink to this definition"></a></dt>
+<dd><p>Mapper for the eBOSS DR14 data set.     Child class of “MapperSDSS”.</p>
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_KV450"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_KV450.MapperKV450">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_KV450.</span></span><span class="sig-name descname"><span class="pre">MapperKV450</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_KV450.html#MapperKV450"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_KV450.MapperKV450" title="Permalink to this definition"></a></dt>
+<dd><p>Mapper for the KiDS-1000 weak lensing data set.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_KV450.MapperKV450.get_catalog">
+<span class="sig-name descname"><span class="pre">get_catalog</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_KV450.html#MapperKV450.get_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_KV450.MapperKV450.get_catalog" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the chosen redshift bin of the         mappers catalog.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>cat_data (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_KV450.MapperKV450.get_dtype">
+<span class="sig-name descname"><span class="pre">get_dtype</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_KV450.html#MapperKV450.get_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_KV450.MapperKV450.get_dtype" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the type of the mapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>mapper_type (String)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_KV450.MapperKV450.get_nl_coupled">
+<span class="sig-name descname"><span class="pre">get_nl_coupled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_KV450.html#MapperKV450.get_nl_coupled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_KV450.MapperKV450.get_nl_coupled" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the mapper’s coupled noise         noise power spectrum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>nl_coupled (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_KV450.MapperKV450.get_nz">
+<span class="sig-name descname"><span class="pre">get_nz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_KV450.html#MapperKV450.get_nz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_KV450.MapperKV450.get_nz" title="Permalink to this definition"></a></dt>
+<dd><p>Loads the redshift distribution of sources         from the data products.
+Then, it shifts the distribution by “dz” (default dz=0).         Finally, it returns the redshift distribtuion.</p>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><p>dz=0</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>[z, nz] (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_KV450.MapperKV450.get_signal_map">
+<span class="sig-name descname"><span class="pre">get_signal_map</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_KV450.html#MapperKV450.get_signal_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_KV450.MapperKV450.get_signal_map" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the mapper’s signal map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>signal_map (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_KV450.MapperKV450.get_spin">
+<span class="sig-name descname"><span class="pre">get_spin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_KV450.html#MapperKV450.get_spin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_KV450.MapperKV450.get_spin" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the spin of the mapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>spin (Int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_SPT"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_SPT.MapperSPT">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_SPT.</span></span><span class="sig-name descname"><span class="pre">MapperSPT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_SPT.html#MapperSPT"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_SPT.MapperSPT" title="Permalink to this definition"></a></dt>
+<dd><p>Mapper for the SPT CMB data set.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_SPT.MapperSPT.get_dtype">
+<span class="sig-name descname"><span class="pre">get_dtype</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_SPT.html#MapperSPT.get_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_SPT.MapperSPT.get_dtype" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the type of the mapper.
+:param None:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>mapper_type (String)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_P18CMBK"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_P18CMBK.MapperP18CMBK">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_P18CMBK.</span></span><span class="sig-name descname"><span class="pre">MapperP18CMBK</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_P18CMBK.html#MapperP18CMBK"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_P18CMBK.MapperP18CMBK" title="Permalink to this definition"></a></dt>
+<dd><p>Mapper for the Planck 18 convergence map.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_P18CMBK.MapperP18CMBK.get_cl_fiducial">
+<span class="sig-name descname"><span class="pre">get_cl_fiducial</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_P18CMBK.html#MapperP18CMBK.get_cl_fiducial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_P18CMBK.MapperP18CMBK.get_cl_fiducial" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the signal power spectrum         of the mapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>cl_fid (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_P18CMBK.MapperP18CMBK.get_dtype">
+<span class="sig-name descname"><span class="pre">get_dtype</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_P18CMBK.html#MapperP18CMBK.get_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_P18CMBK.MapperP18CMBK.get_dtype" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the type of the mapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>mapper_type (String)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_P18CMBK.MapperP18CMBK.get_nl_coupled">
+<span class="sig-name descname"><span class="pre">get_nl_coupled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_P18CMBK.html#MapperP18CMBK.get_nl_coupled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_P18CMBK.MapperP18CMBK.get_nl_coupled" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the coupled noise power         spectrum of the mapper.         It loads the decoupled noise power spectrum         and then it multiplies it by the mean of the         squared mask to couple it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>nl_coupled (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_P18CMBK.MapperP18CMBK.get_signal_map">
+<span class="sig-name descname"><span class="pre">get_signal_map</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_P18CMBK.html#MapperP18CMBK.get_signal_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_P18CMBK.MapperP18CMBK.get_signal_map" title="Permalink to this definition"></a></dt>
+<dd><p>Returns mapper’s signal map.         If the highest multipole is larger than         the one allowed by the resolution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>signal_map (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_P18CMBK.MapperP18CMBK.get_spin">
+<span class="sig-name descname"><span class="pre">get_spin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_P18CMBK.html#MapperP18CMBK.get_spin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_P18CMBK.MapperP18CMBK.get_spin" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the spin of the mapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>spin (Int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_P15tSZ"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_P15tSZ.MapperP15tSZ">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_P15tSZ.</span></span><span class="sig-name descname"><span class="pre">MapperP15tSZ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_P15tSZ.html#MapperP15tSZ"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_P15tSZ.MapperP15tSZ" title="Permalink to this definition"></a></dt>
+<dd><p>Mapper for the Planck 15 thermal Suyaev-Zeldovich data set.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_P15tSZ.MapperP15tSZ.get_dtype">
+<span class="sig-name descname"><span class="pre">get_dtype</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_P15tSZ.html#MapperP15tSZ.get_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_P15tSZ.MapperP15tSZ.get_dtype" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the type of the mapper.
+:param None:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>mapper_type (String)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_P18SMICA"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_P18SMICA.MapperP18SMICA">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_P18SMICA.</span></span><span class="sig-name descname"><span class="pre">MapperP18SMICA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_P18SMICA.html#MapperP18SMICA"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_P18SMICA.MapperP18SMICA" title="Permalink to this definition"></a></dt>
+<dd><p>Mapper for the Planck 18 SMICA component separated CMB map.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_P18SMICA.MapperP18SMICA.get_dtype">
+<span class="sig-name descname"><span class="pre">get_dtype</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_P18SMICA.html#MapperP18SMICA.get_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_P18SMICA.MapperP18SMICA.get_dtype" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the type of the mapper.
+:param None:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>mapper_type (String)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_CIBLenz"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_CIBLenz.MapperCIBLenz">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_CIBLenz.</span></span><span class="sig-name descname"><span class="pre">MapperCIBLenz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_CIBLenz.html#MapperCIBLenz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_CIBLenz.MapperCIBLenz" title="Permalink to this definition"></a></dt>
+<dd><p>Mapper for the P15 CIB data set.     Child of Mapperp15CIB.</p>
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_DELS"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DELS.MapperDELS">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_DELS.</span></span><span class="sig-name descname"><span class="pre">MapperDELS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DELS.html#MapperDELS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DELS.MapperDELS" title="Permalink to this definition"></a></dt>
+<dd><p>Mapper for the DELS data set.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DELS.MapperDELS.get_catalog">
+<span class="sig-name descname"><span class="pre">get_catalog</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DELS.html#MapperDELS.get_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DELS.MapperDELS.get_catalog" title="Permalink to this definition"></a></dt>
+<dd><p>Checks if the mapper has already         loaded the chosen bin of the catalog.         If so, it loads it from the save file. Otherwise, it cuts the original file         using “_get_catalog()”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>catalog (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DELS.MapperDELS.get_dtype">
+<span class="sig-name descname"><span class="pre">get_dtype</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DELS.html#MapperDELS.get_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DELS.MapperDELS.get_dtype" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the type of the mapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>mapper_type (String)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DELS.MapperDELS.get_nl_coupled">
+<span class="sig-name descname"><span class="pre">get_nl_coupled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DELS.html#MapperDELS.get_nl_coupled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DELS.MapperDELS.get_nl_coupled" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the coupled noise power spectrum         of the  DELS data set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>nl_coupled (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DELS.MapperDELS.get_nz">
+<span class="sig-name descname"><span class="pre">get_nz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DELS.html#MapperDELS.get_nz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DELS.MapperDELS.get_nz" title="Permalink to this definition"></a></dt>
+<dd><p>Checks if mapper has precomputed the redshift         distribution. If not, it uses “_get_nz()” to obtain it.         Then, it shifts the distribution by “dz” (default dz=0).</p>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><p>dz=0</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>[z, nz] (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DELS.MapperDELS.get_signal_map">
+<span class="sig-name descname"><span class="pre">get_signal_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">apply_galactic_correction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DELS.html#MapperDELS.get_signal_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DELS.MapperDELS.get_signal_map" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the masked signal map.         If “apply_galactic_correction” is True         it applies the galactic correction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>signal_map (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_DELS.MapperDELS.get_spin">
+<span class="sig-name descname"><span class="pre">get_spin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_DELS.html#MapperDELS.get_spin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_DELS.MapperDELS.get_spin" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the spin of the mapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>spin (Int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_2MPZ"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_2MPZ.Mapper2MPZ">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_2MPZ.</span></span><span class="sig-name descname"><span class="pre">Mapper2MPZ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_2MPZ.html#Mapper2MPZ"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_2MPZ.Mapper2MPZ" title="Permalink to this definition"></a></dt>
+<dd><p>Mapper for the 2MPZ data set.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_catalog">
+<span class="sig-name descname"><span class="pre">get_catalog</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_2MPZ.html#Mapper2MPZ.get_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_catalog" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the mapper catalog of sources.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>catalog (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_dtype">
+<span class="sig-name descname"><span class="pre">get_dtype</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_2MPZ.html#Mapper2MPZ.get_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_dtype" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the type of the mapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>mapper_type (String)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_nl_coupled">
+<span class="sig-name descname"><span class="pre">get_nl_coupled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_2MPZ.html#Mapper2MPZ.get_nl_coupled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_nl_coupled" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates the noise power spectrum         of the mapper’s catalog.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>nl_coupled (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_nz">
+<span class="sig-name descname"><span class="pre">get_nz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_jk_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_2MPZ.html#Mapper2MPZ.get_nz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_nz" title="Permalink to this definition"></a></dt>
+<dd><p>Checks if mapper has precomputed the redshift         distribution. If not, it uses “_get_nz()” to obtain it.         Then, it shifts the distribution by “dz” (default dz=0).</p>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><p>dz=0
+return_jk_error=False</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>[z, nz] (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_signal_map">
+<span class="sig-name descname"><span class="pre">get_signal_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">apply_galactic_correction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_2MPZ.html#Mapper2MPZ.get_signal_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_signal_map" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the signal map of the mappper.</p>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><p>apply_galactic_correction=True</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>delta_map (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_spin">
+<span class="sig-name descname"><span class="pre">get_spin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_2MPZ.html#Mapper2MPZ.get_spin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_spin" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the spin of the mapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>spin (Int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_WIxSC"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_WIxSC.MapperWIxSC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_WIxSC.</span></span><span class="sig-name descname"><span class="pre">MapperWIxSC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_WIxSC.html#MapperWIxSC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_WIxSC.MapperWIxSC" title="Permalink to this definition"></a></dt>
+<dd><p>Mapper for the WIxSC data set.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_WIxSC.MapperWIxSC.get_catalog">
+<span class="sig-name descname"><span class="pre">get_catalog</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_WIxSC.html#MapperWIxSC.get_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_catalog" title="Permalink to this definition"></a></dt>
+<dd><p>Checks if a processed WIxSC catalog has         already been computed.         If so, loads the save file.         Otherwise, it uses “_get_catalog()” to         compute it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>cat_data (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_WIxSC.MapperWIxSC.get_dtype">
+<span class="sig-name descname"><span class="pre">get_dtype</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_WIxSC.html#MapperWIxSC.get_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_dtype" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the type of the mapper</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>mapper_type (String)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_WIxSC.MapperWIxSC.get_nl_coupled">
+<span class="sig-name descname"><span class="pre">get_nl_coupled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_WIxSC.html#MapperWIxSC.get_nl_coupled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_nl_coupled" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the coupled noise power spectrum of the mapper.         if the resolution is equal or greater than nside&gt;=4096, the         high multipole tail of the signal power spectrum         is used as an estimate for the noise power spectrum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>nl_coupled (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_WIxSC.MapperWIxSC.get_nz">
+<span class="sig-name descname"><span class="pre">get_nz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_jk_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_WIxSC.html#MapperWIxSC.get_nz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_nz" title="Permalink to this definition"></a></dt>
+<dd><p>Checks if mapper has already computed         redshift distribution of sources.         If so, loads it from the save file.         Otherwise, it uses “_get_nz()” to calculate it.         Finally, it shifts it by a given amount         (dz=0 default).</p>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><p>dz=0
+return_jk_error=False</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>[z, nz] (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_WIxSC.MapperWIxSC.get_radec">
+<span class="sig-name descname"><span class="pre">get_radec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cat</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_WIxSC.html#MapperWIxSC.get_radec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_radec" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the RA and DEC fields         of the mapper’s catalog.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>cat</strong> (<em>Array</em>) – catalog</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>ra (Array), dec (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_WIxSC.MapperWIxSC.get_signal_map">
+<span class="sig-name descname"><span class="pre">get_signal_map</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_WIxSC.html#MapperWIxSC.get_signal_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_signal_map" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the signal map of the mapper.         If ‘apply_galactic_correction’ = True,         it applies the galactic correction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>delta_map (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_WIxSC.MapperWIxSC.get_spin">
+<span class="sig-name descname"><span class="pre">get_spin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_WIxSC.html#MapperWIxSC.get_spin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_spin" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the spin of the mapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>spin (Int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_HSC_DR1wl"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_HSC_DR1wl.</span></span><span class="sig-name descname"><span class="pre">MapperHSCDR1wl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_HSC_DR1wl.html#MapperHSCDR1wl"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl" title="Permalink to this definition"></a></dt>
+<dd><p>Mapper for the HSC DR1 weak lensing data set.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_catalog">
+<span class="sig-name descname"><span class="pre">get_catalog</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_HSC_DR1wl.html#MapperHSCDR1wl.get_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_catalog" title="Permalink to this definition"></a></dt>
+<dd><p>If lite catalog exists, loads it from save file.         Otherwise, it uses ‘_get_catalog_from_raw’         to produce a lite catalog.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>cat (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_dtype">
+<span class="sig-name descname"><span class="pre">get_dtype</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_HSC_DR1wl.html#MapperHSCDR1wl.get_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_dtype" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the type of the mapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>mapper_type (String)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_nl_coupled">
+<span class="sig-name descname"><span class="pre">get_nl_coupled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_HSC_DR1wl.html#MapperHSCDR1wl.get_nl_coupled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_nl_coupled" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the mapper’s coupled noise         noise power spectrum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>nl_coupled (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_nz">
+<span class="sig-name descname"><span class="pre">get_nz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_HSC_DR1wl.html#MapperHSCDR1wl.get_nz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_nz" title="Permalink to this definition"></a></dt>
+<dd><p>Checks if mapper has precomputed the redshift         distribution. If not, it uses “_get_nz()” to obtain it.         Then, it shifts the distribution by “dz” (default dz=0).</p>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><p>dz=0</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>[z, nz] (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_signal_map">
+<span class="sig-name descname"><span class="pre">get_signal_map</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_HSC_DR1wl.html#MapperHSCDR1wl.get_signal_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_signal_map" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the mapper’s signal map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>signal_map (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_spin">
+<span class="sig-name descname"><span class="pre">get_spin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_HSC_DR1wl.html#MapperHSCDR1wl.get_spin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_spin" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the spin of the mapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>spin (Int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_NVSS"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_NVSS.MapperNVSS">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_NVSS.</span></span><span class="sig-name descname"><span class="pre">MapperNVSS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_NVSS.html#MapperNVSS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_NVSS.MapperNVSS" title="Permalink to this definition"></a></dt>
+<dd><p>Mapper for the NVSS data set.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_NVSS.MapperNVSS.get_catalog">
+<span class="sig-name descname"><span class="pre">get_catalog</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_NVSS.html#MapperNVSS.get_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_NVSS.MapperNVSS.get_catalog" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the mapper’s catalog of sources         (RA &amp; DEC) after applying flux filters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>cat_data (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_NVSS.MapperNVSS.get_catalog_redshift">
+<span class="sig-name descname"><span class="pre">get_catalog_redshift</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_NVSS.html#MapperNVSS.get_catalog_redshift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_NVSS.MapperNVSS.get_catalog_redshift" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the mapper’s catalog of redshifts         after applying flux filters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>cat_redshift (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_NVSS.MapperNVSS.get_dtype">
+<span class="sig-name descname"><span class="pre">get_dtype</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_NVSS.html#MapperNVSS.get_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_NVSS.MapperNVSS.get_dtype" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the type of the mapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>mapper_type (String)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_NVSS.MapperNVSS.get_nl_coupled">
+<span class="sig-name descname"><span class="pre">get_nl_coupled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_NVSS.html#MapperNVSS.get_nl_coupled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_NVSS.MapperNVSS.get_nl_coupled" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the mapper’s coupled noise         noise power spectrum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>nl_coupled (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_NVSS.MapperNVSS.get_nz">
+<span class="sig-name descname"><span class="pre">get_nz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_NVSS.html#MapperNVSS.get_nz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_NVSS.MapperNVSS.get_nz" title="Permalink to this definition"></a></dt>
+<dd><p>Loads the redshift distribution catalog.         Then, it shifts the distribution by “dz” (default dz=0).         Finally, it returns the redshift distribtuion.</p>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><p>dz=0</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>[z, nz] (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_NVSS.MapperNVSS.get_signal_map">
+<span class="sig-name descname"><span class="pre">get_signal_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">apply_galactic_correction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_NVSS.html#MapperNVSS.get_signal_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_NVSS.MapperNVSS.get_signal_map" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the mapper’s signal map.         If ‘apply_galactic_correction = True’         it applies the galactic correction to         the signal map.</p>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><p>apply_galactic_correcting = True</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>signal_map (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_NVSS.MapperNVSS.get_spin">
+<span class="sig-name descname"><span class="pre">get_spin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_NVSS.html#MapperNVSS.get_spin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_NVSS.MapperNVSS.get_spin" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the spin of the mapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>spin (Int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_CatWISE"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_CatWISE.MapperCatWISE">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_CatWISE.</span></span><span class="sig-name descname"><span class="pre">MapperCatWISE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_CatWISE.html#MapperCatWISE"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_CatWISE.MapperCatWISE" title="Permalink to this definition"></a></dt>
+<dd><p>Mapper for the CatWISE data set.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_CatWISE.MapperCatWISE.get_catalog">
+<span class="sig-name descname"><span class="pre">get_catalog</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_CatWISE.html#MapperCatWISE.get_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_catalog" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the mapper’s catalog.         Applies flux thershold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>catalog (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_CatWISE.MapperCatWISE.get_dtype">
+<span class="sig-name descname"><span class="pre">get_dtype</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_CatWISE.html#MapperCatWISE.get_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_dtype" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the type of the mapper.
+:param None:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>mapper_type (String)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_CatWISE.MapperCatWISE.get_nl_coupled">
+<span class="sig-name descname"><span class="pre">get_nl_coupled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_CatWISE.html#MapperCatWISE.get_nl_coupled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_nl_coupled" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the coupled noise power spectrum         of the mapper’s data set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>nl_coupled (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_CatWISE.MapperCatWISE.get_signal_map">
+<span class="sig-name descname"><span class="pre">get_signal_map</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_CatWISE.html#MapperCatWISE.get_signal_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_signal_map" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the masked signal map.         If “apply_ecliptic_correction” is True         it applies the ecliptic correction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>signal_map (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_CatWISE.MapperCatWISE.get_spin">
+<span class="sig-name descname"><span class="pre">get_spin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_CatWISE.html#MapperCatWISE.get_spin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_spin" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the spin of the mapper.
+:param None:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>spin (Int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-xcell.mappers.mapper_ROSAT"></span><dl class="py class">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_ROSAT.MapperROSATXray">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">xcell.mappers.mapper_ROSAT.</span></span><span class="sig-name descname"><span class="pre">MapperROSATXray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_ROSAT.html#MapperROSATXray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_ROSAT.MapperROSATXray" title="Permalink to this definition"></a></dt>
+<dd><p>Implements X-ray count rate maps from ROSAT.</p>
+<p>A few details so we can document this properly in the future:</p>
+<p>Photon list was obtained from:
+<a class="reference external" href="http://dc.zah.uni-heidelberg.de/tableinfo/rosat.photons">http://dc.zah.uni-heidelberg.de/tableinfo/rosat.photons</a></p>
+<p>Exposure maps were obtained from e.g.:
+<a class="reference external" href="https://heasarc.gsfc.nasa.gov/FTP/rosat/data/">https://heasarc.gsfc.nasa.gov/FTP/rosat/data/</a>    pspc/processed_data/rass/release/rs931844n00/</p>
+<p>The signal map in this case is the count rate density in
+units of counts/second/sr^-1. The model for this would
+need the effective instrument area. For ROSAT this is an
+energy-dependent quantity which includes a transfer function
+for E_true vs. E_channel. These can be found in
+<a class="reference external" href="https://heasarc.gsfc.nasa.gov/docs/rosat/pspc_matrices.html">https://heasarc.gsfc.nasa.gov/docs/rosat/pspc_matrices.html</a>
+but we don’t need them and won’t provide them here.</p>
+<p>The mask is constructed by thresholding the exposure map
+and combining it with any other externa map (e.g. aiming
+to remove Galactic emission).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_ROSAT.MapperROSATXray.get_dtype">
+<span class="sig-name descname"><span class="pre">get_dtype</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_ROSAT.html#MapperROSATXray.get_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_ROSAT.MapperROSATXray.get_dtype" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the type of the mapper.
+:returns: mapper_type (String)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_ROSAT.MapperROSATXray.get_expmap">
+<span class="sig-name descname"><span class="pre">get_expmap</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_ROSAT.html#MapperROSATXray.get_expmap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_ROSAT.MapperROSATXray.get_expmap" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the mapper exposure map.
+:returns: expmap (Array)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_ROSAT.MapperROSATXray.get_nl_coupled">
+<span class="sig-name descname"><span class="pre">get_nl_coupled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_ROSAT.html#MapperROSATXray.get_nl_coupled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_ROSAT.MapperROSATXray.get_nl_coupled" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the mapper’s coupled noise         noise power spectrum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>nl_coupled (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_ROSAT.MapperROSATXray.get_pholist">
+<span class="sig-name descname"><span class="pre">get_pholist</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_ROSAT.html#MapperROSATXray.get_pholist"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_ROSAT.MapperROSATXray.get_pholist" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the mapper’s catalog         after applying energy boundaries.
+:returns: catalog
+:rtype: pholist (Arrays)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_ROSAT.MapperROSATXray.get_signal_map">
+<span class="sig-name descname"><span class="pre">get_signal_map</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_ROSAT.html#MapperROSATXray.get_signal_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_ROSAT.MapperROSATXray.get_signal_map" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the mapper’s signal map.         If ‘apply_galactic_correction = True’         it applies the galactic correction to         the signal map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>signal_map (Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="xcell.mappers.mapper_ROSAT.MapperROSATXray.get_spin">
+<span class="sig-name descname"><span class="pre">get_spin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/xcell/mappers/mapper_ROSAT.html#MapperROSATXray.get_spin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#xcell.mappers.mapper_ROSAT.MapperROSATXray.get_spin" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the spin of the mapper.
+:returns: spin (Int)</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="help.html" class="btn btn-neutral float-left" title="Help" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Jaime.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

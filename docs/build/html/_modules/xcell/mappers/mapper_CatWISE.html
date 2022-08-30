@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>xcell.mappers.mapper_CatWISE &mdash; xCell  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> xCell
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../help.html">Help</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../xcell.html">Python API documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">xCell</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>xcell.mappers.mapper_CatWISE</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for xcell.mappers.mapper_CatWISE</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">.mapper_base</span> <span class="kn">import</span> <span class="n">MapperBase</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">get_map_from_points</span><span class="p">,</span> <span class="n">rotate_mask</span>
+<span class="kn">from</span> <span class="nn">astropy.table</span> <span class="kn">import</span> <span class="n">Table</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">healpy</span> <span class="k">as</span> <span class="nn">hp</span>
+
+
+<div class="viewcode-block" id="MapperCatWISE"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_CatWISE.MapperCatWISE">[docs]</a><span class="k">class</span> <span class="nc">MapperCatWISE</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Mapper for the CatWISE data set. \</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        config - dict</span>
+<span class="sd">        {&#39;data_catalog&#39;:</span>
+<span class="sd">        &#39;xcell/tests/data/catwise_agns_masked_final_w1lt16p5_alpha.fits&#39;,</span>
+<span class="sd">        &#39;mask&#39;: &#39;xcell/tests/data/MASKS_exclude_master_final.fits&#39;,</span>
+<span class="sd">        &#39;mask_name&#39;: &#39;mask_CatWISE&#39;,</span>
+<span class="sd">        &#39;apply_ecliptic_correction&#39;: True}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_defaults</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_sourcemask</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mask_sources&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">apply_ecliptic_correction</span> <span class="o">=</span> \
+            <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;apply_ecliptic_correction&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">npix</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">nside2npix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">)</span>
+        <span class="c1"># Angular mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delta_map</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dndz</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_rotator</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
+
+    <span class="c1"># CatWISE catalog</span>
+<div class="viewcode-block" id="MapperCatWISE.get_catalog"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the mapper&#39;s catalog. \</span>
+<span class="sd">        Applies flux thershold. </span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            catalog (Array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">file_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;data_catalog&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">file_data</span><span class="p">)</span>
+            <span class="c1"># Flux condition</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span><span class="p">[</span>
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span><span class="p">[</span><span class="s1">&#39;w1&#39;</span><span class="p">]</span> <span class="o">&lt;</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;flux_max_W1&#39;</span><span class="p">,</span> <span class="mf">16.4</span><span class="p">))]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span></div>
+
+    <span class="c1"># Correction to Density</span>
+    <span class="k">def</span> <span class="nf">_get_ecliptic_correction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the ecliptic correction \</span>
+<span class="sd">        for the CATWISE catalog.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            correction (Array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pixarea_deg2</span> <span class="o">=</span> <span class="p">(</span><span class="n">hp</span><span class="o">.</span><span class="n">nside2resol</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span> <span class="n">arcmin</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">/</span><span class="mi">60</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="c1"># Transforms equatorial to ecliptic coordinates</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">Rotator</span><span class="p">(</span><span class="n">coord</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">,</span> <span class="s1">&#39;E&#39;</span><span class="p">])</span>
+        <span class="c1"># Get coordinates in system of choice</span>
+        <span class="n">theta_EQ</span><span class="p">,</span> <span class="n">phi_EQ</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">pix2ang</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npix</span><span class="p">))</span>
+        <span class="c1"># Rotate to ecliptic</span>
+        <span class="n">theta_EC</span><span class="p">,</span> <span class="n">phi_EC</span> <span class="o">=</span> <span class="n">r</span><span class="p">(</span><span class="n">theta_EQ</span><span class="p">,</span> <span class="n">phi_EQ</span><span class="p">)</span>
+        <span class="c1"># Make a map of ecliptic latitude</span>
+        <span class="n">ec_lat_map</span> <span class="o">=</span> <span class="mi">90</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">theta_EC</span><span class="p">)</span>
+        <span class="c1"># this hard-coded number stems from the fit in 2009.14826</span>
+        <span class="n">correction</span> <span class="o">=</span> <span class="mf">0.0513</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ec_lat_map</span><span class="p">)</span> <span class="o">*</span> <span class="n">pixarea_deg2</span>
+        <span class="k">return</span> <span class="n">correction</span>
+
+    <span class="c1"># Density Map</span>
+<div class="viewcode-block" id="MapperCatWISE.get_signal_map"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the masked signal map. \</span>
+<span class="sd">        If &quot;apply_ecliptic_correction&quot; is True \</span>
+<span class="sd">        it applies the ecliptic correction.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            signal_map (Array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npix</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mask</span><span class="p">()</span>
+            <span class="n">nmap_data</span> <span class="o">=</span> <span class="n">get_map_from_points</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span>
+                                            <span class="n">rot</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rot</span><span class="p">,</span> <span class="n">ra_name</span><span class="o">=</span><span class="s1">&#39;ra&#39;</span><span class="p">,</span>
+                                            <span class="n">dec_name</span><span class="o">=</span><span class="s1">&#39;dec&#39;</span><span class="p">)</span>
+            <span class="c1"># ecliptic latitude correction -- SvH 5/3/22</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_ecliptic_correction</span><span class="p">:</span>
+                <span class="n">correction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ecliptic_correction</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">correction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            <span class="n">nmap_data</span> <span class="o">=</span> <span class="n">nmap_data</span> <span class="o">+</span> <span class="n">correction</span>
+            <span class="n">goodpix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="n">mean_n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">nmap_data</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span>
+            <span class="c1"># Division by mask not really necessary, since it&#39;s binary.</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">goodpix</span><span class="p">]</span> <span class="o">=</span> <span class="n">nmap_data</span><span class="p">[</span><span class="n">goodpix</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">mean_n</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">[</span><span class="n">goodpix</span><span class="p">])</span><span class="o">-</span><span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delta_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">d</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_map</span></div>
+
+    <span class="k">def</span> <span class="nf">_cut_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates the mask given the chosen resolution \</span>
+<span class="sd">        and the angular conditions in the configuration \</span>
+<span class="sd">        file. If &quot;file_sourcemask&quot; is not None it applies \</span>
+<span class="sd">        holes to the mask. </span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            mask (Array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npix</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">Rotator</span><span class="p">(</span><span class="n">coord</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;G&#39;</span><span class="p">])</span>
+        <span class="n">RApix</span><span class="p">,</span> <span class="n">DEpix</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">pix2ang</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npix</span><span class="p">),</span>
+                                  <span class="n">lonlat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">lpix</span><span class="p">,</span> <span class="n">bpix</span> <span class="o">=</span> <span class="n">r</span><span class="p">(</span><span class="n">RApix</span><span class="p">,</span> <span class="n">DEpix</span><span class="p">,</span> <span class="n">lonlat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># angular conditions</span>
+        <span class="n">mask</span><span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">bpix</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;GLAT_max_deg&#39;</span><span class="p">,</span>
+                                              <span class="mi">30</span><span class="p">))]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_sourcemask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># holes catalog</span>
+            <span class="n">mask_holes</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_sourcemask</span><span class="p">)</span>
+            <span class="n">vecmask</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">ang2vec</span><span class="p">(</span><span class="n">mask_holes</span><span class="p">[</span><span class="s1">&#39;ra&#39;</span><span class="p">],</span>
+                                 <span class="n">mask_holes</span><span class="p">[</span><span class="s1">&#39;dec&#39;</span><span class="p">],</span>
+                                 <span class="n">lonlat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">vec</span><span class="p">,</span> <span class="n">radius</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">vecmask</span><span class="p">,</span>
+                                   <span class="n">mask_holes</span><span class="p">[</span><span class="s1">&#39;radius&#39;</span><span class="p">]):</span>
+                <span class="n">ipix_hole</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">query_disc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span> <span class="n">vec</span><span class="p">,</span>
+                                          <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">radius</span><span class="p">),</span>
+                                          <span class="n">inclusive</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">mask</span><span class="p">[</span><span class="n">ipix_hole</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">mask</span>
+
+    <span class="k">def</span> <span class="nf">_get_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if the mapper has already computed \</span>
+<span class="sd">        the mask. If so, it loads it from a file. \</span>
+<span class="sd">        Otherwise, it calculates using &quot;_cut_mask()&quot;. \</span>
+<span class="sd">        It also rotates the mask to the chose coordinates.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            mask (Array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mask_file&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">ud_grade</span><span class="p">(</span><span class="n">hp</span><span class="o">.</span><span class="n">read_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;mask_file&#39;</span><span class="p">]),</span>
+                               <span class="n">nside_out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cut_mask</span><span class="p">()</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">rotate_mask</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rot</span><span class="p">,</span> <span class="n">binarize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mask</span>
+
+    <span class="c1"># Shot noise</span>
+<div class="viewcode-block" id="MapperCatWISE.get_nl_coupled"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the coupled noise power spectrum \</span>
+<span class="sd">        of the mapper&#39;s data set.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            nl_coupled (Array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mask</span><span class="p">()</span>
+            <span class="n">nmap_data</span> <span class="o">=</span> <span class="n">get_map_from_points</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span>
+                                            <span class="n">rot</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rot</span><span class="p">,</span> <span class="n">ra_name</span><span class="o">=</span><span class="s1">&#39;ra&#39;</span><span class="p">,</span>
+                                            <span class="n">dec_name</span><span class="o">=</span><span class="s1">&#39;dec&#39;</span><span class="p">)</span>
+            <span class="n">N_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">nmap_data</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span>
+            <span class="n">N_mean_srad</span> <span class="o">=</span> <span class="n">N_mean</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">npix</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+            <span class="n">N_ell</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span> <span class="o">/</span> <span class="n">N_mean_srad</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="o">=</span> <span class="n">N_ell</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span></div>
+
+    <span class="k">def</span> <span class="nf">get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;No dNdz for CatWISE yet&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MapperCatWISE.get_dtype"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the type of the mapper. \</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            None</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            mapper_type (String)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;galaxy_density&#39;</span></div>
+
+    <span class="c1"># Spin</span>
+<div class="viewcode-block" id="MapperCatWISE.get_spin"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the spin of the mapper. \</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            None</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            spin (Int)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">0</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Jaime.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
