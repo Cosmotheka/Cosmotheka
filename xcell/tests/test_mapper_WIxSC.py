@@ -9,8 +9,10 @@ import pytest
 
 def get_config():
     return {'data_catalog': 'xcell/tests/data/catalog_2mpz.fits',
-            'mask': 'xcell/tests/data/map.fits',
-            'star_map': 'xcell/tests/data/map.fits',
+            'mask_G': 'xcell/tests/data/map.fits',
+            'star_map_G': 'xcell/tests/data/map.fits',
+            'mask_C': 'xcell/tests/data/map.fits',
+            'star_map_C': 'xcell/tests/data/map.fits',
             'spec_sample': 'xcell/tests/data/catalog_spec_2mpz.csv',
             'z_edges': [-1E-10, 0.5],
             'bin_name': '0',
