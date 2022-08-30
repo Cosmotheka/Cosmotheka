@@ -9,8 +9,10 @@ import pytest
 
 def get_config():
     return {'data_catalog': 'xcell/tests/data/catalog_2mpz.fits',
-            'mask': 'xcell/tests/data/map.fits',
-            'star_map': 'xcell/tests/data/map.fits',
+            'mask_G': 'xcell/tests/data/map.fits',
+            'star_map_G': 'xcell/tests/data/map.fits',
+            'mask_C': 'xcell/tests/data/map.fits',
+            'star_map_C': 'xcell/tests/data/map.fits',
             'spec_sample': 'xcell/tests/data/catalog_spec_2mpz.csv',
             'z_edges': [-1E-10, 0.5],
             'bin_name': '0',
@@ -38,8 +40,8 @@ def test_smoke():
     cat = m.get_catalog()
     assert len(m.cat_data) == hp.nside2npix(32)
     # Check that the rerun catalog has been created
-    assert os.path.isfile('./WIxSC_rerun_bin0.fits')
-    t = Table.read('./WIxSC_rerun_bin0.fits')
+    assert os.path.isfile('./WIxSC_rerun_coordC_bin0.fits')
+    t = Table.read('./WIxSC_rerun_coordC_bin0.fits')
     assert (cat['RA'] == t['RA']).all()
 
 

@@ -87,7 +87,8 @@ class MapperCatWISE(MapperBase):
                                               30))] = 0
         if self.file_sourcemask is not None:
             # holes catalog
-            mask_holes = Table.read(self.file_sourcemask)
+            mask_holes = Table.read(self.file_sourcemask,
+                                    format='ascii.commented_header')
             vecmask = hp.ang2vec(mask_holes['ra'],
                                  mask_holes['dec'],
                                  lonlat=True)

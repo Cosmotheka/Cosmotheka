@@ -18,7 +18,7 @@ class Mapper2MPZ(MapperBase):
         """
         self._get_defaults(config)
         self.z_edges = config.get('z_edges', [0, 0.5])
-        self.ra_name, self.dec_name = self._get_coords(config)
+        self.ra_name, self.dec_name = self._get_coords()
 
         self.cat_data = None
         self.npix = hp.nside2npix(self.nside)
@@ -28,7 +28,7 @@ class Mapper2MPZ(MapperBase):
         self.delta_map = None
         self.nl_coupled = None
 
-    def _get_coords(self, config):
+    def _get_coords(self):
         if self.coords == 'G':  # Galactic
             return 'L', 'B'
         elif self.coords == 'C':  # Celestial/Equatorial
@@ -110,7 +110,7 @@ class Mapper2MPZ(MapperBase):
     def _get_mask(self):
         # We will assume the mask has been provided in the right
         # coordinates, so no further conversion is needed.
-        mask = hp.ud_grade(hp.read_map(self.config['mask']),
+        mask = hp.ud_grade(hp.read_map(self.config[f'mask_{self.coords}']),
                            nside_out=self.nside)
         return mask
 

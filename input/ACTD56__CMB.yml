@@ -1,0 +1,10 @@
+mapper_class: MapperACTCMB
+mask_name: mask_ACT_compsep_D56
+map_name: compsep_D56
+path_rerun: '/mnt/extraspace/damonge/Datasets/ACT_DR4/xcell_runs'
+file_map: /mnt/extraspace/damonge/Datasets/ACT_DR4/compsep_maps/tilec_single_tile_D56_cmb_map_v1.2.0_joint.fits
+file_mask: /mnt/extraspace/damonge/Datasets/ACT_DR4/masks/compsep_masks/act_dr4.01_s14s15_D56_compsep_mask.fits
+beam_info:
+  - type: 'Custom'
+    file: '/mnt/extraspace/damonge/Datasets/ACT_DR4/compsep_maps/tilec_single_tile_D56_CMB_map_v1.2.0_joint_beam.txt'
+lmax: 6000
