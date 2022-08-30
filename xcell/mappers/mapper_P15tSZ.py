@@ -30,11 +30,15 @@ class MapperP15tSZ(MapperPlanckBase):
     def _get_hm_maps(self):
         if self.hm1_map is None:
             hm1_map = hp.read_map(self.file_hm1, 1)
+            ps_mask = self._get_ps_mask()
+            hm1_map *= ps_mask
             hm1_map = rotate_map(hm1_map, self.rot)
             self.hm1_map = [hp.ud_grade(hm1_map,
                             nside_out=self.nside)]
         if self.hm2_map is None:
             hm2_map = hp.read_map(self.file_hm2, 2)
+            ps_mask = self._get_ps_mask()
+            hm2_map *= ps_mask
             hm2_map = rotate_map(hm2_map, self.rot)
             self.hm2_map = [hp.ud_grade(hm2_map,
                             nside_out=self.nside)]

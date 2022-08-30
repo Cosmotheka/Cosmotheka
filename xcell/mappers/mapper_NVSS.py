@@ -64,7 +64,7 @@ class MapperNVSS(MapperBase):
                 (self.cat_redshift['redshift'] <= 5)]
         return self.cat_redshift
 
-    def get_signal_map(self, apply_galactic_correction=True):
+    def get_signal_map(self):
         if self.delta_map is None:
             d = np.zeros(self.npix)
             self.cat_data = self.get_catalog()

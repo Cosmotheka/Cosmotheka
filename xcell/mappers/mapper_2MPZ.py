@@ -92,7 +92,7 @@ class Mapper2MPZ(MapperBase):
             self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz, return_jk_error=return_jk_error)
 
-    def get_signal_map(self, apply_galactic_correction=True):
+    def get_signal_map(self):
         if self.delta_map is None:
             d = np.zeros(self.npix)
             self.cat_data = self.get_catalog()

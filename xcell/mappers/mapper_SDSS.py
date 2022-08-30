@@ -17,7 +17,6 @@ class MapperSDSS(MapperBase):
         self.cats = {'data': None, 'random': None}
         self.num_z_bins = config.get('num_z_bins', 50)
         self.nside_mask = config.get('nside_mask', 512)
-        self.npix = hp.nside2npix(self.nside)
         self.ws = {'data': None, 'random': None}
         self.alpha = None
         self.dndz = None
