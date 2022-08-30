@@ -40,8 +40,8 @@ def test_smoke():
     cat = m.get_catalog()
     assert len(m.cat_data) == hp.nside2npix(32)
     # Check that the rerun catalog has been created
-    assert os.path.isfile('./WIxSC_rerun_bin0.fits')
-    t = Table.read('./WIxSC_rerun_bin0.fits')
+    assert os.path.isfile('./WIxSC_rerun_coordC_bin0.fits')
+    t = Table.read('./WIxSC_rerun_coordC_bin0.fits')
     assert (cat['RA'] == t['RA']).all()
 
 
