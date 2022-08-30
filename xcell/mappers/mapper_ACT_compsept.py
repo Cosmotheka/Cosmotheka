@@ -46,7 +46,8 @@ class MapperACTCompSept(MapperACTBase):
         return msk
 
     def get_nl_coupled(self):
-        raise NotImplementedError("No noise model for the ACT maps")
+        # raise NotImplementedError("No noise model for the ACT maps")
+        return np.zeros([1, 3*self.nside])
 
     def _get_custom_beam(self, info):
         fname = info['file']
