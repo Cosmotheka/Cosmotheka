@@ -7,7 +7,8 @@ import pytest
 
 def get_config():
     return {'data_catalog': 'xcell/tests/data/catalog_2mpz.fits',
-            'mask': 'xcell/tests/data/map.fits',
+            'mask_C': 'xcell/tests/data/map.fits',
+            'mask_G': 'xcell/tests/data/map.fits',
             'z_edges': [-1E-10, 0.5],
             'path_rerun': '.',
             'coords': 'C',

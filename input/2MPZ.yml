@@ -1,11 +1,11 @@
 mapper_class: Mapper2MPZ
 mask_name: mask_2MPZWISC
 path_rerun: '/mnt/extraspace/damonge/Datasets/2MPZ_WIxSC/xcell_runs'
-coords: G
 z_edges: [0.0, 0.1]
 data_catalog: '/mnt/extraspace/damonge/Datasets/2MPZ_WIxSC/2MPZ.fits'
 n_jk_dir: 100
-mask: '/mnt/extraspace/damonge/Datasets/2MPZ_WIxSC/WISExSCOSmask.fits.gz'
+mask_G: '/mnt/extraspace/damonge/Datasets/2MPZ_WIxSC/WISExSCOSmask_galactic.fits.gz'
+mask_C: '/mnt/extraspace/damonge/Datasets/2MPZ_WIxSC/WISExSCOSmask_equatorial.fits.gz'
 use_halo_model: True
 hod_params:
   lMmin_0: 12.708493552845066

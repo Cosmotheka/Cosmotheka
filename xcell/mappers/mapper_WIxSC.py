@@ -23,7 +23,7 @@ class MapperWIxSC(MapperBase):
         """
         self._get_defaults(config)
         self.z_edges = config.get('z_edges', [0, 0.5])
-        self.ra_name, self.dec_name, self.in_rad = self._get_coords(config)
+        self.ra_name, self.dec_name, self.in_rad = self._get_coords()
 
         self.cat_data = None
         self.npix = hp.nside2npix(self.nside)
@@ -73,7 +73,7 @@ class MapperWIxSC(MapperBase):
 
     def get_catalog(self):
         if self.cat_data is None:
-            fn = 'WIxSC_rerun_bin' + self.bn + '.fits'
+            fn = 'WIxSC_rerun_coord'+self.coords + '_bin' + self.bn + '.fits'
             self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
                                                    self._get_catalog)
         return self.cat_data
@@ -149,7 +149,7 @@ class MapperWIxSC(MapperBase):
     def _get_mask(self):
         # We will assume the mask has been provided in the right
         # coordinates, so no further conversion is needed.
-        mask = hp.ud_grade(hp.read_map(self.config['mask']),
+        mask = hp.ud_grade(hp.read_map(self.config[f'mask_{self.coords}']),
                            nside_out=self.nside)
         return mask
 
@@ -157,7 +157,8 @@ class MapperWIxSC(MapperBase):
         if self.stars is None:
             # Power = -2 makes sure the total number of stars is conserved
             # We assume the star map has been provided in the right coords
-            self.stars = hp.ud_grade(hp.read_map(self.config['star_map']),
+            fname = self.config[f'star_map_{self.coords}']
+            self.stars = hp.ud_grade(hp.read_map(fname),
                                      nside_out=self.nside, power=-2)
             # Convert to stars per deg^2
             pix_srad = 4*np.pi/self.npix
