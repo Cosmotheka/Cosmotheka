@@ -36,6 +36,7 @@ class MapperPlanckBase(MapperBase):
             signal_map[signal_map == hp.UNSEEN] = 0.0
             signal_map[np.isnan(signal_map)] = 0.0
             ps_mask = self._get_ps_mask()
+            print(ps_mask)
             signal_map *= ps_mask
             signal_map = rotate_map(signal_map, self.rot)
             self.signal_map = np.array([hp.ud_grade(signal_map,
@@ -69,8 +70,12 @@ class MapperPlanckBase(MapperBase):
             if self.file_ps_mask is not None:
                 for mode in self.ps_mask_mode:
                     field = self.ps_mask_modes[mode]
-                    self.ps_mask *= hp.read_map(self.file_ps_mask, field)
-            else:
+                    msk = hp.read_map(self.file_ps_mask, field)
+                    if self.ps_mask is None:
+                        self.ps_mask = msk
+                    else:
+                        self.ps_mask *= msk
+            if self.ps_mask is None:
                 self.ps_mask = 1
         return self.ps_mask
 
