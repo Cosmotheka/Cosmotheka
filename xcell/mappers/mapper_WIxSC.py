@@ -46,7 +46,7 @@ class MapperWIxSC(MapperBase):
         else:
             return cat[self.ra_name], cat[self.dec_name]
 
-    def _get_coords(self, config):
+    def _get_coords(self):
         if self.coords == 'G':  # Galactic
             return 'L', 'B', False
         elif self.coords == 'C':  # Celestial/Equatorial
