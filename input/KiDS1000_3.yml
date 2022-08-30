@@ -1,8 +1,0 @@
-mapper_class: MapperKiDS1000
-map_name: KiDS1000__3
-data_catalog: /mnt/extraspace/damonge/Datasets/KiDS/KiDS_DR4.1_ugriZYJHKs_SOM_gold_WL_cat.fits
-file_nz: /mnt/extraspace/damonge/Datasets/KiDS/SOM_N_of_Z/K1000_NS_V1.0.0A_ugriZYJHKs_photoz_SG_mask_LF_svn_309c_2Dbins_v2_SOMcols_Fid_blindC_TOMO4_Nz.asc
-mode: "shear"
-zbin: "3"
-mask_name: "mask_KiDS1000__3"
-path_rerun: '/mnt/extraspace/damonge/Datasets/KiDS/xcell_runs'
