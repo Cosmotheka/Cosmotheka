@@ -4,4 +4,5 @@ file_mask: /mnt/extraspace/damonge/Datasets/Planck_lensing/Lensing2018/mask.fits
 file_noise: mnt/extraspace/damonge/Datasets/Planck_lensing/Lensing2018/MV/nlkk.dat 
 mask_aposize: 0.2
 mask_apotype: 'C1'
+mask_name: mask_P18kappa
 path_rerun: '/mnt/extraspace/damonge/Datasets/Planck_lensing/Lensing2018/xcell_runs'
