@@ -5,7 +5,7 @@ import numpy as np
 class MappereBOSS(MapperSDSS):
     """
     Mapper for the eBOSS DR14 data set. \
-    Child class of "MapperSDSS". \
+    Child class of "MapperSDSS". 
     """
     def __init__(self, config):
         """
@@ -23,16 +23,13 @@ class MappereBOSS(MapperSDSS):
     def _get_w(self, mod='data'):
         """
         Returns the weights for the sources of \
-        the mapper's data or randoms catalog. \
+        the mapper's data or randoms catalog. 
         
-        Args:
-            None
         Kwargs:
-            mod='data'
+            mod="data"
         Returns:
             ws (Array)
- 
-        """"
+        """
         if self.ws[mod] is None:
             cat = self.get_catalog(mod=mod)
             w_systot = np.array(cat['WEIGHT_SYSTOT'])
@@ -44,14 +41,14 @@ class MappereBOSS(MapperSDSS):
     def _get_random_cols(self):
         """
         Returns the names of the columns \
-        of interest for the mapper. \
+        of interest for the mapper. 
         
         Args:
             None
+
         Returns:
             ['RA', 'DEC', 'Z', 'WEIGHT_SYSTOT',
-             'WEIGHT_CP', 'WEIGHT_NOZ'] (Array)
-        
+             'WEIGHT_CP', 'WEIGHT_NOZ'] (Array)      
         """
         return ['RA', 'DEC', 'Z', 'WEIGHT_SYSTOT',
                 'WEIGHT_CP', 'WEIGHT_NOZ']

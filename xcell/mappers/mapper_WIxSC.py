@@ -45,9 +45,11 @@ class MapperWIxSC(MapperBase):
     def get_radec(self, cat):
         """
         Returns the RA and DEC fields \
-        of the mapper's catalog. \
+        of the mapper's catalog.
+
         Args:
             cat (Array): catalog
+
         Returns:
             ra (Array), dec (Array)
         """
@@ -61,9 +63,11 @@ class MapperWIxSC(MapperBase):
         """
         Returns names of the coordinates \
         in the chosen coordinate \
-        system ('G'-galactic or 'C'-celestial). \
+        system ('G'-galactic or 'C'-celestial).
+
         Args:
             config (Dict): configuration file
+
         Returns:
             coord1_name (String)
             coord2_name (String)
@@ -78,9 +82,8 @@ class MapperWIxSC(MapperBase):
     def _get_catalog(self):
         """
         Loads chosen columns of the raw WIxSC catalog. \
-        Selects the chosen bin and masks it. \
-        Args:
-            None
+        Selects the chosen bin and masks it.
+
         Returns:
             cat_data (Array)
         """
@@ -106,9 +109,8 @@ class MapperWIxSC(MapperBase):
         already been computed. \
         If so, loads the save file. \
         Otherwise, it uses "_get_catalog()" to \
-        compute it. \
-        Args:
-            None
+        compute it.
+
         Returns:
             cat_data (Array)
         """
@@ -121,8 +123,10 @@ class MapperWIxSC(MapperBase):
     def _mask_catalog(self, cat):
         """
         Applies binary mask to catalog. 
+
         Args:
             cat (Array): mapper's catalog
+
         Returns:
             cat (Array): masked catalog
         """
@@ -135,9 +139,11 @@ class MapperWIxSC(MapperBase):
     def _bin_z(self, cat):
         """
         Removes all sources in the catalog \
-        outside the chosen bin. \
+        outside the chosen bin.
+
         Args:
             cat (Array): mapper's catalog
+
         Returns:
             cat (Array): binned catalog
         """
@@ -147,9 +153,11 @@ class MapperWIxSC(MapperBase):
     def _get_specsample(self, cat):
         """
         Loads the spectroscopic catalog of \
-        sources of the mapper and bins it. \
+        sources of the mapper and bins it.
+
         Args:
             cat (Array): mapper's catalog
+
         Returns:
             ds (array): spectroscopic sample
         """
@@ -165,9 +173,8 @@ class MapperWIxSC(MapperBase):
         Uses the DIR algorithm to build \
         the redshift distribution of sources \
         from the mapper's photometric sample \
-        given the spectroscopic sample. \
-        Args:
-            None
+        given the spectroscopic sample.
+
         Returns:
             {'z_mid': redshift,
              'nz': sources at a given redshift,
@@ -201,12 +208,12 @@ class MapperWIxSC(MapperBase):
         If so, loads it from the save file. \
         Otherwise, it uses "_get_nz()" to calculate it. \
         Finally, it shifts it by a given amount \
-        (dz=0 default). \
-        Args:
-            None
+        (dz=0 default).
+
         Kwargs:
             dz=0
             return_jk_error=False
+
         Returns:
             [z, nz] (Array)
         """
@@ -219,9 +226,8 @@ class MapperWIxSC(MapperBase):
         """
         Returns the signal map of the mapper. \
         If 'apply_galactic_correction' = True, \
-        it applies the galactic correction. \
-        Args:
-            None
+        it applies the galactic correction.
+
         Returns:
             delta_map (Array)
         """
@@ -247,9 +253,8 @@ class MapperWIxSC(MapperBase):
 
     def _get_mask(self):
         """
-        Returns the mapper's mask. \
-        Args:
-            None
+        Returns the mapper's mask.
+
         Returns:
             mask (Array)
         """
@@ -262,8 +267,7 @@ class MapperWIxSC(MapperBase):
     def _get_stars(self):
         """
         Returns the mapper's stars catalog.
-        Args:
-            None
+
         Returns:
             stars (Array)
         """
@@ -280,9 +284,11 @@ class MapperWIxSC(MapperBase):
 
     def _get_mean_n(self, nmap):
         """
-        Returns mean of a given counts map. 
+        Returns mean of a given counts map.
+
         Args:
             nmap (Array): counts map
+
         Returns:
             n_mean (Int): mean
         """
@@ -295,14 +301,17 @@ class MapperWIxSC(MapperBase):
 
     def _get_galactic_correction(self, delta, stars, bmask, nbins=14, npoly=3):
         """
-        Computes the galactic correction. 
+        Computes the galactic correction.
+
         Args:
             delta (Array): signal map
             stars (Array): stars map
             bmask (Array): binary mask
+
         Kwargs:
             nbins=14 (Int): number of bins 
             npoly=3 (Int): order of the polynomial fit
+
         Returns:
             {'stars' (Array): binned star density,
              'delta_mean' (Array): stars' bins mean,
@@ -347,9 +356,8 @@ class MapperWIxSC(MapperBase):
         Returns the coupled noise power spectrum of the mapper. \
         if the resolution is equal or greater than nside>=4096, the \
         high multipole tail of the signal power spectrum \
-        is used as an estimate for the noise power spectrum. \
-        Args:
-            None
+        is used as an estimate for the noise power spectrum.
+
         Returns:
             nl_coupled (Array)
             
@@ -375,10 +383,8 @@ class MapperWIxSC(MapperBase):
 
     def get_dtype(self):
         """
-        Returns the type of the mapper. \
-        
-        Args:
-            None
+        Returns the type of the mapper
+
         Returns:
             mapper_type (String)
         """
@@ -386,10 +392,8 @@ class MapperWIxSC(MapperBase):
 
     def get_spin(self):
         """
-        Returns the spin of the mapper. \
+        Returns the spin of the mapper.
         
-        Args:
-            None
         Returns:
             spin (Int)
         """

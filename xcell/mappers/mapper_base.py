@@ -6,9 +6,10 @@ from .utils import get_rerun_data, save_rerun_data
 
 
 class MapperBase(object):
-     """ Base mapper class used as foundation \
-     for the rest of mappers.
-     """
+    """ 
+    Base mapper class used as foundation \
+    for the rest of mappers.
+    """
     def __init__(self, config):
         self._get_defaults(config)
 

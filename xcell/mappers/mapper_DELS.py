@@ -51,10 +51,8 @@ class MapperDELS(MapperBase):
 
     def _get_catalog(self):
         """Loads the mapper's catalog \
-        after binning it in redshift. \
-        
-        Args:
-            None
+        after binning it in redshift.
+
         Returns:
             catalog (Array)
         """
@@ -75,9 +73,7 @@ class MapperDELS(MapperBase):
         If so, it loads it from the save file. \ 
         Otherwise, it cuts the original file \
         using "_get_catalog()". 
-        
-        Args:
-            None
+
         Returns:
             catalog (Array)
         """
@@ -93,8 +89,7 @@ class MapperDELS(MapperBase):
         as the signal map containing True if \
         the pixel is masked by the binary mask \
         or False if it isn't.
-        Args:
-            None
+
         Returns:
             masked_pixels (Array)
         """
@@ -110,10 +105,11 @@ class MapperDELS(MapperBase):
     def _bin_z(self, cat):
         """
         Removes all but the catalog sources \
-        inside the chosen redshift bin. \
+        inside the chosen redshift bin.
     
         Args:
             catalog (Array)
+
         Returns:
             catalog (Array)
         """
@@ -124,11 +120,10 @@ class MapperDELS(MapperBase):
         """
         Computes the Lorentzian kernel for a given redshift \
         used transform the photometric distribution \
-        of sources into the spectroscopic distribution \
+        of sources into the spectroscopic distribution
         
         Args:
             zz (Array)
-        
         """
         # a m s
         params = np.array([[1.257, -0.0010, 0.0122],
@@ -140,10 +135,8 @@ class MapperDELS(MapperBase):
 
     def _get_nz(self):
         """Builds the redshift distributions of \
-        the sources of the mapper's catalog. \
+        the sources of the mapper's catalog.
         
-        Args:
-            None
         Returns:
             {'z_mid': z_arr, 'nz': nz_spec} (Dict)
         
@@ -162,12 +155,11 @@ class MapperDELS(MapperBase):
     def get_nz(self, dz=0):
         """Checks if mapper has precomputed the redshift \
         distribution. If not, it uses "_get_nz()" to obtain it. \
-        Then, it shifts the distribution by "dz" (default dz=0). \
-        
-        Args:
-            None
+        Then, it shifts the distribution by "dz" (default dz=0).
+
         Kwargs:
             dz=0
+
         Returns:
             [z, nz] (Array)
         """
@@ -180,9 +172,8 @@ class MapperDELS(MapperBase):
         """
         Returns the masked signal map. \
         If "apply_galactic_correction" is True \
-        it applies the galactic correction. \
-        Args:
-            None
+        it applies the galactic correction.
+
         Returns:
             signal_map (Array)
         """
@@ -207,14 +198,16 @@ class MapperDELS(MapperBase):
     def _get_galactic_correction(self, delta, stars, bmask, nbins=14, npoly=5):
         """
         Calculates the galactic correction \
-        for the DELS catalog. \
+        for the DELS catalog.
         Args:
             delta (Array): signal map
             stars (Array): star map
             bmask (Array): binary mask
+
         Kwargs:
             nbis=14
             npoly=5
+
         Returns:
             correction (Array)
         """
@@ -252,11 +245,13 @@ class MapperDELS(MapperBase):
     def _get_mean_n(self, nmap):
         """
         Returns the the average number of sources \
-        per pixel of a given sources map. \
+        per pixel of a given sources map.
+
         Args:
-            nmap (Array):
+            nmap (Array)
+
         Returns:
-            n_mean (Float): 
+            n_mean (Float)
         """
         self.comp_map = self._get_comp_map()
         self.stars = self._get_stars()
@@ -269,9 +264,8 @@ class MapperDELS(MapperBase):
 
     def _get_stars(self):
         """
-        Returns the stars map of the DELS data set. \
-        Args:
-            None
+        Returns the stars map of the DELS data set.
+
         Returns:
             stars (Array)
         """
@@ -290,9 +284,8 @@ class MapperDELS(MapperBase):
     def _get_comp_map(self):
         """
         Returns the completeness map of \
-        the DELS data set. \
-        Args:
-            None
+        the DELS data set.
+
         Returns:
             comp_map (Array)
         """
@@ -307,9 +300,8 @@ class MapperDELS(MapperBase):
     def _get_binary_mask(self):
         """
         Returns the completeness map of \
-        the DELS data set. \
-        Args:
-            None
+        the DELS data set.
+
         Returns:
             comp_map (Array)
         """
@@ -324,9 +316,8 @@ class MapperDELS(MapperBase):
     def _get_mask(self):
         """
         Returns the binary mask of the DELS data set \
-        after applying the completeness map. \
-        Args:
-            None
+        after applying the completeness map.
+
         Returns:
             mask (Array)
         """
@@ -337,9 +328,8 @@ class MapperDELS(MapperBase):
     def get_nl_coupled(self):
         """
         Returns the coupled noise power spectrum \
-        of the  DELS data set. \
-        Args:
-            None
+        of the  DELS data set.
+
         Returns:
             nl_coupled (Array)
         """
@@ -356,10 +346,8 @@ class MapperDELS(MapperBase):
 
     def get_dtype(self):
         """
-        Returns the type of the mapper. \
-        
-        Args:
-            None
+        Returns the type of the mapper.
+
         Returns:
             mapper_type (String)
         """
@@ -367,10 +355,8 @@ class MapperDELS(MapperBase):
 
     def get_spin(self):
         """
-        Returns the spin of the mapper. \
-        
-        Args:
-            None
+        Returns the spin of the mapper.
+
         Returns:
             spin (Int)
         """

@@ -64,9 +64,8 @@ class MapperKV450(MapperBase):
     def get_catalog(self):
         """
         Returns the chosen redshift bin of the \
-        mappers catalog. \
-        Args:
-            None
+        mappers catalog.
+
         Returns:
             cat_data (Array)
         """
@@ -83,9 +82,8 @@ class MapperKV450(MapperBase):
         Selects the chosen bin in the catalog. \
         Removes the additive and multiplicative \
         biases. 
-        Returns the catalog. \
-        Args:
-            None
+        Returns the catalog.
+
         Returns:
             cat (Table)
         """
@@ -116,12 +114,10 @@ class MapperKV450(MapperBase):
         it returns the kind of the map associated \
         ('shear', 'PSF' --> 'galaxy' and 'stars' --> stars) \
         with the mode and corresponding name of the \
-        ellipticity fields in the catalog. \
-        
-        Args:
-            None
+        ellipticity fields in the catalog. 
+
         Returns:
-            kind (String), e1_flag (String),
+            kind (String), e1_flag (String), \
             e2_flag (String), mode (String)
         """
         mode = self.mode
@@ -145,10 +141,12 @@ class MapperKV450(MapperBase):
     def _bin_z(self, cat, zbin):
         """
         Removes all sources in the catalog \
-        outside the chosen redshift bin. \
+        outside the chosen redshift bin.
+
         Args:
             cat (Array): catalog
             zbin (Int): redshift bin index
+
         Returns:
             cat (Array)
         """
@@ -159,9 +157,11 @@ class MapperKV450(MapperBase):
 
     def _remove_additive_bias(self, cat):
         """
-        Removes the additive bias from the ellipticity maps. \
+        Removes the additive bias from the ellipticity maps.
+
         Args:
             cat (Array): catalog
+
         Returns:
             None
         """
@@ -176,12 +176,12 @@ class MapperKV450(MapperBase):
 
     def _remove_multiplicative_bias(self, cat_data, zbin):
         """
-        Removes the multiplicative bias from the ellipticity maps. \
+        Removes the multiplicative bias from the ellipticity maps.
+
         Args:
             cat (Array): catalog
             zbin (Int): redshift bin index
-        Returns:
-            None
+
         """
         sel_gals = cat_data['SG_FLAG'] == 1
         cat_data['bias_corrected_e1'][sel_gals] /= 1 + self.m[zbin]
@@ -189,9 +189,8 @@ class MapperKV450(MapperBase):
 
     def _get_gals_or_stars(self, kind='galaxies'):
         """
-        Returns the ellipticity fields of the mapper's catalog.\
-        Args:
-            None
+        Returns the ellipticity fields of the mapper's catalog.
+
         Returns:
             we1 (Array), we2 (Array)
         """
@@ -201,9 +200,8 @@ class MapperKV450(MapperBase):
 
     def _get_ellip_maps(self):
         """
-        Returns the ellipticity fields of the mapper's catalog.\
-        Args:
-            None
+        Returns the ellipticity fields of the mapper's catalog.
+
         Returns:
             we1 (Array), we2 (Array)
         """
@@ -224,9 +222,8 @@ class MapperKV450(MapperBase):
 
     def get_signal_map(self):
         """
-        Returns the mapper's signal map. \
-        Args:
-            None
+        Returns the mapper's signal map.
+
         Returns:
             signal_map (Array)
         """
@@ -247,9 +244,8 @@ class MapperKV450(MapperBase):
 
     def _get_mask(self):
         """
-        Returns the mapper's mask. \
-        Args:
-            None
+        Returns the mapper's mask.
+
         Returns:
             mask (Array)
         """
@@ -269,9 +265,8 @@ class MapperKV450(MapperBase):
     def _get_w2s2(self):
         """
         Computes map for noise power spectrum \
-        estimation. \
-        Args:
-            None
+        estimation.
+
         Returns:
             w2s2_map (Array)
         """
@@ -300,9 +295,8 @@ class MapperKV450(MapperBase):
     def get_nl_coupled(self):
         """
         Returns the mapper's coupled noise \
-        noise power spectrum. \
-        Args:
-            None
+        noise power spectrum.
+
         Returns:
             nl_coupled (Array)
         """
@@ -321,12 +315,11 @@ class MapperKV450(MapperBase):
         Loads the redshift distribution of sources \
         from the data products. 
         Then, it shifts the distribution by "dz" (default dz=0). \
-        Finally, it returns the redshift distribtuion. \
-        
-        Args:
-            None
+        Finally, it returns the redshift distribtuion.
+
         Kwargs:
             dz=0
+
         Returns:
             [z, nz] (Array)
         """
@@ -337,10 +330,8 @@ class MapperKV450(MapperBase):
 
     def get_dtype(self):
         """
-        Returns the type of the mapper. \
+        Returns the type of the mapper.
         
-        Args:
-            None
         Returns:
             mapper_type (String)
         """
@@ -348,10 +339,8 @@ class MapperKV450(MapperBase):
 
     def get_spin(self):
         """
-        Returns the spin of the mapper. \
-        
-        Args:
-            None
+        Returns the spin of the mapper.
+
         Returns:
             spin (Int)
         """

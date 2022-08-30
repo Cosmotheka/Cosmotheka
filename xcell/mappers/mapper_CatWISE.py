@@ -35,9 +35,8 @@ class MapperCatWISE(MapperBase):
     def get_catalog(self):
         """
         Returns the mapper's catalog. \
-        Applies flux thershold. \
-        Args:
-            None
+        Applies flux thershold. 
+
         Returns:
             catalog (Array)
         """
@@ -54,9 +53,8 @@ class MapperCatWISE(MapperBase):
     def _get_ecliptic_correction(self):
         """
         Calculates the ecliptic correction \
-        for the CATWISE catalog. \
-        Args:
-            None
+        for the CATWISE catalog.
+
         Returns:
             correction (Array)
         """
@@ -78,9 +76,8 @@ class MapperCatWISE(MapperBase):
         """
         Returns the masked signal map. \
         If "apply_ecliptic_correction" is True \
-        it applies the ecliptic correction. \
-        Args:
-            None
+        it applies the ecliptic correction.
+
         Returns:
             signal_map (Array)
         """
@@ -109,10 +106,8 @@ class MapperCatWISE(MapperBase):
         Generates the mask given the chosen resolution \
         and the angular conditions in the configuration \
         file. If "file_sourcemask" is not None it applies \
-        holes to the mask. \
+        holes to the mask. 
 
-        Args:
-            None
         Returns:
             mask (Array)
         """
@@ -143,9 +138,8 @@ class MapperCatWISE(MapperBase):
         Checks if the mapper has already computed \
         the mask. If so, it loads it from a file. \
         Otherwise, it calculates using "_cut_mask()". \
-        It also rotates the mask to the chose coordinates. \
-        Args:
-            None
+        It also rotates the mask to the chose coordinates.
+
         Returns:
             mask (Array)
         """
@@ -161,9 +155,8 @@ class MapperCatWISE(MapperBase):
     def get_nl_coupled(self):
         """
         Returns the coupled noise power spectrum \
-        of the mapper's data set. \
-        Args:
-            None
+        of the mapper's data set.
+
         Returns:
             nl_coupled (Array)
         """
@@ -180,19 +173,8 @@ class MapperCatWISE(MapperBase):
         return self.nl_coupled
 
     def get_nz(self, dz=0):
-        """Not implemented.
-        
-        Args:
-            None
-        Kwargs:
-            dz=0
-        Returns
-            Error
-        
-        """
         raise NotImplementedError("No dNdz for CatWISE yet")
 
-    # Type
     def get_dtype(self):
         """Returns the type of the mapper. \
         

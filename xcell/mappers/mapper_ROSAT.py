@@ -48,10 +48,10 @@ class MapperROSATXray(MapperBase):
         """
         Returns the mapper's catalog \
         after applying energy boundaries. \
-        Args:
-            None
+
         Returns:
             pholist (Arrays): catalog
+
         """
         if self.pholist is None:
             f = fitsio.FITS(self.fname_pholist)
@@ -64,10 +64,10 @@ class MapperROSATXray(MapperBase):
     def get_expmap(self):
         """
         Returns the mapper exposure map. \
-        Args:
-            None
+
         Returns:
             expmap (Array)
+
         """
         if self.expmap is None:
             mp = hp.read_map(self.fname_expmap)
@@ -80,13 +80,11 @@ class MapperROSATXray(MapperBase):
         Returns the mapper's signal map. \
         If 'apply_galactic_correction = True' \
         it applies the galactic correction to \
-        the signal map. \
-        Args:
-            None
-        Kwargs:
-            apply_galactic_correcting = True
+        the signal map. 
+
         Returns:
             signal_map (Array)
+
         """
         if self.countrate_map is None:
             cat = self.get_pholist()
@@ -106,11 +104,11 @@ class MapperROSATXray(MapperBase):
 
     def _get_mask(self):
         """
-        Returns the mapper's mask. \
-        Args:
-            None
+        Returns the mapper's mask. 
+
         Returns:
             mask (Array)
+
         """
         mask = np.ones(self.npix)
         xpmap = self.get_expmap()
@@ -125,11 +123,11 @@ class MapperROSATXray(MapperBase):
     def get_nl_coupled(self):
         """
         Returns the mapper's coupled noise \
-        noise power spectrum. \
-        Args:
-            None
+        noise power spectrum.
+
         Returns:
             nl_coupled (Array)
+
         """
         if self.nl_coupled is None:
             cat = self.get_pholist()
@@ -155,8 +153,6 @@ class MapperROSATXray(MapperBase):
         """
         Returns the type of the mapper. \
         
-        Args:
-            None
         Returns:
             mapper_type (String)
         """
@@ -166,8 +162,6 @@ class MapperROSATXray(MapperBase):
         """
         Returns the spin of the mapper. \
         
-        Args:
-            None
         Returns:
             spin (Int)
         """

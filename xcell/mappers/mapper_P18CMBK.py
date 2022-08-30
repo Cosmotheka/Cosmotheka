@@ -39,9 +39,8 @@ class MapperP18CMBK(MapperBase):
         """
         Returns mapper's signal map. \
         If the highest multipole is larger than \
-        the one allowed by the resolution \
-        Args:
-            None
+        the one allowed by the resolution.
+
         Returns:
             signal_map (Array)
         """
@@ -63,9 +62,8 @@ class MapperP18CMBK(MapperBase):
         """
         Returns the mapper's mask \
         after applying the neccesary coordinate \
-        rotations and apodizing. \
-        Args:
-            None
+        rotations and apodizing.
+
         Returns:
             msk (Array)
         """
@@ -84,9 +82,8 @@ class MapperP18CMBK(MapperBase):
         spectrum of the mapper. \
         It loads the decoupled noise power spectrum \
         and then it multiplies it by the mean of the \
-        squared mask to couple it. \
-        Args:
-            None
+        squared mask to couple it.
+
         Returns:
             nl_coupled (Array)
         """
@@ -107,9 +104,8 @@ class MapperP18CMBK(MapperBase):
     def get_cl_fiducial(self):
         """
         Returns the signal power spectrum \
-        of the mapper. \
-        Args:
-            None
+        of the mapper.
+
         Returns:
             cl_fid (Array)
         """
@@ -125,9 +121,8 @@ class MapperP18CMBK(MapperBase):
     def _get_noise(self):
         """
         Returns the decoupled noise power spectrum of the \
-        auto-correlation of the covergence map. \
-        Args:
-            None
+        auto-correlation of the covergence map.
+
         Returns:
             [l (Array): multipole list, 
              Nl (Array): noise power spectrum, 
@@ -140,22 +135,18 @@ class MapperP18CMBK(MapperBase):
         return self.noise
 
     def get_dtype(self):
-         """
-        Returns the type of the mapper. \
-        
-        Args:
-            None
+        """
+        Returns the type of the mapper.
+
         Returns:
             mapper_type (String)
         """
-        return 'cmb_convergence'
+        return "cmb_convergence"
 
     def get_spin(self):
         """
-        Returns the spin of the mapper. \
-        
-        Args:
-            None
+        Returns the spin of the mapper.
+
         Returns:
             spin (Int)
         """

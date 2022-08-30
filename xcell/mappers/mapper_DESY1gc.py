@@ -42,9 +42,8 @@ class MapperDESY1gc(MapperBase):
 
     def get_catalog(self):
         """
-        Returns the mapper's binned catalog. \
-        Args:
-            None
+        Returns the mapper's binned catalog.
+
         Returns:
             catalog (Array)
         """
@@ -54,11 +53,13 @@ class MapperDESY1gc(MapperBase):
         return self.cat_data
 
     def _bin_z(self, cat):
-        """Removes all but the catalog sources \
-        inside the chosen redshift bin. \
+        """
+        Removes all but the catalog sources \
+        inside the chosen redshift bin.
     
         Args:
             catalog (Array)
+
         Returns:
             catalog (Array)
         """
@@ -69,10 +70,8 @@ class MapperDESY1gc(MapperBase):
     def _get_w(self):
         """
         Returns the weights for the sources of \
-        the mapper's catalog. \
-        
-        Args:
-            None
+        the mapper's catalog.
+
         Returns:
             w (Array)
         
@@ -85,10 +84,8 @@ class MapperDESY1gc(MapperBase):
     def _get_mask(self):
         """
         Returns the mapper's mask after applying. \
-        the mapper's threshold. \
-        
-        Args:
-            None
+        the mapper's threshold.  
+
         Returns:
             mask (Array)
         """
@@ -101,13 +98,13 @@ class MapperDESY1gc(MapperBase):
         return mask
 
     def get_nz(self, dz=0):
-        """Returns the mappers redshift \
-        distribtuion of sources from a file. \
-        
-        Args:
-            None
+        """
+        Returns the mappers redshift \
+        distribtuion of sources from a file.
+
         Kwargs:
             dz=0
+
         Returns:
             [z, nz] (Array)
         """
@@ -119,10 +116,8 @@ class MapperDESY1gc(MapperBase):
 
     def get_signal_map(self):
         """
-        Returns the masked signal map. \
+        Returns the masked signal map.
 
-        Args:
-            None
         Returns:
             signal_map (Array)
         """
@@ -142,9 +137,8 @@ class MapperDESY1gc(MapperBase):
     def get_nl_coupled(self):
         """
         Returns the coupled noise power spectrum \
-        of the mapper's data set. \
-        Args:
-            None
+        of the mapper's data set.
+
         Returns:
             nl_coupled (Array)
         """
@@ -165,20 +159,18 @@ class MapperDESY1gc(MapperBase):
         return self.nl_coupled
 
     def get_dtype(self):
-        """Returns the type of the mapper. \
-        
-        Args:
-            None
+        """
+        Returns the type of the mapper.
+
         Returns:
             mapper_type (String)
         """
         return 'galaxy_density'
 
     def get_spin(self):
-        """Returns the spin of the mapper. \
-        
-        Args:
-            None
+        """
+        Returns the spin of the mapper.
+
         Returns:
             spin (Int)
         """

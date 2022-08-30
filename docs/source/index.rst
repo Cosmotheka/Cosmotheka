@@ -1,17 +1,21 @@
-.. COSMOTECA documentation master file, created by
-   sphinx-quickstart on Fri Aug 26 17:19:22 2022.
+.. xCell documentation master file, created by
+   sphinx-quickstart on Mon Aug 29 23:29:25 2022.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to COSMOTECA's documentation!
-=====================================
+Welcome to xCell's documentation!
+=================================
 
+Guide
+^^^^^
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Contents:
-   xcell
-   License
 
+   license
+   help
+   xcell
+       
 
 
 Indices and tables

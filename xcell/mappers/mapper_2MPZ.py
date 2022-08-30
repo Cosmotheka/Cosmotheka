@@ -34,10 +34,11 @@ class Mapper2MPZ(MapperBase):
     def _get_coords(self, config):
         """Returns mapper's ra and dec names \
         in the mapper's catalog given the coordinates \
-        designated in the cofiguration file \
+        designated in the cofiguration file
 
         Args:
             config (Dict): mapper's configuration file
+
         Returns:
             ra_name (String), dec_name (String)
         """
@@ -49,10 +50,8 @@ class Mapper2MPZ(MapperBase):
             raise NotImplementedError(f"Unknown coordinates {self.coords}")
 
     def get_catalog(self):
-        """Returns the mapper catalog of sources. \
+        """Returns the mapper catalog of sources.
 
-        Args:
-            None
         Returns:
             catalog (Array)
         """
@@ -67,10 +66,11 @@ class Mapper2MPZ(MapperBase):
         return self.cat_data
 
     def _mask_catalog(self, cat):
-        """Applies binary mask to catalog \
+        """Applies binary mask to catalog
 
         Args:
             catalog (Array)
+
         Returns:
             catalog (Array)
         """
@@ -82,10 +82,11 @@ class Mapper2MPZ(MapperBase):
 
     def _bin_z(self, cat):
         """Removes all but the catalog sources \
-        inside the chosen redshift bin. \
+        inside the chosen redshift bin.
 
         Args:
             catalog (Array)
+
         Returns:
             catalog (Array)
         """
@@ -94,10 +95,11 @@ class Mapper2MPZ(MapperBase):
 
     def _get_specsample(self, cat):
         """Selects the spectroscopic samples \
-        in the catalog \
+        in the catalog
 
         Args:
             catalog (Array)
+
         Returns:
             catalog (Array)
         """
@@ -112,8 +114,6 @@ class Mapper2MPZ(MapperBase):
         of the redshift histogram, "nz"; the heights of \
         the histogram, and "nz_jk".
 
-        Args:
-            None
         Returns:
             dndz (Dict)
         """
@@ -141,15 +141,15 @@ class Mapper2MPZ(MapperBase):
         return {'z_mid': zm, 'nz': nz, 'nz_jk': nz_jk}
 
     def get_nz(self, dz=0, return_jk_error=False):
-        """Checks if mapper has precomputed the redshift \
+        """
+        Checks if mapper has precomputed the redshift \
         distribution. If not, it uses "_get_nz()" to obtain it. \
-        Then, it shifts the distribution by "dz" (default dz=0). \
+        Then, it shifts the distribution by "dz" (default dz=0).
 
-        Args:
-            None
         Kwargs:
             dz=0
             return_jk_error=False
+
         Returns:
             [z, nz] (Array)
         """
@@ -160,12 +160,11 @@ class Mapper2MPZ(MapperBase):
 
     def get_signal_map(self, apply_galactic_correction=True):
         """
-        Returns the signal map of the mappper. \
+        Returns the signal map of the mappper.
 
-        Args:
-            None
         Kwargs:
             apply_galactic_correction=True
+
         Returns:
             delta_map (Array)
         """
@@ -188,8 +187,6 @@ class Mapper2MPZ(MapperBase):
         Reads the mask of the mappper from a file \
         and upgrades it to the chosen resolution.
 
-        Args:
-            None
         Returns:
             mask (Array)
         """
@@ -202,10 +199,8 @@ class Mapper2MPZ(MapperBase):
     def get_nl_coupled(self):
         """
         Calculates the noise power spectrum \
-        of the mapper's catalog. \
+        of the mapper's catalog.
 
-        Args:
-            None
         Returns:
             nl_coupled (Array)
         """
@@ -223,10 +218,8 @@ class Mapper2MPZ(MapperBase):
 
     def get_dtype(self):
         """
-        Returns the type of the mapper. \
+        Returns the type of the mapper.
 
-        Args:
-            None
         Returns:
             mapper_type (String)
         """
@@ -234,10 +227,8 @@ class Mapper2MPZ(MapperBase):
 
     def get_spin(self):
         """
-        Returns the spin of the mapper. \
+        Returns the spin of the mapper.
 
-        Args:
-            None
         Returns:
             spin (Int)
         """

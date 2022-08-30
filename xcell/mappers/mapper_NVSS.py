@@ -34,9 +34,8 @@ class MapperNVSS(MapperBase):
     def get_catalog(self):
         """
         Returns the mapper's catalog of sources \
-        (RA & DEC) after applying flux filters. \
-        Args:
-            None
+        (RA & DEC) after applying flux filters.
+
         Returns:
             cat_data (Array)
         """
@@ -64,9 +63,8 @@ class MapperNVSS(MapperBase):
     def get_catalog_redshift(self):
         """
         Returns the mapper's catalog of redshifts \
-        after applying flux filters. \
-        Args:
-            None
+        after applying flux filters.
+
         Returns:
             cat_redshift (Array)
         """
@@ -88,11 +86,11 @@ class MapperNVSS(MapperBase):
         Returns the mapper's signal map. \
         If 'apply_galactic_correction = True' \
         it applies the galactic correction to \
-        the signal map. \
-        Args:
-            None
+        the signal map.
+
         Kwargs:
             apply_galactic_correcting = True
+
         Returns:
             signal_map (Array)
         """
@@ -113,9 +111,8 @@ class MapperNVSS(MapperBase):
 
     def _get_mask(self):
         """
-        Returns the mapper's mask. \
-        Args:
-            None
+        Returns the mapper's mask.
+
         Returns:
             mask (Array)
         """
@@ -150,9 +147,8 @@ class MapperNVSS(MapperBase):
     def get_nl_coupled(self):
         """
         Returns the mapper's coupled noise \
-        noise power spectrum. \
-        Args:
-            None
+        noise power spectrum.
+
         Returns:
             nl_coupled (Array)
         """
@@ -173,12 +169,11 @@ class MapperNVSS(MapperBase):
         """
         Loads the redshift distribution catalog. \
         Then, it shifts the distribution by "dz" (default dz=0). \
-        Finally, it returns the redshift distribtuion. \
+        Finally, it returns the redshift distribtuion.
         
-        Args:
-            None
         Kwargs:
             dz=0
+
         Returns:
             [z, nz] (Array)
         """
@@ -192,10 +187,8 @@ class MapperNVSS(MapperBase):
 
     def get_dtype(self):
         """
-        Returns the type of the mapper. \
-        
-        Args:
-            None
+        Returns the type of the mapper.
+
         Returns:
             mapper_type (String)
         """
@@ -203,10 +196,8 @@ class MapperNVSS(MapperBase):
 
     def get_spin(self):
         """
-        Returns the spin of the mapper. \
-        
-        Args:
-            None
+        Returns the spin of the mapper.
+
         Returns:
             spin (Int)
         """

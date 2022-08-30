@@ -46,9 +46,8 @@ class MapperDESY1wl(MapperBase):
         """
         Returns the chosen redshift bin of the \
         mappers catalog after removing the \
-        additive and multiplicative bias. \
-        Args:
-            None
+        additive and multiplicative bias.
+
         Returns:
             cat_data (Array)
         """
@@ -71,8 +70,7 @@ class MapperDESY1wl(MapperBase):
         produces a lite version only with the \
         columns of interest and after applying \
         a -90 < DEC < 35 filter.
-        Args:
-            None
+
         Returns:
             cat (Array)
         """
@@ -115,8 +113,7 @@ class MapperDESY1wl(MapperBase):
     def _load_catalog(self):
         """
         Loads the lite DESY1 catalog.
-        Args:
-            None
+
         Returns:
             cat (Table)
         """
@@ -129,12 +126,11 @@ class MapperDESY1wl(MapperBase):
         """
         Given the chose mapper mode ('shear' or 'PSF'), \
         it returns the corresponding name of the \
-        ellipticity fields in the catalog. \
-        
-        Args:
-            None
+        ellipticity fields in the catalog.
+
         Kwargs:
             mode=None
+
         Returns:
             e1_flag (String), e2_flag (String), mode (String)
         """
@@ -154,9 +150,8 @@ class MapperDESY1wl(MapperBase):
     def _get_Rs(self):
         """
         Computes the R factor used to calculate \
-        the multiplicative bias of the maps. \
-        Args:
-            None
+        the multiplicative bias of the maps.
+
         Returns:
             R (Float)
         """
@@ -183,9 +178,8 @@ class MapperDESY1wl(MapperBase):
 
     def _remove_additive_bias(self):
         """
-        Removes the additive bias from the ellipticity maps. \
-        Args:
-            None
+        Removes the additive bias from the ellipticity maps.
+
         Returns:
             None
         """
@@ -195,9 +189,8 @@ class MapperDESY1wl(MapperBase):
 
     def _remove_multiplicative_bias(self):
         """
-        Removes the multiplicative bias from the ellipticity maps. \
-        Args:
-            None
+        Removes the multiplicative bias from the ellipticity maps.
+
         Returns:
             None
         """
@@ -217,10 +210,10 @@ class MapperDESY1wl(MapperBase):
         """
         Returns the ellipticity maps of the \
         chose mode ('shear' or 'PSF').
-        Args:
-            None
+
         Kwargs:
             mode=None
+
         Returns:
             we1 (Array), we2 (Array)
         """
@@ -240,10 +233,8 @@ class MapperDESY1wl(MapperBase):
 
     def get_signal_map(self, mode=None):
         """
-        Returns the masked signal map. \
+        Returns the masked signal map.
 
-        Args:
-            None
         Returns:
             signal_map (Array)
         """
@@ -267,12 +258,11 @@ class MapperDESY1wl(MapperBase):
 
     def get_nz(self, dz=0):
         """Returns the mappers redshift \
-        distribtuion of sources from a file. \
-        
-        Args:
-            None
+        distribtuion of sources from a file.
+
         Kwargs:
             dz=0
+
         Returns:
             [z, nz] (Array)
         """
@@ -286,10 +276,8 @@ class MapperDESY1wl(MapperBase):
     def _get_mask(self):
         """
         Returns the mapper's mask after applying. \
-        the mapper's threshold. \
-        
-        Args:
-            None
+        the mapper's threshold.
+
         Returns:
             mask (Array)
         """
@@ -302,9 +290,8 @@ class MapperDESY1wl(MapperBase):
     def get_nl_coupled(self, mode=None):
         """
         Returns the coupled noise power spectrum \
-        of the mapper's data set. \
-        Args:
-            None
+        of the mapper's data set.
+
         Returns:
             nl_coupled (Array)
         """
@@ -337,20 +324,16 @@ class MapperDESY1wl(MapperBase):
         return self.nl_coupled
 
     def get_dtype(self):
-        """Returns the type of the mapper. \
-        
-        Args:
-            None
+        """Returns the type of the mapper.
+
         Returns:
             mapper_type (String)
         """
         return 'galaxy_shear'
 
     def get_spin(self):
-        """Returns the spin of the mapper. \
-        
-        Args:
-            None
+        """Returns the spin of the mapper.
+
         Returns:
             spin (Int)
         """

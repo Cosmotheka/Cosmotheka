@@ -1,30 +1,4 @@
 # flake8: noqa
-"""
-:mod:`COSMOTECA` contains the following mappers:
-- :class:`xcell.MapperACTk`
-- :class:`xcell.MapperACTtSZ`
-- :class:`xcell.MapperACTCMB`
-- :class:`xcell.MapperDESgc`
-- :class:`xcell.MapperDESwl`
-- :class:`xcell.MapperBOSS`
-- :class:`xcell.MappereBOSS`
-- :class:`xcell.MapperKV450`
-- :class:`xcell.MapperKiDS1000`
-- :class:`xcell.MapperSPT`
-- :class:`xcell.MapperP18CMBk`
-- :class:`xcell.MapperP15tSZ`
-- :class:`xcell.MapperP18SMICA`
-- :class:`xcell.MapperP15CIB`
-- :class:`xcell.MapperCIBLenz`
-- :class:`xcell.MapperDELS`
-- :class:`xcell.Mapper2MPZ`
-- :class:`xcell.MapperWIxSC`
-- :class:`xcell.MapperHSCDR1wl`
-- :class:`xcell.MapperNVSS`
-- :class:`xcell.MapperCatWISE`
-- :class:`xcell.MapperROSATXray`
-"""
-
 from .mapper_base import MapperBase
 from .mapper_ACT_base import MapperACTBase
 from .mapper_ACT_compsept import MapperACTCompSept
@@ -43,7 +17,6 @@ from .mapper_SPT import MapperSPT
 from .mapper_P18CMBK import MapperP18CMBK
 from .mapper_P15tSZ import MapperP15tSZ
 from .mapper_P18SMICA import MapperP18SMICA
-from .mapper_P15CIB import MapperP15CIB
 from .mapper_CIBLenz import MapperCIBLenz
 from .mapper_DELS import MapperDELS
 from .mapper_2MPZ import Mapper2MPZ

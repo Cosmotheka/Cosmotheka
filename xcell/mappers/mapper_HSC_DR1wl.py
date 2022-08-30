@@ -42,9 +42,8 @@ class MapperHSCDR1wl(MapperBase):
         applies shear cuts, removes all but the \
         chosen redshift bin and calibrates \
         elipticities. \
-        Finally, it returns the processed catalog. \
-        Args:
-            None
+        Finally, it returns the processed catalog.
+
         Retunrs
             cat (Array)
         """
@@ -101,9 +100,8 @@ class MapperHSCDR1wl(MapperBase):
         """
         If lite catalog exists, loads it from save file. \
         Otherwise, it uses '_get_catalog_from_raw' \
-        to produce a lite catalog. \
-        Args:
-            None
+        to produce a lite catalog.
+
         Returns:
             cat (Array)
         """
@@ -115,9 +113,11 @@ class MapperHSCDR1wl(MapperBase):
 
     def _clean_raw_catalog(self, fnames):
         """
-        Cleans the raw HSC DR1 catalog. \
+        Cleans the raw HSC DR1 catalog.
+        
         Args:
             fnames (Array(String))
+
         Returns:
             cat (Array)
         """
@@ -185,9 +185,8 @@ class MapperHSCDR1wl(MapperBase):
 
     def _get_ellip_maps(self):
         """
-        Returns the ellipticity fields of the mapper's catalog.\
-        Args:
-            None
+        Returns the ellipticity fields of the mapper's catalog.
+
         Returns:
             we1 (Array), we2 (Array)
         """
@@ -207,9 +206,8 @@ class MapperHSCDR1wl(MapperBase):
 
     def get_signal_map(self):
         """
-        Returns the mapper's signal map. \
-        Args:
-            None
+        Returns the mapper's signal map.
+
         Returns:
             signal_map (Array)
         """
@@ -225,9 +223,8 @@ class MapperHSCDR1wl(MapperBase):
 
     def _get_mask(self):
         """
-        Returns the mapper's mask. \
-        Args:
-            None
+        Returns the mapper's mask.
+
         Returns:
             signal_map (Array)
         """
@@ -243,9 +240,8 @@ class MapperHSCDR1wl(MapperBase):
     def _get_w2s2(self):
         """
         Computes map for noise power spectrum \
-        estimation. \
-        Args:
-            None
+        estimation.
+
         Returns:
             w2s2_map (Array)
         """
@@ -262,8 +258,7 @@ class MapperHSCDR1wl(MapperBase):
         """
         Returns the mapper's coupled noise \
         noise power spectrum. 
-        Args:
-            None
+
         Returns:
             nl_coupled (Array)
         """
@@ -310,12 +305,11 @@ class MapperHSCDR1wl(MapperBase):
         """
         Checks if mapper has precomputed the redshift \
         distribution. If not, it uses "_get_nz()" to obtain it. \
-        Then, it shifts the distribution by "dz" (default dz=0). \
-        
-        Args:
-            None
+        Then, it shifts the distribution by "dz" (default dz=0).
+
         Kwargs:
             dz=0
+
         Returns:
             [z, nz] (Array)
         """
@@ -326,10 +320,8 @@ class MapperHSCDR1wl(MapperBase):
 
     def get_dtype(self):
         """
-        Returns the type of the mapper. \
-        
-        Args:
-            None
+        Returns the type of the mapper.
+
         Returns:
             mapper_type (String)
         """
@@ -337,10 +329,8 @@ class MapperHSCDR1wl(MapperBase):
 
     def get_spin(self):
         """
-        Returns the spin of the mapper. \
-        
-        Args:
-            None
+        Returns the spin of the mapper.
+
         Returns:
             spin (Int)
         """
