@@ -51,317 +51,46 @@ tracers:
   WIxSCx2M__5: !include input/WIxSC__4.yml
 
 cls:
-  ACT-ACT:
-    compute: 'all'
-
-  ACT-SDSS:
-    compute: 'all'
-
-  ACT-CatWISE:
-    compute: 'all'
-
-  ACT-CIBLenz:
-    compute: 'all'
-
-  ACT-DELS:
-    compute: 'all'
-
-  ACT-DESY1gc:
-    compute: 'all'
-
-  ACT-DESY1wl:
-    compute: 'all'
-
-  ACT-HSCDR1wl:
-    compute: 'all'
-
-  ACT-KiDS1000:
-    compute: 'all'
-
-  ACT-NVSS:
-    compute: 'all'
-
-  ACT-Planck:
-    compute: 'all'
-
-  ACT-ROSAT:
-    compute: 'all'
-
-  ACT-SPT:
-    compute: 'all'
-
-  ACT-WIxSCx2M:
-    compute: 'all'
-
-  SDSS-SDSS:
-    compute: 'all'
-
-  SDSS-CatWISE:
-    compute: 'all'
-
-  SDSS-CIBLenz:
-    compute: 'all'
-
-  SDSS-DELS:
-    compute: 'all'
-
-  SDSS-DESY1gc:
-    compute: 'all'
-
-  SDSS-DESY1wl:
-    compute: 'all'
-
-  SDSS-HSCDR1wl:
-    compute: 'all'
-
-  SDSS-KiDS1000:
-    compute: 'all'
-
-  SDSS-NVSS:
-    compute: 'all'
-
-  SDSS-Planck:
-    compute: 'all'
-
-  SDSS-ROSAT:
-    compute: 'all'
-
-  SDSS-SPT:
-    compute: 'all'
-
-  SDSS-WIxSCx2M:
-    compute: 'all'
-
-  CatWISE-CatWISE:
-    compute: 'all'
-
-  CatWISE-CIBLenz:
-    compute: 'all'
-
-  CatWISE-DELS:
-    compute: 'all'
-
-  CatWISE-DESY1gc:
-    compute: 'all'
-
-  CatWISE-DESY1wl:
-    compute: 'all'
-
-  CatWISE-HSCDR1wl:
-    compute: 'all'
-
-  CatWISE-KiDS1000:
-    compute: 'all'
-
-  CatWISE-NVSS:
-    compute: 'all'
-
-  CatWISE-Planck:
-    compute: 'all'
-
-  CatWISE-ROSAT:
-    compute: 'all'
-
-  CatWISE-SPT:
-    compute: 'all'
-
-  CatWISE-WIxSCx2M:
-    compute: 'all'
-
-  CIBLenz-CIBLenz:
-    compute: 'all'
-
-  CIBLenz-DELS:
-    compute: 'all'
-
-  CIBLenz-DESY1gc:
-    compute: 'all'
-
-  CIBLenz-DESY1wl:
-    compute: 'all'
-
-  CIBLenz-HSCDR1wl:
-    compute: 'all'
-
-  CIBLenz-KiDS1000:
-    compute: 'all'
-
-  CIBLenz-NVSS:
-    compute: 'all'
-
-  CIBLenz-Planck:
-    compute: 'all'
-
-  CIBLenz-ROSAT:
-    compute: 'all'
-
-  CIBLenz-SPT:
-    compute: 'all'
-
-  CIBLenz-WIxSCx2M:
-    compute: 'all'
-
-  DELS-DELS:
-    compute: 'all'
-
-  DELS-DESY1gc:
-    compute: 'all'
-
-  DELS-DESY1wl:
-    compute: 'all'
-
-  DELS-HSCDR1wl:
-    compute: 'all'
-
-  DELS-KiDS1000:
-    compute: 'all'
-
-  DELS-NVSS:
-    compute: 'all'
-
-  DELS-Planck:
-    compute: 'all'
-
-  DELS-ROSAT:
-    compute: 'all'
-
-  DELS-SPT:
-    compute: 'all'
-
-  DELS-WIxSCx2M:
-    compute: 'all'
-
-  DESY1gc-DESY1gc:
-    compute: 'all'
-
-  DESY1gc-DESY1wl:
-    compute: 'all'
-
-  DESY1gc-HSCDR1wl:
-    compute: 'all'
-
-  DESY1gc-KiDS1000:
-    compute: 'all'
-
-  DESY1gc-NVSS:
-    compute: 'all'
-
-  DESY1gc-Planck:
-    compute: 'all'
-
-  DESY1gc-ROSAT:
-    compute: 'all'
-
-  DESY1gc-SPT:
-    compute: 'all'
-
-  DESY1gc-WIxSCx2M:
-    compute: 'all'
-
-  DESY1wl-DESY1wl:
-    compute: 'all'
-
-  DESY1wl-HSCDR1wl:
-    compute: 'all'
-
-  DESY1wl-KiDS1000:
-    compute: 'all'
-
-  DESY1wl-NVSS:
-    compute: 'all'
-
-  DESY1wl-Planck:
-    compute: 'all'
-
-  DESY1wl-ROSAT:
-    compute: 'all'
-
-  DESY1wl-SPT:
-    compute: 'all'
-
-  DESY1wl-WIxSCx2M:
-    compute: 'all'
-
-  HSCDR1wl-HSCDR1wl:
-    compute: 'all'
-
-  HSCDR1wl-KiDS1000:
-    compute: 'all'
-
-  HSCDR1wl-NVSS:
-    compute: 'all'
-
-  HSCDR1wl-Planck:
-    compute: 'all'
-
-  HSCDR1wl-ROSAT:
-    compute: 'all'
-
-  HSCDR1wl-SPT:
-    compute: 'all'
-
-  HSCDR1wl-WIxSCx2M:
-    compute: 'all'
-
-  KiDS1000-KiDS1000:
-    compute: 'all'
-
-  KiDS1000-NVSS:
-    compute: 'all'
-
-  KiDS1000-Planck:
-    compute: 'all'
-
-  KiDS1000-ROSAT:
-    compute: 'all'
-
-  KiDS1000-SPT:
-    compute: 'all'
-
-  KiDS1000-WIxSCx2M:
-    compute: 'all'
-
-  NVSS-NVSS:
-    compute: 'all'
-
-  NVSS-Planck:
-    compute: 'all'
-
-  NVSS-ROSAT:
-    compute: 'all'
-
-  NVSS-SPT:
-    compute: 'all'
-
-  NVSS-WIxSCx2M:
-    compute: 'all'
-
-  Planck-Planck:
-    compute: 'all'
-
-  Planck-ROSAT:
-    compute: 'all'
-
-  Planck-SPT:
-    compute: 'all'
-
-  Planck-WIxSCx2M:
-    compute: 'all'
-
-  ROSAT-ROSAT:
-    compute: 'all'
-
-  ROSAT-SPT:
-    compute: 'all'
-
-  ROSAT-WIxSCx2M:
-    compute: 'all'
-
-  SPT-SPT:
-    compute: 'all'
-
-  SPT-WIxSCx2M:
-    compute: 'all'
-
-  WIxSCx2M-WIxSCx2M:
-    compute: 'all'
+  default: 'None'
+  file: 'input/cl_matrix.npz'
+
+bpw_edges: [0, 30, 60, 90, 120, 150, 180, 210, 240, 272, 309, 351, 398, 452, 513, 582, 661, 750, 852, 967, 1098, 1247, 1416, 1608, 1826, 2073, 2354, 2673, 3035, 3446, 3914, 4444, 5047, 5731, 6508, 7390, 8392, 9529, 10821, 12288]
+
+cov:
+  fiducial:
+    cosmo:
+      # Planck 2018: Table 2 of 1807.06209
+      # Omega_m: 0.3133
+      Omega_c: 0.2640
+      Omega_b: 0.0493
+      h: 0.6736
+      n_s: 0.9649
+      sigma8: 0.8111
+
+  cls_from_data: 'all'
+
+toeplitz:
+  cls:
+    l_toeplitz: -1
+    l_exact: -1
+    dl_band: -1
+  cov:
+    l_toeplitz: 2750
+    l_exact: 1000
+    dl_band: 2000
+
+sphere:
+  n_iter_sht: 0
+  n_iter_mcm: 3
+  n_iter_cmcm: 3
+  nside: 2048
+  spin0_cov: True
+  coords: 'C'
+
+recompute:
+  cls: False
+  cov: False
+  mcm: False
+  cmcm: False
+
+output:  '/mnt/extraspace/damonge/xCell_run0/'
