@@ -37,9 +37,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../help.html">Help</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../xcell.html">Python API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
 </ul>
 
         </div>
@@ -76,23 +74,26 @@
 <span class="kn">import</span> <span class="nn">os</span>
 
 
-<div class="viewcode-block" id="MapperDELS"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_DELS.MapperDELS">[docs]</a><span class="k">class</span> <span class="nc">MapperDELS</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperDELS"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DELS.MapperDELS">[docs]</a><span class="k">class</span> <span class="nc">MapperDELS</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Mapper for the DELS data set. \</span>
+<span class="sd">    **Config**</span>
+<span class="sd">        - z_name: `&quot;PHOTOZ_3DINFER&quot;`</span>
+<span class="sd">        - num_z_bins: `500`</span>
+<span class="sd">        - zbin: `0` / `1` / `2` / `3`</span>
+<span class="sd">        - data_catalogs:</span>
+
+<span class="sd">            - `&#39;.../Datasets/DELS/Legacy_Survey_BASS-MZLS_galaxies-selection.fits&#39;`</span>
+<span class="sd">            - `&#39;.../Datasets/DELS/Legacy_Survey_DECALS_galaxies-selection.fits&#39;`</span>
+
+<span class="sd">        - binary_mask: `&#39;.../Datasets/DELS/Legacy_footprint_final_mask_cut_decm36.fits&#39;`</span>
+<span class="sd">        - completeness_map: `&#39;.../Datasets/DELS/Legacy_footprint_completeness_mask_128.fits&#39;`</span>
+<span class="sd">        - star_map: `&#39;.../Datasets/DELS/allwise_total_rot_1024.fits&#39;`</span>
+<span class="sd">        - path_rerun: `&#39;.../Datasets/DELS/xcell_reruns/&#39;`</span>
+<span class="sd">        - mask_name: `&#39;mask_DELS_decm36&#39;`</span>
+<span class="sd">        - mapper_class: `&#39;MapperDELS&#39;`</span>
+<span class="sd">        - bias: `1.13` / v1.40` / `1.35` / `1.77`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        config - dict</span>
-<span class="sd">          {&#39;data_catalogs&#39;:[&#39;Legacy_Survey_BASS-MZLS_galaxies-selection.fits&#39;],</span>
-<span class="sd">           &#39;zbin&#39;: 0,</span>
-<span class="sd">           &#39;z_name&#39;: &#39;PHOTOZ_3DINFER&#39;,</span>
-<span class="sd">           &#39;num_z_bins&#39;: 500,</span>
-<span class="sd">           &#39;binary_mask&#39;: &#39;Legacy_footprint_final_mask.fits&#39;,</span>
-<span class="sd">           &#39;completeness_map&#39;: &#39;Legacy_footprint_completeness_mask_128.fits&#39;,</span>
-<span class="sd">           &#39;star_map&#39;: &#39;allwise_total_rot_1024.fits&#39;,</span>
-<span class="sd">           &#39;nside&#39;: 1024,</span>
-<span class="sd">           &#39;mask_name&#39;: &#39;mask_DELS&#39;}</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_get_defaults</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_rotator</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pz</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;z_name&#39;</span><span class="p">,</span> <span class="s1">&#39;PHOTOZ_3DINFER&#39;</span><span class="p">)</span>
@@ -136,7 +137,7 @@
         <span class="n">cat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bin_z</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cat</span><span class="o">.</span><span class="n">as_array</span><span class="p">()</span>
 
-<div class="viewcode-block" id="MapperDELS.get_catalog"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_DELS.MapperDELS.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperDELS.get_catalog"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DELS.MapperDELS.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Checks if the mapper has already \</span>
 <span class="sd">        loaded the chosen bin of the catalog. \</span>
 <span class="sd">        If so, it loads it from the save file. \ </span>
@@ -221,7 +222,7 @@
         <span class="n">nz_spec</span> <span class="o">/=</span> <span class="n">simps</span><span class="p">(</span><span class="n">nz_spec</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">z_arr</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;z_mid&#39;</span><span class="p">:</span> <span class="n">z_arr</span><span class="p">,</span> <span class="s1">&#39;nz&#39;</span><span class="p">:</span> <span class="n">nz_spec</span><span class="p">}</span>
 
-<div class="viewcode-block" id="MapperDELS.get_nz"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_DELS.MapperDELS.get_nz">[docs]</a>    <span class="k">def</span> <span class="nf">get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperDELS.get_nz"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DELS.MapperDELS.get_nz">[docs]</a>    <span class="k">def</span> <span class="nf">get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Checks if mapper has precomputed the redshift \</span>
 <span class="sd">        distribution. If not, it uses &quot;_get_nz()&quot; to obtain it. \</span>
 <span class="sd">        Then, it shifts the distribution by &quot;dz&quot; (default dz=0).</span>
@@ -237,7 +238,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">dndz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rerun_read_cycle</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">&#39;NPZ&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_nz</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shifted_nz</span><span class="p">(</span><span class="n">dz</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MapperDELS.get_signal_map"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_DELS.MapperDELS.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">apply_galactic_correction</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperDELS.get_signal_map"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DELS.MapperDELS.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">apply_galactic_correction</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the masked signal map. \</span>
 <span class="sd">        If &quot;apply_galactic_correction&quot; is True \</span>
@@ -394,7 +395,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">comp_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_comp_map</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmask</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_map</span>
 
-<div class="viewcode-block" id="MapperDELS.get_nl_coupled"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_DELS.MapperDELS.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperDELS.get_nl_coupled"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DELS.MapperDELS.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the coupled noise power spectrum \</span>
 <span class="sd">        of the  DELS data set.</span>
@@ -413,7 +414,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="o">=</span> <span class="n">N_ell</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span></div>
 
-<div class="viewcode-block" id="MapperDELS.get_dtype"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_DELS.MapperDELS.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperDELS.get_dtype"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DELS.MapperDELS.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the type of the mapper.</span>
 
@@ -422,7 +423,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s1">&#39;galaxy_density&#39;</span></div>
 
-<div class="viewcode-block" id="MapperDELS.get_spin"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_DELS.MapperDELS.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperDELS.get_spin"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DELS.MapperDELS.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the spin of the mapper.</span>
 

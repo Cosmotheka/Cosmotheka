@@ -37,9 +37,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../help.html">Help</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../xcell.html">Python API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
 </ul>
 
         </div>
@@ -71,21 +69,28 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 
-<div class="viewcode-block" id="MapperBOSS"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_BOSS.MapperBOSS">[docs]</a><span class="k">class</span> <span class="nc">MapperBOSS</span><span class="p">(</span><span class="n">MapperSDSS</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperBOSS"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_BOSS.MapperBOSS">[docs]</a><span class="k">class</span> <span class="nc">MapperBOSS</span><span class="p">(</span><span class="n">MapperSDSS</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Mapper for the BOSS DR12 data set. \</span>
-<span class="sd">    Child class of &quot;MapperSDSS&quot;. \</span>
+<span class="sd">    Note that X in file names stands for either `&#39;CMASS&#39;` or `&#39;LOWZ&#39;`.</span>
+<span class="sd">    </span>
+<span class="sd">    **Config**</span>
+
+<span class="sd">        - num_z_bins: `50`</span>
+<span class="sd">        - nside_mask: `512`</span>
+<span class="sd">        - nside_nl_threshold: `4096`</span>
+<span class="sd">        - lmin_nl_from_data: `2000`</span>
+<span class="sd">        - data_catalogs: `[&#39;.../Datasets/BOSS/galaxy_DR12v5_X_North.fits.gz&#39; \</span>
+<span class="sd">                           &#39;.../Datasets/BOSS/galaxy_DR12v5_X_South.fits.gz&#39;]` </span>
+<span class="sd">        - random_catalogs: `[&#39;.../Datasets/BOSS/random0_DR12v5_X_North.fits.gz&#39;, \</span>
+<span class="sd">                            &#39;.../Datasets/BOSS/random0_DR12v5_X_South.fits.gz&#39;]`</span>
+
+<span class="sd">        - z_edges: `[0.4, 0.8]` / `[0.1, 0.43]`</span>
+<span class="sd">        - path_rerun: `&#39;.../Datasets/BOSS/xcell_runs&#39;`</span>
+<span class="sd">        - mask_name: `&#39;mask_X&#39;`</span>
+<span class="sd">        - mapper_class: `&#39;MapperBOSS&#39;`</span>
+<span class="sd">        - bias: `1.93` / `1.93`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        config - dict</span>
-<span class="sd">        {&#39;data_catalogs&#39;:[data_path+&#39;BOSSLOWZ/galaxy_DR12v5_LOWZ_North.fits&#39;],</span>
-<span class="sd">        &#39;random_catalogs&#39;:[data_path+&#39;BOSSLOWZ/random1_DR12v5_LOWZ_North.fits&#39;],</span>
-<span class="sd">        &#39;mask_path&#39;:[data_path+&#39;BOSSLOWZ/mask_DR12v5_LOWZ_North.fits&#39;],</span>
-<span class="sd">        &#39;z_edges&#39;:[0.15, 0.43] / [0.43, 0.75]</span>
-<span class="sd">        &#39;nside&#39;:nside, &#39;nside_mask&#39;: nside_mask,</span>
-<span class="sd">        &#39;mask_name&#39;: &#39;mask_LOWZ_NGC&#39;}</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_get_SDSS_defaults</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">z_edges</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;z_edges&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 

@@ -6,15 +6,10 @@
 Welcome to xCell's documentation!
 =================================
 
-Guide
-^^^^^
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
-   license
-   help
-   xcell
+   mappers
        
 
 

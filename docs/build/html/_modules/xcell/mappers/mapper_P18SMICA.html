@@ -37,9 +37,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../help.html">Help</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../xcell.html">Python API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
 </ul>
 
         </div>
@@ -72,17 +70,27 @@
 <span class="kn">import</span> <span class="nn">healpy</span> <span class="k">as</span> <span class="nn">hp</span>
 
 
-<div class="viewcode-block" id="MapperP18SMICA"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_P18SMICA.MapperP18SMICA">[docs]</a><span class="k">class</span> <span class="nc">MapperP18SMICA</span><span class="p">(</span><span class="n">MapperPlanckBase</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperP18SMICA"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_P18SMICA.MapperP18SMICA">[docs]</a><span class="k">class</span> <span class="nc">MapperP18SMICA</span><span class="p">(</span><span class="n">MapperPlanckBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Mapper for the Planck 18 SMICA component separated CMB map.</span>
+<span class="sd">    **Config**</span>
+
+<span class="sd">        - file_map: `&quot;.../Datasets/Planck_SMICA/COM_CMB_IQU-smica-nosz_2048_R3.00_full.fits&quot;`</span>
+<span class="sd">        - file_hm1: `&quot;.../Datasets/Planck_SMICA/COM_CMB_IQU-smica-nosz_2048_R3.00_hm1.fits&quot;`</span>
+<span class="sd">        - file_hm2: `&quot;.../Datasets/Planck_SMICA/COM_CMB_IQU-smica-nosz_2048_R3.00_hm2.fits&quot;`</span>
+<span class="sd">        - file_gp_mask: `&quot;.../Datasets/Planck_masks/HFI_Mask_GalPlane-apo2_2048_R2.00.fits&quot;`</span>
+<span class="sd">        - file_ps_mask: `&quot;.../Datasets/Planck_masks/HFI_Mask_PointSrc_2048_R2.00.fits&quot;`</span>
+<span class="sd">        </span>
+<span class="sd">        - beam_info:</span>
+
+<span class="sd">            - type: `&#39;Gaussian&#39;`</span>
+<span class="sd">            - FWHM_arcmin: `5.0`</span>
+
+<span class="sd">        - gp_mask_mode: `&#39;0.6&#39;`</span>
+<span class="sd">        - ps_mask_mode: `[&#39;F100&#39;, &#39;F143&#39;, &#39;F217&#39;, &#39;F353&#39;]`</span>
+<span class="sd">        - mask_name: `mask_P18SMICA`</span>
+<span class="sd">        - path_rerun: `&#39;.../Datasets/Planck_SMICA/xcell_runs&#39;`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        config - dict</span>
-<span class="sd">        {&#39;file_map&#39;: [path+&#39;COM_CMB_IQU-smica-nosz_2048_R3.00_full.fits&#39;],</span>
-<span class="sd">         &#39;&#39;,</span>
-<span class="sd">         &#39;nside&#39;:512}</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_get_Planck_defaults</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">beam_info</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;beam_info&#39;</span><span class="p">,</span>
                                     <span class="p">[{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;Gaussian&#39;</span><span class="p">,</span>
@@ -120,7 +128,7 @@
                             <span class="n">nside_out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">)]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hm1_map</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hm2_map</span>
 
-<div class="viewcode-block" id="MapperP18SMICA.get_dtype"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_P18SMICA.MapperP18SMICA.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperP18SMICA.get_dtype"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_P18SMICA.MapperP18SMICA.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the type of the mapper. \</span>
 <span class="sd">        </span>

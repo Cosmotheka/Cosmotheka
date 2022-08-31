@@ -37,9 +37,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../help.html">Help</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../xcell.html">Python API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
 </ul>
 
         </div>
@@ -75,23 +73,33 @@
 <span class="kn">import</span> <span class="nn">healpy</span> <span class="k">as</span> <span class="nn">hp</span>
 
 
-<div class="viewcode-block" id="MapperHSCDR1wl"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl">[docs]</a><span class="k">class</span> <span class="nc">MapperHSCDR1wl</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Mapper for the HSC DR1 weak lensing data set.</span>
+<div class="viewcode-block" id="MapperHSCDR1wl"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl">[docs]</a><span class="k">class</span> <span class="nc">MapperHSCDR1wl</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;    </span>
+<span class="sd">    **Config**</span>
+<span class="sd">        - depth_cut: `24.5` </span>
+<span class="sd">        - z_edges: `[0.3, 0.6]` / `[0.6, 0.9]` / `[0.9, 1.2]` / `[1.2, 1.5]`</span>
+
+<span class="sd">        - bin_name: `bin0` / `bin1` / `bin2` / `bin3` </span>
+<span class="sd">        - data_catalogs: `[[&#39;.../Datasets/HSC_DR1/HSC_WIDE_GAMA09H.fits&#39;], \</span>
+<span class="sd">                           [&#39;.../Datasets/HSC_DR1/HSC_WIDE_GAMA15H.fits&#39;], \</span>
+<span class="sd">                           [&#39;.../Datasets/HSC_DR1/HSC_WIDE_HECTOMAP.fits&#39;], \</span>
+<span class="sd">                           [&#39;.../Datasets/HSC_DR1/HSC_WIDE_VVDS_part1.fits&#39;,\</span>
+<span class="sd">                            &#39;.../Datasets/HSC_DR1/HSC_WIDE_VVDS_part2.fits&#39;], \</span>
+<span class="sd">                           [&#39;.../Datasets/HSC_DR1/HSC_WIDE_WIDE12H.fits&#39;], \</span>
+<span class="sd">                           [&#39;.../Datasets/HSC_DR1/HSC_WIDE_XMM.fits&#39;]]`</span>
+
+<span class="sd">        - fname_cosmos: `&#39;.../Datasets/HSC_DR1/Afterburner_reweighted_COSMOS_photoz_FDFC.fits&#39;`</span>
+<span class="sd">        - fnames_cosmos_ph: `[&#39;.../Datasets/HSC_DR1/pdf-s17a_wide-9812.cat.fits&#39;, \</span>
+<span class="sd">                            &#39;.../Datasets/HSC_DR1/pdf-s17a_wide-9813.cat.fits&#39;]`</span>
+
+<span class="sd">        - nbin_nz: `100`</span>
+<span class="sd">        - zlim_nz: `[0.0, 4.0]`</span>
+<span class="sd">        - mask_name: `&#39;mask_HSC_wl0&#39;` / `&#39;mask_HSC_wl1&#39;` / `&#39;mask_HSC_wl2&#39;` / \</span>
+<span class="sd">                   `&#39;mask_HSC_wl3&#39;` </span>
+<span class="sd">        - mapper_class: `&#39;MapperHSCDR1wl&#39;`</span>
+<span class="sd">        - path_rerun: `&#39;.../Datasets/HSC_DR1/lite/&#39;`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Inputs:</span>
-<span class="sd">        {&#39;depth_cut&#39;: i-band magnitude cut (24.5)</span>
-<span class="sd">         &#39;z_edges&#39;: photo-z bin edges</span>
-<span class="sd">         &#39;bin_name&#39;: name for this redshift bin</span>
-<span class="sd">         &#39;data_catalogs&#39;: list of lists of files (one list for each HSC field)</span>
-<span class="sd">         &#39;shear_mod_thr&#39;: shear modulus threshold (2)</span>
-<span class="sd">         &#39;fname_cosmos&#39;: name of the matched COSMOS catalog</span>
-<span class="sd">         &#39;fname_cosmos_ph&#39;: list of names of the photo-z COSMOS files</span>
-<span class="sd">         &#39;nbin_nz&#39;: number of intervals for redshift distribution (100)</span>
-<span class="sd">         &#39;zlim_nz&#39;: redshift range of redshift distribution (0-4)</span>
-<span class="sd">        }</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_get_defaults</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_rotator</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">icut</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;depth_cut&#39;</span><span class="p">,</span> <span class="mf">24.5</span><span class="p">)</span>
@@ -165,7 +173,7 @@
             <span class="n">cats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">vstack</span><span class="p">(</span><span class="n">cats</span><span class="p">)</span><span class="o">.</span><span class="n">as_array</span><span class="p">()</span>
 
-<div class="viewcode-block" id="MapperHSCDR1wl.get_catalog"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperHSCDR1wl.get_catalog"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        If lite catalog exists, loads it from save file. \</span>
 <span class="sd">        Otherwise, it uses &#39;_get_catalog_from_raw&#39; \</span>
@@ -273,7 +281,7 @@
         <span class="n">we2</span><span class="p">[</span><span class="n">goodpix</span><span class="p">]</span> <span class="o">/=</span> <span class="n">mask</span><span class="p">[</span><span class="n">goodpix</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">we1</span><span class="p">,</span> <span class="n">we2</span>
 
-<div class="viewcode-block" id="MapperHSCDR1wl.get_signal_map"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperHSCDR1wl.get_signal_map"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the mapper&#39;s signal map.</span>
 
@@ -323,7 +331,7 @@
                                    <span class="n">rot</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rot</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">w2s2</span>
 
-<div class="viewcode-block" id="MapperHSCDR1wl.get_nl_coupled"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperHSCDR1wl.get_nl_coupled"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the mapper&#39;s coupled noise \</span>
 <span class="sd">        noise power spectrum. </span>
@@ -370,7 +378,7 @@
         <span class="n">zm</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">bz</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">bz</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;z_mid&#39;</span><span class="p">:</span> <span class="n">zm</span><span class="p">,</span> <span class="s1">&#39;nz&#39;</span><span class="p">:</span> <span class="n">dndz</span><span class="p">}</span>
 
-<div class="viewcode-block" id="MapperHSCDR1wl.get_nz"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_nz">[docs]</a>    <span class="k">def</span> <span class="nf">get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperHSCDR1wl.get_nz"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_nz">[docs]</a>    <span class="k">def</span> <span class="nf">get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks if mapper has precomputed the redshift \</span>
 <span class="sd">        distribution. If not, it uses &quot;_get_nz()&quot; to obtain it. \</span>
@@ -387,7 +395,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">dndz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rerun_read_cycle</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;NPZ&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_nz</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shifted_nz</span><span class="p">(</span><span class="n">dz</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MapperHSCDR1wl.get_dtype"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperHSCDR1wl.get_dtype"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the type of the mapper.</span>
 
@@ -396,7 +404,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s1">&#39;galaxy_shear&#39;</span></div>
 
-<div class="viewcode-block" id="MapperHSCDR1wl.get_spin"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperHSCDR1wl.get_spin"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the spin of the mapper.</span>
 

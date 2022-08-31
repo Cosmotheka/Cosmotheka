@@ -8,19 +8,18 @@ from .utils import rotate_mask
 
 class MapperP18CMBK(MapperBase):
     """
-    Mapper for the Planck 18 convergence map. 
+    **Config**
+
+        - file_klm: `".../Datasets/Planck_lensing/Lensing2018/MV/dat_klm.fits"`
+        - file_mask: `".../Datasets/Planck_lensing/Lensing2018/mask.fits.gz"`
+        - file_noise: `".../Datasets/Planck_lensing/Lensing2018/MV/nlkk.dat"`
+        - mask_aposize: `0.2`
+        - mask_apotype: `"C12"`
+        - mask_name: `"mask_P18kappa"`
+        - path_rerun: `".../Datasets/Planck_lensing/Lensing2018/xcell_runs"`
+
     """
     def __init__(self, config):
-        """
-        config - dict
-        {'file_klm':'COM_Lensing_4096_R3.00/MV/dat_klm.fits',
-         'file_mask':'COM_Lensing_4096_R3.00/mask.fits.gz',
-         'file_noise':'COM_Lensing_4096_R3.00/MV/nlkk.dat',
-         'mask_aposize': 0.2,
-         'mask_apotype': 'C1',
-         'mask_name': 'mask_CMBK',
-         'nside':4096}
-        """
         self._get_defaults(config)
         self.mask_apotype = config.get('mask_apotype', 'C1')
         self.mask_aposize = config.get('mask_aposize', 0.2)

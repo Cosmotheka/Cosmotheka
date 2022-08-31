@@ -37,9 +37,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../help.html">Help</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../xcell.html">Python API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
 </ul>
 
         </div>
@@ -73,18 +71,25 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 
-<div class="viewcode-block" id="MapperSPT"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_SPT.MapperSPT">[docs]</a><span class="k">class</span> <span class="nc">MapperSPT</span><span class="p">(</span><span class="n">MapperPlanckBase</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperSPT"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_SPT.MapperSPT">[docs]</a><span class="k">class</span> <span class="nc">MapperSPT</span><span class="p">(</span><span class="n">MapperPlanckBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Mapper for the SPT CMB data set. </span>
+<span class="sd">    ***Config***</span>
+<span class="sd">        - file_map: `&quot;.../Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap.fits.gz&quot;`</span>
+<span class="sd">        - file_hm1: `&quot;.../Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap_half1.fits.gz&quot;`</span>
+<span class="sd">        - file_hm2: `&quot;.../Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap_half2.fits.gz&quot;`</span>
+<span class="sd">        - file_gp_mask: &quot;.../Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_dust_mask_top_5percent.fits.gz&quot;`</span>
+<span class="sd">        - gp_mask_mode: `&quot;default&quot;`</span>
+<span class="sd">        - file_ps_mask: `&quot;.../Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_point_source_mask_nside_8192_binary_mask.fits.gz&quot;`</span>
+<span class="sd">        - ps_mask_mode: `[&#39;default&#39;]`</span>
+<span class="sd">        </span>
+<span class="sd">        - beam_info: </span>
+<span class="sd">            - type: `&quot;Gaussian&quot;`</span>
+<span class="sd">            - FWHM_arcmin: `1.6`</span>
+
+<span class="sd">        - mask_name: `&quot;mask_SPT&quot;`</span>
+<span class="sd">        - path_rerun: `&quot;.../Datasets/SPT/xcell_runs&quot;`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        config - dict</span>
-<span class="sd">        {&#39;file_map&#39;: path+&#39;COM_CompMap_Compton-SZMap-ymaps_2048_R2.00.fits&#39;,</span>
-<span class="sd">         &#39;file_mask&#39;: path+&#39;COM_CompMap_Compton-SZMap-masks_2048_R2.01.fits&#39;,</span>
-<span class="sd">         &#39;mask_name&#39;: &#39;mask_tSZ&#39;,</span>
-<span class="sd">         &#39;nside&#39;:512}</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_get_Planck_defaults</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gp_mask_modes</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gp_mask_mode</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;gp_mask_mode&#39;</span><span class="p">,</span> <span class="s1">&#39;default&#39;</span><span class="p">)</span>
@@ -120,7 +125,7 @@
                             <span class="n">nside_out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">)]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hm1_map</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hm2_map</span>
 
-<div class="viewcode-block" id="MapperSPT.get_dtype"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_SPT.MapperSPT.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperSPT.get_dtype"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_SPT.MapperSPT.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the type of the mapper. \</span>
 <span class="sd">        </span>

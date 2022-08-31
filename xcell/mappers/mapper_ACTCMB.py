@@ -3,20 +3,23 @@ from .mapper_ACT_compsept import MapperACTCompSept
 
 class MapperACTCMB(MapperACTCompSept):
     """
-    Mapper for the ACT CMB data set. \
-    Child class of "MapperACTCompSept". \
+    For X either 'BN' or 'D56' depending on the desired sky patch.
+    
+    **Config**
+
+        - mask_name: `'mask_ACT_compsep_X'`
+        - map_name: `'compsep_X'`
+        - path_rerun: `'/mnt/extraspace/damonge/Datasets/ACT_DR4/xcell_runs'`
+        - file_map: `'/mnt/extraspace/damonge/Datasets/ACT_DR4/compsep_maps/tilec_single_tile_X_cmb_map_v1.2.0_joint.fits'`
+        - file_mask: `'/mnt/extraspace/damonge/Datasets/ACT_DR4/masks/compsep_masks/act_dr4.01_s14s15_X_compsep_mask.fits'`
+        - beam_info:
+
+            - type: `'Custom'`
+            - file: `'/mnt/extraspace/damonge/Datasets/ACT_DR4/compsep_maps/tilec_single_tile_X_cmb_map_v1.2.0_joint_beam.txt'`
+
+        - lmax: `6000`
     """
     def __init__(self, config):
-        """
-        config - dict
-        {'file_map':'tilec_single_tile_D56_cmb_map_v1.2.0_joint.fits',
-         'file_mask':'tilec_mask.fits',
-         'file_noise': 'tilec_single_tile_D56_cmb_map_v1.2.0_joint_noise.fits',
-         'beam_file': 'tilec_single_tile_D56_cmb_map_v1.2.0_joint_beam.txt',
-         'mask_name': 'mask_ACTtsz',
-         'nside': 1024,
-         'lmax': 6000}
-        """
         self._get_ACT_defaults(config)
 
     def get_dtype(self):

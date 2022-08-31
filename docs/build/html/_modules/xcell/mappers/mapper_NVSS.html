@@ -37,9 +37,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../help.html">Help</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../xcell.html">Python API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
 </ul>
 
         </div>
@@ -74,18 +72,22 @@
 <span class="kn">import</span> <span class="nn">healpy</span> <span class="k">as</span> <span class="nn">hp</span>
 
 
-<div class="viewcode-block" id="MapperNVSS"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_NVSS.MapperNVSS">[docs]</a><span class="k">class</span> <span class="nc">MapperNVSS</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperNVSS"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_NVSS.MapperNVSS">[docs]</a><span class="k">class</span> <span class="nc">MapperNVSS</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Mapper for the NVSS data set. </span>
+
+<span class="sd">    **Config**</span>
+
+<span class="sd">        - data_catalog: `&quot;.../Datasets/NVSS/nvss.fits&quot;`</span>
+<span class="sd">        - mask_sources: `&quot;.../Datasets/NVSS/source_masks_nvss.txt&quot;`</span>
+<span class="sd">        - redshift_catalog: &quot;.../Datasets/NVSS/100sqdeg_1uJy_s1400.fits&quot;`</span>
+<span class="sd">        - DEC_min_deg: `-40`</span>
+<span class="sd">        - flux_min_mJy: `10`</span>
+<span class="sd">        - fux_max_mJy: `1000`</span>
+<span class="sd">        - GLAT_max_deg: `10`</span>
+<span class="sd">        - mask_name: `&quot;mask_NVSS&quot;`</span>
+<span class="sd">        - path_rerun: `&quot;.../Datasets/NVSS/xcell_runs&quot;`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        config - dict</span>
-<span class="sd">          {&#39;data_catalog&#39;: &#39;nvss.fits&#39;,</span>
-<span class="sd">           &#39;mask&#39;: &#39;mask.fits&#39;,</span>
-<span class="sd">           &#39;mask_name&#39;: &#39;mask_NVSS&#39;</span>
-<span class="sd">           &#39;redshift_catalog&#39;:&#39;100sqdeg_1uJy_s1400.fits&#39;}</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_get_defaults</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_rotator</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">file_sourcemask</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mask_sources&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
@@ -100,7 +102,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">dndz</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cat_redshift</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="MapperNVSS.get_catalog"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_NVSS.MapperNVSS.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperNVSS.get_catalog"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_NVSS.MapperNVSS.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the mapper&#39;s catalog of sources \</span>
 <span class="sd">        (RA &amp; DEC) after applying flux filters.</span>
@@ -129,7 +131,7 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;GLAT_max_deg&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">))]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span></div>
 
-<div class="viewcode-block" id="MapperNVSS.get_catalog_redshift"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_NVSS.MapperNVSS.get_catalog_redshift">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog_redshift</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperNVSS.get_catalog_redshift"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_NVSS.MapperNVSS.get_catalog_redshift">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog_redshift</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the mapper&#39;s catalog of redshifts \</span>
 <span class="sd">        after applying flux filters.</span>
@@ -150,7 +152,7 @@
                 <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_redshift</span><span class="p">[</span><span class="s1">&#39;redshift&#39;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">5</span><span class="p">)]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_redshift</span></div>
 
-<div class="viewcode-block" id="MapperNVSS.get_signal_map"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_NVSS.MapperNVSS.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">apply_galactic_correction</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperNVSS.get_signal_map"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_NVSS.MapperNVSS.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">apply_galactic_correction</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the mapper&#39;s signal map. \</span>
 <span class="sd">        If &#39;apply_galactic_correction = True&#39; \</span>
@@ -213,7 +215,7 @@
             <span class="n">mask</span> <span class="o">=</span> <span class="n">rotate_mask</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rot</span><span class="p">,</span> <span class="n">binarize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">mask</span>
 
-<div class="viewcode-block" id="MapperNVSS.get_nl_coupled"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_NVSS.MapperNVSS.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperNVSS.get_nl_coupled"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_NVSS.MapperNVSS.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the mapper&#39;s coupled noise \</span>
 <span class="sd">        noise power spectrum.</span>
@@ -234,7 +236,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="o">=</span> <span class="n">N_ell</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span></div>
 
-<div class="viewcode-block" id="MapperNVSS.get_nz"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_NVSS.MapperNVSS.get_nz">[docs]</a>    <span class="k">def</span> <span class="nf">get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperNVSS.get_nz"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_NVSS.MapperNVSS.get_nz">[docs]</a>    <span class="k">def</span> <span class="nf">get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Loads the redshift distribution catalog. \</span>
 <span class="sd">        Then, it shifts the distribution by &quot;dz&quot; (default dz=0). \</span>
@@ -254,7 +256,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">dndz</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;z_mid&#39;</span><span class="p">:</span> <span class="n">zz</span><span class="p">,</span> <span class="s1">&#39;nz&#39;</span><span class="p">:</span> <span class="n">nz</span><span class="p">}</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shifted_nz</span><span class="p">(</span><span class="n">dz</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MapperNVSS.get_dtype"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_NVSS.MapperNVSS.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperNVSS.get_dtype"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_NVSS.MapperNVSS.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the type of the mapper.</span>
 
@@ -263,7 +265,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s1">&#39;galaxy_density&#39;</span></div>
 
-<div class="viewcode-block" id="MapperNVSS.get_spin"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_NVSS.MapperNVSS.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperNVSS.get_spin"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_NVSS.MapperNVSS.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the spin of the mapper.</span>
 

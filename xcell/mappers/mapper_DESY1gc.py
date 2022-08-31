@@ -8,21 +8,18 @@ import healpy as hp
 
 class MapperDESY1gc(MapperBase):
     """
-    Mapper of the DESY1 clustering data set. \
+    **Config**
+    
+        - zbin: `0` / `1` / `2` / `3` / `4`
+        - mask_threshold: `0.5`
+        - data_catalog: `'.../Datasets/DES_Y1/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits'`
+        - file_mask: `'.../Datasets/DES_Y1/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits'`
+        - file_nz: `'.../Datasets/DES_Y1/data_vector/2pt_NG_mcal_1110.fits'`
+        - mask_name: `'mask_DESY1gc'`
+        - mapper_class: `'MapperDESY1gc'`
+        - bias: `1.48`/`1.76`/`1.78`/`2.19`/`2.23`
     """
     def __init__(self, config):
-        """
-        Data source:
-        https://des.ncsa.illinois.edu/releases/y1a1/key-catalogs/key-shape
-        config - dict
-          {'data_catalog':'/home/zcapjru/PhD/Data/DES_redm/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits',
-           'file_mask':'/home/zcapjru/PhD/Data/DES_redm/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits',
-           'file_nz':'/home/zcapjru/PhD/Data/DES_redm/2pt_NG_mcal_1110.fits',
-           'zbin':1,
-           'nside':nside,
-           'mask_name': 'mask_DESgc_1'}
-        """
-
         self._get_defaults(config)
         self.rot = self._get_rotator('C')
         self.mask_threshold = config.get('mask_threshold', 0.5)

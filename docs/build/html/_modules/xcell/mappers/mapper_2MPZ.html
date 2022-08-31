@@ -37,9 +37,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../help.html">Help</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../xcell.html">Python API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
 </ul>
 
         </div>
@@ -75,9 +73,26 @@
 <span class="kn">import</span> <span class="nn">os</span>
 
 
-<div class="viewcode-block" id="Mapper2MPZ"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ">[docs]</a><span class="k">class</span> <span class="nc">Mapper2MPZ</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Mapper for the 2MPZ data set.</span>
+<div class="viewcode-block" id="Mapper2MPZ"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ">[docs]</a><span class="k">class</span> <span class="nc">Mapper2MPZ</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    **Config**</span>
+<span class="sd">    </span>
+<span class="sd">        - mask_name: `mask_2MPZWISC`</span>
+<span class="sd">        - path_rerun: `&#39;/.../Datasets/2MPZ_WIxSC/xcell_runs&#39;`</span>
+<span class="sd">        - z_edges: `[0.0, 0.1]`</span>
+<span class="sd">        - data_catalog: `&#39;/.../Datasets/2MPZ_WIxSC/2MPZ.fits&#39;`</span>
+<span class="sd">        - n_jk_dir: `100`</span>
+<span class="sd">        - mask_G: `&#39;/.../Datasets/2MPZ_WIxSC/WISExSCOSmask_galactic.fits.gz&#39;`</span>
+<span class="sd">        - mask_C: `&#39;/.../Datasets/2MPZ_WIxSC/WISExSCOSmask_equatorial.fits.gz&#39;`</span>
+<span class="sd">        - use_halo_model: `True`</span>
+<span class="sd">        - hod_params:</span>
+
+<span class="sd">              - lMmin_0: `12.708493552845066`</span>
+<span class="sd">              - siglM_0: `0.345`</span>
+<span class="sd">              - lM0_0: `12.708493552845066`</span>
+<span class="sd">              - lM1_0: `14.260818060157721`</span>
+<span class="sd">              - alpha_0: `1.0`</span>
+<span class="sd">              - fc_0: `1.0`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -118,7 +133,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown coordinates </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Mapper2MPZ.get_catalog"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Mapper2MPZ.get_catalog"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the mapper catalog of sources.</span>
 
 <span class="sd">        Returns:</span>
@@ -209,7 +224,7 @@
         <span class="n">zm</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">z</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">z</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;z_mid&#39;</span><span class="p">:</span> <span class="n">zm</span><span class="p">,</span> <span class="s1">&#39;nz&#39;</span><span class="p">:</span> <span class="n">nz</span><span class="p">,</span> <span class="s1">&#39;nz_jk&#39;</span><span class="p">:</span> <span class="n">nz_jk</span><span class="p">}</span>
 
-<div class="viewcode-block" id="Mapper2MPZ.get_nz"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_nz">[docs]</a>    <span class="k">def</span> <span class="nf">get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">return_jk_error</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="Mapper2MPZ.get_nz"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_nz">[docs]</a>    <span class="k">def</span> <span class="nf">get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">return_jk_error</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks if mapper has precomputed the redshift \</span>
 <span class="sd">        distribution. If not, it uses &quot;_get_nz()&quot; to obtain it. \</span>
@@ -227,7 +242,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">dndz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rerun_read_cycle</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">&#39;NPZ&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_nz</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shifted_nz</span><span class="p">(</span><span class="n">dz</span><span class="p">,</span> <span class="n">return_jk_error</span><span class="o">=</span><span class="n">return_jk_error</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Mapper2MPZ.get_signal_map"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">apply_galactic_correction</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="Mapper2MPZ.get_signal_map"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">apply_galactic_correction</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the signal map of the mappper.</span>
 
@@ -265,7 +280,7 @@
                            <span class="n">nside_out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">mask</span>
 
-<div class="viewcode-block" id="Mapper2MPZ.get_nl_coupled"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Mapper2MPZ.get_nl_coupled"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculates the noise power spectrum \</span>
 <span class="sd">        of the mapper&#39;s catalog.</span>
@@ -285,7 +300,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="o">=</span> <span class="n">N_ell</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span></div>
 
-<div class="viewcode-block" id="Mapper2MPZ.get_dtype"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Mapper2MPZ.get_dtype"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the type of the mapper.</span>
 
@@ -294,7 +309,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s1">&#39;galaxy_density&#39;</span></div>
 
-<div class="viewcode-block" id="Mapper2MPZ.get_spin"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Mapper2MPZ.get_spin"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the spin of the mapper.</span>
 

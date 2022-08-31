@@ -6,18 +6,20 @@ import numpy as np
 
 class MapperACTk(MapperACTBase):
     """
-    Mapper for the ACT lensing data set. \
-    Child class of "MapperACTBase". \
+    For X either 'BN' or 'D56' depending on the desired sky patch.
+    
+    **Config**
+    
+        - mapper_class: `'MapperACTk'`
+        - mask_name: `'mask_ACT_kappa_X'`
+        - map_name: `'kappa_X'`
+        - path_rerun: `'/mnt/extraspace/damonge/Datasets/ACT_DR4/xcell_runs'`
+        - file_map: `'/mnt/extraspace/damonge/Datasets/ACT_DR4/lensing_kappa_maps/act_planck_dr4.01_s14s15_X_lensing_kappa_baseline.fits'`
+        - file_mask: `'/mnt/extraspace/damonge/Datasets/ACT_DR4/masks/lensing_masks/act_dr4.01_s14s15_X_lensing_mask.fits'`
+        - lmax: `6000`
+        - mask_power: `2`
     """
     def __init__(self, config):
-        """
-        config - dict
-        {'file_map':path_ACT+'act_planck_dr4.01_s14s15_D56_lensing_kappa_baseline.fits',
-        'file_mask':path_ACT+'act_dr4.01_s14s15_D56_lensing_mask.fits',
-        'mask_name': 'mask_CMBK',
-        'nside': nside,
-        'mask_power': 2}
-        """
         self._get_ACT_defaults(config)
         self.mask_power = config.get('mask_power', 2)
 

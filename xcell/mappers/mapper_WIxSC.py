@@ -10,20 +10,36 @@ import os
 
 class MapperWIxSC(MapperBase):
     """
-    Mapper for the WIxSC data set. 
+    **Config**
+
+    - mask_name: `"mask_2MPZWISC"`
+    - path_rerun: `'.../Datasets/2MPZ_WIxSC/xcell_runs'`
+    - z_edges: `[0.10, 0.15]` / `[0.15, 0.20]` / `[0.20, 0.25]` \
+               `[0.25, 0.30]` / `[0.30, 0.35]`
+    - bin_name: `'z0p10_0p15'` / `'z0p15_0p20'` / `'z0p20_0p25'` \
+                `'z0p25_0p30'` / `'z0p30_0p35'`
+    - nside_nl_threshold: `8129`
+    - lmin_nl_from_data: `8192`
+    - nl_analytic: `True`
+    - data_catalog: `'.../Datasets/2MPZ_WIxSC/WIxSC.fits'`
+    - spec_sample: `'.../Datasets/2MPZ_WIxSC/zSpec-comp-WIxSC.csv'`
+    - n_jk_dir: `100`
+    - apply_galactic_correction: `True`
+    - mask_G: `'.../Datasets/2MPZ_WIxSC/WISExSCOSmask_galactic.fits.gz'`
+    - mask_C: `'.../Datasets/2MPZ_WIxSC/WISExSCOSmask_equatorial.fits.gz'`
+    - star_map_G: `'.../Datasets/2MPZ_WIxSC/allwise_total_galactic.fits'`
+    - star_map_C: `'.../Datasets/2MPZ_WIxSC/allwise_total_equatorial.fits'`
+    - use_halo_model: `True`
+    - hod_params:
+    
+        - lMmin_0: `11.697` / `11.859` / `12.103` / `12.144` / `12.084`
+        - siglM_0: `0.345` / `0.345` / `0.345` / `0.345` / `0.345`
+        - lM0_0: `11.697` / `11.859` / `12.103` / 12.144 / `13.013`
+        - lM1_0: `13.035` / `13.146` / `13.414` / 13.434 / `12.084`
+        - alpha_0: `1.0` / `1.0` / `1.0` / `1.0` /  `1.0`
+        - fc_0: `1.0` / `1.0` / `1.0` / `1.0` / `1.0`
     """
     def __init__(self, config):
-        """
-        config - dict
-          {'data_catalog': 'WIxSC.fits',
-           'mask': 'mask.fits',
-           'star_map': 'stars.fits',
-           'spec_sample': 'zSpec-comp-WIxSC.csv',
-           'bin_name': '0',
-           'z_edges': [0, 0.5],
-           'n_jk_dir': 100,
-           'mask_name': 'mask_WIxSC'}
-        """
         self._get_defaults(config)
         self.z_edges = config.get('z_edges', [0, 0.5])
         self.ra_name, self.dec_name, self.in_rad = self._get_coords(config)

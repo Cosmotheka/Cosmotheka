@@ -7,17 +7,15 @@ import healpy as hp
 
 class MapperCatWISE(MapperBase):
     """
-    Mapper for the CatWISE data set. \
+    **Config**
+    
+        - data_catalog: `".../Datasets/CatWISE/catwise_agns_masked_final_w1lt16p5_alpha.fits"`
+        - file_mask: `".../Datasets/CatWISE/MASKS_exclude_master_final.fits"`
+        - apply_ecliptic_correction: `True`
+        - mask_name: `"mask_CatWISE"`
+        - path_rerun: `".../Datasets/CatWISE/xcell_runs"`
     """
     def __init__(self, config):
-        """
-        config - dict
-        {'data_catalog':
-        'xcell/tests/data/catwise_agns_masked_final_w1lt16p5_alpha.fits',
-        'mask': 'xcell/tests/data/MASKS_exclude_master_final.fits',
-        'mask_name': 'mask_CatWISE',
-        'apply_ecliptic_correction': True}
-        """
         self._get_defaults(config)
         self.file_sourcemask = config.get('mask_sources', None)
         self.apply_ecliptic_correction = \

@@ -9,21 +9,24 @@ import os
 
 class MapperDELS(MapperBase):
     """
-    Mapper for the DELS data set. \
+    **Config**
+        - z_name: `"PHOTOZ_3DINFER"`
+        - num_z_bins: `500`
+        - zbin: `0` / `1` / `2` / `3`
+        - data_catalogs:
+
+            - `'.../Datasets/DELS/Legacy_Survey_BASS-MZLS_galaxies-selection.fits'`
+            - `'.../Datasets/DELS/Legacy_Survey_DECALS_galaxies-selection.fits'`
+
+        - binary_mask: `'.../Datasets/DELS/Legacy_footprint_final_mask_cut_decm36.fits'`
+        - completeness_map: `'.../Datasets/DELS/Legacy_footprint_completeness_mask_128.fits'`
+        - star_map: `'.../Datasets/DELS/allwise_total_rot_1024.fits'`
+        - path_rerun: `'.../Datasets/DELS/xcell_reruns/'`
+        - mask_name: `'mask_DELS_decm36'`
+        - mapper_class: `'MapperDELS'`
+        - bias: `1.13` / v1.40` / `1.35` / `1.77`
     """
     def __init__(self, config):
-        """
-        config - dict
-          {'data_catalogs':['Legacy_Survey_BASS-MZLS_galaxies-selection.fits'],
-           'zbin': 0,
-           'z_name': 'PHOTOZ_3DINFER',
-           'num_z_bins': 500,
-           'binary_mask': 'Legacy_footprint_final_mask.fits',
-           'completeness_map': 'Legacy_footprint_completeness_mask_128.fits',
-           'star_map': 'allwise_total_rot_1024.fits',
-           'nside': 1024,
-           'mask_name': 'mask_DELS'}
-        """
         self._get_defaults(config)
         self.rot = self._get_rotator('C')
         self.pz = config.get('z_name', 'PHOTOZ_3DINFER')

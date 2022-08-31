@@ -5,15 +5,25 @@ import healpy as hp
 
 class MapperP18SMICA(MapperPlanckBase):
     """
-    Mapper for the Planck 18 SMICA component separated CMB map.
+    **Config**
+
+        - file_map: `".../Datasets/Planck_SMICA/COM_CMB_IQU-smica-nosz_2048_R3.00_full.fits"`
+        - file_hm1: `".../Datasets/Planck_SMICA/COM_CMB_IQU-smica-nosz_2048_R3.00_hm1.fits"`
+        - file_hm2: `".../Datasets/Planck_SMICA/COM_CMB_IQU-smica-nosz_2048_R3.00_hm2.fits"`
+        - file_gp_mask: `".../Datasets/Planck_masks/HFI_Mask_GalPlane-apo2_2048_R2.00.fits"`
+        - file_ps_mask: `".../Datasets/Planck_masks/HFI_Mask_PointSrc_2048_R2.00.fits"`
+        
+        - beam_info:
+
+            - type: `'Gaussian'`
+            - FWHM_arcmin: `5.0`
+
+        - gp_mask_mode: `'0.6'`
+        - ps_mask_mode: `['F100', 'F143', 'F217', 'F353']`
+        - mask_name: `mask_P18SMICA`
+        - path_rerun: `'.../Datasets/Planck_SMICA/xcell_runs'`
     """
     def __init__(self, config):
-        """
-        config - dict
-        {'file_map': [path+'COM_CMB_IQU-smica-nosz_2048_R3.00_full.fits'],
-         '',
-         'nside':512}
-        """
         self._get_Planck_defaults(config)
         self.beam_info = config.get('beam_info',
                                     [{'type': 'Gaussian',

@@ -37,9 +37,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../help.html">Help</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../xcell.html">Python API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
 </ul>
 
         </div>
@@ -77,22 +75,38 @@
 <span class="kn">import</span> <span class="nn">os</span>
 
 
-<div class="viewcode-block" id="MapperWIxSC"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_WIxSC.MapperWIxSC">[docs]</a><span class="k">class</span> <span class="nc">MapperWIxSC</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperWIxSC"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC">[docs]</a><span class="k">class</span> <span class="nc">MapperWIxSC</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Mapper for the WIxSC data set. </span>
+<span class="sd">    **Config**</span>
+
+<span class="sd">    - mask_name: `&quot;mask_2MPZWISC&quot;`</span>
+<span class="sd">    - path_rerun: `&#39;.../Datasets/2MPZ_WIxSC/xcell_runs&#39;`</span>
+<span class="sd">    - z_edges: `[0.10, 0.15]` / `[0.15, 0.20]` / `[0.20, 0.25]` \</span>
+<span class="sd">               `[0.25, 0.30]` / `[0.30, 0.35]`</span>
+<span class="sd">    - bin_name: `&#39;z0p10_0p15&#39;` / `&#39;z0p15_0p20&#39;` / `&#39;z0p20_0p25&#39;` \</span>
+<span class="sd">                `&#39;z0p25_0p30&#39;` / `&#39;z0p30_0p35&#39;`</span>
+<span class="sd">    - nside_nl_threshold: `8129`</span>
+<span class="sd">    - lmin_nl_from_data: `8192`</span>
+<span class="sd">    - nl_analytic: `True`</span>
+<span class="sd">    - data_catalog: `&#39;.../Datasets/2MPZ_WIxSC/WIxSC.fits&#39;`</span>
+<span class="sd">    - spec_sample: `&#39;.../Datasets/2MPZ_WIxSC/zSpec-comp-WIxSC.csv&#39;`</span>
+<span class="sd">    - n_jk_dir: `100`</span>
+<span class="sd">    - apply_galactic_correction: `True`</span>
+<span class="sd">    - mask_G: `&#39;.../Datasets/2MPZ_WIxSC/WISExSCOSmask_galactic.fits.gz&#39;`</span>
+<span class="sd">    - mask_C: `&#39;.../Datasets/2MPZ_WIxSC/WISExSCOSmask_equatorial.fits.gz&#39;`</span>
+<span class="sd">    - star_map_G: `&#39;.../Datasets/2MPZ_WIxSC/allwise_total_galactic.fits&#39;`</span>
+<span class="sd">    - star_map_C: `&#39;.../Datasets/2MPZ_WIxSC/allwise_total_equatorial.fits&#39;`</span>
+<span class="sd">    - use_halo_model: `True`</span>
+<span class="sd">    - hod_params:</span>
+<span class="sd">    </span>
+<span class="sd">        - lMmin_0: `11.697` / `11.859` / `12.103` / `12.144` / `12.084`</span>
+<span class="sd">        - siglM_0: `0.345` / `0.345` / `0.345` / `0.345` / `0.345`</span>
+<span class="sd">        - lM0_0: `11.697` / `11.859` / `12.103` / 12.144 / `13.013`</span>
+<span class="sd">        - lM1_0: `13.035` / `13.146` / `13.414` / 13.434 / `12.084`</span>
+<span class="sd">        - alpha_0: `1.0` / `1.0` / `1.0` / `1.0` /  `1.0`</span>
+<span class="sd">        - fc_0: `1.0` / `1.0` / `1.0` / `1.0` / `1.0`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        config - dict</span>
-<span class="sd">          {&#39;data_catalog&#39;: &#39;WIxSC.fits&#39;,</span>
-<span class="sd">           &#39;mask&#39;: &#39;mask.fits&#39;,</span>
-<span class="sd">           &#39;star_map&#39;: &#39;stars.fits&#39;,</span>
-<span class="sd">           &#39;spec_sample&#39;: &#39;zSpec-comp-WIxSC.csv&#39;,</span>
-<span class="sd">           &#39;bin_name&#39;: &#39;0&#39;,</span>
-<span class="sd">           &#39;z_edges&#39;: [0, 0.5],</span>
-<span class="sd">           &#39;n_jk_dir&#39;: 100,</span>
-<span class="sd">           &#39;mask_name&#39;: &#39;mask_WIxSC&#39;}</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_get_defaults</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">z_edges</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;z_edges&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ra_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dec_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_rad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_coords</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
@@ -111,7 +125,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">lmin_nl_from_data</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;lmin_nl_from_data&#39;</span><span class="p">,</span>
                                             <span class="mi">2000</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MapperWIxSC.get_radec"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_radec">[docs]</a>    <span class="k">def</span> <span class="nf">get_radec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cat</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperWIxSC.get_radec"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_radec">[docs]</a>    <span class="k">def</span> <span class="nf">get_radec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cat</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the RA and DEC fields \</span>
 <span class="sd">        of the mapper&#39;s catalog.</span>
@@ -172,7 +186,7 @@
         <span class="n">cat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_catalog</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cat</span>
 
-<div class="viewcode-block" id="MapperWIxSC.get_catalog"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperWIxSC.get_catalog"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks if a processed WIxSC catalog has \</span>
 <span class="sd">        already been computed. \</span>
@@ -270,7 +284,7 @@
         <span class="n">zm</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">z</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">z</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;z_mid&#39;</span><span class="p">:</span> <span class="n">zm</span><span class="p">,</span> <span class="s1">&#39;nz&#39;</span><span class="p">:</span> <span class="n">nz</span><span class="p">,</span> <span class="s1">&#39;nz_jk&#39;</span><span class="p">:</span> <span class="n">nz_jk</span><span class="p">}</span>
 
-<div class="viewcode-block" id="MapperWIxSC.get_nz"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_nz">[docs]</a>    <span class="k">def</span> <span class="nf">get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">return_jk_error</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperWIxSC.get_nz"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_nz">[docs]</a>    <span class="k">def</span> <span class="nf">get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">return_jk_error</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks if mapper has already computed \</span>
 <span class="sd">        redshift distribution of sources. \</span>
@@ -291,7 +305,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">dndz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rerun_read_cycle</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">&#39;NPZ&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_nz</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shifted_nz</span><span class="p">(</span><span class="n">dz</span><span class="p">,</span> <span class="n">return_jk_error</span><span class="o">=</span><span class="n">return_jk_error</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MapperWIxSC.get_signal_map"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperWIxSC.get_signal_map"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the signal map of the mapper. \</span>
 <span class="sd">        If &#39;apply_galactic_correction&#39; = True, \</span>
@@ -420,7 +434,7 @@
                 <span class="s1">&#39;delta_func&#39;</span><span class="p">:</span> <span class="n">df</span><span class="p">,</span>
                 <span class="s1">&#39;delta_map&#39;</span><span class="p">:</span> <span class="n">d_corr</span><span class="p">}</span>
 
-<div class="viewcode-block" id="MapperWIxSC.get_nl_coupled"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperWIxSC.get_nl_coupled"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the coupled noise power spectrum of the mapper. \</span>
 <span class="sd">        if the resolution is equal or greater than nside&gt;=4096, the \</span>
@@ -450,7 +464,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="o">=</span> <span class="n">N_ell</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span></div>
 
-<div class="viewcode-block" id="MapperWIxSC.get_dtype"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperWIxSC.get_dtype"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the type of the mapper</span>
 
@@ -459,7 +473,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s1">&#39;galaxy_density&#39;</span></div>
 
-<div class="viewcode-block" id="MapperWIxSC.get_spin"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperWIxSC.get_spin"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the spin of the mapper.</span>
 <span class="sd">        </span>

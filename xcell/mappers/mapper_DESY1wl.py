@@ -7,22 +7,21 @@ import healpy as hp
 
 class MapperDESY1wl(MapperBase):
     """
-    Mapper of the DESY1 weak lensing data set.
+    Note that last letter of the the mask name stands for the \
+    chosen redshdift bin (`i = [1,2,3,4]`).
+    
+    ***Config***
+    
+        - zbin: `0` / `1` / `2` /`3`
+        - mode: `shear` / `PSF`
+        - zbin_cat: `'.../Datasets/DES_Y1/shear_catalog/y1_source_redshift_binning_v1.fits'`
+        - data_cat:  `'.../Datasets/DES_Y1/shear_catalog/mcal-y1a1-combined-riz-unblind-v4-matched.fits'`
+        - file_nz: `'.../Datasets/DES_Y1/shear_catalog/y1_redshift_distributions_v1.fits'`
+        - path_rerun: `'.../Datasets/DES_Y1/xcell_reruns/'`
+        - mask_name: `'mask_DESY1wli'`
+        - mapper_class: `'MapperDESY1wl'`
     """
     def __init__(self, config):
-        """
-        Data source:
-        https://des.ncsa.illinois.edu/releases/y1a1/key-catalogs/key-shape
-        config - dict
-          {'zbin_cat': 'y1_source_redshift_binning_v1.fits',
-           'data_cat':  'mcal-y1a1-combined-riz-unblind-v4-matched.fits',
-           'file_nz': '/.../.../y1_redshift_distributions_v1.fits'
-           'nside': Nside,
-           'zbin': zbin,
-           'mask_name': name,
-           }
-        """
-
         self._get_defaults(config)
         self.config = config
         self.rot = self._get_rotator('C')

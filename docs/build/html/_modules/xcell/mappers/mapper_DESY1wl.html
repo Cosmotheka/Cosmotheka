@@ -37,9 +37,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../help.html">Help</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../xcell.html">Python API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
 </ul>
 
         </div>
@@ -74,24 +72,23 @@
 <span class="kn">import</span> <span class="nn">healpy</span> <span class="k">as</span> <span class="nn">hp</span>
 
 
-<div class="viewcode-block" id="MapperDESY1wl"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_DESY1wl.MapperDESY1wl">[docs]</a><span class="k">class</span> <span class="nc">MapperDESY1wl</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperDESY1wl"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DESY1wl.MapperDESY1wl">[docs]</a><span class="k">class</span> <span class="nc">MapperDESY1wl</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Mapper of the DESY1 weak lensing data set.</span>
+<span class="sd">    Note that last letter of the the mask name stands for the \</span>
+<span class="sd">    chosen redshdift bin (`i = [1,2,3,4]`).</span>
+<span class="sd">    </span>
+<span class="sd">    ***Config***</span>
+<span class="sd">    </span>
+<span class="sd">        - zbin: `0` / `1` / `2` /`3`</span>
+<span class="sd">        - mode: `shear` / `PSF`</span>
+<span class="sd">        - zbin_cat: `&#39;.../Datasets/DES_Y1/shear_catalog/y1_source_redshift_binning_v1.fits&#39;`</span>
+<span class="sd">        - data_cat:  `&#39;.../Datasets/DES_Y1/shear_catalog/mcal-y1a1-combined-riz-unblind-v4-matched.fits&#39;`</span>
+<span class="sd">        - file_nz: `&#39;.../Datasets/DES_Y1/shear_catalog/y1_redshift_distributions_v1.fits&#39;`</span>
+<span class="sd">        - path_rerun: `&#39;.../Datasets/DES_Y1/xcell_reruns/&#39;`</span>
+<span class="sd">        - mask_name: `&#39;mask_DESY1wli&#39;`</span>
+<span class="sd">        - mapper_class: `&#39;MapperDESY1wl&#39;`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Data source:</span>
-<span class="sd">        https://des.ncsa.illinois.edu/releases/y1a1/key-catalogs/key-shape</span>
-<span class="sd">        config - dict</span>
-<span class="sd">          {&#39;zbin_cat&#39;: &#39;y1_source_redshift_binning_v1.fits&#39;,</span>
-<span class="sd">           &#39;data_cat&#39;:  &#39;mcal-y1a1-combined-riz-unblind-v4-matched.fits&#39;,</span>
-<span class="sd">           &#39;file_nz&#39;: &#39;/.../.../y1_redshift_distributions_v1.fits&#39;</span>
-<span class="sd">           &#39;nside&#39;: Nside,</span>
-<span class="sd">           &#39;zbin&#39;: zbin,</span>
-<span class="sd">           &#39;mask_name&#39;: name,</span>
-<span class="sd">           }</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_get_defaults</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_rotator</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
@@ -111,7 +108,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nls</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;PSF&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;shear&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
 
-<div class="viewcode-block" id="MapperDESY1wl.get_catalog"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperDESY1wl.get_catalog"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the chosen redshift bin of the \</span>
 <span class="sd">        mappers catalog after removing the \</span>
@@ -300,7 +297,7 @@
         <span class="n">we2</span><span class="p">[</span><span class="n">goodpix</span><span class="p">]</span> <span class="o">/=</span> <span class="n">mask</span><span class="p">[</span><span class="n">goodpix</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">we1</span><span class="p">,</span> <span class="n">we2</span>
 
-<div class="viewcode-block" id="MapperDESY1wl.get_signal_map"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperDESY1wl.get_signal_map"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the masked signal map.</span>
 
@@ -325,7 +322,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">signal_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maps</span><span class="p">[</span><span class="n">mod</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">signal_map</span></div>
 
-<div class="viewcode-block" id="MapperDESY1wl.get_nz"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_nz">[docs]</a>    <span class="k">def</span> <span class="nf">get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperDESY1wl.get_nz"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_nz">[docs]</a>    <span class="k">def</span> <span class="nf">get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the mappers redshift \</span>
 <span class="sd">        distribtuion of sources from a file.</span>
 
@@ -356,7 +353,7 @@
                                   <span class="n">rot</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rot</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">msk</span>
 
-<div class="viewcode-block" id="MapperDESY1wl.get_nl_coupled"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperDESY1wl.get_nl_coupled"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the coupled noise power spectrum \</span>
 <span class="sd">        of the mapper&#39;s data set.</span>
@@ -392,7 +389,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nls</span><span class="p">[</span><span class="n">mod</span><span class="p">]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span></div>
 
-<div class="viewcode-block" id="MapperDESY1wl.get_dtype"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperDESY1wl.get_dtype"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the type of the mapper.</span>
 
 <span class="sd">        Returns:</span>
@@ -400,7 +397,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s1">&#39;galaxy_shear&#39;</span></div>
 
-<div class="viewcode-block" id="MapperDESY1wl.get_spin"><a class="viewcode-back" href="../../../xcell.html#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MapperDESY1wl.get_spin"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the spin of the mapper.</span>
 
 <span class="sd">        Returns:</span>

@@ -7,16 +7,20 @@ import healpy as hp
 
 class MapperNVSS(MapperBase):
     """
-    Mapper for the NVSS data set. 
+
+    **Config**
+
+        - data_catalog: `".../Datasets/NVSS/nvss.fits"`
+        - mask_sources: `".../Datasets/NVSS/source_masks_nvss.txt"`
+        - redshift_catalog: ".../Datasets/NVSS/100sqdeg_1uJy_s1400.fits"`
+        - DEC_min_deg: `-40`
+        - flux_min_mJy: `10`
+        - fux_max_mJy: `1000`
+        - GLAT_max_deg: `10`
+        - mask_name: `"mask_NVSS"`
+        - path_rerun: `".../Datasets/NVSS/xcell_runs"`
     """
     def __init__(self, config):
-        """
-        config - dict
-          {'data_catalog': 'nvss.fits',
-           'mask': 'mask.fits',
-           'mask_name': 'mask_NVSS'
-           'redshift_catalog':'100sqdeg_1uJy_s1400.fits'}
-        """
         self._get_defaults(config)
         self.rot = self._get_rotator('C')
         self.file_sourcemask = config.get('mask_sources', None)

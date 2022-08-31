@@ -7,17 +7,19 @@ import healpy as hp
 
 class MapperKiDS1000(MapperBase):
     """
-    Mapper for the KiDS-1000 weak lensing data set. \
+    Note that last letter of the the mask name stands for the \
+    chosen redshdift bin (`i = [1,2,3,4]`).
+    
+    ***Config***
+    
+        - data_catalog: `".../Datasets/KiDS1000/KiDS_DR4.1_ugriZYJHKs_SOM_gold_WL_cat.fits"`
+        - file_nz: `".../Datasets/KiDS1000/SOM_N_of_Z/K1000_NS_V1.0.0A_ugriZYJHKs_photoz_SG_mask_LF_svn_309c_2Dbins_v2_SOMcols_Fid_blindC_TOMO2_Nz.asc"`
+        - mode: `"shear"` / `"PSF"` / `"stars"`
+        - zbin: `"1"` / `"1"` / `"2"` / `"3"` / `"4"`
+        - mask_name: "mask_KiDS1000__i"
+        - path_rerun: '/mnt/extraspace/damonge/Datasets/KiDS1000/xcell_runs'
     """
     def __init__(self, config):
-        """
-        config - dict
-          {'data_catalog': 'KiDS_DR4.1_ugriZYJHKs_SOM_gold_WL_cat.fits',
-           'file_nz': SOM_N_of_Z/K1000_..._TOMO1_Nz.asc
-          'zbin':0,
-          'nside':nside,
-          'mask_name': 'mask_KiDS1000_0'}
-        """
 
         self._get_defaults(config)
         self.rot = self._get_rotator('C')
@@ -59,9 +61,8 @@ class MapperKiDS1000(MapperBase):
     def get_catalog(self):
         """
         Returns the chosen redshift bin of the \
-        mappers catalog. \
-        Args:
-            None
+        mappers catalog.
+
         Returns:
             cat_data (Array)
         """
@@ -76,11 +77,9 @@ class MapperKiDS1000(MapperBase):
         """
         Loads the lite DESY1 catalog. \
         Selects the chosen bin in the catalog. \
-        Removes the additive and multiplicative \
-        biases. 
-        Returns the catalog. \
-        Args:
-            None
+        Removes the additive and multiplicative biases. 
+        Returns the catalog.
+
         Returns:
             cat (Table)
         """
@@ -106,10 +105,8 @@ class MapperKiDS1000(MapperBase):
         it returns the kind of the map associated \
         ('shear', 'PSF' --> 'galaxy' and 'stars' --> stars) \
         with the mode and corresponding name of the \
-        ellipticity fields in the catalog. \
-        
-        Args:
-            None
+        ellipticity fields in the catalog. 
+
         Returns:
             kind (String), e1_flag (String),
             e2_flag (String), mode (String)
@@ -134,7 +131,8 @@ class MapperKiDS1000(MapperBase):
     def _bin_z(self, cat, zbin):
         """
         Removes all sources in the catalog \
-        outside the chosen redshift bin. \
+        outside the chosen redshift bin.
+
         Args:
             cat (Array): catalog
             zbin (Int): redshift bin index
@@ -148,7 +146,8 @@ class MapperKiDS1000(MapperBase):
 
     def _remove_additive_bias(self, cat):
         """
-        Removes the additive bias from the ellipticity maps. \
+        Removes the additive bias from the ellipticity maps.
+
         Args:
             cat (Array): catalog
         Returns:
@@ -165,10 +164,12 @@ class MapperKiDS1000(MapperBase):
 
     def _remove_multiplicative_bias(self, cat, zbin):
         """
-        Removes the multiplicative bias from the ellipticity maps. \
+        Removes the multiplicative bias from the ellipticity maps.
+
         Args:
             cat (Array): catalog
             zbin (Int): redshift bin index
+
         Returns:
             None
         """
@@ -180,11 +181,11 @@ class MapperKiDS1000(MapperBase):
         """
         Returns the sources of the catalog \
         corresponding to the chosen kind \
-        of source ('galaxies' or 'stars'). \
-        Args:
-            None
+        of source ('galaxies' or 'stars').
+
         Kwargs:
             kind='galaxies'
+
         Returns:
             cat (Array)
         """
@@ -194,9 +195,8 @@ class MapperKiDS1000(MapperBase):
 
     def _get_ellip_maps(self):
         """
-        Returns the ellipticity fields of the mapper's catalog.\
-        Args:
-            None
+        Returns the ellipticity fields of the mapper's catalog.
+
         Returns:
             we1 (Array), we2 (Array)
         """
@@ -217,9 +217,8 @@ class MapperKiDS1000(MapperBase):
 
     def get_signal_map(self):
         """
-        Returns the mapper's signal map. \
-        Args:
-            None
+        Returns the mapper's signal map.
+
         Returns:
             signal_map (Array)
         """
@@ -241,9 +240,8 @@ class MapperKiDS1000(MapperBase):
 
     def _get_mask(self):
         """
-        Returns the mapper's mask. \
-        Args:
-            None
+        Returns the mapper's mask.
+
         Returns:
             mask (Array)
         """
@@ -263,9 +261,8 @@ class MapperKiDS1000(MapperBase):
     def _get_w2s2(self):
         """
         Computes map for noise power spectrum \
-        estimation. \
-        Args:
-            None
+        estimation.
+
         Returns:
             w2s2_map (Array)
         """
@@ -293,9 +290,8 @@ class MapperKiDS1000(MapperBase):
     def get_nl_coupled(self):
         """
         Returns the mapper's coupled noise \
-        noise power spectrum. \
-        Args:
-            None
+        noise power spectrum.
+
         Returns:
             nl_coupled (Array)
         """
@@ -314,12 +310,11 @@ class MapperKiDS1000(MapperBase):
         Loads the redshift distribution of sources \
         from the data products. 
         Then, it shifts the distribution by "dz" (default dz=0). \
-        Finally, it returns the redshift distribtuion. \
-        
-        Args:
-            None
+        Finally, it returns the redshift distribtuion.
+
         Kwargs:
             dz=0
+
         Returns:
             [z, nz] (Array)
         """
@@ -330,10 +325,8 @@ class MapperKiDS1000(MapperBase):
 
     def get_dtype(self):
         """
-        Returns the type of the mapper. \
-        
-        Args:
-            None
+        Returns the type of the mapper.
+
         Returns:
             mapper_type (String)
         """
@@ -341,10 +334,8 @@ class MapperKiDS1000(MapperBase):
 
     def get_spin(self):
         """
-        Returns the spin of the mapper. \
-        
-        Args:
-            None
+        Returns the spin of the mapper.
+
         Returns:
             spin (Int)
         """
