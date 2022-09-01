@@ -10,7 +10,7 @@ class MapperKiDS1000(MapperBase):
     Note that last letter of the the mask name stands for the \
     chosen redshdift bin (`i = [1,2,3,4]`).
 
-    path = `".../Datasets/KiDS1000"`
+    path = `".../Datasets/KiDS1000/"`
 
     **Config**
 
@@ -20,8 +20,8 @@ class MapperKiDS1000(MapperBase):
         `path+"SOM_N_of_Z/K1000_NS_V1.0.0A_ugriZYJHKs_photoz_SG_mask_LF_svn_309c_2Dbins_v2_SOMcols_Fid_blindC_TOMO2_Nz.asc"`
         - mode: `"shear"` / `"PSF"` / `"stars"`
         - zbin: `"1"` / `"1"` / `"2"` / `"3"` / `"4"`
-        - mask_name: "mask_KiDS1000__i"
-        - path_rerun: '/mnt/extraspace/damonge/Datasets/KiDS1000/xcell_runs'
+        - mask_name: `"mask_KiDS1000__i"`
+        - path_rerun: `path+'xcell_runs'`
     """
     def __init__(self, config):
 

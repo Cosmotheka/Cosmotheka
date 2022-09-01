@@ -28,7 +28,7 @@ def get_rerun_data(mpr, fname, ftype, section=None, read=True):
         read (`True` or `False`): if `False` only checks for existance of \
             files as opposed to reading them.
     Returns:
-        The rerun file
+        file
     """
     # Ignore rerun file if required
     ignore = mpr.config.get('ignore_rerun', False)
@@ -71,7 +71,7 @@ def save_rerun_data(mpr, fname, ftype, data):
         ftype (string): type of rerun files FITSTable, FITSMap, ASCII or NPZ
         data: the data that will be saved to a file
     Returns:
-        Nothing
+
     """
     fname_full, _ = _build_rerun_fname(mpr, fname)
 
@@ -103,7 +103,7 @@ def rotate_mask(mask, rot, binarize=False):
             to 1.
 
     Returns:
-        Rotated mask
+        mask (Array)
     """
     if rot is None:
         return mask
@@ -128,7 +128,7 @@ def rotate_map(mapp, rot):
                coordinates.
 
     Returns:
-        Rotated map
+        map (Array)
     """
     if rot is None:
         return mapp
@@ -138,28 +138,31 @@ def rotate_map(mapp, rot):
 def get_map_from_points(cat, nside, w=None, rot=None,
                         ra_name='RA', dec_name='DEC',
                         in_radians=False, qu=None):
-    """Creates a map given a catalog of objects and \
-        a number of pixels.
+    """
+    Creates a map given a catalog of objects and \
+    a number of pixels.
+
     Args:
         cat (Array): catalog of sources.
         nside (:class:`healpy.rotator.Rotator`): rotator \
             object containing the current and target \
             coordinates.
         w (Array): weights of sources in catalaog. \
-            Defaults to `None`.
+                   Defaults to `None`.
        rot (:class:`healpy.rotator.Rotator`): If not `None` \
            rotates sources in catalog to target \
            coordinates. Defaults to "None". \
        ra_name (String): name of RA field in catalog. \
-           Defaults to "RA".
+                         Defaults to "RA".
        dec_name (String): name of DEC field in catalog. \
-           Defaults to "DEC".
+                          Defaults to "DEC".
        in_radians (`True` or `False`): Flags if input catalog. \
            If `True`, converts angles in catalog to degrees.
        qu (Array): weights for spin-2 quantities. \
-           Defaults to `None`. \
+                   Defaults to `None`.
+
     Returns:
-        Array with length nside
+        numcount (Array)
     """
     npix = hp.nside2npix(nside)
     if in_radians:

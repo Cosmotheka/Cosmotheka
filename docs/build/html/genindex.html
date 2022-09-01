@@ -38,7 +38,7 @@
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="base_mapper.html">General Philosophy &amp; The Base Mapper</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mappers.html">2MPZ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mappers.html#act">ACT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mappers.html#module-xcell.mappers.mapper_ACT_base">ACT</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mappers.html#module-xcell.mappers.mapper_CatWISE">CatWISE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mappers.html#module-xcell.mappers.mapper_DELS">DESL</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mappers.html#desy1">DESY1</a></li>
@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="mappers.html#module-xcell.mappers.mapper_SDSS">SDSS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Utils</a></li>
 </ul>
 
         </div>
@@ -81,6 +82,8 @@
 <div class="genindex-jumpbox">
  <a href="#G"><strong>G</strong></a>
  | <a href="#M"><strong>M</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
  | <a href="#X"><strong>X</strong></a>
  
 </div>
@@ -118,6 +121,8 @@
       <li><a href="mappers.html#xcell.mappers.mapper_Planck_base.MapperPlanckBase.get_cls_covar_coupled">get_cls_covar_coupled() (xcell.mappers.mapper_Planck_base.MapperPlanckBase method)</a>
 </li>
       <li><a href="base_mapper.html#xcell.mappers.mapper_base.MapperBase.get_contaminants">get_contaminants() (xcell.mappers.mapper_base.MapperBase method)</a>
+</li>
+      <li><a href="utils.html#xcell.mappers.utils.get_DIR_Nz">get_DIR_Nz() (in module xcell.mappers.utils)</a>
 </li>
       <li><a href="mappers.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_dtype">get_dtype() (xcell.mappers.mapper_2MPZ.Mapper2MPZ method)</a>
 
@@ -164,6 +169,8 @@
       <li><a href="base_mapper.html#xcell.mappers.mapper_base.MapperBase.get_ell">get_ell() (xcell.mappers.mapper_base.MapperBase method)</a>
 </li>
       <li><a href="mappers.html#xcell.mappers.mapper_ROSAT.MapperROSATXray.get_expmap">get_expmap() (xcell.mappers.mapper_ROSAT.MapperROSATXray method)</a>
+</li>
+      <li><a href="utils.html#xcell.mappers.utils.get_map_from_points">get_map_from_points() (in module xcell.mappers.utils)</a>
 </li>
       <li><a href="base_mapper.html#xcell.mappers.mapper_base.MapperBase.get_mask">get_mask() (xcell.mappers.mapper_base.MapperBase method)</a>
 </li>
@@ -229,9 +236,13 @@
 </li>
       <li><a href="mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_radec">get_radec() (xcell.mappers.mapper_WIxSC.MapperWIxSC method)</a>
 </li>
+      <li><a href="utils.html#xcell.mappers.utils.get_rerun_data">get_rerun_data() (in module xcell.mappers.utils)</a>
+</li>
       <li><a href="mappers.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_signal_map">get_signal_map() (xcell.mappers.mapper_2MPZ.Mapper2MPZ method)</a>
 
       <ul>
+        <li><a href="mappers.html#xcell.mappers.mapper_ACT_base.MapperACTBase.get_signal_map">(xcell.mappers.mapper_ACT_base.MapperACTBase method)</a>
+</li>
         <li><a href="base_mapper.html#xcell.mappers.mapper_base.MapperBase.get_signal_map">(xcell.mappers.mapper_base.MapperBase method)</a>
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_signal_map">(xcell.mappers.mapper_CatWISE.MapperCatWISE method)</a>
@@ -303,6 +314,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="mappers.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ">Mapper2MPZ (class in xcell.mappers.mapper_2MPZ)</a>
 </li>
+      <li><a href="mappers.html#xcell.mappers.mapper_ACT_base.MapperACTBase">MapperACTBase (class in xcell.mappers.mapper_ACT_base)</a>
+</li>
       <li><a href="mappers.html#xcell.mappers.mapper_ACTCMB.MapperACTCMB">MapperACTCMB (class in xcell.mappers.mapper_ACTCMB)</a>
 </li>
       <li><a href="mappers.html#xcell.mappers.mapper_ACT_compsept.MapperACTCompSept">MapperACTCompSept (class in xcell.mappers.mapper_ACT_compsept)</a>
@@ -351,13 +364,13 @@
 </li>
       <li><a href="mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC">MapperWIxSC (class in xcell.mappers.mapper_WIxSC)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     module
 
       <ul>
         <li><a href="mappers.html#module-xcell.mappers.mapper_2MPZ">xcell.mappers.mapper_2MPZ</a>
+</li>
+        <li><a href="mappers.html#module-xcell.mappers.mapper_ACT_base">xcell.mappers.mapper_ACT_base</a>
 </li>
         <li><a href="mappers.html#module-xcell.mappers.mapper_ACT_compsept">xcell.mappers.mapper_ACT_compsept</a>
 </li>
@@ -407,7 +420,29 @@
 </li>
         <li><a href="mappers.html#module-xcell.mappers.mapper_WIxSC">xcell.mappers.mapper_WIxSC</a>
 </li>
+        <li><a href="utils.html#module-xcell.mappers.utils">xcell.mappers.utils</a>
+</li>
       </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="utils.html#xcell.mappers.utils.rotate_map">rotate_map() (in module xcell.mappers.utils)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="utils.html#xcell.mappers.utils.rotate_mask">rotate_mask() (in module xcell.mappers.utils)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="utils.html#xcell.mappers.utils.save_rerun_data">save_rerun_data() (in module xcell.mappers.utils)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -419,6 +454,13 @@
 
       <ul>
         <li><a href="mappers.html#module-xcell.mappers.mapper_2MPZ">module</a>
+</li>
+      </ul></li>
+      <li>
+    xcell.mappers.mapper_ACT_base
+
+      <ul>
+        <li><a href="mappers.html#module-xcell.mappers.mapper_ACT_base">module</a>
 </li>
       </ul></li>
       <li>
@@ -589,6 +631,13 @@
 
       <ul>
         <li><a href="mappers.html#module-xcell.mappers.mapper_WIxSC">module</a>
+</li>
+      </ul></li>
+      <li>
+    xcell.mappers.utils
+
+      <ul>
+        <li><a href="utils.html#module-xcell.mappers.utils">module</a>
 </li>
       </ul></li>
   </ul></td>

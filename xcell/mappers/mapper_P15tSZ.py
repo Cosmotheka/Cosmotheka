@@ -12,8 +12,7 @@ class MapperP15tSZ(MapperPlanckBase):
         - file_map: `path+"COM_CompMap_YSZ_R2.02/milca_ymaps.fits"`
         - file_gp_mask: \
         `path+"COM_CompMap_YSZ_R2.02/COM_CompMap_Compton-SZMap-masks_2048_R2.01.fits"`
-        - file_ps_mask:
-
+        - file_ps_mask: \
         `".../Datasets/Planck_tSZ/COM_CompMap_YSZ_R2.02/COM_CompMap_Compton-SZMap-masks_2048_R2.01.fits"`
         - gp_mask_mode: `'0.6'`
         - ps_mask_mode: `['default']`

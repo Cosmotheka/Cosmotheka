@@ -9,6 +9,7 @@ import healpy as hp
 class MapperDESY1gc(MapperBase):
     """
     path = `'.../Datasets/DES_Y1/redmagic_catalog/'`
+
     **Config**
 
         - zbin: `0` / `1` / `2` / `3` / `4`

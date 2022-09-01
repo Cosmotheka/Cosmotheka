@@ -11,7 +11,7 @@ Welcome to xCell's documentation!
 
    base_mapper
    mappers
-       
+   utils
 
 
 Indices and tables

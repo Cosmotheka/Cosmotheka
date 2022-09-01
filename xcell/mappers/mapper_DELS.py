@@ -10,6 +10,7 @@ import os
 class MapperDELS(MapperBase):
     """
     path = `'.../Datasets/DELS/'`
+
     **Config**
 
         - z_name: `"PHOTOZ_3DINFER"`

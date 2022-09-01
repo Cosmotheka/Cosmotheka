@@ -9,6 +9,7 @@ import healpy as hp
 class MapperHSCDR1wl(MapperBase):
     """
     **Config**
+
         - depth_cut: `24.5`
         - z_edges: `[0.3, 0.6]` / `[0.6, 0.9]` / `[0.9, 1.2]` / `[1.2, 1.5]`
 
@@ -17,7 +18,7 @@ class MapperHSCDR1wl(MapperBase):
         `[['.../Datasets/HSC_DR1/HSC_WIDE_GAMA09H.fits'], \
           ['.../Datasets/HSC_DR1/HSC_WIDE_GAMA15H.fits'], \
           ['.../Datasets/HSC_DR1/HSC_WIDE_HECTOMAP.fits'], \
-          ['.../Datasets/HSC_DR1/HSC_WIDE_VVDS_part1.fits',\
+          ['.../Datasets/HSC_DR1/HSC_WIDE_VVDS_part1.fits', \
            '.../Datasets/HSC_DR1/HSC_WIDE_VVDS_part2.fits'], \
           ['.../Datasets/HSC_DR1/HSC_WIDE_WIDE12H.fits'], \
           ['.../Datasets/HSC_DR1/HSC_WIDE_XMM.fits']]`
