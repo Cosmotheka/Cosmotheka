@@ -9,18 +9,22 @@ import os
 
 class MapperDELS(MapperBase):
     """
+    path = `'.../Datasets/DELS/'`
     **Config**
+
         - z_name: `"PHOTOZ_3DINFER"`
         - num_z_bins: `500`
         - zbin: `0` / `1` / `2` / `3`
         - data_catalogs:
 
-            - `'.../Datasets/DELS/Legacy_Survey_BASS-MZLS_galaxies-selection.fits'`
-            - `'.../Datasets/DELS/Legacy_Survey_DECALS_galaxies-selection.fits'`
+            - `path+'Legacy_Survey_BASS-MZLS_galaxies-selection.fits'`
+            - `path+'Legacy_Survey_DECALS_galaxies-selection.fits'`
 
-        - binary_mask: `'.../Datasets/DELS/Legacy_footprint_final_mask_cut_decm36.fits'`
-        - completeness_map: `'.../Datasets/DELS/Legacy_footprint_completeness_mask_128.fits'`
-        - star_map: `'.../Datasets/DELS/allwise_total_rot_1024.fits'`
+        - binary_mask: \
+          `path+'Legacy_footprint_final_mask_cut_decm36.fits'`
+        - completeness_map: \
+          `path+'Legacy_footprint_completeness_mask_128.fits'`
+        - star_map: `path+'allwise_total_rot_1024.fits'`
         - path_rerun: `'.../Datasets/DELS/xcell_reruns/'`
         - mask_name: `'mask_DELS_decm36'`
         - mapper_class: `'MapperDELS'`
@@ -71,8 +75,8 @@ class MapperDELS(MapperBase):
         """
         Checks if the mapper has already \
         loaded the chosen bin of the catalog. \
-        If so, it loads it from the save file. \ 
-        Otherwise, it cuts the original file 
+        If so, it loads it from the save file. \
+        Otherwise, it cuts the original file
 
         Returns:
             catalog (Array)
@@ -84,7 +88,7 @@ class MapperDELS(MapperBase):
         return self.cat_data
 
     def _get_angmask(self):
-        # Returns True if pixel is masked 
+        # Returns True if pixel is masked
         # by the binary mask
 
         if self.mskflag is None:

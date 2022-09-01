@@ -47,7 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#sdss">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_SDSS">SDSS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
@@ -83,18 +83,22 @@
 <div class="viewcode-block" id="MapperACTtSZ"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_ACTtSZ.MapperACTtSZ">[docs]</a><span class="k">class</span> <span class="nc">MapperACTtSZ</span><span class="p">(</span><span class="n">MapperACTCompSept</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    For X either &#39;BN&#39; or &#39;D56&#39; depending on the desired sky patch.</span>
-<span class="sd">    </span>
+
 <span class="sd">    ***Config***</span>
 
 <span class="sd">        - mask_name: `&#39;mask_ACT_compsep_X&#39;`</span>
 <span class="sd">        - map_name: `&#39;compsep_X&#39;`</span>
-<span class="sd">        - path_rerun: `&#39;/mnt/extraspace/damonge/Datasets/ACT_DR4/xcell_runs&#39;`</span>
-<span class="sd">        - file_map: `&#39;/mnt/extraspace/damonge/Datasets/ACT_DR4/compsep_maps/tilec_single_tile_X_comptony_map_v1.2.0_joint.fits&#39;`</span>
-<span class="sd">        - file_mask: `&#39;/mnt/extraspace/damonge/Datasets/ACT_DR4/masks/compsep_masks/act_dr4.01_s14s15_X_compsep_mask.fits&#39;`</span>
+<span class="sd">        - path_rerun: `&#39;.../Datasets/ACT_DR4/xcell_runs&#39;`</span>
+<span class="sd">        - file_map: `&#39;.../Datasets/ACT_DR4/compsep_maps\</span>
+<span class="sd">          /tilec_single_tile_X_comptony_map_v1.2.0_joint.fits&#39;`</span>
+<span class="sd">        - file_mask: \</span>
+<span class="sd">        `&#39;.../Datasets/ACT_DR4/masks/compsep_masks/\</span>
+<span class="sd">          act_dr4.01_s14s15_X_compsep_mask.fits&#39;`</span>
 <span class="sd">        - beam_info:</span>
 
 <span class="sd">           - type: `&#39;Custom&#39;`</span>
-<span class="sd">           - file: `&#39;/mnt/extraspace/damonge/Datasets/ACT_DR4/compsep_maps/tilec_single_tile_X_comptony_map_v1.2.0_joint_beam.txt&#39;`</span>
+<span class="sd">           - file: \</span>
+<span class="sd">           `&#39;.../ACT_DR4/compsep_maps/tilec_single_tile_X_comptony_map_v1.2.0_joint_beam.txt&#39;`</span>
 
 <span class="sd">        - lmax: `6000`</span>
 <span class="sd">    &quot;&quot;&quot;</span>

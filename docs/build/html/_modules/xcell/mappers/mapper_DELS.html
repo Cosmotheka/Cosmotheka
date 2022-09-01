@@ -47,7 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#sdss">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_SDSS">SDSS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
@@ -88,18 +88,22 @@
 
 <div class="viewcode-block" id="MapperDELS"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DELS.MapperDELS">[docs]</a><span class="k">class</span> <span class="nc">MapperDELS</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    path = `&#39;.../Datasets/DELS/&#39;`</span>
 <span class="sd">    **Config**</span>
+
 <span class="sd">        - z_name: `&quot;PHOTOZ_3DINFER&quot;`</span>
 <span class="sd">        - num_z_bins: `500`</span>
 <span class="sd">        - zbin: `0` / `1` / `2` / `3`</span>
 <span class="sd">        - data_catalogs:</span>
 
-<span class="sd">            - `&#39;.../Datasets/DELS/Legacy_Survey_BASS-MZLS_galaxies-selection.fits&#39;`</span>
-<span class="sd">            - `&#39;.../Datasets/DELS/Legacy_Survey_DECALS_galaxies-selection.fits&#39;`</span>
+<span class="sd">            - `path+&#39;Legacy_Survey_BASS-MZLS_galaxies-selection.fits&#39;`</span>
+<span class="sd">            - `path+&#39;Legacy_Survey_DECALS_galaxies-selection.fits&#39;`</span>
 
-<span class="sd">        - binary_mask: `&#39;.../Datasets/DELS/Legacy_footprint_final_mask_cut_decm36.fits&#39;`</span>
-<span class="sd">        - completeness_map: `&#39;.../Datasets/DELS/Legacy_footprint_completeness_mask_128.fits&#39;`</span>
-<span class="sd">        - star_map: `&#39;.../Datasets/DELS/allwise_total_rot_1024.fits&#39;`</span>
+<span class="sd">        - binary_mask: \</span>
+<span class="sd">          `path+&#39;Legacy_footprint_final_mask_cut_decm36.fits&#39;`</span>
+<span class="sd">        - completeness_map: \</span>
+<span class="sd">          `path+&#39;Legacy_footprint_completeness_mask_128.fits&#39;`</span>
+<span class="sd">        - star_map: `path+&#39;allwise_total_rot_1024.fits&#39;`</span>
 <span class="sd">        - path_rerun: `&#39;.../Datasets/DELS/xcell_reruns/&#39;`</span>
 <span class="sd">        - mask_name: `&#39;mask_DELS_decm36&#39;`</span>
 <span class="sd">        - mapper_class: `&#39;MapperDELS&#39;`</span>
@@ -150,8 +154,8 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks if the mapper has already \</span>
 <span class="sd">        loaded the chosen bin of the catalog. \</span>
-<span class="sd">        If so, it loads it from the save file. \ </span>
-<span class="sd">        Otherwise, it cuts the original file </span>
+<span class="sd">        If so, it loads it from the save file. \</span>
+<span class="sd">        Otherwise, it cuts the original file</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            catalog (Array)</span>
@@ -163,7 +167,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span></div>
 
     <span class="k">def</span> <span class="nf">_get_angmask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># Returns True if pixel is masked </span>
+        <span class="c1"># Returns True if pixel is masked</span>
         <span class="c1"># by the binary mask</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mskflag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>

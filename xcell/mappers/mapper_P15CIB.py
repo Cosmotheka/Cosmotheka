@@ -34,7 +34,7 @@ class MapperP15CIB(MapperPlanckBase):
 
         # Returns:
         #    hm1_map (Array)
-        #    hm2_map (Array) 
+        #    hm2_map (Array)
 
         if self.hm1_map is None:
             hm1_map = hp.read_map(self.file_hm1)

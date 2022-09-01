@@ -29,13 +29,10 @@ class MapperACTBase(MapperBase):
         the signal mapper, the function loads it \
         from a file. \
         Otherwise, each mapper's "_get_signal_map()" \
-        is used to calculate it. \
+        is used to calculate it.
 
-        Args:
-            None
         Returns:
             delta_map (Array)
-
         """
         if self.signal_map is None:
             fn = '_'.join([f'ACT_{self.map_name}_signal',
@@ -49,12 +46,9 @@ class MapperACTBase(MapperBase):
         """
         Returns the mask of the mapper \
         in pixell format.
-        
-        Args:
-            None
+
         Returns
             pixel_mask (Array)
-        
         """
         if self.pixell_mask is None:
             self.pixell_mask = enmap.read_map(self.file_mask)

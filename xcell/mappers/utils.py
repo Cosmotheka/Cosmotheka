@@ -101,7 +101,7 @@ def rotate_mask(mask, rot, binarize=False):
             with values smaller than 0.5 are set to 0 \
             Pixels with values bigger than 0.5 are set \
             to 1.
-            
+
     Returns:
         Rotated mask
     """
@@ -116,16 +116,17 @@ def rotate_mask(mask, rot, binarize=False):
 
 
 def rotate_map(mapp, rot):
-    """Applies a given rotator object to map. \
-        The rotation is performed in Fourrier
-        space.
-    
+    """
+    Applies a given rotator object to map. \
+    The rotation is performed in Fourrier
+    space.
+
     Args:
-        mapp (Array): map to be rotated.
-        rot (:class:`healpy.rotator.Rotator`): rotator \
-            object containing the current and target \
-            coordinates.
-            
+        - mapp (Array): map to be rotated.
+        - rot (:class:`healpy.rotator.Rotator`): rotator \
+               object containing the current and target \
+               coordinates.
+
     Returns:
         Rotated map
     """
@@ -190,33 +191,36 @@ def get_map_from_points(cat, nside, w=None, rot=None,
 def get_DIR_Nz(cat_spec, cat_photo, bands, zflag,
                zrange, nz, nearest_neighbors=10, njk=100,
                bands_photo=None):
-    """Implementation of the DIR algorithm that \
-        calibrates a photometric galaxy redshift 
-        distribution given a reference \
-        spectroscopic sample. \
-        The code makes use of sklearn nearest \
-        neighbors algorthim .\
+    """
+    Implementation of the DIR algorithm that \
+    calibrates a photometric galaxy redshift \
+    distribution given a reference \
+    spectroscopic sample. \
+    The code makes use of sklearn nearest \
+    neighbors algorthim
+
     Args:
-        cat_spec (Array): catalog of spectroscopic \
-            samples. \
-        cat_photo (Array): catalog of photometric \
-            samples. \
-        bands (Array): bands for spectroscopic \
-            and photometric samples.
-        zflag (String): name of the redshift field \
-            in the samples catalog.
-       zrange (Array): redshift range for the calibrated \
-           galaxy redshift distribution. \       
-       nz (Int): number of bins for calibrated \
+        - cat_spec (Array): catalog of spectroscopic \
+                            samples.
+        - cat_photo (Array): catalog of photometric \
+                             samples.
+        - bands (Array): bands for spectroscopic \
+                         and photometric samples.
+        - zflag (String): name of the redshift field \
+                        in the samples catalog.
+        - zrange (Array): redshift range for the calibrated \
+           galaxy redshift distribution.
+        - nz (Int): number of bins for calibrated \
           galaxy redshift distribution.
-       nearest_neighbors (String): number of nearest neighbors \
-           found by the algorithm. \
-           Defaults to 10. \
-       njk : Loop over JK region. \
+        - nearest_neighbors = 10 (float): number of nearest neighbors \
+           found by the algorithm.
+        - njk (float) = 100: Loop over JK region.
+        - bands_photo = None: bands of phometric catalog.
+
     Returns:
-        zz (Array): position of bins in redshift
-        dndz (Array): elements per bin
-        dndz_jk (Array):
+        - zz (Array): position of bins in redshift
+        - dndz (Array): elements per bin
+        - dndz_jk (Array):
     """
     from sklearn.neighbors import NearestNeighbors
     from scipy.spatial import cKDTree

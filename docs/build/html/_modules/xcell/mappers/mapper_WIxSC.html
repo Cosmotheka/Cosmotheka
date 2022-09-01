@@ -37,7 +37,19 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../base_mapper.html">General Philosophy &amp; The Base Mapper</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">2MPZ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#act">ACT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_CatWISE">CatWISE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_DELS">DESL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#desy1">DESY1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_HSC_DR1wl">HSC_DR1wl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_KiDS1000">KiDS-1000</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_SDSS">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
 
         </div>
@@ -98,7 +110,7 @@
 <span class="sd">    - star_map_C: `&#39;.../Datasets/2MPZ_WIxSC/allwise_total_equatorial.fits&#39;`</span>
 <span class="sd">    - use_halo_model: `True`</span>
 <span class="sd">    - hod_params:</span>
-<span class="sd">    </span>
+
 <span class="sd">        - lMmin_0: `11.697` / `11.859` / `12.103` / `12.144` / `12.084`</span>
 <span class="sd">        - siglM_0: `0.345` / `0.345` / `0.345` / `0.345` / `0.345`</span>
 <span class="sd">        - lM0_0: `11.697` / `11.859` / `12.103` / 12.144 / `13.013`</span>
@@ -189,7 +201,7 @@
 
     <span class="k">def</span> <span class="nf">_mask_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cat</span><span class="p">):</span>
         <span class="c1"># Applies binary mask to catalog.</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mask</span><span class="p">()</span>
         <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_radec</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
         <span class="n">ipix</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">ang2pix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">lonlat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -264,8 +276,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">dndz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rerun_read_cycle</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">&#39;NPZ&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_nz</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shifted_nz</span><span class="p">(</span><span class="n">dz</span><span class="p">,</span> <span class="n">return_jk_error</span><span class="o">=</span><span class="n">return_jk_error</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MapperWIxSC.get_signal_map"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
-        <span class="c1"># If &#39;apply_galactic_correction&#39; = True, </span>
+<div class="viewcode-block" id="MapperWIxSC.get_signal_map"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># If &#39;apply_galactic_correction&#39; = True,</span>
         <span class="c1"># it applies the galactic correction.</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -326,7 +338,7 @@
         <span class="c1">#     bmask (Array): binary mask</span>
 
         <span class="c1"># Kwargs:</span>
-        <span class="c1">#     nbins=14 (Int): number of bins </span>
+        <span class="c1">#     nbins=14 (Int): number of bins</span>
         <span class="c1">#     npoly=3 (Int): order of the polynomial fit</span>
 
         <span class="c1"># Returns:</span>

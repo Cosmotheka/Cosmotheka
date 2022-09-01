@@ -47,7 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#sdss">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_SDSS">SDSS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
@@ -88,14 +88,16 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Note that last letter of the the mask name stands for the \</span>
 <span class="sd">    chosen redshdift bin (`i = [1,2,3,4]`).</span>
-<span class="sd">    </span>
+
+<span class="sd">    path = `&#39;.../Datasets/DES_Y1/shear_catalog/&#39;`</span>
+
 <span class="sd">    ***Config***</span>
-<span class="sd">    </span>
+
 <span class="sd">        - zbin: `0` / `1` / `2` /`3`</span>
 <span class="sd">        - mode: `shear` / `PSF`</span>
-<span class="sd">        - zbin_cat: `&#39;.../Datasets/DES_Y1/shear_catalog/y1_source_redshift_binning_v1.fits&#39;`</span>
-<span class="sd">        - data_cat:  `&#39;.../Datasets/DES_Y1/shear_catalog/mcal-y1a1-combined-riz-unblind-v4-matched.fits&#39;`</span>
-<span class="sd">        - file_nz: `&#39;.../Datasets/DES_Y1/shear_catalog/y1_redshift_distributions_v1.fits&#39;`</span>
+<span class="sd">        - zbin_cat: `path+&#39;y1_source_redshift_binning_v1.fits&#39;`</span>
+<span class="sd">        - data_cat: `path+&#39;mcal-y1a1-combined-riz-unblind-v4-matched.fits&#39;`</span>
+<span class="sd">        - file_nz: `path+&#39;y1_redshift_distributions_v1.fits&#39;`</span>
 <span class="sd">        - path_rerun: `&#39;.../Datasets/DES_Y1/xcell_reruns/&#39;`</span>
 <span class="sd">        - mask_name: `&#39;mask_DESY1wli&#39;`</span>
 <span class="sd">        - mapper_class: `&#39;MapperDESY1wl&#39;`</span>

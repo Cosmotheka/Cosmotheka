@@ -47,7 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#sdss">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_SDSS">SDSS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
@@ -87,13 +87,17 @@
 
 <div class="viewcode-block" id="MapperDESY1gc"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DESY1gc.MapperDESY1gc">[docs]</a><span class="k">class</span> <span class="nc">MapperDESY1gc</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    path = `&#39;.../Datasets/DES_Y1/redmagic_catalog/&#39;`</span>
 <span class="sd">    **Config**</span>
-<span class="sd">    </span>
+
 <span class="sd">        - zbin: `0` / `1` / `2` / `3` / `4`</span>
 <span class="sd">        - mask_threshold: `0.5`</span>
-<span class="sd">        - data_catalog: `&#39;.../Datasets/DES_Y1/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits&#39;`</span>
-<span class="sd">        - file_mask: `&#39;.../Datasets/DES_Y1/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits&#39;`</span>
-<span class="sd">        - file_nz: `&#39;.../Datasets/DES_Y1/data_vector/2pt_NG_mcal_1110.fits&#39;`</span>
+<span class="sd">        - data_catalog: \</span>
+<span class="sd">          `path+&#39;DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits&#39;`</span>
+<span class="sd">        - file_mask: \</span>
+<span class="sd">          `path+&#39;DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits&#39;`</span>
+<span class="sd">        - file_nz: \</span>
+<span class="sd">          `&#39;.../Datasets/DES_Y1/data_vector/2pt_NG_mcal_1110.fits&#39;`</span>
 <span class="sd">        - mask_name: `&#39;mask_DESY1gc&#39;`</span>
 <span class="sd">        - mapper_class: `&#39;MapperDESY1gc&#39;`</span>
 <span class="sd">        - bias: `1.48`/`1.76`/`1.78`/`2.19`/`2.23`</span>

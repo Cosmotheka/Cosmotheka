@@ -7,16 +7,16 @@ import os
 
 
 class Mapper2MPZ(MapperBase):
-    """ 
+    """
     **Config**
-    
+
         - mask_name: `mask_2MPZWISC`
-        - path_rerun: `'/.../Datasets/2MPZ_WIxSC/xcell_runs'`
+        - path_rerun: `'.../Datasets/2MPZ_WIxSC/xcell_runs'`
         - z_edges: `[0.0, 0.1]`
-        - data_catalog: `'/.../Datasets/2MPZ_WIxSC/2MPZ.fits'`
+        - data_catalog: `'.../Datasets/2MPZ_WIxSC/2MPZ.fits'`
         - n_jk_dir: `100`
-        - mask_G: `'/.../Datasets/2MPZ_WIxSC/WISExSCOSmask_galactic.fits.gz'`
-        - mask_C: `'/.../Datasets/2MPZ_WIxSC/WISExSCOSmask_equatorial.fits.gz'`
+        - mask_G: `'.../Datasets/2MPZ_WIxSC/WISExSCOSmask_galactic.fits.gz'`
+        - mask_C: `'.../Datasets/2MPZ_WIxSC/WISExSCOSmask_equatorial.fits.gz'`
         - use_halo_model: `True`
         - hod_params:
 
@@ -44,7 +44,7 @@ class Mapper2MPZ(MapperBase):
         # Returns mapper's ra and dec names \
         # in the mapper's catalog given the coordinates \
         # designated in the cofiguration file
-        
+
         # Returns:
         #     ra_name (String), dec_name (String)
 
@@ -74,7 +74,7 @@ class Mapper2MPZ(MapperBase):
 
     def _mask_catalog(self, cat):
         # Applies binary mask to catalog
-        
+
         self.mask = self.get_mask()
         ipix = hp.ang2pix(self.nside, cat[self.ra_name],
                           cat[self.dec_name], lonlat=True)
@@ -162,7 +162,7 @@ class Mapper2MPZ(MapperBase):
     def _get_mask(self):
         # Reads the mask of the mappper from a file \
         # and upgrades it to the chosen resolution.
-        
+
         # We will assume the mask has been provided in the right
         # coordinates, so no further conversion is needed.
         mask = hp.ud_grade(hp.read_map(self.config['mask']),

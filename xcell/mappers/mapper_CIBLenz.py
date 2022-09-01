@@ -8,24 +8,29 @@ class MapperCIBLenz(MapperP15CIB):
     """
     Note that X in the names of files and directories \
     stands for either of the three available frequency \
-    channels `X = [353, 545, 857]`. 
+    channels `X = [353, 545, 857]`.
 
     **Config**
-        - file_map: `"/mnt/extraspace/damonge/Datasets/CIB_Lenz/X/2.5e+20_gp20/cib_fullmission.hpx.fits"`
-        - file_hm1: `"/mnt/extraspace/damonge/Datasets/CIB_Lenz/X/2.5e+20_gp20/cib_evenring.hpx.fits"`
-        - file_hm2: `"/mnt/extraspace/damonge/Datasets/CIB_Lenz/X/2.5e+20_gp20/cib_oddring.hpx.fits"`
-        - file_mask: `"/mnt/extraspace/damonge/Datasets/CIB_Lenz/X/2.5e+20_gp20/mask_apod.hpx.fits"`
+        - file_map: \
+          `".../Datasets/CIB_Lenz/X/2.5e+20_gp20/cib_fullmission.hpx.fits"`
+        - file_hm1: \
+          `".../Datasets/CIB_Lenz/X/2.5e+20_gp20/cib_evenring.hpx.fits"`
+        - file_hm2: \
+          `".../Datasets/CIB_Lenz/X/2.5e+20_gp20/cib_oddring.hpx.fits"`
+        - file_mask: \
+          `".../Datasets/CIB_Lenz/X/2.5e+20_gp20/mask_apod.hpx.fits"`
         - beam_info:
 
             - type: `'Custom'`
-            - file: `'/mnt/extraspace/damonge/Datasets/CIB_Lenz/X/2.5e+20_gp20/windowfunctions.csv'`
+            - file: \
+            `'.../Datasets/CIB_Lenz/X/2.5e+20_gp20/windowfunctions.csv'`
             - field: `'Wl_eff'`
             - type: `'PixWin'`
             - nside_native: `2048`
             - nside_wanted: `4096`
 
         - mask_name: `"mask_CIB_Lenz_X"`
-        - path_rerun: `'/mnt/extraspace/damonge/Datasets/CIB_Lenz_X/xcell_runs'`
+        - path_rerun: `'.../Datasets/CIB_Lenz_X/xcell_runs'`
     """
     def __init__(self, config):
         self._get_Planck_defaults(config)
@@ -34,7 +39,7 @@ class MapperCIBLenz(MapperP15CIB):
                                       'FWHM_arcmin': 5.0}])
 
     def _get_custom_beam(self, info):
-        # Constructs beam function 
+        # Constructs beam function
         # based on window function
         # from file
 

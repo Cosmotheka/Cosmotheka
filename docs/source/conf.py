@@ -13,7 +13,6 @@
 import os
 from os.path import abspath, dirname, join as pjoin
 import sys
-import sphinx_rtd_theme
 
 this_dir = dirname(abspath(__file__))
 root_path = abspath(pjoin(this_dir, '../../'))
@@ -51,14 +50,14 @@ author = 'Jaime'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
-             'sphinx.ext.doctest',
-             'sphinx.ext.intersphinx',
-             'sphinx.ext.todo',
-             'sphinx.ext.coverage',
-             'sphinx.ext.ifconfig',
-             'sphinx.ext.mathjax',
-             'sphinx.ext.viewcode',
-             'sphinx.ext.napoleon']
+              'sphinx.ext.doctest',
+              'sphinx.ext.intersphinx',
+              'sphinx.ext.todo',
+              'sphinx.ext.coverage',
+              'sphinx.ext.ifconfig',
+              'sphinx.ext.mathjax',
+              'sphinx.ext.viewcode',
+              'sphinx.ext.napoleon']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

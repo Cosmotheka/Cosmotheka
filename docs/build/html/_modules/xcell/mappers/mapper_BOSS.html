@@ -37,7 +37,19 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../base_mapper.html">General Philosophy &amp; The Base Mapper</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">2MPZ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#act">ACT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_CatWISE">CatWISE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_DELS">DESL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#desy1">DESY1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_HSC_DR1wl">HSC_DR1wl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_KiDS1000">KiDS-1000</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_SDSS">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
 
         </div>
@@ -72,17 +84,19 @@
 <div class="viewcode-block" id="MapperBOSS"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_BOSS.MapperBOSS">[docs]</a><span class="k">class</span> <span class="nc">MapperBOSS</span><span class="p">(</span><span class="n">MapperSDSS</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Note that X in file names stands for either `&#39;CMASS&#39;` or `&#39;LOWZ&#39;`.</span>
-<span class="sd">    </span>
+
 <span class="sd">    **Config**</span>
 
 <span class="sd">        - num_z_bins: `50`</span>
 <span class="sd">        - nside_mask: `512`</span>
 <span class="sd">        - nside_nl_threshold: `4096`</span>
 <span class="sd">        - lmin_nl_from_data: `2000`</span>
-<span class="sd">        - data_catalogs: `[&#39;.../Datasets/BOSS/galaxy_DR12v5_X_North.fits.gz&#39; \</span>
-<span class="sd">                           &#39;.../Datasets/BOSS/galaxy_DR12v5_X_South.fits.gz&#39;]` </span>
-<span class="sd">        - random_catalogs: `[&#39;.../Datasets/BOSS/random0_DR12v5_X_North.fits.gz&#39;, \</span>
-<span class="sd">                            &#39;.../Datasets/BOSS/random0_DR12v5_X_South.fits.gz&#39;]`</span>
+<span class="sd">        - data_catalogs: \</span>
+<span class="sd">          `[&#39;.../Datasets/BOSS/galaxy_DR12v5_X_North.fits.gz&#39; \</span>
+<span class="sd">            &#39;.../Datasets/BOSS/galaxy_DR12v5_X_South.fits.gz&#39;]`</span>
+<span class="sd">        - random_catalogs: \</span>
+<span class="sd">          `[&#39;.../Datasets/BOSS/random0_DR12v5_X_North.fits.gz&#39;, \</span>
+<span class="sd">            &#39;.../Datasets/BOSS/random0_DR12v5_X_South.fits.gz&#39;]`</span>
 
 <span class="sd">        - z_edges: `[0.4, 0.8]` / `[0.1, 0.43]`</span>
 <span class="sd">        - path_rerun: `&#39;.../Datasets/BOSS/xcell_runs&#39;`</span>
@@ -113,7 +127,7 @@
 
     <span class="k">def</span> <span class="nf">_get_random_cols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Returns the names of the columns \</span>
-        <span class="c1"># of interest for the mapper. </span>
+        <span class="c1"># of interest for the mapper.</span>
         <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;RA&#39;</span><span class="p">,</span> <span class="s1">&#39;DEC&#39;</span><span class="p">,</span> <span class="s1">&#39;Z&#39;</span><span class="p">]</span></div>
 </pre></div>
 

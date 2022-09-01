@@ -7,28 +7,31 @@ import healpy as hp
 
 
 class MapperHSCDR1wl(MapperBase):
-    """    
+    """
     **Config**
-        - depth_cut: `24.5` 
+        - depth_cut: `24.5`
         - z_edges: `[0.3, 0.6]` / `[0.6, 0.9]` / `[0.9, 1.2]` / `[1.2, 1.5]`
 
-        - bin_name: `bin0` / `bin1` / `bin2` / `bin3` 
-        - data_catalogs: `[['.../Datasets/HSC_DR1/HSC_WIDE_GAMA09H.fits'], \
-                           ['.../Datasets/HSC_DR1/HSC_WIDE_GAMA15H.fits'], \
-                           ['.../Datasets/HSC_DR1/HSC_WIDE_HECTOMAP.fits'], \
-                           ['.../Datasets/HSC_DR1/HSC_WIDE_VVDS_part1.fits',\
-                            '.../Datasets/HSC_DR1/HSC_WIDE_VVDS_part2.fits'], \
-                           ['.../Datasets/HSC_DR1/HSC_WIDE_WIDE12H.fits'], \
-                           ['.../Datasets/HSC_DR1/HSC_WIDE_XMM.fits']]`
+        - bin_name: `bin0` / `bin1` / `bin2` / `bin3`
+        - data_catalogs: \
+        `[['.../Datasets/HSC_DR1/HSC_WIDE_GAMA09H.fits'], \
+          ['.../Datasets/HSC_DR1/HSC_WIDE_GAMA15H.fits'], \
+          ['.../Datasets/HSC_DR1/HSC_WIDE_HECTOMAP.fits'], \
+          ['.../Datasets/HSC_DR1/HSC_WIDE_VVDS_part1.fits',\
+           '.../Datasets/HSC_DR1/HSC_WIDE_VVDS_part2.fits'], \
+          ['.../Datasets/HSC_DR1/HSC_WIDE_WIDE12H.fits'], \
+          ['.../Datasets/HSC_DR1/HSC_WIDE_XMM.fits']]`
 
-        - fname_cosmos: `'.../Datasets/HSC_DR1/Afterburner_reweighted_COSMOS_photoz_FDFC.fits'`
-        - fnames_cosmos_ph: `['.../Datasets/HSC_DR1/pdf-s17a_wide-9812.cat.fits', \
-                            '.../Datasets/HSC_DR1/pdf-s17a_wide-9813.cat.fits']`
+        - fname_cosmos: `'.../Datasets/HSC_DR1\
+        /Afterburner_reweighted_COSMOS_photoz_FDFC.fits'`
+        - fnames_cosmos_ph: \
+        `['.../Datasets/HSC_DR1/pdf-s17a_wide-9812.cat.fits', \
+          '.../Datasets/HSC_DR1/pdf-s17a_wide-9813.cat.fits']`
 
         - nbin_nz: `100`
         - zlim_nz: `[0.0, 4.0]`
         - mask_name: `'mask_HSC_wl0'` / `'mask_HSC_wl1'` / `'mask_HSC_wl2'` / \
-                   `'mask_HSC_wl3'` 
+                   `'mask_HSC_wl3'`
         - mapper_class: `'MapperHSCDR1wl'`
         - path_rerun: `'.../Datasets/HSC_DR1/lite/'`
     """
@@ -225,7 +228,7 @@ class MapperHSCDR1wl(MapperBase):
     def _get_w2s2(self):
         # Computes weight-square map for
         # noise power spectrum estimation.
- 
+
         print('Computing w2s2 map')
         cat = self.get_catalog()
         w2s2 = get_map_from_points(cat, self.nside,

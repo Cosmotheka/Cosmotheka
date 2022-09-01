@@ -7,15 +7,19 @@ import numpy as np
 class MapperACTk(MapperACTBase):
     """
     For X either 'BN' or 'D56' depending on the desired sky patch.
-    
+
     **Config**
-    
+
         - mapper_class: `'MapperACTk'`
         - mask_name: `'mask_ACT_kappa_X'`
         - map_name: `'kappa_X'`
-        - path_rerun: `'/mnt/extraspace/damonge/Datasets/ACT_DR4/xcell_runs'`
-        - file_map: `'/mnt/extraspace/damonge/Datasets/ACT_DR4/lensing_kappa_maps/act_planck_dr4.01_s14s15_X_lensing_kappa_baseline.fits'`
-        - file_mask: `'/mnt/extraspace/damonge/Datasets/ACT_DR4/masks/lensing_masks/act_dr4.01_s14s15_X_lensing_mask.fits'`
+        - path_rerun: `'.../Datasets/ACT_DR4/xcell_runs'`
+        - file_map: \
+        `'.../Datasets/ACT_DR4/lensing_kappa_maps/\
+         act_planck_dr4.01_s14s15_X_lensing_kappa_baseline.fits'`
+        - file_mask: \
+        `'.../Datasets/ACT_DR4/masks/lensing_masks/\
+         act_dr4.01_s14s15_X_lensing_mask.fits'`
         - lmax: `6000`
         - mask_power: `2`
     """

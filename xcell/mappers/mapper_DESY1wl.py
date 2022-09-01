@@ -9,14 +9,16 @@ class MapperDESY1wl(MapperBase):
     """
     Note that last letter of the the mask name stands for the \
     chosen redshdift bin (`i = [1,2,3,4]`).
-    
+
+    path = `'.../Datasets/DES_Y1/shear_catalog/'`
+
     ***Config***
-    
+
         - zbin: `0` / `1` / `2` /`3`
         - mode: `shear` / `PSF`
-        - zbin_cat: `'.../Datasets/DES_Y1/shear_catalog/y1_source_redshift_binning_v1.fits'`
-        - data_cat:  `'.../Datasets/DES_Y1/shear_catalog/mcal-y1a1-combined-riz-unblind-v4-matched.fits'`
-        - file_nz: `'.../Datasets/DES_Y1/shear_catalog/y1_redshift_distributions_v1.fits'`
+        - zbin_cat: `path+'y1_source_redshift_binning_v1.fits'`
+        - data_cat: `path+'mcal-y1a1-combined-riz-unblind-v4-matched.fits'`
+        - file_nz: `path+'y1_redshift_distributions_v1.fits'`
         - path_rerun: `'.../Datasets/DES_Y1/xcell_reruns/'`
         - mask_name: `'mask_DESY1wli'`
         - mapper_class: `'MapperDESY1wl'`

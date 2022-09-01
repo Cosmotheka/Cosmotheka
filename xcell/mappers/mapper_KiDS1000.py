@@ -9,11 +9,15 @@ class MapperKiDS1000(MapperBase):
     """
     Note that last letter of the the mask name stands for the \
     chosen redshdift bin (`i = [1,2,3,4]`).
-    
-    ***Config***
-    
-        - data_catalog: `".../Datasets/KiDS1000/KiDS_DR4.1_ugriZYJHKs_SOM_gold_WL_cat.fits"`
-        - file_nz: `".../Datasets/KiDS1000/SOM_N_of_Z/K1000_NS_V1.0.0A_ugriZYJHKs_photoz_SG_mask_LF_svn_309c_2Dbins_v2_SOMcols_Fid_blindC_TOMO2_Nz.asc"`
+
+    path = `".../Datasets/KiDS1000"`
+
+    **Config**
+
+        - data_catalog: \
+        `path+"KiDS_DR4.1_ugriZYJHKs_SOM_gold_WL_cat.fits"`
+        - file_nz: \
+        `path+"SOM_N_of_Z/K1000_NS_V1.0.0A_ugriZYJHKs_photoz_SG_mask_LF_svn_309c_2Dbins_v2_SOMcols_Fid_blindC_TOMO2_Nz.asc"`
         - mode: `"shear"` / `"PSF"` / `"stars"`
         - zbin: `"1"` / `"1"` / `"2"` / `"3"` / `"4"`
         - mask_name: "mask_KiDS1000__i"
@@ -77,7 +81,7 @@ class MapperKiDS1000(MapperBase):
 
         # Loads the lite DESY1 catalog. \
         # Selects the chosen bin in the catalog. \
-        # Removes the additive and multiplicative biases. 
+        # Removes the additive and multiplicative biases.
         # Returns the catalog.
 
         nzbins = self.zbin_edges.shape[0]
@@ -101,7 +105,7 @@ class MapperKiDS1000(MapperBase):
         # it returns the kind of the map associated \
         # ('shear', 'PSF' --> 'galaxy' and 'stars' --> stars) \
         # with the mode and corresponding name of the \
-        # ellipticity fields in the catalog. 
+        # ellipticity fields in the catalog.
 
         # Returns:
         #     kind (String), e1_flag (String),
@@ -247,7 +251,7 @@ class MapperKiDS1000(MapperBase):
     def get_nz(self, dz=0):
         """
         Loads the redshift distribution of sources \
-        from the data products. 
+        from the data products. \
         Then, it shifts the distribution by "dz" (default dz=0). \
         Finally, it returns the redshift distribtuion.
 

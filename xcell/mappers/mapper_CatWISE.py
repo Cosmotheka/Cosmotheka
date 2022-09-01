@@ -8,9 +8,11 @@ import healpy as hp
 class MapperCatWISE(MapperBase):
     """
     **Config**
-    
-        - data_catalog: `".../Datasets/CatWISE/catwise_agns_masked_final_w1lt16p5_alpha.fits"`
-        - file_mask: `".../Datasets/CatWISE/MASKS_exclude_master_final.fits"`
+
+        - data_catalog: \
+          `".../Datasets/CatWISE/catwise_agns_masked_final_w1lt16p5_alpha.fits"`
+        - file_mask: \
+          `".../Datasets/CatWISE/MASKS_exclude_master_final.fits"`
         - apply_ecliptic_correction: `True`
         - mask_name: `"mask_CatWISE"`
         - path_rerun: `".../Datasets/CatWISE/xcell_runs"`
@@ -32,7 +34,7 @@ class MapperCatWISE(MapperBase):
     def get_catalog(self):
         """
         Returns the mapper's catalog after \
-        applying flux thershold. 
+        applying flux thershold.
 
         Returns:
             catalog (Array)
@@ -87,7 +89,7 @@ class MapperCatWISE(MapperBase):
         # Generates the mask given the chosen resolution \
         # and the angular conditions in the configuration \
         # file. If "file_sourcemask" is not None it applies \
-        # holes to the mask. 
+        # holes to the mask.
 
         mask = np.ones(self.npix)
         r = hp.Rotator(coord=['C', 'G'])
@@ -125,7 +127,6 @@ class MapperCatWISE(MapperBase):
         mask = rotate_mask(mask, self.rot, binarize=True)
         return mask
 
-
     def get_nl_coupled(self):
         # Shot noise
 
@@ -150,6 +151,5 @@ class MapperCatWISE(MapperBase):
     def get_dtype(self):
         return 'galaxy_density'
 
-    # Spin
     def get_spin(self):
         return 0

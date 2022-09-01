@@ -37,7 +37,19 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../base_mapper.html">General Philosophy &amp; The Base Mapper</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">2MPZ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#act">ACT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_CatWISE">CatWISE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_DELS">DESL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#desy1">DESY1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_HSC_DR1wl">HSC_DR1wl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_KiDS1000">KiDS-1000</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_SDSS">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
 
         </div>
@@ -73,16 +85,19 @@
 
 <div class="viewcode-block" id="MapperSPT"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_SPT.MapperSPT">[docs]</a><span class="k">class</span> <span class="nc">MapperSPT</span><span class="p">(</span><span class="n">MapperPlanckBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    ***Config***</span>
-<span class="sd">        - file_map: `&quot;.../Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap.fits.gz&quot;`</span>
-<span class="sd">        - file_hm1: `&quot;.../Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap_half1.fits.gz&quot;`</span>
-<span class="sd">        - file_hm2: `&quot;.../Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap_half2.fits.gz&quot;`</span>
-<span class="sd">        - file_gp_mask: &quot;.../Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_dust_mask_top_5percent.fits.gz&quot;`</span>
+<span class="sd">    path = `.../Datasets/SPT/sptsz_planck_ymap_healpix/&quot;`</span>
+<span class="sd">    **Config**</span>
+
+<span class="sd">        - file_map: `path+&quot;SPTSZ_Planck_min_variance_ymap.fits.gz&quot;`</span>
+<span class="sd">        - file_hm1: `path+&quot;SPTSZ_Planck_min_variance_ymap_half1.fits.gz&quot;`</span>
+<span class="sd">        - file_hm2: `path+&quot;SPTSZ_Planck_min_variance_ymap_half2.fits.gz&quot;`</span>
+<span class="sd">        - file_gp_mask: `path+&quot;SPTSZ_dust_mask_top_5percent.fits.gz&quot;`</span>
 <span class="sd">        - gp_mask_mode: `&quot;default&quot;`</span>
-<span class="sd">        - file_ps_mask: `&quot;.../Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_point_source_mask_nside_8192_binary_mask.fits.gz&quot;`</span>
+<span class="sd">        - file_ps_mask: `path+ \</span>
+<span class="sd">          &quot;SPTSZ_point_source_mask_nside_8192_binary_mask.fits.gz&quot;`</span>
 <span class="sd">        - ps_mask_mode: `[&#39;default&#39;]`</span>
-<span class="sd">        </span>
-<span class="sd">        - beam_info: </span>
+
+<span class="sd">        - beam_info:</span>
 <span class="sd">            - type: `&quot;Gaussian&quot;`</span>
 <span class="sd">            - FWHM_arcmin: `1.6`</span>
 
@@ -106,7 +121,7 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            hm1_map (Array)</span>
-<span class="sd">            hm2_map (Array) </span>
+<span class="sd">            hm2_map (Array)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hm1_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">hm1_map</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">read_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_hm1</span><span class="p">)</span>

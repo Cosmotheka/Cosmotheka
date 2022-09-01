@@ -47,7 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#sdss">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_SDSS">SDSS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
@@ -86,16 +86,16 @@
 
 
 <div class="viewcode-block" id="Mapper2MPZ"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ">[docs]</a><span class="k">class</span> <span class="nc">Mapper2MPZ</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; </span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    **Config**</span>
-<span class="sd">    </span>
+
 <span class="sd">        - mask_name: `mask_2MPZWISC`</span>
-<span class="sd">        - path_rerun: `&#39;/.../Datasets/2MPZ_WIxSC/xcell_runs&#39;`</span>
+<span class="sd">        - path_rerun: `&#39;.../Datasets/2MPZ_WIxSC/xcell_runs&#39;`</span>
 <span class="sd">        - z_edges: `[0.0, 0.1]`</span>
-<span class="sd">        - data_catalog: `&#39;/.../Datasets/2MPZ_WIxSC/2MPZ.fits&#39;`</span>
+<span class="sd">        - data_catalog: `&#39;.../Datasets/2MPZ_WIxSC/2MPZ.fits&#39;`</span>
 <span class="sd">        - n_jk_dir: `100`</span>
-<span class="sd">        - mask_G: `&#39;/.../Datasets/2MPZ_WIxSC/WISExSCOSmask_galactic.fits.gz&#39;`</span>
-<span class="sd">        - mask_C: `&#39;/.../Datasets/2MPZ_WIxSC/WISExSCOSmask_equatorial.fits.gz&#39;`</span>
+<span class="sd">        - mask_G: `&#39;.../Datasets/2MPZ_WIxSC/WISExSCOSmask_galactic.fits.gz&#39;`</span>
+<span class="sd">        - mask_C: `&#39;.../Datasets/2MPZ_WIxSC/WISExSCOSmask_equatorial.fits.gz&#39;`</span>
 <span class="sd">        - use_halo_model: `True`</span>
 <span class="sd">        - hod_params:</span>
 
@@ -123,7 +123,7 @@
         <span class="c1"># Returns mapper&#39;s ra and dec names \</span>
         <span class="c1"># in the mapper&#39;s catalog given the coordinates \</span>
         <span class="c1"># designated in the cofiguration file</span>
-        
+
         <span class="c1"># Returns:</span>
         <span class="c1">#     ra_name (String), dec_name (String)</span>
 
@@ -153,7 +153,7 @@
 
     <span class="k">def</span> <span class="nf">_mask_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cat</span><span class="p">):</span>
         <span class="c1"># Applies binary mask to catalog</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mask</span><span class="p">()</span>
         <span class="n">ipix</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">ang2pix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span> <span class="n">cat</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ra_name</span><span class="p">],</span>
                           <span class="n">cat</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dec_name</span><span class="p">],</span> <span class="n">lonlat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -241,7 +241,7 @@
     <span class="k">def</span> <span class="nf">_get_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Reads the mask of the mappper from a file \</span>
         <span class="c1"># and upgrades it to the chosen resolution.</span>
-        
+
         <span class="c1"># We will assume the mask has been provided in the right</span>
         <span class="c1"># coordinates, so no further conversion is needed.</span>
         <span class="n">mask</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">ud_grade</span><span class="p">(</span><span class="n">hp</span><span class="o">.</span><span class="n">read_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;mask&#39;</span><span class="p">]),</span>

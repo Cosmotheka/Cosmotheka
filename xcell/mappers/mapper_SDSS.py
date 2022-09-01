@@ -72,7 +72,7 @@ class MapperSDSS(MapperBase):
     def get_nz(self, dz=0):
         """
         Computes the redshift distribution of sources. \
-        Then, it shifts the distribution by "dz" (default dz=0). 
+        Then, it shifts the distribution by "dz" (default dz=0).
 
         Kwargs:
             dz=0
@@ -126,7 +126,7 @@ class MapperSDSS(MapperBase):
     def _get_mask(self):
         # Calculates the mask of the SDSS \
         # data sets based on their random catalogs.
-        
+
         cat_random = self.get_catalog(mod='random')
         w_random = self._get_w(mod='random')
         alpha = self._get_alpha()
@@ -145,7 +145,7 @@ class MapperSDSS(MapperBase):
         # is below a 4096, the random catalog is used \
         # to compute the noise power spectrum. Otherwise, \
         # the high multipole tail of the signal power \
-        # spectrum is used to estimate the noise power spectrum. 
+        # spectrum is used to estimate the noise power spectrum.
 
         if self.nside < self.nside_nl_threshold:
             print('calculing nl from weights')
@@ -186,8 +186,8 @@ class MapperSDSS(MapperBase):
         return self.nl_coupled
 
     def _bin_z(self, cat):
-        # Removes all but the catalog sources 
-        # inside the chosen redshift bin. 
+        # Removes all but the catalog sources
+        # inside the chosen redshift bin.
         return cat[(cat['Z'] >= self.z_edges[0]) &
                    (cat['Z'] < self.z_edges[1])]
 

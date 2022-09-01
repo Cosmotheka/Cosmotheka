@@ -15,7 +15,7 @@ class MapperACTCompSept(MapperACTBase):
 
     def _get_signal_map(self):
         # Loads pixell map and converts it
-        # to healpy 
+        # to healpy
 
         if self.signal_map is None:
             # The 'Weights' FITS file contains the 2D Fourier space
@@ -46,7 +46,7 @@ class MapperACTCompSept(MapperACTBase):
         raise NotImplementedError("No noise model for the ACT maps")
 
     def _get_custom_beam(self, info):
-        # Loads beam from file 
+        # Loads beam from file
 
         fname = info['file']
         beam_file = np.transpose(np.loadtxt(fname))

@@ -37,7 +37,19 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../base_mapper.html">General Philosophy &amp; The Base Mapper</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">2MPZ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#act">ACT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_CatWISE">CatWISE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_DELS">DESL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#desy1">DESY1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_HSC_DR1wl">HSC_DR1wl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_KiDS1000">KiDS-1000</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_SDSS">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
 
         </div>
@@ -75,24 +87,29 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Note that X in the names of files and directories \</span>
 <span class="sd">    stands for either of the three available frequency \</span>
-<span class="sd">    channels `X = [353, 545, 857]`. </span>
+<span class="sd">    channels `X = [353, 545, 857]`.</span>
 
 <span class="sd">    **Config**</span>
-<span class="sd">        - file_map: `&quot;/mnt/extraspace/damonge/Datasets/CIB_Lenz/X/2.5e+20_gp20/cib_fullmission.hpx.fits&quot;`</span>
-<span class="sd">        - file_hm1: `&quot;/mnt/extraspace/damonge/Datasets/CIB_Lenz/X/2.5e+20_gp20/cib_evenring.hpx.fits&quot;`</span>
-<span class="sd">        - file_hm2: `&quot;/mnt/extraspace/damonge/Datasets/CIB_Lenz/X/2.5e+20_gp20/cib_oddring.hpx.fits&quot;`</span>
-<span class="sd">        - file_mask: `&quot;/mnt/extraspace/damonge/Datasets/CIB_Lenz/X/2.5e+20_gp20/mask_apod.hpx.fits&quot;`</span>
+<span class="sd">        - file_map: \</span>
+<span class="sd">          `&quot;.../Datasets/CIB_Lenz/X/2.5e+20_gp20/cib_fullmission.hpx.fits&quot;`</span>
+<span class="sd">        - file_hm1: \</span>
+<span class="sd">          `&quot;.../Datasets/CIB_Lenz/X/2.5e+20_gp20/cib_evenring.hpx.fits&quot;`</span>
+<span class="sd">        - file_hm2: \</span>
+<span class="sd">          `&quot;.../Datasets/CIB_Lenz/X/2.5e+20_gp20/cib_oddring.hpx.fits&quot;`</span>
+<span class="sd">        - file_mask: \</span>
+<span class="sd">          `&quot;.../Datasets/CIB_Lenz/X/2.5e+20_gp20/mask_apod.hpx.fits&quot;`</span>
 <span class="sd">        - beam_info:</span>
 
 <span class="sd">            - type: `&#39;Custom&#39;`</span>
-<span class="sd">            - file: `&#39;/mnt/extraspace/damonge/Datasets/CIB_Lenz/X/2.5e+20_gp20/windowfunctions.csv&#39;`</span>
+<span class="sd">            - file: \</span>
+<span class="sd">            `&#39;.../Datasets/CIB_Lenz/X/2.5e+20_gp20/windowfunctions.csv&#39;`</span>
 <span class="sd">            - field: `&#39;Wl_eff&#39;`</span>
 <span class="sd">            - type: `&#39;PixWin&#39;`</span>
 <span class="sd">            - nside_native: `2048`</span>
 <span class="sd">            - nside_wanted: `4096`</span>
 
 <span class="sd">        - mask_name: `&quot;mask_CIB_Lenz_X&quot;`</span>
-<span class="sd">        - path_rerun: `&#39;/mnt/extraspace/damonge/Datasets/CIB_Lenz_X/xcell_runs&#39;`</span>
+<span class="sd">        - path_rerun: `&#39;.../Datasets/CIB_Lenz_X/xcell_runs&#39;`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_get_Planck_defaults</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
@@ -101,7 +118,7 @@
                                       <span class="s1">&#39;FWHM_arcmin&#39;</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">}])</span>
 
     <span class="k">def</span> <span class="nf">_get_custom_beam</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
-        <span class="c1"># Constructs beam function </span>
+        <span class="c1"># Constructs beam function</span>
         <span class="c1"># based on window function</span>
         <span class="c1"># from file</span>
 

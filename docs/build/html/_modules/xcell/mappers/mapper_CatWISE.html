@@ -47,7 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#sdss">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_SDSS">SDSS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
@@ -87,9 +87,11 @@
 <div class="viewcode-block" id="MapperCatWISE"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_CatWISE.MapperCatWISE">[docs]</a><span class="k">class</span> <span class="nc">MapperCatWISE</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    **Config**</span>
-<span class="sd">    </span>
-<span class="sd">        - data_catalog: `&quot;.../Datasets/CatWISE/catwise_agns_masked_final_w1lt16p5_alpha.fits&quot;`</span>
-<span class="sd">        - file_mask: `&quot;.../Datasets/CatWISE/MASKS_exclude_master_final.fits&quot;`</span>
+
+<span class="sd">        - data_catalog: \</span>
+<span class="sd">          `&quot;.../Datasets/CatWISE/catwise_agns_masked_final_w1lt16p5_alpha.fits&quot;`</span>
+<span class="sd">        - file_mask: \</span>
+<span class="sd">          `&quot;.../Datasets/CatWISE/MASKS_exclude_master_final.fits&quot;`</span>
 <span class="sd">        - apply_ecliptic_correction: `True`</span>
 <span class="sd">        - mask_name: `&quot;mask_CatWISE&quot;`</span>
 <span class="sd">        - path_rerun: `&quot;.../Datasets/CatWISE/xcell_runs&quot;`</span>
@@ -111,7 +113,7 @@
 <div class="viewcode-block" id="MapperCatWISE.get_catalog"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the mapper&#39;s catalog after \</span>
-<span class="sd">        applying flux thershold. </span>
+<span class="sd">        applying flux thershold.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            catalog (Array)</span>
@@ -166,7 +168,7 @@
         <span class="c1"># Generates the mask given the chosen resolution \</span>
         <span class="c1"># and the angular conditions in the configuration \</span>
         <span class="c1"># file. If &quot;file_sourcemask&quot; is not None it applies \</span>
-        <span class="c1"># holes to the mask. </span>
+        <span class="c1"># holes to the mask.</span>
 
         <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npix</span><span class="p">)</span>
         <span class="n">r</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">Rotator</span><span class="p">(</span><span class="n">coord</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;G&#39;</span><span class="p">])</span>
@@ -204,7 +206,6 @@
         <span class="n">mask</span> <span class="o">=</span> <span class="n">rotate_mask</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rot</span><span class="p">,</span> <span class="n">binarize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">mask</span>
 
-
 <div class="viewcode-block" id="MapperCatWISE.get_nl_coupled"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Shot noise</span>
 
@@ -229,7 +230,6 @@
 <div class="viewcode-block" id="MapperCatWISE.get_dtype"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galaxy_density&#39;</span></div>
 
-    <span class="c1"># Spin</span>
 <div class="viewcode-block" id="MapperCatWISE.get_spin"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="mi">0</span></div></div>
 </pre></div>

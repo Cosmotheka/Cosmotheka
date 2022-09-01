@@ -7,14 +7,14 @@ from .utils import rotate_mask, rotate_map
 
 class MapperPlanckBase(MapperBase):
     """
-    Base mapper for the Planck mappers. 
+    Base mapper for the Planck mappers.
     """
     def __init__(self, config):
         self._get_Planck_defaults(config)
 
     def _get_Planck_defaults(self, config):
         # Creates instances of common elements \
-        # between the different Planck mappers. 
+        # between the different Planck mappers.
 
         self._get_defaults(config)
         self.rot = self._get_rotator('G')
@@ -52,7 +52,8 @@ class MapperPlanckBase(MapperBase):
         # the base masks are multiplied. \
         # If the mapper is equipped with a \
         # point source mask, the point source and \
-        # the base masks are multiplied. 
+        # the base masks are multiplied.
+
         msk = None
         if self.file_mask is not None:
             msk = hp.read_map(self.file_mask)
@@ -83,8 +84,8 @@ class MapperPlanckBase(MapperBase):
 
     def _get_diff_map(self):
         # Substracts the two half mission maps \
-        # of the mapper. 
-        
+        # of the mapper.
+
         if self.diff_map is None:
             self.hm1_map, self.hm2_map = self._get_hm_maps()
             self.diff_map = [(self.hm1_map[0] - self.hm2_map[0])/2]
@@ -103,7 +104,6 @@ class MapperPlanckBase(MapperBase):
         estimate the coupled signal power \
         spectrum of the mapper.
 
-
         Returns:
             cl_coupled (Array)
         """
@@ -120,7 +120,7 @@ class MapperPlanckBase(MapperBase):
         estimate the coupled covariance matrix of the \
         power spectrum of the coadded map as \
         well as the half mission maps cross- \
-        and auto-correlation. 
+        and auto-correlation.
 
         Returns:
             cl_coupled (Array)

@@ -37,8 +37,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../base_mapper.html">General Philosophy &amp; The Base Mapper</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_2MPZ">2MPZ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">2MPZ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#act">ACT</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_CatWISE">CatWISE</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_DELS">DESL</a></li>
@@ -48,7 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#sdss">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_SDSS">SDSS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
@@ -85,10 +84,14 @@
 
 <div class="viewcode-block" id="MapperP15tSZ"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_P15tSZ.MapperP15tSZ">[docs]</a><span class="k">class</span> <span class="nc">MapperP15tSZ</span><span class="p">(</span><span class="n">MapperPlanckBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    path = `&quot;.../Datasets/Planck_tSZ&quot;`</span>
 <span class="sd">    **Config**</span>
-<span class="sd">        - file_map: `&quot;.../Datasets/Planck_tSZ/COM_CompMap_YSZ_R2.02/milca_ymaps.fits&quot;`</span>
-<span class="sd">        - file_gp_mask: `&quot;.../Datasets/Planck_tSZ/COM_CompMap_YSZ_R2.02/COM_CompMap_Compton-SZMap-masks_2048_R2.01.fits&quot;`</span>
-<span class="sd">        - file_ps_mask: `&quot;.../Datasets/Planck_tSZ/COM_CompMap_YSZ_R2.02/COM_CompMap_Compton-SZMap-masks_2048_R2.01.fits&quot;`</span>
+
+<span class="sd">        - file_map: `path+&quot;COM_CompMap_YSZ_R2.02/milca_ymaps.fits&quot;`</span>
+<span class="sd">        - file_gp_mask: \</span>
+<span class="sd">        `path+&quot;COM_CompMap_YSZ_R2.02/COM_CompMap_Compton-SZMap-masks_2048_R2.01.fits&quot;`</span>
+<span class="sd">        - file_ps_mask: \</span>
+<span class="sd">        `&quot;.../Datasets/Planck_tSZ/COM_CompMap_YSZ_R2.02/COM_CompMap_Compton-SZMap-masks_2048_R2.01.fits&quot;`</span>
 <span class="sd">        - gp_mask_mode: `&#39;0.6&#39;`</span>
 <span class="sd">        - ps_mask_mode: `[&#39;default&#39;]`</span>
 <span class="sd">        - beam_info:</span>
@@ -97,7 +100,7 @@
 <span class="sd">            - FWHM_arcmin: `10.0`</span>
 
 <span class="sd">        - mask_name: `mask_P15tSZ`</span>
-<span class="sd">        - path_rerun: `&quot;.../Datasets/Planck_tSZ/COM_CompMap_YSZ_R2.02/xcell_runs&quot;`</span>
+<span class="sd">        - path_rerun: `path+&quot;COM_CompMap_YSZ_R2.02/xcell_runs&quot;`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_get_Planck_defaults</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
@@ -119,7 +122,7 @@
         <span class="c1"># Returns the half mission maps of the mapper \</span>
         <span class="c1"># after applying the \</span>
         <span class="c1"># neccesary coordinate rotations.</span>
-        
+
         <span class="c1"># Returns:</span>
         <span class="c1">#     hm1_map (Array)</span>
         <span class="c1">#     hm2_map (Array)</span>

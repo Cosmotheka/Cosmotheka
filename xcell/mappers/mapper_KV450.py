@@ -79,7 +79,7 @@ class MapperKV450(MapperBase):
     def _load_catalog(self):
         # Loads the lite DESY1 catalog. \
         # Selects the chosen bin in the catalog. \
-        # Removes the additive and multiplicative  biases. 
+        # Removes the additive and multiplicative  biases.
 
         nzbins = self.zbin_edges.shape[0]
         cat_bins = [Table() for i in range(nzbins)]
@@ -107,7 +107,7 @@ class MapperKV450(MapperBase):
         # it returns the kind of the map associated \
         # ('shear', 'PSF' --> 'galaxy' and 'stars' --> stars) \
         # with the mode and corresponding name of the \
-        # ellipticity fields in the catalog. 
+        # ellipticity fields in the catalog.
 
         # Returns:
         #     kind (String), e1_flag (String), \
@@ -164,7 +164,7 @@ class MapperKV450(MapperBase):
 
     def _get_ellip_maps(self):
         # Returns the ellipticity fields of the mapper's catalog.
-        
+
         kind, e1f, e2f, mod = self._set_mode()
         print('Computing bin{} signal map'.format(self.zbin))
         data = self._get_gals_or_stars(kind)
@@ -211,7 +211,7 @@ class MapperKV450(MapperBase):
         return msk
 
     def _get_w2s2(self):
-        # Computes the weight-squared map for 
+        # Computes the weight-squared map for
         # noise power spectrum estimation.
 
         kind, e1f, e2f, mod = self._set_mode()
@@ -250,7 +250,7 @@ class MapperKV450(MapperBase):
     def get_nz(self, dz=0):
         """
         Loads the redshift distribution of sources \
-        from the data products. 
+        from the data products.
         Then, it shifts the distribution by "dz" (default dz=0). \
         Finally, it returns the redshift distribtuion.
 

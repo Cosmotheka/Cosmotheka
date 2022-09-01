@@ -7,7 +7,6 @@ import healpy as hp
 
 class MapperNVSS(MapperBase):
     """
-
     **Config**
 
         - data_catalog: `".../Datasets/NVSS/nvss.fits"`
@@ -149,7 +148,7 @@ class MapperNVSS(MapperBase):
         Loads the redshift distribution catalog. \
         Then, it shifts the distribution by "dz" (default dz=0). \
         Finally, it returns the redshift distribtuion.
-        
+
         Kwargs:
             dz=0
 

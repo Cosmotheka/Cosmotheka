@@ -6,16 +6,19 @@ import numpy as np
 
 class MapperSPT(MapperPlanckBase):
     """
-    ***Config***
-        - file_map: `".../Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap.fits.gz"`
-        - file_hm1: `".../Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap_half1.fits.gz"`
-        - file_hm2: `".../Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_Planck_min_variance_ymap_half2.fits.gz"`
-        - file_gp_mask: ".../Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_dust_mask_top_5percent.fits.gz"`
+    path = `.../Datasets/SPT/sptsz_planck_ymap_healpix/"`
+    **Config**
+
+        - file_map: `path+"SPTSZ_Planck_min_variance_ymap.fits.gz"`
+        - file_hm1: `path+"SPTSZ_Planck_min_variance_ymap_half1.fits.gz"`
+        - file_hm2: `path+"SPTSZ_Planck_min_variance_ymap_half2.fits.gz"`
+        - file_gp_mask: `path+"SPTSZ_dust_mask_top_5percent.fits.gz"`
         - gp_mask_mode: `"default"`
-        - file_ps_mask: `".../Datasets/SPT/sptsz_planck_ymap_healpix/SPTSZ_point_source_mask_nside_8192_binary_mask.fits.gz"`
+        - file_ps_mask: `path+ \
+          "SPTSZ_point_source_mask_nside_8192_binary_mask.fits.gz"`
         - ps_mask_mode: `['default']`
-        
-        - beam_info: 
+
+        - beam_info:
             - type: `"Gaussian"`
             - FWHM_arcmin: `1.6`
 
@@ -39,7 +42,7 @@ class MapperSPT(MapperPlanckBase):
 
         Returns:
             hm1_map (Array)
-            hm2_map (Array) 
+            hm2_map (Array)
         """
         if self.hm1_map is None:
             hm1_map = hp.read_map(self.file_hm1)

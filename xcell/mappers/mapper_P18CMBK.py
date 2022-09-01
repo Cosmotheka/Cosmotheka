@@ -99,8 +99,8 @@ class MapperP18CMBK(MapperBase):
         # auto-correlation of the covergence map.
 
         # Returns:
-        #     [l (Array): multipole list, 
-        #      Nl (Array): noise power spectrum, 
+        #     [l (Array): multipole list,
+        #      Nl (Array): noise power spectrum,
         #      Nl+Cl (Array): noise + signal power spectrum] (Array)
 
         if self.noise is None:

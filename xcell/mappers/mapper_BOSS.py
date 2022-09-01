@@ -5,17 +5,19 @@ import numpy as np
 class MapperBOSS(MapperSDSS):
     """
     Note that X in file names stands for either `'CMASS'` or `'LOWZ'`.
-    
+
     **Config**
 
         - num_z_bins: `50`
         - nside_mask: `512`
         - nside_nl_threshold: `4096`
         - lmin_nl_from_data: `2000`
-        - data_catalogs: `['.../Datasets/BOSS/galaxy_DR12v5_X_North.fits.gz' \
-                           '.../Datasets/BOSS/galaxy_DR12v5_X_South.fits.gz']` 
-        - random_catalogs: `['.../Datasets/BOSS/random0_DR12v5_X_North.fits.gz', \
-                            '.../Datasets/BOSS/random0_DR12v5_X_South.fits.gz']`
+        - data_catalogs: \
+          `['.../Datasets/BOSS/galaxy_DR12v5_X_North.fits.gz' \
+            '.../Datasets/BOSS/galaxy_DR12v5_X_South.fits.gz']`
+        - random_catalogs: \
+          `['.../Datasets/BOSS/random0_DR12v5_X_North.fits.gz', \
+            '.../Datasets/BOSS/random0_DR12v5_X_South.fits.gz']`
 
         - z_edges: `[0.4, 0.8]` / `[0.1, 0.43]`
         - path_rerun: `'.../Datasets/BOSS/xcell_runs'`
@@ -46,5 +48,5 @@ class MapperBOSS(MapperSDSS):
 
     def _get_random_cols(self):
         # Returns the names of the columns \
-        # of interest for the mapper. 
+        # of interest for the mapper.
         return ['RA', 'DEC', 'Z']

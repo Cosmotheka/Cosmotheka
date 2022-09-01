@@ -6,7 +6,7 @@ from .utils import get_rerun_data, save_rerun_data
 
 
 class MapperBase(object):
-    """ 
+    """
     Base mapper class used as foundation \
     for the rest of mappers.
     """
@@ -37,26 +37,26 @@ class MapperBase(object):
 
     def get_signal_map(self):
         """
-        Returns the signal map of the mapper. 
+        Returns the signal map of the mapper.
 
         Returns:
-            delta_map (Array): signal mapper. 
+            delta_map (Array): signal mapper.
         """
         raise NotImplementedError("Do not use base class")
 
     def get_contaminants(self):
         """
-        Returns the contaminants maps of the mapper. 
-        
+        Returns the contaminants maps of the mapper.
+
         Returns:
-            contaminants (Array): contaminant mapper. 
+            contaminants (Array): contaminant mapper.
         """
         raise NotImplementedError("Do not use base class")
 
     def get_mask(self):
         """
         Returns the mask of the mapper.
-        
+
         Returns:
             mask (Array): mapper's mask
         """
@@ -72,11 +72,10 @@ class MapperBase(object):
 
     def get_nl_coupled(self):
         """
-        Returns the coupled noise power spectrum of the mapper. 
+        Returns the coupled noise power spectrum of the mapper.
 
         Returns:
             nl_coupled (Array): coupled noise power spectrum
-            
         """
         raise NotImplementedError("Do not use base class")
 
@@ -107,7 +106,7 @@ class MapperBase(object):
             return np.array([z_dz[sel], nz[sel]])
 
     def get_ell(self):
-        """ 
+        """
         Returns the array of multipoles associted with the \
         mapper's pixel resolution.
 
@@ -123,14 +122,14 @@ class MapperBase(object):
         """ Calculates the value of the mapper's beam at each \
             multipole. The beam is calculated following the \
             information contained in "self.beam_info". \
-            Currently three types of beam are implemented: 
-            
+            Currently three types of beam are implemented:
+
                 - Gaussian: a Gaussian beam defined by a FWHM \
                    in arcmin.
                 - PixWin: the pixel window function associated \
                    resolution down/up-scalings.
                 - Custom: loads beam from file.
-   
+
             "self.beam_info" can contain information for many beams. \
             If this is the case, the final beam is the product of \
             individual beams.
@@ -191,7 +190,7 @@ class MapperBase(object):
         if self.nmt_field is None:
             self.nmt_field = self._get_nmt_field(signal=None, **kwargs)
         return self.nmt_field
-    
+
     def get_dtype(self):
         """
         Returns the type of the mapper
@@ -204,9 +203,8 @@ class MapperBase(object):
     def get_spin(self):
         """
         Returns the spin of the mapper.
-        
+
         Returns:
             spin (Int)
         """
         raise NotImplementedError("Do not use base class")
-

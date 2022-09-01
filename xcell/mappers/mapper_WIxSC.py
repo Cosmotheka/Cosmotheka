@@ -31,7 +31,7 @@ class MapperWIxSC(MapperBase):
     - star_map_C: `'.../Datasets/2MPZ_WIxSC/allwise_total_equatorial.fits'`
     - use_halo_model: `True`
     - hod_params:
-    
+
         - lMmin_0: `11.697` / `11.859` / `12.103` / `12.144` / `12.084`
         - siglM_0: `0.345` / `0.345` / `0.345` / `0.345` / `0.345`
         - lM0_0: `11.697` / `11.859` / `12.103` / 12.144 / `13.013`
@@ -122,7 +122,7 @@ class MapperWIxSC(MapperBase):
 
     def _mask_catalog(self, cat):
         # Applies binary mask to catalog.
-        
+
         self.mask = self.get_mask()
         ra, dec = self.get_radec(cat)
         ipix = hp.ang2pix(self.nside, ra, dec, lonlat=True)
@@ -197,8 +197,8 @@ class MapperWIxSC(MapperBase):
             self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz, return_jk_error=return_jk_error)
 
-    def get_signal_map(self): 
-        # If 'apply_galactic_correction' = True, 
+    def get_signal_map(self):
+        # If 'apply_galactic_correction' = True,
         # it applies the galactic correction.
 
         if self.delta_map is None:
@@ -259,7 +259,7 @@ class MapperWIxSC(MapperBase):
         #     bmask (Array): binary mask
 
         # Kwargs:
-        #     nbins=14 (Int): number of bins 
+        #     nbins=14 (Int): number of bins
         #     npoly=3 (Int): order of the polynomial fit
 
         # Returns:

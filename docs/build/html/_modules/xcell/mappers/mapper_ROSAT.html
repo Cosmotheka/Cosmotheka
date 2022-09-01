@@ -47,7 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#sdss">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_SDSS">SDSS</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
@@ -107,14 +107,15 @@
 <span class="sd">    The mask is constructed by thresholding the exposure map</span>
 <span class="sd">    and combining it with any other externa map (e.g. aiming</span>
 <span class="sd">    to remove Galactic emission).</span>
-<span class="sd">    </span>
+
 <span class="sd">    **Config**</span>
-<span class="sd"> </span>
+
 <span class="sd">        - exposure_map: `&#39;.../Datasets/ROSAT/exposure/exposure_mean.fits&#39;`</span>
 <span class="sd">        - photon_list: `&#39;.../Datasets/ROSAT/rosat_photons_Egt0p4keV.fits&#39;`</span>
 <span class="sd">        - energy_range: `[0.5, 3.0]`</span>
 <span class="sd">        - exposure_min: `100.0`</span>
-<span class="sd">        - external_mask: `&#39;.../Datasets/2MPZ_WIxSC/WISExSCOSmask_equatorial.fits.gz&#39;`</span>
+<span class="sd">        - external_mask: \</span>
+<span class="sd">        `&#39;.../Datasets/2MPZ_WIxSC/WISExSCOSmask_equatorial.fits.gz&#39;`</span>
 <span class="sd">        - mask_name: `&#39;mask_ROSAT&#39;`</span>
 <span class="sd">        - mapper_class: `&#39;MapperROSATXray&#39;`</span>
 <span class="sd">    &quot;&quot;&quot;</span>

@@ -5,14 +5,17 @@ import healpy as hp
 
 class MapperP18SMICA(MapperPlanckBase):
     """
+    path = `".../Datasets/Planck_SMICA"`
     **Config**
 
-        - file_map: `".../Datasets/Planck_SMICA/COM_CMB_IQU-smica-nosz_2048_R3.00_full.fits"`
-        - file_hm1: `".../Datasets/Planck_SMICA/COM_CMB_IQU-smica-nosz_2048_R3.00_hm1.fits"`
-        - file_hm2: `".../Datasets/Planck_SMICA/COM_CMB_IQU-smica-nosz_2048_R3.00_hm2.fits"`
-        - file_gp_mask: `".../Datasets/Planck_masks/HFI_Mask_GalPlane-apo2_2048_R2.00.fits"`
-        - file_ps_mask: `".../Datasets/Planck_masks/HFI_Mask_PointSrc_2048_R2.00.fits"`
-        
+        - file_map: `path+"COM_CMB_IQU-smica-nosz_2048_R3.00_full.fits"`
+        - file_hm1: `path+"COM_CMB_IQU-smica-nosz_2048_R3.00_hm1.fits"`
+        - file_hm2: `path+"COM_CMB_IQU-smica-nosz_2048_R3.00_hm2.fits"`
+        - file_gp_mask: \
+        `".../Datasets/Planck_masks/HFI_Mask_GalPlane-apo2_2048_R2.00.fits"`
+        - file_ps_mask: \
+        `".../Datasets/Planck_masks/HFI_Mask_PointSrc_2048_R2.00.fits"`
+
         - beam_info:
 
             - type: `'Gaussian'`
@@ -47,7 +50,7 @@ class MapperP18SMICA(MapperPlanckBase):
             None
         Returns:
             hm1_map (Array)
-            hm2_map (Array) 
+            hm2_map (Array)
         """
         if self.hm1_map is None:
             hm1_map = hp.read_map(self.file_hm1)
@@ -64,7 +67,7 @@ class MapperP18SMICA(MapperPlanckBase):
     def get_dtype(self):
         """
         Returns the type of the mapper. \
-        
+
         Args:
             None
         Returns:
