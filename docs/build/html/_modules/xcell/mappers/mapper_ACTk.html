@@ -35,9 +35,21 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../base_mapper.html">General Philosophy &amp; The Base Mapper</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">2MPZ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#act">ACT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_CatWISE">CatWISE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_DELS">DESL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#desy1">DESY1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_HSC_DR1wl">HSC_DR1wl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_KiDS1000">KiDS-1000</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#sdss">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
 
         </div>
@@ -91,16 +103,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">mask_power</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mask_power&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the signal map of the mappper. \</span>
-<span class="sd">        </span>
-<span class="sd">        Args:</span>
-<span class="sd">            None</span>
-<span class="sd">        Kwargs:</span>
-<span class="sd">            apply_galactic_correction=True</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            delta_map (Array) </span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Loads the signal_map in pixell format</span>
+        <span class="c1"># and coverts it to healpy</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">pixell_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_pixell_mask</span><span class="p">()</span>
         <span class="n">mp</span> <span class="o">=</span> <span class="n">enmap</span><span class="o">.</span><span class="n">read_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_map</span><span class="p">)</span>
         <span class="n">mp</span> <span class="o">=</span> <span class="n">reproject</span><span class="o">.</span><span class="n">healpix_from_enmap</span><span class="p">(</span><span class="n">mp</span><span class="p">,</span>
@@ -111,14 +116,9 @@
         <span class="k">return</span> <span class="n">mp</span>
 
     <span class="k">def</span> <span class="nf">_get_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the mask of the mapper. \</span>
-<span class="sd">        </span>
-<span class="sd">        Args:</span>
-<span class="sd">            None</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            mask (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Loads the signal_map in pixell format</span>
+        <span class="c1"># and coverts it to healpy</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">pixell_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_pixell_mask</span><span class="p">()</span>
         <span class="n">msk</span> <span class="o">=</span> <span class="n">reproject</span><span class="o">.</span><span class="n">healpix_from_enmap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pixell_mask</span><span class="p">,</span>
                                            <span class="n">lmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lmax</span><span class="p">,</span>
@@ -127,25 +127,9 @@
         <span class="k">return</span> <span class="n">msk</span>
 
 <div class="viewcode-block" id="MapperACTk.get_dtype"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_ACTk.MapperACTk.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the type of the mapper. \</span>
-<span class="sd">        </span>
-<span class="sd">        Args:</span>
-<span class="sd">            None</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            mapper_type (String)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s1">&#39;cmb_convergence&#39;</span></div>
 
 <div class="viewcode-block" id="MapperACTk.get_spin"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_ACTk.MapperACTk.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the spin of the mapper. \</span>
-<span class="sd">        </span>
-<span class="sd">        Args:</span>
-<span class="sd">            None</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            spin (Int)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="mi">0</span></div></div>
 </pre></div>
 

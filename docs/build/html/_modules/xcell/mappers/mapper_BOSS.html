@@ -35,8 +35,8 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../base_mapper.html">General Philosophy &amp; The Base Mapper</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
 </ul>
 
@@ -95,18 +95,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">z_edges</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;z_edges&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">_get_w</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the weights for the sources of \</span>
-<span class="sd">        the mapper&#39;s data or randoms catalog. \</span>
-<span class="sd">        </span>
-<span class="sd">        Args:</span>
-<span class="sd">            None</span>
-<span class="sd">        Kwargs:</span>
-<span class="sd">            mod=&#39;data&#39;</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            ws (Array)</span>
-<span class="sd">        </span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Returns the weights for the sources of \</span>
+        <span class="c1"># the mapper&#39;s data or randoms catalog.</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ws</span><span class="p">[</span><span class="n">mod</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">cat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">(</span><span class="n">mod</span><span class="o">=</span><span class="n">mod</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">mod</span> <span class="o">==</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span>
@@ -121,16 +112,8 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ws</span><span class="p">[</span><span class="n">mod</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">_get_random_cols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the names of the columns \</span>
-<span class="sd">        of interest for the mapper. \</span>
-<span class="sd">        </span>
-<span class="sd">        Args:</span>
-<span class="sd">            None</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            [&#39;RA&#39;, &#39;DEC&#39;, &#39;Z&#39;] (Array)</span>
-<span class="sd">        </span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Returns the names of the columns \</span>
+        <span class="c1"># of interest for the mapper. </span>
         <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;RA&#39;</span><span class="p">,</span> <span class="s1">&#39;DEC&#39;</span><span class="p">,</span> <span class="s1">&#39;Z&#39;</span><span class="p">]</span></div>
 </pre></div>
 

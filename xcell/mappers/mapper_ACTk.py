@@ -24,16 +24,9 @@ class MapperACTk(MapperACTBase):
         self.mask_power = config.get('mask_power', 2)
 
     def _get_signal_map(self):
-        """
-        Returns the signal map of the mappper. \
-        
-        Args:
-            None
-        Kwargs:
-            apply_galactic_correction=True
-        Returns:
-            delta_map (Array) 
-        """
+        # Loads the signal_map in pixell format
+        # and coverts it to healpy
+
         self.pixell_mask = self._get_pixell_mask()
         mp = enmap.read_map(self.file_map)
         mp = reproject.healpix_from_enmap(mp,
@@ -44,14 +37,9 @@ class MapperACTk(MapperACTBase):
         return mp
 
     def _get_mask(self):
-        """
-        Returns the mask of the mapper. \
-        
-        Args:
-            None
-        Returns:
-            mask (Array)
-        """
+        # Loads the signal_map in pixell format
+        # and coverts it to healpy
+
         self.pixell_mask = self._get_pixell_mask()
         msk = reproject.healpix_from_enmap(self.pixell_mask,
                                            lmax=self.lmax,
@@ -60,23 +48,7 @@ class MapperACTk(MapperACTBase):
         return msk
 
     def get_dtype(self):
-        """
-        Returns the type of the mapper. \
-        
-        Args:
-            None
-        Returns:
-            mapper_type (String)
-        """
         return 'cmb_convergence'
 
     def get_spin(self):
-        """
-        Returns the spin of the mapper. \
-        
-        Args:
-            None
-        Returns:
-            spin (Int)
-        """
         return 0

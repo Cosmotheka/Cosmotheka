@@ -47,16 +47,11 @@ class MapperHSCDR1wl(MapperBase):
         self.signal_map = None
 
     def _get_catalog_from_raw(self):
-        """
-        Loads the mappper raw catalog, cleans it,\
-        applies shear cuts, removes all but the \
-        chosen redshift bin and calibrates \
-        elipticities. \
-        Finally, it returns the processed catalog.
+        # Loads the mappper raw catalog, cleans it,\
+        # applies shear cuts, removes all but the \
+        # chosen redshift bin and calibrates elipticities. \
+        # Finally, it returns the processed catalog.
 
-        Retunrs
-            cat (Array)
-        """
         cats = []
         for f in self.config['data_catalogs']:
             cat = self._clean_raw_catalog(f)
@@ -122,15 +117,9 @@ class MapperHSCDR1wl(MapperBase):
         return self.cat
 
     def _clean_raw_catalog(self, fnames):
-        """
-        Cleans the raw HSC DR1 catalog.
-        
-        Args:
-            fnames (Array(String))
+        # Cleans the raw HSC DR1 catalog
+        # and produces a lite catalog.
 
-        Returns:
-            cat (Array)
-        """
         cats = []
         for fname in fnames:
             if not os.path.isfile(fname):
@@ -194,12 +183,8 @@ class MapperHSCDR1wl(MapperBase):
         return vstack(cats)
 
     def _get_ellip_maps(self):
-        """
-        Returns the ellipticity fields of the mapper's catalog.
+        # Returns the ellipticity fields of the mapper's catalog.
 
-        Returns:
-            we1 (Array), we2 (Array)
-        """
         print(f'Computing bin {self.bn} signal map')
         cat = self.get_catalog()
         we1, we2 = get_map_from_points(cat, self.nside,
@@ -215,12 +200,6 @@ class MapperHSCDR1wl(MapperBase):
         return we1, we2
 
     def get_signal_map(self):
-        """
-        Returns the mapper's signal map.
-
-        Returns:
-            signal_map (Array)
-        """
         if self.signal_map is None:
             fn = '_'.join([f'HSCDR1wl_signal_{self.bn}',
                            f'coord{self.coords}',
@@ -232,12 +211,8 @@ class MapperHSCDR1wl(MapperBase):
         return self.signal_map
 
     def _get_mask(self):
-        """
-        Returns the mapper's mask.
+        # Loads mapper's from file
 
-        Returns:
-            signal_map (Array)
-        """
         print(f'Computing bin {self.bn} mask')
         cat = self.get_catalog()
         msk = get_map_from_points(cat, self.nside,
@@ -248,13 +223,9 @@ class MapperHSCDR1wl(MapperBase):
         return msk
 
     def _get_w2s2(self):
-        """
-        Computes map for noise power spectrum \
-        estimation.
-
-        Returns:
-            w2s2_map (Array)
-        """
+        # Computes weight-square map for
+        # noise power spectrum estimation.
+ 
         print('Computing w2s2 map')
         cat = self.get_catalog()
         w2s2 = get_map_from_points(cat, self.nside,
@@ -265,13 +236,6 @@ class MapperHSCDR1wl(MapperBase):
         return w2s2
 
     def get_nl_coupled(self):
-        """
-        Returns the mapper's coupled noise \
-        noise power spectrum. 
-
-        Returns:
-            nl_coupled (Array)
-        """
         if self.nl_coupled is not None:
             return self.nl_coupled
 
@@ -329,19 +293,7 @@ class MapperHSCDR1wl(MapperBase):
         return self._get_shifted_nz(dz)
 
     def get_dtype(self):
-        """
-        Returns the type of the mapper.
-
-        Returns:
-            mapper_type (String)
-        """
         return 'galaxy_shear'
 
     def get_spin(self):
-        """
-        Returns the spin of the mapper.
-
-        Returns:
-            spin (Int)
-        """
         return 2

@@ -23,23 +23,7 @@ class MapperACTCMB(MapperACTCompSept):
         self._get_ACT_defaults(config)
 
     def get_dtype(self):
-        """
-        Returns the type of the mapper. \
-        
-        Args:
-            None
-        Returns:
-            mapper_type (String)
-        """
         return 'cmb_kSZ'
 
     def get_spin(self):
-        """
-        Returns the spin of the mapper. \
-        
-        Args:
-            None
-        Returns:
-            spin (Int)
-        """
         return 0

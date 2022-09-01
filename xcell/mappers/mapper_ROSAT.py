@@ -86,16 +86,6 @@ class MapperROSATXray(MapperBase):
         return self.expmap
 
     def get_signal_map(self):
-        """
-        Returns the mapper's signal map. \
-        If 'apply_galactic_correction = True' \
-        it applies the galactic correction to \
-        the signal map. 
-
-        Returns:
-            signal_map (Array)
-
-        """
         if self.countrate_map is None:
             cat = self.get_pholist()
             xpmap = self.get_expmap()
@@ -113,13 +103,6 @@ class MapperROSATXray(MapperBase):
         return self.countrate_map
 
     def _get_mask(self):
-        """
-        Returns the mapper's mask. 
-
-        Returns:
-            mask (Array)
-
-        """
         mask = np.ones(self.npix)
         xpmap = self.get_expmap()
         mask[xpmap <= self.explimit] = 0
@@ -131,14 +114,6 @@ class MapperROSATXray(MapperBase):
         return mask
 
     def get_nl_coupled(self):
-        """
-        Returns the mapper's coupled noise \
-        noise power spectrum.
-
-        Returns:
-            nl_coupled (Array)
-
-        """
         if self.nl_coupled is None:
             cat = self.get_pholist()
             xpmap = self.get_expmap()
@@ -160,19 +135,7 @@ class MapperROSATXray(MapperBase):
         return self.nl_coupled
 
     def get_dtype(self):
-        """
-        Returns the type of the mapper. \
-        
-        Returns:
-            mapper_type (String)
-        """
         return 'generic'
 
     def get_spin(self):
-        """
-        Returns the spin of the mapper. \
-        
-        Returns:
-            spin (Int)
-        """
         return 0

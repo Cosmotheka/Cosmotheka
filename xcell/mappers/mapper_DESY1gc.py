@@ -50,42 +50,26 @@ class MapperDESY1gc(MapperBase):
         return self.cat_data
 
     def _bin_z(self, cat):
-        """
-        Removes all but the catalog sources \
-        inside the chosen redshift bin.
-    
-        Args:
-            catalog (Array)
+        # Removes all but the catalog sources \
+        # inside the chosen redshift bin.
 
-        Returns:
-            catalog (Array)
-        """
         z_key = 'ZREDMAGIC'
         return cat[(cat[z_key] >= self.z_edges[0]) &
                    (cat[z_key] < self.z_edges[1])]
 
     def _get_w(self):
-        """
-        Returns the weights for the sources of \
-        the mapper's catalog.
+        # Returns the weights for the sources of \
+        # the mapper's catalog.
 
-        Returns:
-            w (Array)
-        
-        """
         if self.w is None:
             cat_data = self.get_catalog()
             self.w = np.array(cat_data['weight'])
         return self.w
 
     def _get_mask(self):
-        """
-        Returns the mapper's mask after applying. \
-        the mapper's threshold.  
+        # Returns the mapper's mask after applying. \
+        # the mapper's threshold.
 
-        Returns:
-            mask (Array)
-        """
         mask = hp.read_map(self.config['file_mask'])
         mask = rotate_mask(mask, self.rot)
         mask = hp.ud_grade(mask, nside_out=self.nside)
@@ -112,12 +96,6 @@ class MapperDESY1gc(MapperBase):
         return self._get_shifted_nz(dz)
 
     def get_signal_map(self):
-        """
-        Returns the masked signal map.
-
-        Returns:
-            signal_map (Array)
-        """
         if self.delta_map is None:
             mask = self.get_mask()
             cat_data = self.get_catalog()
@@ -132,13 +110,6 @@ class MapperDESY1gc(MapperBase):
         return [self.delta_map]
 
     def get_nl_coupled(self):
-        """
-        Returns the coupled noise power spectrum \
-        of the mapper's data set.
-
-        Returns:
-            nl_coupled (Array)
-        """
         if self.nl_coupled is None:
             cat_data = self.get_catalog()
             w = self._get_w()
@@ -156,19 +127,7 @@ class MapperDESY1gc(MapperBase):
         return self.nl_coupled
 
     def get_dtype(self):
-        """
-        Returns the type of the mapper.
-
-        Returns:
-            mapper_type (String)
-        """
         return 'galaxy_density'
 
     def get_spin(self):
-        """
-        Returns the spin of the mapper.
-
-        Returns:
-            spin (Int)
-        """
         return 0

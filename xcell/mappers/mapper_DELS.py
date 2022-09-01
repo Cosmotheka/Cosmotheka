@@ -53,12 +53,9 @@ class MapperDELS(MapperBase):
         self.bmask = None
 
     def _get_catalog(self):
-        """Loads the mapper's catalog \
-        after binning it in redshift.
+        # Returns the mapper's catalog \
+        # after binning it in redshift.
 
-        Returns:
-            catalog (Array)
-        """
         cat = []
         for file_data in self.config['data_catalogs']:
             if not os.path.isfile(file_data):
@@ -71,11 +68,11 @@ class MapperDELS(MapperBase):
         return cat.as_array()
 
     def get_catalog(self):
-        """Checks if the mapper has already \
+        """
+        Checks if the mapper has already \
         loaded the chosen bin of the catalog. \
         If so, it loads it from the save file. \ 
-        Otherwise, it cuts the original file \
-        using "_get_catalog()". 
+        Otherwise, it cuts the original file 
 
         Returns:
             catalog (Array)
@@ -87,15 +84,9 @@ class MapperDELS(MapperBase):
         return self.cat_data
 
     def _get_angmask(self):
-        """
-        Returns an array of the same length \
-        as the signal map containing True if \
-        the pixel is masked by the binary mask \
-        or False if it isn't.
+        # Returns True if pixel is masked 
+        # by the binary mask
 
-        Returns:
-            masked_pixels (Array)
-        """
         if self.mskflag is None:
             cat = self.get_catalog()
             bmask = hp.read_map(self.config['binary_mask'])
@@ -106,28 +97,17 @@ class MapperDELS(MapperBase):
         return self.mskflag
 
     def _bin_z(self, cat):
-        """
-        Removes all but the catalog sources \
-        inside the chosen redshift bin.
-    
-        Args:
-            catalog (Array)
+        # Removes all but the catalog sources \
+        # inside the chosen redshift bin.
 
-        Returns:
-            catalog (Array)
-        """
         return cat[(cat[self.pz] >= self.z_edges[0]) &
                    (cat[self.pz] < self.z_edges[1])]
 
     def _get_lorentzian(self, zz):
-        """
-        Computes the Lorentzian kernel for a given redshift \
-        used transform the photometric distribution \
-        of sources into the spectroscopic distribution
-        
-        Args:
-            zz (Array)
-        """
+        # Computes the Lorentzian kernel for a given redshift \
+        # used transform the photometric distribution \
+        # of sources into the spectroscopic distribution
+
         # a m s
         params = np.array([[1.257, -0.0010, 0.0122],
                            [1.104, 0.0076, 0.0151],
@@ -137,13 +117,9 @@ class MapperDELS(MapperBase):
         return 1./(1+((zz[:, None]-zz[None, :]-m)/s)**2/(2*a))**a
 
     def _get_nz(self):
-        """Builds the redshift distributions of \
-        the sources of the mapper's catalog.
-        
-        Returns:
-            {'z_mid': z_arr, 'nz': nz_spec} (Dict)
-        
-        """
+        # Builds the redshift distributions of \
+        # the sources of the mapper's catalog.
+
         cat_data = self.get_catalog()
         mskflag = self._get_angmask()
         h, b = np.histogram(cat_data[self.pz][mskflag],
@@ -156,7 +132,8 @@ class MapperDELS(MapperBase):
         return {'z_mid': z_arr, 'nz': nz_spec}
 
     def get_nz(self, dz=0):
-        """Checks if mapper has precomputed the redshift \
+        """
+        Checks if mapper has precomputed the redshift \
         distribution. If not, it uses "_get_nz()" to obtain it. \
         Then, it shifts the distribution by "dz" (default dz=0).
 
@@ -172,14 +149,6 @@ class MapperDELS(MapperBase):
         return self._get_shifted_nz(dz)
 
     def get_signal_map(self, apply_galactic_correction=True):
-        """
-        Returns the masked signal map. \
-        If "apply_galactic_correction" is True \
-        it applies the galactic correction.
-
-        Returns:
-            signal_map (Array)
-        """
         if self.delta_map is None:
             d = np.zeros(self.npix)
             cat_data = self.get_catalog()
@@ -199,21 +168,17 @@ class MapperDELS(MapperBase):
         return self.delta_map
 
     def _get_galactic_correction(self, delta, stars, bmask, nbins=14, npoly=5):
-        """
-        Calculates the galactic correction \
-        for the DELS catalog.
-        Args:
-            delta (Array): signal map
-            stars (Array): star map
-            bmask (Array): binary mask
+        # Calculates the galactic correction \
+        # for the DELS catalog.
+        # Args:
+        #     delta (Array): signal map
+        #     stars (Array): star map
+        #     bmask (Array): binary mask
 
-        Kwargs:
-            nbis=14
-            npoly=5
+        # Kwargs:
+        #     nbis=14
+        #     npoly=5
 
-        Returns:
-            correction (Array)
-        """
         # Create bins of star density
         stbins = np.linspace(np.log10(stars[bmask > 0].min()),
                              np.log10(stars[bmask > 0].max()), nbins+1)
@@ -246,16 +211,9 @@ class MapperDELS(MapperBase):
                 'delta_map': d_corr}
 
     def _get_mean_n(self, nmap):
-        """
-        Returns the the average number of sources \
-        per pixel of a given sources map.
+        # Returns the the average number of sources \
+        # per pixel of a given sources map.
 
-        Args:
-            nmap (Array)
-
-        Returns:
-            n_mean (Float)
-        """
         self.comp_map = self._get_comp_map()
         self.stars = self._get_stars()
         self.bmask = self._get_binary_mask()
@@ -266,12 +224,8 @@ class MapperDELS(MapperBase):
         return n_mean
 
     def _get_stars(self):
-        """
-        Returns the stars map of the DELS data set.
+        # Returns the stars map of the DELS data set.
 
-        Returns:
-            stars (Array)
-        """
         if self.stars is None:
             # Power = -2 makes sure the total number of stars is conserved
             stars = hp.read_map(self.config['star_map'])
@@ -285,13 +239,9 @@ class MapperDELS(MapperBase):
         return self.stars
 
     def _get_comp_map(self):
-        """
-        Returns the completeness map of \
-        the DELS data set.
+        # Returns the completeness map of \
+        # the DELS data set.
 
-        Returns:
-            comp_map (Array)
-        """
         if self.comp_map is None:
             comp_map = hp.read_map(self.config['completeness_map'])
             comp_map = rotate_mask(comp_map, self.rot)
@@ -301,13 +251,9 @@ class MapperDELS(MapperBase):
         return self.comp_map
 
     def _get_binary_mask(self):
-        """
-        Returns the completeness map of \
-        the DELS data set.
+        # Returns the binary mask of \
+        # the DELS data set.
 
-        Returns:
-            comp_map (Array)
-        """
         if self.bmask is None:
             bmsk = hp.read_map(self.config['binary_mask'])
             bmsk = rotate_mask(bmsk, self.rot)
@@ -317,25 +263,14 @@ class MapperDELS(MapperBase):
         return self.bmask
 
     def _get_mask(self):
-        """
-        Returns the binary mask of the DELS data set \
-        after applying the completeness map.
+        # Returns the binary mask of the DELS data set \
+        # after applying the completeness map.
 
-        Returns:
-            mask (Array)
-        """
         self.bmask = self._get_binary_mask()
         self.comp_map = self._get_comp_map()
         return self.bmask * self.comp_map
 
     def get_nl_coupled(self):
-        """
-        Returns the coupled noise power spectrum \
-        of the  DELS data set.
-
-        Returns:
-            nl_coupled (Array)
-        """
         if self.nl_coupled is None:
             cat_data = self.get_catalog()
             n = get_map_from_points(cat_data, self.nside,
@@ -348,19 +283,7 @@ class MapperDELS(MapperBase):
         return self.nl_coupled
 
     def get_dtype(self):
-        """
-        Returns the type of the mapper.
-
-        Returns:
-            mapper_type (String)
-        """
         return 'galaxy_density'
 
     def get_spin(self):
-        """
-        Returns the spin of the mapper.
-
-        Returns:
-            spin (Int)
-        """
         return 0

@@ -35,9 +35,22 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../base_mapper.html">General Philosophy &amp; The Base Mapper</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_2MPZ">2MPZ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#act">ACT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_CatWISE">CatWISE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_DELS">DESL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#desy1">DESY1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_HSC_DR1wl">HSC_DR1wl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_KiDS1000">KiDS-1000</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#sdss">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
 
         </div>
@@ -75,6 +88,9 @@
 
 <div class="viewcode-block" id="MapperP18CMBK"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_P18CMBK.MapperP18CMBK">[docs]</a><span class="k">class</span> <span class="nc">MapperP18CMBK</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Note that this mapper is a child of `MapperBase`, /</span>
+<span class="sd">    not of `MapperPlanckBase`.</span>
+
 <span class="sd">    **Config**</span>
 
 <span class="sd">        - file_klm: `&quot;.../Datasets/Planck_lensing/Lensing2018/MV/dat_klm.fits&quot;`</span>
@@ -102,14 +118,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">cl_fid</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="MapperP18CMBK.get_signal_map"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_P18CMBK.MapperP18CMBK.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns mapper&#39;s signal map. \</span>
-<span class="sd">        If the highest multipole is larger than \</span>
-<span class="sd">        the one allowed by the resolution.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            signal_map (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">signal_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Read alms</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">klm</span><span class="p">,</span> <span class="n">lmax</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">read_alm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;file_klm&#39;</span><span class="p">],</span>
@@ -125,14 +133,6 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">signal_map</span></div>
 
     <span class="k">def</span> <span class="nf">_get_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the mapper&#39;s mask \</span>
-<span class="sd">        after applying the neccesary coordinate \</span>
-<span class="sd">        rotations and apodizing.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            msk (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">msk</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">read_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;file_mask&#39;</span><span class="p">],</span>
                           <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="n">msk</span> <span class="o">=</span> <span class="n">rotate_mask</span><span class="p">(</span><span class="n">msk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rot</span><span class="p">,</span> <span class="n">binarize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -143,16 +143,6 @@
         <span class="k">return</span> <span class="n">msk</span>
 
 <div class="viewcode-block" id="MapperP18CMBK.get_nl_coupled"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_P18CMBK.MapperP18CMBK.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the coupled noise power \</span>
-<span class="sd">        spectrum of the mapper. \</span>
-<span class="sd">        It loads the decoupled noise power spectrum \</span>
-<span class="sd">        and then it multiplies it by the mean of the \</span>
-<span class="sd">        squared mask to couple it.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            nl_coupled (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">ell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ell</span><span class="p">()</span>
             <span class="n">noise</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_noise</span><span class="p">()</span>
@@ -185,15 +175,14 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cl_fid</span></div>
 
     <span class="k">def</span> <span class="nf">_get_noise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the decoupled noise power spectrum of the \</span>
-<span class="sd">        auto-correlation of the covergence map.</span>
+        <span class="c1"># Returns the decoupled noise power spectrum of the \</span>
+        <span class="c1"># auto-correlation of the covergence map.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            [l (Array): multipole list, </span>
-<span class="sd">             Nl (Array): noise power spectrum, </span>
-<span class="sd">             Nl+Cl (Array): noise + signal power spectrum] (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Returns:</span>
+        <span class="c1">#     [l (Array): multipole list, </span>
+        <span class="c1">#      Nl (Array): noise power spectrum, </span>
+        <span class="c1">#      Nl+Cl (Array): noise + signal power spectrum] (Array)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Read noise file. Column order is: [&#39;l&#39;, &#39;Nl&#39;, &#39;Nl+Cl&#39;]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;file_noise&#39;</span><span class="p">],</span> <span class="n">unpack</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -201,21 +190,9 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise</span>
 
 <div class="viewcode-block" id="MapperP18CMBK.get_dtype"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_P18CMBK.MapperP18CMBK.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the type of the mapper.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            mapper_type (String)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;cmb_convergence&quot;</span></div>
 
 <div class="viewcode-block" id="MapperP18CMBK.get_spin"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_P18CMBK.MapperP18CMBK.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the spin of the mapper.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            spin (Int)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="mi">0</span></div></div>
 </pre></div>
 

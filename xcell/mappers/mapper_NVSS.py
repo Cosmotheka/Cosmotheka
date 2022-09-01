@@ -86,18 +86,6 @@ class MapperNVSS(MapperBase):
         return self.cat_redshift
 
     def get_signal_map(self, apply_galactic_correction=True):
-        """
-        Returns the mapper's signal map. \
-        If 'apply_galactic_correction = True' \
-        it applies the galactic correction to \
-        the signal map.
-
-        Kwargs:
-            apply_galactic_correcting = True
-
-        Returns:
-            signal_map (Array)
-        """
         if self.delta_map is None:
             d = np.zeros(self.npix)
             self.cat_data = self.get_catalog()
@@ -114,12 +102,6 @@ class MapperNVSS(MapperBase):
         return self.delta_map
 
     def _get_mask(self):
-        """
-        Returns the mapper's mask.
-
-        Returns:
-            mask (Array)
-        """
         if self.config.get('mask_file', None) is not None:
             mask = hp.read_map(self.config['mask_file'])
             mask = hp.ud_grade(rotate_mask(mask, self.rot),
@@ -149,13 +131,6 @@ class MapperNVSS(MapperBase):
         return mask
 
     def get_nl_coupled(self):
-        """
-        Returns the mapper's coupled noise \
-        noise power spectrum.
-
-        Returns:
-            nl_coupled (Array)
-        """
         if self.nl_coupled is None:
             self.cat_data = self.get_catalog()
             self.mask = self.get_mask()
@@ -190,19 +165,7 @@ class MapperNVSS(MapperBase):
         return self._get_shifted_nz(dz)
 
     def get_dtype(self):
-        """
-        Returns the type of the mapper.
-
-        Returns:
-            mapper_type (String)
-        """
         return 'galaxy_density'
 
     def get_spin(self):
-        """
-        Returns the spin of the mapper.
-
-        Returns:
-            spin (Int)
-        """
         return 0

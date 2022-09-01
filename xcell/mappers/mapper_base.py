@@ -36,20 +36,27 @@ class MapperBase(object):
         return rot
 
     def get_signal_map(self):
+        """
+        Returns the signal map of the mapper. 
+
+        Returns:
+            delta_map (Array): signal mapper. 
+        """
         raise NotImplementedError("Do not use base class")
 
     def get_contaminants(self):
-        return None
+        """
+        Returns the contaminants maps of the mapper. 
+        
+        Returns:
+            contaminants (Array): contaminant mapper. 
+        """
+        raise NotImplementedError("Do not use base class")
 
     def get_mask(self):
-        """Returns the mask of the associated mapper. \
-        If the mask has been calculated before, it is \
-        loaded from the file. \
-        Otherwise, the map is calculated using the \
-        the prescription of each mapper. \
-        Args:
-            None
-
+        """
+        Returns the mask of the mapper.
+        
         Returns:
             mask (Array): mapper's mask
         """
@@ -64,6 +71,13 @@ class MapperBase(object):
         raise NotImplementedError("Do not use base class")
 
     def get_nl_coupled(self):
+        """
+        Returns the coupled noise power spectrum of the mapper. 
+
+        Returns:
+            nl_coupled (Array): coupled noise power spectrum
+            
+        """
         raise NotImplementedError("Do not use base class")
 
     def get_nl_covariance(self):
@@ -93,13 +107,12 @@ class MapperBase(object):
             return np.array([z_dz[sel], nz[sel]])
 
     def get_ell(self):
-        """ Returns the array of multipoles associted with the \
-            mapper's pixel resolution. \
-            Args:
-                None
+        """ 
+        Returns the array of multipoles associted with the \
+        mapper's pixel resolution.
 
-            Returns:
-                ells (Array): multipoles array.
+        Returns:
+            ells (Array): multipoles array.
         """
         return np.arange(3 * self.nside)
 
@@ -110,18 +123,17 @@ class MapperBase(object):
         """ Calculates the value of the mapper's beam at each \
             multipole. The beam is calculated following the \
             information contained in "self.beam_info". \
-            Currently three types of beam are implemented: \
-                a) Gaussian: a Gaussian beam defined by a FWHM \
+            Currently three types of beam are implemented: 
+            
+                - Gaussian: a Gaussian beam defined by a FWHM \
                    in arcmin.
-                b) PixWin: the pixel window function associated \
+                - PixWin: the pixel window function associated \
                    resolution down/up-scalings.
-                c) Custom: loads beam from file. \
+                - Custom: loads beam from file.
+   
             "self.beam_info" can contain information for many beams. \
             If this is the case, the final beam is the product of \
             individual beams.
-
-            Args:
-                None
 
             Returns:
                 beam (Array): value of the beam at each multipole.
@@ -168,16 +180,33 @@ class MapperBase(object):
                             templates=cont, n_iter=n_iter)
 
     def get_nmt_field(self, **kwargs):
-        """Returns an instance of Namaster field given a mapper's \
-           signal map, mask and beam.
+        """
+        Returns an instance of Namaster field given a mapper's \
+        signal map, mask and beam.
 
-            Args:
-                None
-
-            Returns:
-                nmt_field (:class:`NaMaster.NmtField`): a Namaster \
-                field instance. \
+        Returns:
+            nmt_field (:class:`NaMaster.NmtField`): a Namaster \
+            field instance. \
         """
         if self.nmt_field is None:
             self.nmt_field = self._get_nmt_field(signal=None, **kwargs)
         return self.nmt_field
+    
+    def get_dtype(self):
+        """
+        Returns the type of the mapper
+
+        Returns:
+            mapper_type (String)
+        """
+        raise NotImplementedError("Do not use base class")
+
+    def get_spin(self):
+        """
+        Returns the spin of the mapper.
+        
+        Returns:
+            spin (Int)
+        """
+        raise NotImplementedError("Do not use base class")
+

@@ -8,6 +8,9 @@ from .utils import rotate_mask
 
 class MapperP18CMBK(MapperBase):
     """
+    Note that this mapper is a child of `MapperBase`, /
+    not of `MapperPlanckBase`.
+
     **Config**
 
         - file_klm: `".../Datasets/Planck_lensing/Lensing2018/MV/dat_klm.fits"`
@@ -35,14 +38,6 @@ class MapperP18CMBK(MapperBase):
         self.cl_fid = None
 
     def get_signal_map(self):
-        """
-        Returns mapper's signal map. \
-        If the highest multipole is larger than \
-        the one allowed by the resolution.
-
-        Returns:
-            signal_map (Array)
-        """
         if self.signal_map is None:
             # Read alms
             self.klm, lmax = hp.read_alm(self.config['file_klm'],
@@ -58,14 +53,6 @@ class MapperP18CMBK(MapperBase):
         return self.signal_map
 
     def _get_mask(self):
-        """
-        Returns the mapper's mask \
-        after applying the neccesary coordinate \
-        rotations and apodizing.
-
-        Returns:
-            msk (Array)
-        """
         msk = hp.read_map(self.config['file_mask'],
                           dtype=float)
         msk = rotate_mask(msk, self.rot, binarize=True)
@@ -76,16 +63,6 @@ class MapperP18CMBK(MapperBase):
         return msk
 
     def get_nl_coupled(self):
-        """
-        Returns the coupled noise power \
-        spectrum of the mapper. \
-        It loads the decoupled noise power spectrum \
-        and then it multiplies it by the mean of the \
-        squared mask to couple it.
-
-        Returns:
-            nl_coupled (Array)
-        """
         if self.nl_coupled is None:
             ell = self.get_ell()
             noise = self._get_noise()
@@ -118,15 +95,14 @@ class MapperP18CMBK(MapperBase):
         return self.cl_fid
 
     def _get_noise(self):
-        """
-        Returns the decoupled noise power spectrum of the \
-        auto-correlation of the covergence map.
+        # Returns the decoupled noise power spectrum of the \
+        # auto-correlation of the covergence map.
 
-        Returns:
-            [l (Array): multipole list, 
-             Nl (Array): noise power spectrum, 
-             Nl+Cl (Array): noise + signal power spectrum] (Array)
-        """
+        # Returns:
+        #     [l (Array): multipole list, 
+        #      Nl (Array): noise power spectrum, 
+        #      Nl+Cl (Array): noise + signal power spectrum] (Array)
+
         if self.noise is None:
             # Read noise file. Column order is: ['l', 'Nl', 'Nl+Cl']
             self.noise = np.loadtxt(self.config['file_noise'], unpack=True)
@@ -134,19 +110,7 @@ class MapperP18CMBK(MapperBase):
         return self.noise
 
     def get_dtype(self):
-        """
-        Returns the type of the mapper.
-
-        Returns:
-            mapper_type (String)
-        """
         return "cmb_convergence"
 
     def get_spin(self):
-        """
-        Returns the spin of the mapper.
-
-        Returns:
-            spin (Int)
-        """
         return 0

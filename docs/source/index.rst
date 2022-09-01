@@ -9,6 +9,7 @@ Welcome to xCell's documentation!
 .. toctree::
    :maxdepth: 2
 
+   base_mapper
    mappers
        
 

@@ -29,11 +29,10 @@ class MapperCatWISE(MapperBase):
         self.dndz = None
         self.rot = self._get_rotator('C')
 
-    # CatWISE catalog
     def get_catalog(self):
         """
-        Returns the mapper's catalog. \
-        Applies flux thershold. 
+        Returns the mapper's catalog after \
+        applying flux thershold. 
 
         Returns:
             catalog (Array)
@@ -47,15 +46,9 @@ class MapperCatWISE(MapperBase):
                  self.config.get('flux_max_W1', 16.4))]
         return self.cat_data
 
-    # Correction to Density
     def _get_ecliptic_correction(self):
-        """
-        Calculates the ecliptic correction \
-        for the CATWISE catalog.
+        # Correction to Density
 
-        Returns:
-            correction (Array)
-        """
         pixarea_deg2 = (hp.nside2resol(self.nside, arcmin=True)/60)**2
         # Transforms equatorial to ecliptic coordinates
         r = hp.Rotator(coord=[self.coords, 'E'])
@@ -69,16 +62,7 @@ class MapperCatWISE(MapperBase):
         correction = 0.0513 * np.abs(ec_lat_map) * pixarea_deg2
         return correction
 
-    # Density Map
     def get_signal_map(self):
-        """
-        Returns the masked signal map. \
-        If "apply_ecliptic_correction" is True \
-        it applies the ecliptic correction.
-
-        Returns:
-            signal_map (Array)
-        """
         if self.delta_map is None:
             d = np.zeros(self.npix)
             self.cat_data = self.get_catalog()
@@ -100,15 +84,11 @@ class MapperCatWISE(MapperBase):
         return self.delta_map
 
     def _cut_mask(self):
-        """
-        Generates the mask given the chosen resolution \
-        and the angular conditions in the configuration \
-        file. If "file_sourcemask" is not None it applies \
-        holes to the mask. 
+        # Generates the mask given the chosen resolution \
+        # and the angular conditions in the configuration \
+        # file. If "file_sourcemask" is not None it applies \
+        # holes to the mask. 
 
-        Returns:
-            mask (Array)
-        """
         mask = np.ones(self.npix)
         r = hp.Rotator(coord=['C', 'G'])
         RApix, DEpix = hp.pix2ang(self.nside, np.arange(self.npix),
@@ -132,15 +112,11 @@ class MapperCatWISE(MapperBase):
         return mask
 
     def _get_mask(self):
-        """
-        Checks if the mapper has already computed \
-        the mask. If so, it loads it from a file. \
-        Otherwise, it calculates using "_cut_mask()". \
-        It also rotates the mask to the chose coordinates.
+        # Checks if the mapper has already computed \
+        # the mask. If so, it loads it from a file. \
+        # Otherwise, it calculates using "_cut_mask()". \
+        # It also rotates the mask to the chose coordinates.
 
-        Returns:
-            mask (Array)
-        """
         if self.config.get('mask_file', None) is not None:
             mask = hp.ud_grade(hp.read_map(self.config['mask_file']),
                                nside_out=self.nside)
@@ -149,15 +125,10 @@ class MapperCatWISE(MapperBase):
         mask = rotate_mask(mask, self.rot, binarize=True)
         return mask
 
-    # Shot noise
-    def get_nl_coupled(self):
-        """
-        Returns the coupled noise power spectrum \
-        of the mapper's data set.
 
-        Returns:
-            nl_coupled (Array)
-        """
+    def get_nl_coupled(self):
+        # Shot noise
+
         if self.nl_coupled is None:
             self.cat_data = self.get_catalog()
             self.mask = self.get_mask()
@@ -171,25 +142,14 @@ class MapperCatWISE(MapperBase):
         return self.nl_coupled
 
     def get_nz(self, dz=0):
+        """
+        Not implemented yet.
+        """
         raise NotImplementedError("No dNdz for CatWISE yet")
 
     def get_dtype(self):
-        """Returns the type of the mapper. \
-        
-        Args:
-            None
-        Returns:
-            mapper_type (String)
-        """
         return 'galaxy_density'
 
     # Spin
     def get_spin(self):
-        """Returns the spin of the mapper. \
-        
-        Args:
-            None
-        Returns:
-            spin (Int)
-        """
         return 0

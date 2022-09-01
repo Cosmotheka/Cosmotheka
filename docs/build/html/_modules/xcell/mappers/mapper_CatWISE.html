@@ -35,9 +35,21 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../base_mapper.html">General Philosophy &amp; The Base Mapper</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">2MPZ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#act">ACT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_CatWISE">CatWISE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_DELS">DESL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#desy1">DESY1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_HSC_DR1wl">HSC_DR1wl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_KiDS1000">KiDS-1000</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#sdss">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
 
         </div>
@@ -96,11 +108,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">dndz</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_rotator</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
 
-    <span class="c1"># CatWISE catalog</span>
 <div class="viewcode-block" id="MapperCatWISE.get_catalog"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the mapper&#39;s catalog. \</span>
-<span class="sd">        Applies flux thershold. </span>
+<span class="sd">        Returns the mapper&#39;s catalog after \</span>
+<span class="sd">        applying flux thershold. </span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            catalog (Array)</span>
@@ -114,15 +125,9 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;flux_max_W1&#39;</span><span class="p">,</span> <span class="mf">16.4</span><span class="p">))]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span></div>
 
-    <span class="c1"># Correction to Density</span>
     <span class="k">def</span> <span class="nf">_get_ecliptic_correction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculates the ecliptic correction \</span>
-<span class="sd">        for the CATWISE catalog.</span>
+        <span class="c1"># Correction to Density</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            correction (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">pixarea_deg2</span> <span class="o">=</span> <span class="p">(</span><span class="n">hp</span><span class="o">.</span><span class="n">nside2resol</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span> <span class="n">arcmin</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">/</span><span class="mi">60</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
         <span class="c1"># Transforms equatorial to ecliptic coordinates</span>
         <span class="n">r</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">Rotator</span><span class="p">(</span><span class="n">coord</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">,</span> <span class="s1">&#39;E&#39;</span><span class="p">])</span>
@@ -136,16 +141,7 @@
         <span class="n">correction</span> <span class="o">=</span> <span class="mf">0.0513</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ec_lat_map</span><span class="p">)</span> <span class="o">*</span> <span class="n">pixarea_deg2</span>
         <span class="k">return</span> <span class="n">correction</span>
 
-    <span class="c1"># Density Map</span>
 <div class="viewcode-block" id="MapperCatWISE.get_signal_map"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the masked signal map. \</span>
-<span class="sd">        If &quot;apply_ecliptic_correction&quot; is True \</span>
-<span class="sd">        it applies the ecliptic correction.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            signal_map (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npix</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
@@ -167,15 +163,11 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_map</span></div>
 
     <span class="k">def</span> <span class="nf">_cut_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generates the mask given the chosen resolution \</span>
-<span class="sd">        and the angular conditions in the configuration \</span>
-<span class="sd">        file. If &quot;file_sourcemask&quot; is not None it applies \</span>
-<span class="sd">        holes to the mask. </span>
+        <span class="c1"># Generates the mask given the chosen resolution \</span>
+        <span class="c1"># and the angular conditions in the configuration \</span>
+        <span class="c1"># file. If &quot;file_sourcemask&quot; is not None it applies \</span>
+        <span class="c1"># holes to the mask. </span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            mask (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npix</span><span class="p">)</span>
         <span class="n">r</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">Rotator</span><span class="p">(</span><span class="n">coord</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;G&#39;</span><span class="p">])</span>
         <span class="n">RApix</span><span class="p">,</span> <span class="n">DEpix</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">pix2ang</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npix</span><span class="p">),</span>
@@ -199,15 +191,11 @@
         <span class="k">return</span> <span class="n">mask</span>
 
     <span class="k">def</span> <span class="nf">_get_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Checks if the mapper has already computed \</span>
-<span class="sd">        the mask. If so, it loads it from a file. \</span>
-<span class="sd">        Otherwise, it calculates using &quot;_cut_mask()&quot;. \</span>
-<span class="sd">        It also rotates the mask to the chose coordinates.</span>
+        <span class="c1"># Checks if the mapper has already computed \</span>
+        <span class="c1"># the mask. If so, it loads it from a file. \</span>
+        <span class="c1"># Otherwise, it calculates using &quot;_cut_mask()&quot;. \</span>
+        <span class="c1"># It also rotates the mask to the chose coordinates.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            mask (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mask_file&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">mask</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">ud_grade</span><span class="p">(</span><span class="n">hp</span><span class="o">.</span><span class="n">read_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;mask_file&#39;</span><span class="p">]),</span>
                                <span class="n">nside_out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">)</span>
@@ -216,15 +204,10 @@
         <span class="n">mask</span> <span class="o">=</span> <span class="n">rotate_mask</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rot</span><span class="p">,</span> <span class="n">binarize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">mask</span>
 
-    <span class="c1"># Shot noise</span>
-<div class="viewcode-block" id="MapperCatWISE.get_nl_coupled"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the coupled noise power spectrum \</span>
-<span class="sd">        of the mapper&#39;s data set.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            nl_coupled (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="MapperCatWISE.get_nl_coupled"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Shot noise</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mask</span><span class="p">()</span>
@@ -237,28 +220,17 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="o">=</span> <span class="n">N_ell</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span></div>
 
-    <span class="k">def</span> <span class="nf">get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;No dNdz for CatWISE yet&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="MapperCatWISE.get_nz"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_nz">[docs]</a>    <span class="k">def</span> <span class="nf">get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Not implemented yet.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;No dNdz for CatWISE yet&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MapperCatWISE.get_dtype"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the type of the mapper. \</span>
-<span class="sd">        </span>
-<span class="sd">        Args:</span>
-<span class="sd">            None</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            mapper_type (String)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s1">&#39;galaxy_density&#39;</span></div>
 
     <span class="c1"># Spin</span>
 <div class="viewcode-block" id="MapperCatWISE.get_spin"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the spin of the mapper. \</span>
-<span class="sd">        </span>
-<span class="sd">        Args:</span>
-<span class="sd">            None</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            spin (Int)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="mi">0</span></div></div>
 </pre></div>
 

@@ -35,9 +35,21 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../base_mapper.html">General Philosophy &amp; The Base Mapper</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">2MPZ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#act">ACT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_CatWISE">CatWISE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_DELS">DESL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#desy1">DESY1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_HSC_DR1wl">HSC_DR1wl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_KiDS1000">KiDS-1000</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#sdss">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
 
         </div>
@@ -117,42 +129,26 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span></div>
 
     <span class="k">def</span> <span class="nf">_bin_z</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cat</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Removes all but the catalog sources \</span>
-<span class="sd">        inside the chosen redshift bin.</span>
-<span class="sd">    </span>
-<span class="sd">        Args:</span>
-<span class="sd">            catalog (Array)</span>
+        <span class="c1"># Removes all but the catalog sources \</span>
+        <span class="c1"># inside the chosen redshift bin.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            catalog (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">z_key</span> <span class="o">=</span> <span class="s1">&#39;ZREDMAGIC&#39;</span>
         <span class="k">return</span> <span class="n">cat</span><span class="p">[(</span><span class="n">cat</span><span class="p">[</span><span class="n">z_key</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_edges</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span>
                    <span class="p">(</span><span class="n">cat</span><span class="p">[</span><span class="n">z_key</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
 
     <span class="k">def</span> <span class="nf">_get_w</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the weights for the sources of \</span>
-<span class="sd">        the mapper&#39;s catalog.</span>
+        <span class="c1"># Returns the weights for the sources of \</span>
+        <span class="c1"># the mapper&#39;s catalog.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            w (Array)</span>
-<span class="sd">        </span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">w</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cat_data</span><span class="p">[</span><span class="s1">&#39;weight&#39;</span><span class="p">])</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">w</span>
 
     <span class="k">def</span> <span class="nf">_get_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the mapper&#39;s mask after applying. \</span>
-<span class="sd">        the mapper&#39;s threshold.  </span>
+        <span class="c1"># Returns the mapper&#39;s mask after applying. \</span>
+        <span class="c1"># the mapper&#39;s threshold.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            mask (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mask</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">read_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;file_mask&#39;</span><span class="p">])</span>
         <span class="n">mask</span> <span class="o">=</span> <span class="n">rotate_mask</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rot</span><span class="p">)</span>
         <span class="n">mask</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">ud_grade</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">nside_out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">)</span>
@@ -179,12 +175,6 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shifted_nz</span><span class="p">(</span><span class="n">dz</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MapperDESY1gc.get_signal_map"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DESY1gc.MapperDESY1gc.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the masked signal map.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            signal_map (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mask</span><span class="p">()</span>
             <span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
@@ -199,13 +189,6 @@
         <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_map</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="MapperDESY1gc.get_nl_coupled"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DESY1gc.MapperDESY1gc.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the coupled noise power spectrum \</span>
-<span class="sd">        of the mapper&#39;s data set.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            nl_coupled (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
             <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_w</span><span class="p">()</span>
@@ -223,21 +206,9 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span></div>
 
 <div class="viewcode-block" id="MapperDESY1gc.get_dtype"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DESY1gc.MapperDESY1gc.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the type of the mapper.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            mapper_type (String)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s1">&#39;galaxy_density&#39;</span></div>
 
 <div class="viewcode-block" id="MapperDESY1gc.get_spin"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DESY1gc.MapperDESY1gc.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the spin of the mapper.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            spin (Int)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="mi">0</span></div></div>
 </pre></div>
 

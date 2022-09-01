@@ -35,9 +35,21 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../base_mapper.html">General Philosophy &amp; The Base Mapper</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">2MPZ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#act">ACT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_CatWISE">CatWISE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_DELS">DESL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#desy1">DESY1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_HSC_DR1wl">HSC_DR1wl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_KiDS1000">KiDS-1000</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#sdss">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
 
         </div>
@@ -131,15 +143,11 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span></div>
 
     <span class="k">def</span> <span class="nf">_load_catalog_from_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Loads the raw DESY1 catalog and \</span>
-<span class="sd">        produces a lite version only with the \</span>
-<span class="sd">        columns of interest and after applying \</span>
-<span class="sd">        a -90 &lt; DEC &lt; 35 filter.</span>
+        <span class="c1"># Loads the raw DESY1 catalog and \</span>
+        <span class="c1"># produces a lite version only with the \</span>
+        <span class="c1"># columns of interest and after applying \</span>
+        <span class="c1"># a -90 &lt; DEC &lt; 35 filter.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            cat (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Read catalogs</span>
         <span class="c1"># Columns explained in</span>
         <span class="c1">#</span>
@@ -177,29 +185,24 @@
         <span class="k">return</span> <span class="n">cat</span><span class="o">.</span><span class="n">as_array</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_load_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Loads the lite DESY1 catalog.</span>
+        <span class="c1"># Loads the lite DESY1 catalog.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            cat (Table)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">fn</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;DESY1wl_catalog_rerun_bin</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">zbin</span><span class="si">}</span><span class="s1">.fits&#39;</span>
         <span class="n">cat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rerun_read_cycle</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">&#39;FITSTable&#39;</span><span class="p">,</span>
                                      <span class="bp">self</span><span class="o">.</span><span class="n">_load_catalog_from_raw</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Table</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_set_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Given the chose mapper mode (&#39;shear&#39; or &#39;PSF&#39;), \</span>
-<span class="sd">        it returns the corresponding name of the \</span>
-<span class="sd">        ellipticity fields in the catalog.</span>
+        <span class="c1"># Given the chose mapper mode (&#39;shear&#39; or &#39;PSF&#39;), \</span>
+        <span class="c1"># it returns the corresponding name of the \</span>
+        <span class="c1"># ellipticity fields in the catalog.</span>
 
-<span class="sd">        Kwargs:</span>
-<span class="sd">            mode=None</span>
+        <span class="c1"># Kwargs:</span>
+        <span class="c1">#    mode=None</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            e1_flag (String), e2_flag (String), mode (String)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Returns:</span>
+        <span class="c1">#     e1_flag (String), e2_flag (String), mode (String)</span>
+
         <span class="k">if</span> <span class="n">mode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span>
 
@@ -214,13 +217,9 @@
         <span class="k">return</span> <span class="n">e1_flag</span><span class="p">,</span> <span class="n">e2_flag</span><span class="p">,</span> <span class="n">mode</span>
 
     <span class="k">def</span> <span class="nf">_get_Rs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Computes the R factor used to calculate \</span>
-<span class="sd">        the multiplicative bias of the maps.</span>
+        <span class="c1"># Computes the R factor used to calculate \</span>
+        <span class="c1"># the multiplicative bias of the maps.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            R (Float)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">Rs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">data_1p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span><span class="p">[</span><span class="s1">&#39;zbin_mcal_1p&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">zbin</span><span class="p">]</span>
             <span class="n">data_1m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span><span class="p">[</span><span class="s1">&#39;zbin_mcal_1m&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">zbin</span><span class="p">]</span>
@@ -243,23 +242,11 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Rs</span>
 
     <span class="k">def</span> <span class="nf">_remove_additive_bias</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Removes the additive bias from the ellipticity maps.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span><span class="p">[</span><span class="s1">&#39;e1&#39;</span><span class="p">]</span> <span class="o">-=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span><span class="p">[</span><span class="s1">&#39;e1&#39;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span><span class="p">[</span><span class="s1">&#39;e2&#39;</span><span class="p">]</span> <span class="o">-=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span><span class="p">[</span><span class="s1">&#39;e2&#39;</span><span class="p">])</span>
         <span class="k">return</span>
 
     <span class="k">def</span> <span class="nf">_remove_multiplicative_bias</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Removes the multiplicative bias from the ellipticity maps.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Should be done only with galaxies truly in zbin</span>
         <span class="n">Rg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span><span class="p">[</span><span class="s1">&#39;R11&#39;</span><span class="p">]),</span>
                         <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span><span class="p">[</span><span class="s1">&#39;R12&#39;</span><span class="p">])],</span>
@@ -273,16 +260,9 @@
         <span class="k">return</span>
 
     <span class="k">def</span> <span class="nf">_get_ellipticity_maps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the ellipticity maps of the \</span>
-<span class="sd">        chose mode (&#39;shear&#39; or &#39;PSF&#39;).</span>
+        <span class="c1"># Returns the ellipticity maps of the \</span>
+        <span class="c1"># chose catalog (&#39;shear&#39; or &#39;PSF&#39;).</span>
 
-<span class="sd">        Kwargs:</span>
-<span class="sd">            mode=None</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            we1 (Array), we2 (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">e1f</span><span class="p">,</span> <span class="n">e2f</span><span class="p">,</span> <span class="n">mod</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_mode</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Computing bin</span><span class="si">{}</span><span class="s1"> signal map&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zbin</span><span class="p">))</span>
         <span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
@@ -298,12 +278,6 @@
         <span class="k">return</span> <span class="n">we1</span><span class="p">,</span> <span class="n">we2</span>
 
 <div class="viewcode-block" id="MapperDESY1wl.get_signal_map"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the masked signal map.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            signal_map (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">e1f</span><span class="p">,</span> <span class="n">e2f</span><span class="p">,</span> <span class="n">mod</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_mode</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">maps</span><span class="p">[</span><span class="n">mod</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">signal_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maps</span><span class="p">[</span><span class="n">mod</span><span class="p">]</span>
@@ -323,7 +297,8 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">signal_map</span></div>
 
 <div class="viewcode-block" id="MapperDESY1wl.get_nz"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_nz">[docs]</a>    <span class="k">def</span> <span class="nf">get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the mappers redshift \</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the mappers redshift \</span>
 <span class="sd">        distribtuion of sources from a file.</span>
 
 <span class="sd">        Kwargs:</span>
@@ -340,13 +315,9 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shifted_nz</span><span class="p">(</span><span class="n">dz</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_get_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the mapper&#39;s mask after applying. \</span>
-<span class="sd">        the mapper&#39;s threshold.</span>
+        <span class="c1"># Returns the mapper&#39;s mask after applying. \</span>
+        <span class="c1"># the mapper&#39;s threshold.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            mask (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
         <span class="n">msk</span> <span class="o">=</span> <span class="n">get_map_from_points</span><span class="p">(</span><span class="n">cat_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span>
                                   <span class="n">ra_name</span><span class="o">=</span><span class="s1">&#39;ra&#39;</span><span class="p">,</span> <span class="n">dec_name</span><span class="o">=</span><span class="s1">&#39;dec&#39;</span><span class="p">,</span>
@@ -354,13 +325,6 @@
         <span class="k">return</span> <span class="n">msk</span>
 
 <div class="viewcode-block" id="MapperDESY1wl.get_nl_coupled"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the coupled noise power spectrum \</span>
-<span class="sd">        of the mapper&#39;s data set.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            nl_coupled (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">e1f</span><span class="p">,</span> <span class="n">e2f</span><span class="p">,</span> <span class="n">mod</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_mode</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nls</span><span class="p">[</span><span class="n">mod</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nls</span><span class="p">[</span><span class="n">mod</span><span class="p">]</span>
@@ -390,19 +354,9 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span></div>
 
 <div class="viewcode-block" id="MapperDESY1wl.get_dtype"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the type of the mapper.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            mapper_type (String)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s1">&#39;galaxy_shear&#39;</span></div>
 
 <div class="viewcode-block" id="MapperDESY1wl.get_spin"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DESY1wl.MapperDESY1wl.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the spin of the mapper.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            spin (Int)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="mi">2</span></div></div>
 </pre></div>
 

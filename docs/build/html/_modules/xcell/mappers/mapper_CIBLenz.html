@@ -35,8 +35,8 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../base_mapper.html">General Philosophy &amp; The Base Mapper</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
 </ul>
 
@@ -101,16 +101,10 @@
                                       <span class="s1">&#39;FWHM_arcmin&#39;</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">}])</span>
 
     <span class="k">def</span> <span class="nf">_get_custom_beam</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the custom beam of the mapper \</span>
-<span class="sd">        given an information dictionary. \</span>
-<span class="sd">        </span>
-<span class="sd">        Args:</span>
-<span class="sd">            info (Dict)</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            beam (Array)</span>
-<span class="sd">        </span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Constructs beam function </span>
+        <span class="c1"># based on window function</span>
+        <span class="c1"># from file</span>
+
         <span class="n">fname</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span>
         <span class="n">field</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;field&#39;</span><span class="p">]</span>
         <span class="n">windowfuncs</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="s1">&#39;#&#39;</span><span class="p">)</span>

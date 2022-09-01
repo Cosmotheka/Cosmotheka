@@ -13,14 +13,9 @@ class MapperPlanckBase(MapperBase):
         self._get_Planck_defaults(config)
 
     def _get_Planck_defaults(self, config):
-        """
-        Creates instances of common elements \
-        between the different Planck mappers. \
-        Args:
-            config (Dict): configuration file. 
-        Returns:
-            None
-        """
+        # Creates instances of common elements \
+        # between the different Planck mappers. 
+
         self._get_defaults(config)
         self.rot = self._get_rotator('G')
         self.file_map = config['file_map']
@@ -39,15 +34,6 @@ class MapperPlanckBase(MapperBase):
         self.custom_auto = True
 
     def get_signal_map(self):
-        """
-        Returns the signal map of the mapper \
-        after masking NaN values and applying \
-        coordinate rotations. \
-        Args:
-            None
-        Returns:
-            signal_map (Array)
-        """
         if self.signal_map is None:
             signal_map = hp.read_map(self.file_map)
             signal_map[signal_map == hp.UNSEEN] = 0.0
@@ -58,21 +44,15 @@ class MapperPlanckBase(MapperBase):
         return self.signal_map
 
     def _get_mask(self):
-        """
-        Returns the mask of the mapper. \
-        if the mapper doesn't have a base mask \
-        a full sky mask is created. \
-        If the mapper is equipped with a \
-        galactic plane mask, the galactic plane and \
-        the base masks are multiplied. \
-        If the mapper is equipped with a \
-        point source mask, the point source and \
-        the base masks are multiplied. \
-        Args:
-            None
-        Returns:
-            signal_map (Array)
-        """
+        # Returns the mask of the mapper. \
+        # if the mapper doesn't have a base mask \
+        # a full sky mask is created. \
+        # If the mapper is equipped with a \
+        # galactic plane mask, the galactic plane and \
+        # the base masks are multiplied. \
+        # If the mapper is equipped with a \
+        # point source mask, the point source and \
+        # the base masks are multiplied. 
         msk = None
         if self.file_mask is not None:
             msk = hp.read_map(self.file_mask)
@@ -97,37 +77,20 @@ class MapperPlanckBase(MapperBase):
         return msk
 
     def _get_hm_maps(self):
-        """
-        Dummy function. Please use the \
-        equivalent function in the children \
-        mappers. \
-        """
+        # Returns the half mission maps
+        # of the mapper
         return NotImplementedError("Do not use base class")
 
     def _get_diff_map(self):
-        """
-        Substracts the two half mission maps \
-        of the mapper. \
-        Args:
-            None
-        Returns:
-            diff_map (Array): (half_mission_a- \
-                               half_mission_b)/2  
-        """
+        # Substracts the two half mission maps \
+        # of the mapper. 
+        
         if self.diff_map is None:
             self.hm1_map, self.hm2_map = self._get_hm_maps()
             self.diff_map = [(self.hm1_map[0] - self.hm2_map[0])/2]
         return self.diff_map
 
     def get_nl_coupled(self):
-        """
-        Returns the noise power spectrum \
-        of the mapper. \
-        Args:
-            None
-        Returns:
-            None
-        """
         if self.nl_coupled is None:
             self.diff_map = self._get_diff_map()
             diff_f = self._get_nmt_field(signal=self.diff_map)
@@ -138,9 +101,9 @@ class MapperPlanckBase(MapperBase):
         """
         Uses the half mission maps to \
         estimate the coupled signal power \
-        spectrum of the mapper. \
-        Args:
-            None
+        spectrum of the mapper.
+
+
         Returns:
             cl_coupled (Array)
         """
@@ -157,9 +120,8 @@ class MapperPlanckBase(MapperBase):
         estimate the coupled covariance matrix of the \
         power spectrum of the coadded map as \
         well as the half mission maps cross- \
-        and auto-correlation. \
-        Args:
-            None
+        and auto-correlation. 
+
         Returns:
             cl_coupled (Array)
         """
@@ -180,12 +142,4 @@ class MapperPlanckBase(MapperBase):
         return self.cls_cov
 
     def get_spin(self):
-        """
-        Returns the spin of the mapper. \
-        
-        Args:
-            None
-        Returns:
-            spin (Int)
-        """
         return 0

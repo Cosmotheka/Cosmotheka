@@ -35,9 +35,8 @@ class MapperSPT(MapperPlanckBase):
         """
         Returns the half mission maps of the mapper \
         after masking NaN values and applying the \
-        neccesary coordinate rotations. \
-        Args:
-            None
+        neccesary coordinate rotations.
+
         Returns:
             hm1_map (Array)
             hm2_map (Array) 
@@ -59,12 +58,4 @@ class MapperSPT(MapperPlanckBase):
         return self.hm1_map, self.hm2_map
 
     def get_dtype(self):
-        """
-        Returns the type of the mapper. \
-        
-        Args:
-            None
-        Returns:
-            mapper_type (String)
-        """
         return 'cmb_tSZ'

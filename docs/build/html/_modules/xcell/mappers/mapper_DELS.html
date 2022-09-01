@@ -35,9 +35,21 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../base_mapper.html">General Philosophy &amp; The Base Mapper</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">2MPZ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#act">ACT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_CatWISE">CatWISE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_DELS">DESL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#desy1">DESY1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_HSC_DR1wl">HSC_DR1wl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_KiDS1000">KiDS-1000</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#sdss">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
 
         </div>
@@ -120,12 +132,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">bmask</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">_get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Loads the mapper&#39;s catalog \</span>
-<span class="sd">        after binning it in redshift.</span>
+        <span class="c1"># Returns the mapper&#39;s catalog \</span>
+        <span class="c1"># after binning it in redshift.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            catalog (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cat</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">file_data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;data_catalogs&#39;</span><span class="p">]:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_data</span><span class="p">):</span>
@@ -138,11 +147,11 @@
         <span class="k">return</span> <span class="n">cat</span><span class="o">.</span><span class="n">as_array</span><span class="p">()</span>
 
 <div class="viewcode-block" id="MapperDELS.get_catalog"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DELS.MapperDELS.get_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Checks if the mapper has already \</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if the mapper has already \</span>
 <span class="sd">        loaded the chosen bin of the catalog. \</span>
 <span class="sd">        If so, it loads it from the save file. \ </span>
-<span class="sd">        Otherwise, it cuts the original file \</span>
-<span class="sd">        using &quot;_get_catalog()&quot;. </span>
+<span class="sd">        Otherwise, it cuts the original file </span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            catalog (Array)</span>
@@ -154,15 +163,9 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span></div>
 
     <span class="k">def</span> <span class="nf">_get_angmask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns an array of the same length \</span>
-<span class="sd">        as the signal map containing True if \</span>
-<span class="sd">        the pixel is masked by the binary mask \</span>
-<span class="sd">        or False if it isn&#39;t.</span>
+        <span class="c1"># Returns True if pixel is masked </span>
+        <span class="c1"># by the binary mask</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            masked_pixels (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mskflag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">cat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
             <span class="n">bmask</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">read_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;binary_mask&#39;</span><span class="p">])</span>
@@ -173,28 +176,17 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mskflag</span>
 
     <span class="k">def</span> <span class="nf">_bin_z</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cat</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Removes all but the catalog sources \</span>
-<span class="sd">        inside the chosen redshift bin.</span>
-<span class="sd">    </span>
-<span class="sd">        Args:</span>
-<span class="sd">            catalog (Array)</span>
+        <span class="c1"># Removes all but the catalog sources \</span>
+        <span class="c1"># inside the chosen redshift bin.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            catalog (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">cat</span><span class="p">[(</span><span class="n">cat</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pz</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_edges</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span>
                    <span class="p">(</span><span class="n">cat</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pz</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
 
     <span class="k">def</span> <span class="nf">_get_lorentzian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zz</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Computes the Lorentzian kernel for a given redshift \</span>
-<span class="sd">        used transform the photometric distribution \</span>
-<span class="sd">        of sources into the spectroscopic distribution</span>
-<span class="sd">        </span>
-<span class="sd">        Args:</span>
-<span class="sd">            zz (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Computes the Lorentzian kernel for a given redshift \</span>
+        <span class="c1"># used transform the photometric distribution \</span>
+        <span class="c1"># of sources into the spectroscopic distribution</span>
+
         <span class="c1"># a m s</span>
         <span class="n">params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.257</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.0010</span><span class="p">,</span> <span class="mf">0.0122</span><span class="p">],</span>
                            <span class="p">[</span><span class="mf">1.104</span><span class="p">,</span> <span class="mf">0.0076</span><span class="p">,</span> <span class="mf">0.0151</span><span class="p">],</span>
@@ -204,13 +196,9 @@
         <span class="k">return</span> <span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="p">((</span><span class="n">zz</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span><span class="o">-</span><span class="n">zz</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span><span class="o">-</span><span class="n">m</span><span class="p">)</span><span class="o">/</span><span class="n">s</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">))</span><span class="o">**</span><span class="n">a</span>
 
     <span class="k">def</span> <span class="nf">_get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Builds the redshift distributions of \</span>
-<span class="sd">        the sources of the mapper&#39;s catalog.</span>
-<span class="sd">        </span>
-<span class="sd">        Returns:</span>
-<span class="sd">            {&#39;z_mid&#39;: z_arr, &#39;nz&#39;: nz_spec} (Dict)</span>
-<span class="sd">        </span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Builds the redshift distributions of \</span>
+        <span class="c1"># the sources of the mapper&#39;s catalog.</span>
+
         <span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
         <span class="n">mskflag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_angmask</span><span class="p">()</span>
         <span class="n">h</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">cat_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pz</span><span class="p">][</span><span class="n">mskflag</span><span class="p">],</span>
@@ -223,7 +211,8 @@
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;z_mid&#39;</span><span class="p">:</span> <span class="n">z_arr</span><span class="p">,</span> <span class="s1">&#39;nz&#39;</span><span class="p">:</span> <span class="n">nz_spec</span><span class="p">}</span>
 
 <div class="viewcode-block" id="MapperDELS.get_nz"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DELS.MapperDELS.get_nz">[docs]</a>    <span class="k">def</span> <span class="nf">get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Checks if mapper has precomputed the redshift \</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if mapper has precomputed the redshift \</span>
 <span class="sd">        distribution. If not, it uses &quot;_get_nz()&quot; to obtain it. \</span>
 <span class="sd">        Then, it shifts the distribution by &quot;dz&quot; (default dz=0).</span>
 
@@ -239,14 +228,6 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shifted_nz</span><span class="p">(</span><span class="n">dz</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MapperDELS.get_signal_map"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DELS.MapperDELS.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">apply_galactic_correction</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the masked signal map. \</span>
-<span class="sd">        If &quot;apply_galactic_correction&quot; is True \</span>
-<span class="sd">        it applies the galactic correction.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            signal_map (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npix</span><span class="p">)</span>
             <span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
@@ -266,21 +247,17 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_map</span></div>
 
     <span class="k">def</span> <span class="nf">_get_galactic_correction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delta</span><span class="p">,</span> <span class="n">stars</span><span class="p">,</span> <span class="n">bmask</span><span class="p">,</span> <span class="n">nbins</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">npoly</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculates the galactic correction \</span>
-<span class="sd">        for the DELS catalog.</span>
-<span class="sd">        Args:</span>
-<span class="sd">            delta (Array): signal map</span>
-<span class="sd">            stars (Array): star map</span>
-<span class="sd">            bmask (Array): binary mask</span>
+        <span class="c1"># Calculates the galactic correction \</span>
+        <span class="c1"># for the DELS catalog.</span>
+        <span class="c1"># Args:</span>
+        <span class="c1">#     delta (Array): signal map</span>
+        <span class="c1">#     stars (Array): star map</span>
+        <span class="c1">#     bmask (Array): binary mask</span>
 
-<span class="sd">        Kwargs:</span>
-<span class="sd">            nbis=14</span>
-<span class="sd">            npoly=5</span>
+        <span class="c1"># Kwargs:</span>
+        <span class="c1">#     nbis=14</span>
+        <span class="c1">#     npoly=5</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            correction (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Create bins of star density</span>
         <span class="n">stbins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">stars</span><span class="p">[</span><span class="n">bmask</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span>
                              <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">stars</span><span class="p">[</span><span class="n">bmask</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span> <span class="n">nbins</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
@@ -313,16 +290,9 @@
                 <span class="s1">&#39;delta_map&#39;</span><span class="p">:</span> <span class="n">d_corr</span><span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">_get_mean_n</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nmap</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the the average number of sources \</span>
-<span class="sd">        per pixel of a given sources map.</span>
+        <span class="c1"># Returns the the average number of sources \</span>
+        <span class="c1"># per pixel of a given sources map.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            nmap (Array)</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            n_mean (Float)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">comp_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_comp_map</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_stars</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bmask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_binary_mask</span><span class="p">()</span>
@@ -333,12 +303,8 @@
         <span class="k">return</span> <span class="n">n_mean</span>
 
     <span class="k">def</span> <span class="nf">_get_stars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the stars map of the DELS data set.</span>
+        <span class="c1"># Returns the stars map of the DELS data set.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            stars (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stars</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Power = -2 makes sure the total number of stars is conserved</span>
             <span class="n">stars</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">read_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;star_map&#39;</span><span class="p">])</span>
@@ -352,13 +318,9 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stars</span>
 
     <span class="k">def</span> <span class="nf">_get_comp_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the completeness map of \</span>
-<span class="sd">        the DELS data set.</span>
+        <span class="c1"># Returns the completeness map of \</span>
+        <span class="c1"># the DELS data set.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            comp_map (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">comp_map</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">read_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;completeness_map&#39;</span><span class="p">])</span>
             <span class="n">comp_map</span> <span class="o">=</span> <span class="n">rotate_mask</span><span class="p">(</span><span class="n">comp_map</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rot</span><span class="p">)</span>
@@ -368,13 +330,9 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_map</span>
 
     <span class="k">def</span> <span class="nf">_get_binary_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the completeness map of \</span>
-<span class="sd">        the DELS data set.</span>
+        <span class="c1"># Returns the binary mask of \</span>
+        <span class="c1"># the DELS data set.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            comp_map (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">bmsk</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">read_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;binary_mask&#39;</span><span class="p">])</span>
             <span class="n">bmsk</span> <span class="o">=</span> <span class="n">rotate_mask</span><span class="p">(</span><span class="n">bmsk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rot</span><span class="p">)</span>
@@ -384,25 +342,14 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmask</span>
 
     <span class="k">def</span> <span class="nf">_get_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the binary mask of the DELS data set \</span>
-<span class="sd">        after applying the completeness map.</span>
+        <span class="c1"># Returns the binary mask of the DELS data set \</span>
+        <span class="c1"># after applying the completeness map.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            mask (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bmask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_binary_mask</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">comp_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_comp_map</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bmask</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_map</span>
 
 <div class="viewcode-block" id="MapperDELS.get_nl_coupled"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DELS.MapperDELS.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the coupled noise power spectrum \</span>
-<span class="sd">        of the  DELS data set.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            nl_coupled (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
             <span class="n">n</span> <span class="o">=</span> <span class="n">get_map_from_points</span><span class="p">(</span><span class="n">cat_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span>
@@ -415,21 +362,9 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span></div>
 
 <div class="viewcode-block" id="MapperDELS.get_dtype"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DELS.MapperDELS.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the type of the mapper.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            mapper_type (String)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s1">&#39;galaxy_density&#39;</span></div>
 
 <div class="viewcode-block" id="MapperDELS.get_spin"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_DELS.MapperDELS.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the spin of the mapper.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            spin (Int)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="mi">0</span></div></div>
 </pre></div>
 

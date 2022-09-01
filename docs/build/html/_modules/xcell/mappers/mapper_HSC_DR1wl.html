@@ -35,9 +35,21 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">Mappers</a></li>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../base_mapper.html">General Philosophy &amp; The Base Mapper</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html">2MPZ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#act">ACT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_CatWISE">CatWISE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_DELS">DESL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#desy1">DESY1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_HSC_DR1wl">HSC_DR1wl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_KiDS1000">KiDS-1000</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#sdss">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
 
         </div>
@@ -114,16 +126,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">signal_map</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">_get_catalog_from_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Loads the mappper raw catalog, cleans it,\</span>
-<span class="sd">        applies shear cuts, removes all but the \</span>
-<span class="sd">        chosen redshift bin and calibrates \</span>
-<span class="sd">        elipticities. \</span>
-<span class="sd">        Finally, it returns the processed catalog.</span>
+        <span class="c1"># Loads the mappper raw catalog, cleans it,\</span>
+        <span class="c1"># applies shear cuts, removes all but the \</span>
+        <span class="c1"># chosen redshift bin and calibrates elipticities. \</span>
+        <span class="c1"># Finally, it returns the processed catalog.</span>
 
-<span class="sd">        Retunrs</span>
-<span class="sd">            cat (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cats</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;data_catalogs&#39;</span><span class="p">]:</span>
             <span class="n">cat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clean_raw_catalog</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
@@ -189,15 +196,9 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span></div>
 
     <span class="k">def</span> <span class="nf">_clean_raw_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fnames</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Cleans the raw HSC DR1 catalog.</span>
-<span class="sd">        </span>
-<span class="sd">        Args:</span>
-<span class="sd">            fnames (Array(String))</span>
+        <span class="c1"># Cleans the raw HSC DR1 catalog</span>
+        <span class="c1"># and produces a lite catalog.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            cat (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cats</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">fnames</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
@@ -261,12 +262,8 @@
         <span class="k">return</span> <span class="n">vstack</span><span class="p">(</span><span class="n">cats</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_ellip_maps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the ellipticity fields of the mapper&#39;s catalog.</span>
+        <span class="c1"># Returns the ellipticity fields of the mapper&#39;s catalog.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            we1 (Array), we2 (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Computing bin </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bn</span><span class="si">}</span><span class="s1"> signal map&#39;</span><span class="p">)</span>
         <span class="n">cat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
         <span class="n">we1</span><span class="p">,</span> <span class="n">we2</span> <span class="o">=</span> <span class="n">get_map_from_points</span><span class="p">(</span><span class="n">cat</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span>
@@ -282,12 +279,6 @@
         <span class="k">return</span> <span class="n">we1</span><span class="p">,</span> <span class="n">we2</span>
 
 <div class="viewcode-block" id="MapperHSCDR1wl.get_signal_map"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the mapper&#39;s signal map.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            signal_map (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">signal_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">fn</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;HSCDR1wl_signal_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bn</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
                            <span class="sa">f</span><span class="s1">&#39;coord</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
@@ -299,12 +290,8 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">signal_map</span></div>
 
     <span class="k">def</span> <span class="nf">_get_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the mapper&#39;s mask.</span>
+        <span class="c1"># Loads mapper&#39;s from file</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            signal_map (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Computing bin </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bn</span><span class="si">}</span><span class="s1"> mask&#39;</span><span class="p">)</span>
         <span class="n">cat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
         <span class="n">msk</span> <span class="o">=</span> <span class="n">get_map_from_points</span><span class="p">(</span><span class="n">cat</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span>
@@ -315,13 +302,9 @@
         <span class="k">return</span> <span class="n">msk</span>
 
     <span class="k">def</span> <span class="nf">_get_w2s2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Computes map for noise power spectrum \</span>
-<span class="sd">        estimation.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            w2s2_map (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Computes weight-square map for</span>
+        <span class="c1"># noise power spectrum estimation.</span>
+ 
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Computing w2s2 map&#39;</span><span class="p">)</span>
         <span class="n">cat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
         <span class="n">w2s2</span> <span class="o">=</span> <span class="n">get_map_from_points</span><span class="p">(</span><span class="n">cat</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span>
@@ -332,13 +315,6 @@
         <span class="k">return</span> <span class="n">w2s2</span>
 
 <div class="viewcode-block" id="MapperHSCDR1wl.get_nl_coupled"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the mapper&#39;s coupled noise \</span>
-<span class="sd">        noise power spectrum. </span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            nl_coupled (Array)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span>
 
@@ -396,21 +372,9 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shifted_nz</span><span class="p">(</span><span class="n">dz</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MapperHSCDR1wl.get_dtype"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the type of the mapper.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            mapper_type (String)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s1">&#39;galaxy_shear&#39;</span></div>
 
 <div class="viewcode-block" id="MapperHSCDR1wl.get_spin"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_HSC_DR1wl.MapperHSCDR1wl.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the spin of the mapper.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            spin (Int)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="mi">2</span></div></div>
 </pre></div>
 

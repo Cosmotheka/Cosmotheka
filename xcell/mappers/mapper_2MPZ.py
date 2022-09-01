@@ -28,14 +28,6 @@ class Mapper2MPZ(MapperBase):
               - fc_0: `1.0`
     """
     def __init__(self, config):
-        """
-        config - dict
-          {'data_catalog': 'Legacy_Survey_BASS-MZLS_galaxies-selection.fits',
-           'mask': 'mask.fits',
-           'z_edges': [0, 0.5],
-           'n_jk_dir': 100,
-           'mask_name': 'mask_2MPZ'}
-        """
         self._get_defaults(config)
         self.z_edges = config.get('z_edges', [0, 0.5])
         self.ra_name, self.dec_name = self._get_coords(config)
@@ -49,16 +41,13 @@ class Mapper2MPZ(MapperBase):
         self.nl_coupled = None
 
     def _get_coords(self, config):
-        """Returns mapper's ra and dec names \
-        in the mapper's catalog given the coordinates \
-        designated in the cofiguration file
+        # Returns mapper's ra and dec names \
+        # in the mapper's catalog given the coordinates \
+        # designated in the cofiguration file
+        
+        # Returns:
+        #     ra_name (String), dec_name (String)
 
-        Args:
-            config (Dict): mapper's configuration file
-
-        Returns:
-            ra_name (String), dec_name (String)
-        """
         if self.coords == 'G':  # Galactic
             return 'L', 'B'
         elif self.coords == 'C':  # Celestial/Equatorial
@@ -67,7 +56,8 @@ class Mapper2MPZ(MapperBase):
             raise NotImplementedError(f"Unknown coordinates {self.coords}")
 
     def get_catalog(self):
-        """Returns the mapper catalog of sources.
+        """
+        Returns the mapper catalog of sources.
 
         Returns:
             catalog (Array)
@@ -83,14 +73,8 @@ class Mapper2MPZ(MapperBase):
         return self.cat_data
 
     def _mask_catalog(self, cat):
-        """Applies binary mask to catalog
-
-        Args:
-            catalog (Array)
-
-        Returns:
-            catalog (Array)
-        """
+        # Applies binary mask to catalog
+        
         self.mask = self.get_mask()
         ipix = hp.ang2pix(self.nside, cat[self.ra_name],
                           cat[self.dec_name], lonlat=True)
@@ -98,42 +82,27 @@ class Mapper2MPZ(MapperBase):
         return cat[self.mask[ipix] > 0.1]
 
     def _bin_z(self, cat):
-        """Removes all but the catalog sources \
-        inside the chosen redshift bin.
+        # Removes all but the catalog sources \
+        # inside the chosen redshift bin.
 
-        Args:
-            catalog (Array)
-
-        Returns:
-            catalog (Array)
-        """
         return cat[(cat['ZPHOTO'] > self.z_edges[0]) &
                    (cat['ZPHOTO'] <= self.z_edges[1])]
 
     def _get_specsample(self, cat):
-        """Selects the spectroscopic samples \
-        in the catalog
+        # Selects the spectroscopic samples \
+        # in the catalog
 
-        Args:
-            catalog (Array)
-
-        Returns:
-            catalog (Array)
-        """
         ids = cat['ZSPEC'] > -1
         return cat[ids]
 
     def _get_nz(self):
-        """Employs the DIR algorithm to build \
-        the sources redshift distribution of the \
-        catalog and returns it in the shape of a \
-        dictionary containing "z_mid"; the mid redshift \
-        of the redshift histogram, "nz"; the heights of \
-        the histogram, and "nz_jk".
+        # Employs the DIR algorithm to build \
+        # the sources redshift distribution of the \
+        # catalog and returns it in the shape of a \
+        # dictionary containing "z_mid"; the mid redshift \
+        # of the redshift histogram, "nz"; the heights of \
+        # the histogram, and "nz_jk".
 
-        Returns:
-            dndz (Dict)
-        """
         c_p = self.get_catalog()
         c_s = self._get_specsample(c_p)
         # Sort spec sample by nested pixel index so jackknife
@@ -176,15 +145,6 @@ class Mapper2MPZ(MapperBase):
         return self._get_shifted_nz(dz, return_jk_error=return_jk_error)
 
     def get_signal_map(self, apply_galactic_correction=True):
-        """
-        Returns the signal map of the mappper.
-
-        Kwargs:
-            apply_galactic_correction=True
-
-        Returns:
-            delta_map (Array)
-        """
         if self.delta_map is None:
             d = np.zeros(self.npix)
             self.cat_data = self.get_catalog()
@@ -200,13 +160,9 @@ class Mapper2MPZ(MapperBase):
         return self.delta_map
 
     def _get_mask(self):
-        """
-        Reads the mask of the mappper from a file \
-        and upgrades it to the chosen resolution.
-
-        Returns:
-            mask (Array)
-        """
+        # Reads the mask of the mappper from a file \
+        # and upgrades it to the chosen resolution.
+        
         # We will assume the mask has been provided in the right
         # coordinates, so no further conversion is needed.
         mask = hp.ud_grade(hp.read_map(self.config['mask']),
@@ -214,13 +170,6 @@ class Mapper2MPZ(MapperBase):
         return mask
 
     def get_nl_coupled(self):
-        """
-        Calculates the noise power spectrum \
-        of the mapper's catalog.
-
-        Returns:
-            nl_coupled (Array)
-        """
         if self.nl_coupled is None:
             self.cat_data = self.get_catalog()
             self.mask = self.get_mask()
@@ -234,19 +183,7 @@ class Mapper2MPZ(MapperBase):
         return self.nl_coupled
 
     def get_dtype(self):
-        """
-        Returns the type of the mapper.
-
-        Returns:
-            mapper_type (String)
-        """
         return 'galaxy_density'
 
     def get_spin(self):
-        """
-        Returns the spin of the mapper.
-
-        Returns:
-            spin (Int)
-        """
         return 0

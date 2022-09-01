@@ -34,16 +34,10 @@ class MapperCIBLenz(MapperP15CIB):
                                       'FWHM_arcmin': 5.0}])
 
     def _get_custom_beam(self, info):
-        """
-        Returns the custom beam of the mapper \
-        given an information dictionary. \
-        
-        Args:
-            info (Dict)
-        Returns:
-            beam (Array)
-        
-        """
+        # Constructs beam function 
+        # based on window function
+        # from file
+
         fname = info['file']
         field = info['field']
         windowfuncs = pd.read_csv(fname, comment='#')

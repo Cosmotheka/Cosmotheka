@@ -36,7 +36,20 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="mappers.html">Mappers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="base_mapper.html">General Philosophy &amp; The Base Mapper</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mappers.html">2MPZ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mappers.html#act">ACT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mappers.html#module-xcell.mappers.mapper_CatWISE">CatWISE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mappers.html#module-xcell.mappers.mapper_DELS">DESL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mappers.html#desy1">DESY1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mappers.html#module-xcell.mappers.mapper_HSC_DR1wl">HSC_DR1wl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mappers.html#module-xcell.mappers.mapper_KiDS1000">KiDS-1000</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mappers.html#module-xcell.mappers.mapper_NVSS">NVSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mappers.html#module-xcell.mappers.mapper_Planck_base">Planck</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mappers.html#module-xcell.mappers.mapper_P18CMBK">P18CMBk</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mappers.html#module-xcell.mappers.mapper_SDSS">SDSS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mappers.html#module-xcell.mappers.mapper_ROSAT">ROSAT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mappers.html#module-xcell.mappers.mapper_WIxSC">WIxSC</a></li>
 </ul>
 
         </div>
@@ -74,7 +87,7 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="mappers.html#xcell.mappers.mapper_base.MapperBase.get_beam">get_beam() (xcell.mappers.mapper_base.MapperBase method)</a>
+      <li><a href="base_mapper.html#xcell.mappers.mapper_base.MapperBase.get_beam">get_beam() (xcell.mappers.mapper_base.MapperBase method)</a>
 </li>
       <li><a href="mappers.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_catalog">get_catalog() (xcell.mappers.mapper_2MPZ.Mapper2MPZ method)</a>
 
@@ -93,12 +106,18 @@
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_NVSS.MapperNVSS.get_catalog">(xcell.mappers.mapper_NVSS.MapperNVSS method)</a>
 </li>
-        <li><a href="mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_catalog">(xcell.mappers.mapper_WIxSC.MapperWIxSC method)</a>
+        <li><a href="mappers.html#xcell.mappers.mapper_SDSS.MapperSDSS.get_catalog">(xcell.mappers.mapper_SDSS.MapperSDSS method)</a>
 </li>
       </ul></li>
       <li><a href="mappers.html#xcell.mappers.mapper_NVSS.MapperNVSS.get_catalog_redshift">get_catalog_redshift() (xcell.mappers.mapper_NVSS.MapperNVSS method)</a>
 </li>
+      <li><a href="mappers.html#xcell.mappers.mapper_Planck_base.MapperPlanckBase.get_cl_coupled">get_cl_coupled() (xcell.mappers.mapper_Planck_base.MapperPlanckBase method)</a>
+</li>
       <li><a href="mappers.html#xcell.mappers.mapper_P18CMBK.MapperP18CMBK.get_cl_fiducial">get_cl_fiducial() (xcell.mappers.mapper_P18CMBK.MapperP18CMBK method)</a>
+</li>
+      <li><a href="mappers.html#xcell.mappers.mapper_Planck_base.MapperPlanckBase.get_cls_covar_coupled">get_cls_covar_coupled() (xcell.mappers.mapper_Planck_base.MapperPlanckBase method)</a>
+</li>
+      <li><a href="base_mapper.html#xcell.mappers.mapper_base.MapperBase.get_contaminants">get_contaminants() (xcell.mappers.mapper_base.MapperBase method)</a>
 </li>
       <li><a href="mappers.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_dtype">get_dtype() (xcell.mappers.mapper_2MPZ.Mapper2MPZ method)</a>
 
@@ -108,6 +127,8 @@
         <li><a href="mappers.html#xcell.mappers.mapper_ACTk.MapperACTk.get_dtype">(xcell.mappers.mapper_ACTk.MapperACTk method)</a>
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_ACTtSZ.MapperACTtSZ.get_dtype">(xcell.mappers.mapper_ACTtSZ.MapperACTtSZ method)</a>
+</li>
+        <li><a href="base_mapper.html#xcell.mappers.mapper_base.MapperBase.get_dtype">(xcell.mappers.mapper_base.MapperBase method)</a>
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_dtype">(xcell.mappers.mapper_CatWISE.MapperCatWISE method)</a>
 </li>
@@ -123,6 +144,8 @@
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_NVSS.MapperNVSS.get_dtype">(xcell.mappers.mapper_NVSS.MapperNVSS method)</a>
 </li>
+        <li><a href="mappers.html#xcell.mappers.mapper_P15CIB.MapperP15CIB.get_dtype">(xcell.mappers.mapper_P15CIB.MapperP15CIB method)</a>
+</li>
         <li><a href="mappers.html#xcell.mappers.mapper_P15tSZ.MapperP15tSZ.get_dtype">(xcell.mappers.mapper_P15tSZ.MapperP15tSZ method)</a>
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_P18CMBK.MapperP18CMBK.get_dtype">(xcell.mappers.mapper_P18CMBK.MapperP18CMBK method)</a>
@@ -131,20 +154,26 @@
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_ROSAT.MapperROSATXray.get_dtype">(xcell.mappers.mapper_ROSAT.MapperROSATXray method)</a>
 </li>
+        <li><a href="mappers.html#xcell.mappers.mapper_SDSS.MapperSDSS.get_dtype">(xcell.mappers.mapper_SDSS.MapperSDSS method)</a>
+</li>
         <li><a href="mappers.html#xcell.mappers.mapper_SPT.MapperSPT.get_dtype">(xcell.mappers.mapper_SPT.MapperSPT method)</a>
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_dtype">(xcell.mappers.mapper_WIxSC.MapperWIxSC method)</a>
 </li>
       </ul></li>
-      <li><a href="mappers.html#xcell.mappers.mapper_base.MapperBase.get_ell">get_ell() (xcell.mappers.mapper_base.MapperBase method)</a>
+      <li><a href="base_mapper.html#xcell.mappers.mapper_base.MapperBase.get_ell">get_ell() (xcell.mappers.mapper_base.MapperBase method)</a>
 </li>
       <li><a href="mappers.html#xcell.mappers.mapper_ROSAT.MapperROSATXray.get_expmap">get_expmap() (xcell.mappers.mapper_ROSAT.MapperROSATXray method)</a>
 </li>
-      <li><a href="mappers.html#xcell.mappers.mapper_base.MapperBase.get_mask">get_mask() (xcell.mappers.mapper_base.MapperBase method)</a>
+      <li><a href="base_mapper.html#xcell.mappers.mapper_base.MapperBase.get_mask">get_mask() (xcell.mappers.mapper_base.MapperBase method)</a>
 </li>
       <li><a href="mappers.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_nl_coupled">get_nl_coupled() (xcell.mappers.mapper_2MPZ.Mapper2MPZ method)</a>
 
       <ul>
+        <li><a href="mappers.html#xcell.mappers.mapper_ACT_compsept.MapperACTCompSept.get_nl_coupled">(xcell.mappers.mapper_ACT_compsept.MapperACTCompSept method)</a>
+</li>
+        <li><a href="base_mapper.html#xcell.mappers.mapper_base.MapperBase.get_nl_coupled">(xcell.mappers.mapper_base.MapperBase method)</a>
+</li>
         <li><a href="mappers.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_nl_coupled">(xcell.mappers.mapper_CatWISE.MapperCatWISE method)</a>
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_DELS.MapperDELS.get_nl_coupled">(xcell.mappers.mapper_DELS.MapperDELS method)</a>
@@ -161,18 +190,24 @@
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_P18CMBK.MapperP18CMBK.get_nl_coupled">(xcell.mappers.mapper_P18CMBK.MapperP18CMBK method)</a>
 </li>
+        <li><a href="mappers.html#xcell.mappers.mapper_Planck_base.MapperPlanckBase.get_nl_coupled">(xcell.mappers.mapper_Planck_base.MapperPlanckBase method)</a>
+</li>
         <li><a href="mappers.html#xcell.mappers.mapper_ROSAT.MapperROSATXray.get_nl_coupled">(xcell.mappers.mapper_ROSAT.MapperROSATXray method)</a>
+</li>
+        <li><a href="mappers.html#xcell.mappers.mapper_SDSS.MapperSDSS.get_nl_coupled">(xcell.mappers.mapper_SDSS.MapperSDSS method)</a>
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_nl_coupled">(xcell.mappers.mapper_WIxSC.MapperWIxSC method)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="mappers.html#xcell.mappers.mapper_base.MapperBase.get_nmt_field">get_nmt_field() (xcell.mappers.mapper_base.MapperBase method)</a>
+      <li><a href="base_mapper.html#xcell.mappers.mapper_base.MapperBase.get_nmt_field">get_nmt_field() (xcell.mappers.mapper_base.MapperBase method)</a>
 </li>
       <li><a href="mappers.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_nz">get_nz() (xcell.mappers.mapper_2MPZ.Mapper2MPZ method)</a>
 
       <ul>
+        <li><a href="mappers.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_nz">(xcell.mappers.mapper_CatWISE.MapperCatWISE method)</a>
+</li>
         <li><a href="mappers.html#xcell.mappers.mapper_DELS.MapperDELS.get_nz">(xcell.mappers.mapper_DELS.MapperDELS method)</a>
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_DESY1gc.MapperDESY1gc.get_nz">(xcell.mappers.mapper_DESY1gc.MapperDESY1gc method)</a>
@@ -185,6 +220,8 @@
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_NVSS.MapperNVSS.get_nz">(xcell.mappers.mapper_NVSS.MapperNVSS method)</a>
 </li>
+        <li><a href="mappers.html#xcell.mappers.mapper_SDSS.MapperSDSS.get_nz">(xcell.mappers.mapper_SDSS.MapperSDSS method)</a>
+</li>
         <li><a href="mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_nz">(xcell.mappers.mapper_WIxSC.MapperWIxSC method)</a>
 </li>
       </ul></li>
@@ -195,6 +232,8 @@
       <li><a href="mappers.html#xcell.mappers.mapper_2MPZ.Mapper2MPZ.get_signal_map">get_signal_map() (xcell.mappers.mapper_2MPZ.Mapper2MPZ method)</a>
 
       <ul>
+        <li><a href="base_mapper.html#xcell.mappers.mapper_base.MapperBase.get_signal_map">(xcell.mappers.mapper_base.MapperBase method)</a>
+</li>
         <li><a href="mappers.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_signal_map">(xcell.mappers.mapper_CatWISE.MapperCatWISE method)</a>
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_DELS.MapperDELS.get_signal_map">(xcell.mappers.mapper_DELS.MapperDELS method)</a>
@@ -211,7 +250,11 @@
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_P18CMBK.MapperP18CMBK.get_signal_map">(xcell.mappers.mapper_P18CMBK.MapperP18CMBK method)</a>
 </li>
+        <li><a href="mappers.html#xcell.mappers.mapper_Planck_base.MapperPlanckBase.get_signal_map">(xcell.mappers.mapper_Planck_base.MapperPlanckBase method)</a>
+</li>
         <li><a href="mappers.html#xcell.mappers.mapper_ROSAT.MapperROSATXray.get_signal_map">(xcell.mappers.mapper_ROSAT.MapperROSATXray method)</a>
+</li>
+        <li><a href="mappers.html#xcell.mappers.mapper_SDSS.MapperSDSS.get_signal_map">(xcell.mappers.mapper_SDSS.MapperSDSS method)</a>
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_signal_map">(xcell.mappers.mapper_WIxSC.MapperWIxSC method)</a>
 </li>
@@ -224,6 +267,8 @@
         <li><a href="mappers.html#xcell.mappers.mapper_ACTk.MapperACTk.get_spin">(xcell.mappers.mapper_ACTk.MapperACTk method)</a>
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_ACTtSZ.MapperACTtSZ.get_spin">(xcell.mappers.mapper_ACTtSZ.MapperACTtSZ method)</a>
+</li>
+        <li><a href="base_mapper.html#xcell.mappers.mapper_base.MapperBase.get_spin">(xcell.mappers.mapper_base.MapperBase method)</a>
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_CatWISE.MapperCatWISE.get_spin">(xcell.mappers.mapper_CatWISE.MapperCatWISE method)</a>
 </li>
@@ -241,7 +286,11 @@
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_P18CMBK.MapperP18CMBK.get_spin">(xcell.mappers.mapper_P18CMBK.MapperP18CMBK method)</a>
 </li>
+        <li><a href="mappers.html#xcell.mappers.mapper_Planck_base.MapperPlanckBase.get_spin">(xcell.mappers.mapper_Planck_base.MapperPlanckBase method)</a>
+</li>
         <li><a href="mappers.html#xcell.mappers.mapper_ROSAT.MapperROSATXray.get_spin">(xcell.mappers.mapper_ROSAT.MapperROSATXray method)</a>
+</li>
+        <li><a href="mappers.html#xcell.mappers.mapper_SDSS.MapperSDSS.get_spin">(xcell.mappers.mapper_SDSS.MapperSDSS method)</a>
 </li>
         <li><a href="mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_spin">(xcell.mappers.mapper_WIxSC.MapperWIxSC method)</a>
 </li>
@@ -256,11 +305,13 @@
 </li>
       <li><a href="mappers.html#xcell.mappers.mapper_ACTCMB.MapperACTCMB">MapperACTCMB (class in xcell.mappers.mapper_ACTCMB)</a>
 </li>
+      <li><a href="mappers.html#xcell.mappers.mapper_ACT_compsept.MapperACTCompSept">MapperACTCompSept (class in xcell.mappers.mapper_ACT_compsept)</a>
+</li>
       <li><a href="mappers.html#xcell.mappers.mapper_ACTk.MapperACTk">MapperACTk (class in xcell.mappers.mapper_ACTk)</a>
 </li>
       <li><a href="mappers.html#xcell.mappers.mapper_ACTtSZ.MapperACTtSZ">MapperACTtSZ (class in xcell.mappers.mapper_ACTtSZ)</a>
 </li>
-      <li><a href="mappers.html#xcell.mappers.mapper_base.MapperBase">MapperBase (class in xcell.mappers.mapper_base)</a>
+      <li><a href="base_mapper.html#xcell.mappers.mapper_base.MapperBase">MapperBase (class in xcell.mappers.mapper_base)</a>
 </li>
       <li><a href="mappers.html#xcell.mappers.mapper_BOSS.MapperBOSS">MapperBOSS (class in xcell.mappers.mapper_BOSS)</a>
 </li>
@@ -282,13 +333,19 @@
 </li>
       <li><a href="mappers.html#xcell.mappers.mapper_NVSS.MapperNVSS">MapperNVSS (class in xcell.mappers.mapper_NVSS)</a>
 </li>
+      <li><a href="mappers.html#xcell.mappers.mapper_P15CIB.MapperP15CIB">MapperP15CIB (class in xcell.mappers.mapper_P15CIB)</a>
+</li>
       <li><a href="mappers.html#xcell.mappers.mapper_P15tSZ.MapperP15tSZ">MapperP15tSZ (class in xcell.mappers.mapper_P15tSZ)</a>
 </li>
       <li><a href="mappers.html#xcell.mappers.mapper_P18CMBK.MapperP18CMBK">MapperP18CMBK (class in xcell.mappers.mapper_P18CMBK)</a>
 </li>
       <li><a href="mappers.html#xcell.mappers.mapper_P18SMICA.MapperP18SMICA">MapperP18SMICA (class in xcell.mappers.mapper_P18SMICA)</a>
 </li>
+      <li><a href="mappers.html#xcell.mappers.mapper_Planck_base.MapperPlanckBase">MapperPlanckBase (class in xcell.mappers.mapper_Planck_base)</a>
+</li>
       <li><a href="mappers.html#xcell.mappers.mapper_ROSAT.MapperROSATXray">MapperROSATXray (class in xcell.mappers.mapper_ROSAT)</a>
+</li>
+      <li><a href="mappers.html#xcell.mappers.mapper_SDSS.MapperSDSS">MapperSDSS (class in xcell.mappers.mapper_SDSS)</a>
 </li>
       <li><a href="mappers.html#xcell.mappers.mapper_SPT.MapperSPT">MapperSPT (class in xcell.mappers.mapper_SPT)</a>
 </li>
@@ -302,13 +359,15 @@
       <ul>
         <li><a href="mappers.html#module-xcell.mappers.mapper_2MPZ">xcell.mappers.mapper_2MPZ</a>
 </li>
+        <li><a href="mappers.html#module-xcell.mappers.mapper_ACT_compsept">xcell.mappers.mapper_ACT_compsept</a>
+</li>
         <li><a href="mappers.html#module-xcell.mappers.mapper_ACTCMB">xcell.mappers.mapper_ACTCMB</a>
 </li>
         <li><a href="mappers.html#module-xcell.mappers.mapper_ACTk">xcell.mappers.mapper_ACTk</a>
 </li>
         <li><a href="mappers.html#module-xcell.mappers.mapper_ACTtSZ">xcell.mappers.mapper_ACTtSZ</a>
 </li>
-        <li><a href="mappers.html#module-xcell.mappers.mapper_base">xcell.mappers.mapper_base</a>
+        <li><a href="base_mapper.html#module-xcell.mappers.mapper_base">xcell.mappers.mapper_base</a>
 </li>
         <li><a href="mappers.html#module-xcell.mappers.mapper_BOSS">xcell.mappers.mapper_BOSS</a>
 </li>
@@ -330,13 +389,19 @@
 </li>
         <li><a href="mappers.html#module-xcell.mappers.mapper_NVSS">xcell.mappers.mapper_NVSS</a>
 </li>
+        <li><a href="mappers.html#module-xcell.mappers.mapper_P15CIB">xcell.mappers.mapper_P15CIB</a>
+</li>
         <li><a href="mappers.html#module-xcell.mappers.mapper_P15tSZ">xcell.mappers.mapper_P15tSZ</a>
 </li>
         <li><a href="mappers.html#module-xcell.mappers.mapper_P18CMBK">xcell.mappers.mapper_P18CMBK</a>
 </li>
         <li><a href="mappers.html#module-xcell.mappers.mapper_P18SMICA">xcell.mappers.mapper_P18SMICA</a>
 </li>
+        <li><a href="mappers.html#module-xcell.mappers.mapper_Planck_base">xcell.mappers.mapper_Planck_base</a>
+</li>
         <li><a href="mappers.html#module-xcell.mappers.mapper_ROSAT">xcell.mappers.mapper_ROSAT</a>
+</li>
+        <li><a href="mappers.html#module-xcell.mappers.mapper_SDSS">xcell.mappers.mapper_SDSS</a>
 </li>
         <li><a href="mappers.html#module-xcell.mappers.mapper_SPT">xcell.mappers.mapper_SPT</a>
 </li>
@@ -354,6 +419,13 @@
 
       <ul>
         <li><a href="mappers.html#module-xcell.mappers.mapper_2MPZ">module</a>
+</li>
+      </ul></li>
+      <li>
+    xcell.mappers.mapper_ACT_compsept
+
+      <ul>
+        <li><a href="mappers.html#module-xcell.mappers.mapper_ACT_compsept">module</a>
 </li>
       </ul></li>
       <li>
@@ -381,7 +453,7 @@
     xcell.mappers.mapper_base
 
       <ul>
-        <li><a href="mappers.html#module-xcell.mappers.mapper_base">module</a>
+        <li><a href="base_mapper.html#module-xcell.mappers.mapper_base">module</a>
 </li>
       </ul></li>
       <li>
@@ -426,8 +498,6 @@
         <li><a href="mappers.html#module-xcell.mappers.mapper_DESY1wl">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     xcell.mappers.mapper_eBOSS
 
@@ -435,6 +505,8 @@
         <li><a href="mappers.html#module-xcell.mappers.mapper_eBOSS">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     xcell.mappers.mapper_HSC_DR1wl
 
@@ -454,6 +526,13 @@
 
       <ul>
         <li><a href="mappers.html#module-xcell.mappers.mapper_NVSS">module</a>
+</li>
+      </ul></li>
+      <li>
+    xcell.mappers.mapper_P15CIB
+
+      <ul>
+        <li><a href="mappers.html#module-xcell.mappers.mapper_P15CIB">module</a>
 </li>
       </ul></li>
       <li>
@@ -478,10 +557,24 @@
 </li>
       </ul></li>
       <li>
+    xcell.mappers.mapper_Planck_base
+
+      <ul>
+        <li><a href="mappers.html#module-xcell.mappers.mapper_Planck_base">module</a>
+</li>
+      </ul></li>
+      <li>
     xcell.mappers.mapper_ROSAT
 
       <ul>
         <li><a href="mappers.html#module-xcell.mappers.mapper_ROSAT">module</a>
+</li>
+      </ul></li>
+      <li>
+    xcell.mappers.mapper_SDSS
+
+      <ul>
+        <li><a href="mappers.html#module-xcell.mappers.mapper_SDSS">module</a>
 </li>
       </ul></li>
       <li>
