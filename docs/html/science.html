@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scientific Documentation &mdash; xCell  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API" href="api.html" />
+    <link rel="prev" title="Design Philosophy" href="design.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> xCell
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="design.html">Design Philosophy</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Scientific Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mappers">Mappers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mpz">2MPZ</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#act">ACT</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#acttsz">ACTtSZ</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#actcmb">ACTCMB</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#actk">ACTk</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#catwise">CatWISE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#desl">DESL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#desy1">DESY1</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#desy1gc">DESY1gc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#desy1wl">DESY1wl</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#hsc-dr1wl">HSC_DR1wl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kids-1000">KiDS-1000</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nvss">NVSS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#planck">Planck</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#p15cib">P15CIB</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#p15tsz">P15tSZ</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#p18smica">P18SMICA</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#spt">SPT</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#p18cmbk">P18CMBk</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#sdss">SDSS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#boss-dr12">BOSS DR12</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#eboss-dr14">eBOSS DR14</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#rosat">ROSAT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#wixsc">WIxSC</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#cls">Cls</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">xCell</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Scientific Documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/science.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="scientific-documentation">
+<h1>Scientific Documentation<a class="headerlink" href="#scientific-documentation" title="Permalink to this heading"></a></h1>
+<section id="mappers">
+<h2>Mappers<a class="headerlink" href="#mappers" title="Permalink to this heading"></a></h2>
+<section id="mpz">
+<h3>2MPZ<a class="headerlink" href="#mpz" title="Permalink to this heading"></a></h3>
+</section>
+<section id="act">
+<h3>ACT<a class="headerlink" href="#act" title="Permalink to this heading"></a></h3>
+<section id="acttsz">
+<h4>ACTtSZ<a class="headerlink" href="#acttsz" title="Permalink to this heading"></a></h4>
+</section>
+<section id="actcmb">
+<h4>ACTCMB<a class="headerlink" href="#actcmb" title="Permalink to this heading"></a></h4>
+</section>
+<section id="actk">
+<h4>ACTk<a class="headerlink" href="#actk" title="Permalink to this heading"></a></h4>
+</section>
+</section>
+<section id="catwise">
+<h3>CatWISE<a class="headerlink" href="#catwise" title="Permalink to this heading"></a></h3>
+</section>
+<section id="desl">
+<h3>DESL<a class="headerlink" href="#desl" title="Permalink to this heading"></a></h3>
+</section>
+<section id="desy1">
+<h3>DESY1<a class="headerlink" href="#desy1" title="Permalink to this heading"></a></h3>
+<section id="desy1gc">
+<h4>DESY1gc<a class="headerlink" href="#desy1gc" title="Permalink to this heading"></a></h4>
+</section>
+<section id="desy1wl">
+<h4>DESY1wl<a class="headerlink" href="#desy1wl" title="Permalink to this heading"></a></h4>
+</section>
+</section>
+<section id="hsc-dr1wl">
+<h3>HSC_DR1wl<a class="headerlink" href="#hsc-dr1wl" title="Permalink to this heading"></a></h3>
+</section>
+<section id="kids-1000">
+<h3>KiDS-1000<a class="headerlink" href="#kids-1000" title="Permalink to this heading"></a></h3>
+</section>
+<section id="nvss">
+<h3>NVSS<a class="headerlink" href="#nvss" title="Permalink to this heading"></a></h3>
+</section>
+<section id="planck">
+<h3>Planck<a class="headerlink" href="#planck" title="Permalink to this heading"></a></h3>
+<section id="p15cib">
+<h4>P15CIB<a class="headerlink" href="#p15cib" title="Permalink to this heading"></a></h4>
+<section id="ciblenz">
+<h5>CIBLenz<a class="headerlink" href="#ciblenz" title="Permalink to this heading"></a></h5>
+</section>
+</section>
+<section id="p15tsz">
+<h4>P15tSZ<a class="headerlink" href="#p15tsz" title="Permalink to this heading"></a></h4>
+</section>
+<section id="p18smica">
+<h4>P18SMICA<a class="headerlink" href="#p18smica" title="Permalink to this heading"></a></h4>
+</section>
+<section id="spt">
+<h4>SPT<a class="headerlink" href="#spt" title="Permalink to this heading"></a></h4>
+</section>
+<section id="p18cmbk">
+<h4>P18CMBk<a class="headerlink" href="#p18cmbk" title="Permalink to this heading"></a></h4>
+</section>
+</section>
+<section id="sdss">
+<h3>SDSS<a class="headerlink" href="#sdss" title="Permalink to this heading"></a></h3>
+<section id="boss-dr12">
+<h4>BOSS DR12<a class="headerlink" href="#boss-dr12" title="Permalink to this heading"></a></h4>
+</section>
+<section id="eboss-dr14">
+<h4>eBOSS DR14<a class="headerlink" href="#eboss-dr14" title="Permalink to this heading"></a></h4>
+</section>
+</section>
+<section id="rosat">
+<h3>ROSAT<a class="headerlink" href="#rosat" title="Permalink to this heading"></a></h3>
+</section>
+<section id="wixsc">
+<h3>WIxSC<a class="headerlink" href="#wixsc" title="Permalink to this heading"></a></h3>
+</section>
+</section>
+<section id="cls">
+<h2>Cls<a class="headerlink" href="#cls" title="Permalink to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="design.html" class="btn btn-neutral float-left" title="Design Philosophy" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api.html" class="btn btn-neutral float-right" title="API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Jaime.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

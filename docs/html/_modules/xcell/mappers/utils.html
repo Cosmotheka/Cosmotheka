@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>xcell.mappers.utils &mdash; xCell  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> xCell
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../design.html">Design Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../science.html">Scientific Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">xCell</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>xcell.mappers.utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for xcell.mappers.utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">healpy</span> <span class="k">as</span> <span class="nn">hp</span>
+<span class="kn">import</span> <span class="nn">fitsio</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+
+<span class="k">def</span> <span class="nf">_build_rerun_fname</span><span class="p">(</span><span class="n">mpr</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
+    <span class="c1"># Check if we want to save rerun data</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">mpr</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;path_rerun&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">False</span>
+
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Check if file exists</span>
+    <span class="n">fname_full</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fname_full</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fname_full</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_rerun_data"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.utils.get_rerun_data">[docs]</a><span class="k">def</span> <span class="nf">get_rerun_data</span><span class="p">(</span><span class="n">mpr</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">ftype</span><span class="p">,</span> <span class="n">section</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">read</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Loads files from previous runs of a given mapper</span>
+<span class="sd">    Args:</span>
+<span class="sd">        mpr (:class:`~xcell.mapper_base.MapperBase`): A mapper object.</span>
+<span class="sd">        fname (string): path to rerun files.</span>
+<span class="sd">        ftype (string): type of rerun files FITSTable, FITSMap, ASCII or NPZ</span>
+<span class="sd">        section (Int): if `ftype == FITSTable` or `ftype == FITSMap` selects \</span>
+<span class="sd">            field of file.</span>
+<span class="sd">        read (`True` or `False`): if `False` only checks for existance of \</span>
+<span class="sd">            files as opposed to reading them.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Ignore rerun file if required</span>
+    <span class="n">ignore</span> <span class="o">=</span> <span class="n">mpr</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ignore_rerun&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ignore</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">fname_full</span><span class="p">,</span> <span class="n">exists</span> <span class="o">=</span> <span class="n">_build_rerun_fname</span><span class="p">(</span><span class="n">mpr</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+
+    <span class="c1"># Check if we want to save rerun data</span>
+    <span class="k">if</span> <span class="n">fname_full</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="c1"># If just checking for existence, return True/False</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">read</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">exists</span>
+
+    <span class="c1"># If it doesn&#39;t exist, just return False</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="c1"># Read</span>
+    <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="s1">&#39;FITSTable&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fitsio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">fname_full</span><span class="p">,</span> <span class="n">ext</span><span class="o">=</span><span class="n">section</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">ftype</span> <span class="o">==</span> <span class="s1">&#39;FITSMap&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">hp</span><span class="o">.</span><span class="n">read_map</span><span class="p">(</span><span class="n">fname_full</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="n">section</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">ftype</span> <span class="o">==</span> <span class="s1">&#39;ASCII&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">fname_full</span><span class="p">,</span> <span class="n">unpack</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">ftype</span> <span class="o">==</span> <span class="s1">&#39;NPZ&#39;</span><span class="p">:</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fname_full</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown file format </span><span class="si">{</span><span class="n">ftype</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="save_rerun_data"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.utils.save_rerun_data">[docs]</a><span class="k">def</span> <span class="nf">save_rerun_data</span><span class="p">(</span><span class="n">mpr</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">ftype</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Saves files from previous runs of a given mapper</span>
+<span class="sd">    Args:</span>
+<span class="sd">        mpr (:class:`~xcell.mapper_base.MapperBase`): A mapper object.</span>
+<span class="sd">        fname (string): path to rerun files.</span>
+<span class="sd">        ftype (string): type of rerun files FITSTable, FITSMap, ASCII or NPZ</span>
+<span class="sd">        data: the data that will be saved to a file</span>
+<span class="sd">    Returns:</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fname_full</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_build_rerun_fname</span><span class="p">(</span><span class="n">mpr</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">fname_full</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="s1">&#39;FITSTable&#39;</span><span class="p">:</span>
+        <span class="n">fitsio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fname_full</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">ftype</span> <span class="o">==</span> <span class="s1">&#39;FITSMap&#39;</span><span class="p">:</span>
+        <span class="n">hp</span><span class="o">.</span><span class="n">write_map</span><span class="p">(</span><span class="n">fname_full</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">ftype</span> <span class="o">==</span> <span class="s1">&#39;ASCII&#39;</span><span class="p">:</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">fname_full</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">ftype</span> <span class="o">==</span> <span class="s1">&#39;NPZ&#39;</span><span class="p">:</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">savez</span><span class="p">(</span><span class="n">fname_full</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown file format </span><span class="si">{</span><span class="n">ftype</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="rotate_mask"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.utils.rotate_mask">[docs]</a><span class="k">def</span> <span class="nf">rotate_mask</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">rot</span><span class="p">,</span> <span class="n">binarize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Applies a given rotator object to mask</span>
+<span class="sd">    Args:</span>
+<span class="sd">        mask (Array): mask to be rotated.</span>
+<span class="sd">        rot (:class:`healpy.rotator.Rotator`): rotator \</span>
+<span class="sd">            object containing the current and target \</span>
+<span class="sd">            coordinates.</span>
+<span class="sd">        binarize(`True` or `False`): if `True` pixels \</span>
+<span class="sd">            with values smaller than 0.5 are set to 0 \</span>
+<span class="sd">            Pixels with values bigger than 0.5 are set \</span>
+<span class="sd">            to 1.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        mask (Array)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">rot</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">mask</span>
+
+    <span class="n">m</span> <span class="o">=</span> <span class="n">rot</span><span class="o">.</span><span class="n">rotate_map_pixel</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">binarize</span><span class="p">:</span>
+        <span class="n">m</span><span class="p">[</span><span class="n">m</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">m</span><span class="p">[</span><span class="n">m</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">m</span></div>
+
+
+<div class="viewcode-block" id="rotate_map"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.utils.rotate_map">[docs]</a><span class="k">def</span> <span class="nf">rotate_map</span><span class="p">(</span><span class="n">mapp</span><span class="p">,</span> <span class="n">rot</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Applies a given rotator object to map. \</span>
+<span class="sd">    The rotation is performed in Fourrier</span>
+<span class="sd">    space.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - mapp (Array): map to be rotated.</span>
+<span class="sd">        - rot (:class:`healpy.rotator.Rotator`): rotator \</span>
+<span class="sd">               object containing the current and target \</span>
+<span class="sd">               coordinates.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        map (Array)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">rot</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">mapp</span>
+    <span class="k">return</span> <span class="n">rot</span><span class="o">.</span><span class="n">rotate_map_alms</span><span class="p">(</span><span class="n">mapp</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_map_from_points"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.utils.get_map_from_points">[docs]</a><span class="k">def</span> <span class="nf">get_map_from_points</span><span class="p">(</span><span class="n">cat</span><span class="p">,</span> <span class="n">nside</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rot</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">ra_name</span><span class="o">=</span><span class="s1">&#39;RA&#39;</span><span class="p">,</span> <span class="n">dec_name</span><span class="o">=</span><span class="s1">&#39;DEC&#39;</span><span class="p">,</span>
+                        <span class="n">in_radians</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">qu</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a map given a catalog of objects and \</span>
+<span class="sd">    a number of pixels.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        cat (Array): catalog of sources.</span>
+<span class="sd">        nside (:class:`healpy.rotator.Rotator`): rotator \</span>
+<span class="sd">            object containing the current and target \</span>
+<span class="sd">            coordinates.</span>
+<span class="sd">        w (Array): weights of sources in catalaog. \</span>
+<span class="sd">                   Defaults to `None`.</span>
+<span class="sd">       rot (:class:`healpy.rotator.Rotator`): If not `None` \</span>
+<span class="sd">           rotates sources in catalog to target \</span>
+<span class="sd">           coordinates. Defaults to &quot;None&quot;. \</span>
+<span class="sd">       ra_name (String): name of RA field in catalog. \</span>
+<span class="sd">                         Defaults to &quot;RA&quot;.</span>
+<span class="sd">       dec_name (String): name of DEC field in catalog. \</span>
+<span class="sd">                          Defaults to &quot;DEC&quot;.</span>
+<span class="sd">       in_radians (`True` or `False`): Flags if input catalog. \</span>
+<span class="sd">           If `True`, converts angles in catalog to degrees.</span>
+<span class="sd">       qu (Array): weights for spin-2 quantities. \</span>
+<span class="sd">                   Defaults to `None`.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        numcount (Array)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">npix</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">nside2npix</span><span class="p">(</span><span class="n">nside</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">in_radians</span><span class="p">:</span>
+        <span class="n">lon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">cat</span><span class="p">[</span><span class="n">ra_name</span><span class="p">])</span>
+        <span class="n">lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">cat</span><span class="p">[</span><span class="n">dec_name</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lon</span> <span class="o">=</span> <span class="n">cat</span><span class="p">[</span><span class="n">ra_name</span><span class="p">]</span>
+        <span class="n">lat</span> <span class="o">=</span> <span class="n">cat</span><span class="p">[</span><span class="n">dec_name</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">rot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Rotate spin-2 quantities if needed</span>
+        <span class="k">if</span> <span class="n">qu</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">angle_ref</span> <span class="o">=</span> <span class="n">rot</span><span class="o">.</span><span class="n">angle_ref</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lonlat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">ll</span> <span class="o">=</span> <span class="p">(</span><span class="n">qu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">qu</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">angle_ref</span><span class="p">)</span>
+            <span class="n">qu</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">ll</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">ll</span><span class="p">)]</span>
+        <span class="c1"># Rotate coordinates</span>
+        <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">rot</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lonlat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ipix</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">ang2pix</span><span class="p">(</span><span class="n">nside</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lonlat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">qu</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">w</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">qu</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">*</span><span class="n">w</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">qu</span><span class="p">]</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">ipix</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">qu</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">minlength</span><span class="o">=</span><span class="n">npix</span><span class="p">)</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">ipix</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">qu</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">minlength</span><span class="o">=</span><span class="n">npix</span><span class="p">)</span>
+        <span class="n">numcount</span> <span class="o">=</span> <span class="p">[</span><span class="n">q</span><span class="p">,</span> <span class="n">u</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">numcount</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">ipix</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">w</span><span class="p">,</span> <span class="n">minlength</span><span class="o">=</span><span class="n">npix</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">numcount</span></div>
+
+
+<div class="viewcode-block" id="get_DIR_Nz"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.utils.get_DIR_Nz">[docs]</a><span class="k">def</span> <span class="nf">get_DIR_Nz</span><span class="p">(</span><span class="n">cat_spec</span><span class="p">,</span> <span class="n">cat_photo</span><span class="p">,</span> <span class="n">bands</span><span class="p">,</span> <span class="n">zflag</span><span class="p">,</span>
+               <span class="n">zrange</span><span class="p">,</span> <span class="n">nz</span><span class="p">,</span> <span class="n">nearest_neighbors</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">njk</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+               <span class="n">bands_photo</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Implementation of the DIR algorithm that \</span>
+<span class="sd">    calibrates a photometric galaxy redshift \</span>
+<span class="sd">    distribution given a reference \</span>
+<span class="sd">    spectroscopic sample. \</span>
+<span class="sd">    The code makes use of sklearn nearest \</span>
+<span class="sd">    neighbors algorthim</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - cat_spec (Array): catalog of spectroscopic \</span>
+<span class="sd">                            samples.</span>
+<span class="sd">        - cat_photo (Array): catalog of photometric \</span>
+<span class="sd">                             samples.</span>
+<span class="sd">        - bands (Array): bands for spectroscopic \</span>
+<span class="sd">                         and photometric samples.</span>
+<span class="sd">        - zflag (String): name of the redshift field \</span>
+<span class="sd">                        in the samples catalog.</span>
+<span class="sd">        - zrange (Array): redshift range for the calibrated \</span>
+<span class="sd">           galaxy redshift distribution.</span>
+<span class="sd">        - nz (Int): number of bins for calibrated \</span>
+<span class="sd">          galaxy redshift distribution.</span>
+<span class="sd">        - nearest_neighbors = 10 (float): number of nearest neighbors \</span>
+<span class="sd">           found by the algorithm.</span>
+<span class="sd">        - njk (float) = 100: Loop over JK region.</span>
+<span class="sd">        - bands_photo = None: bands of phometric catalog.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - zz (Array): position of bins in redshift</span>
+<span class="sd">        - dndz (Array): elements per bin</span>
+<span class="sd">        - dndz_jk (Array):</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sklearn.neighbors</span> <span class="kn">import</span> <span class="n">NearestNeighbors</span>
+    <span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">cKDTree</span>
+    <span class="n">train_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">cat_spec</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">bands</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">if</span> <span class="n">bands_photo</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">bands_photo</span> <span class="o">=</span> <span class="n">bands</span>
+    <span class="n">photo_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">cat_photo</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">bands_photo</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="c1"># Get nearest neighbors</span>
+    <span class="n">n_nbrs</span> <span class="o">=</span> <span class="n">NearestNeighbors</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="n">nearest_neighbors</span><span class="p">,</span>
+                              <span class="n">algorithm</span><span class="o">=</span><span class="s1">&#39;kd_tree&#39;</span><span class="p">,</span>
+                              <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;euclidean&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_data</span><span class="p">)</span>
+    <span class="c1"># Get distances</span>
+    <span class="n">distances</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">n_nbrs</span><span class="o">.</span><span class="n">kneighbors</span><span class="p">(</span><span class="n">train_data</span><span class="p">)</span>
+    <span class="c1"># Get maximum distance</span>
+    <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># Find all photo-z objects within this</span>
+    <span class="c1"># distance of each spec-z object</span>
+    <span class="n">tree_NN_lookup</span> <span class="o">=</span> <span class="n">cKDTree</span><span class="p">(</span><span class="n">photo_data</span><span class="p">,</span> <span class="n">leafsize</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+    <span class="n">num_photoz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">tree_NN_lookup</span><span class="o">.</span><span class="n">query_ball_point</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">d</span><span class="o">+</span><span class="mf">1E-6</span><span class="p">))</span>
+                           <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">train_data</span><span class="p">,</span> <span class="n">distances</span><span class="p">)])</span>
+    <span class="c1"># Weight as ratio of numbers</span>
+    <span class="n">ntrain</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_data</span><span class="p">)</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_photoz</span> <span class="o">*</span> <span class="n">ntrain</span> <span class="o">/</span>
+               <span class="p">(</span><span class="n">nearest_neighbors</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">photo_data</span><span class="p">)))</span>
+
+    <span class="c1"># Compute N(z)</span>
+    <span class="n">dndz</span><span class="p">,</span> <span class="n">zz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">cat_spec</span><span class="p">[</span><span class="n">zflag</span><span class="p">],</span> <span class="nb">range</span><span class="o">=</span><span class="n">zrange</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">nz</span><span class="p">,</span>
+                            <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># Loop over JK regions</span>
+    <span class="n">dndz_jk</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">njk</span><span class="p">):</span>
+        <span class="n">id0</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ntrain</span><span class="o">*</span><span class="n">i</span><span class="o">/</span><span class="n">njk</span><span class="p">)</span>
+        <span class="n">idf</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ntrain</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">njk</span><span class="p">)</span>
+        <span class="n">msk</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ntrain</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">idf</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ntrain</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">id0</span><span class="p">)</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">cat_spec</span><span class="p">[</span><span class="n">zflag</span><span class="p">][</span><span class="n">msk</span><span class="p">],</span> <span class="nb">range</span><span class="o">=</span><span class="n">zrange</span><span class="p">,</span>
+                            <span class="n">bins</span><span class="o">=</span><span class="n">nz</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">[</span><span class="n">msk</span><span class="p">],</span> <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">dndz_jk</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">dndz_jk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dndz_jk</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">zz</span><span class="p">,</span> <span class="n">dndz</span><span class="p">,</span> <span class="n">dndz_jk</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Jaime.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>xcell.mappers.mapper_WIxSC &mdash; xCell  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> xCell
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../design.html">Design Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../science.html">Scientific Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">xCell</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>xcell.mappers.mapper_WIxSC</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for xcell.mappers.mapper_WIxSC</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">.mapper_base</span> <span class="kn">import</span> <span class="n">MapperBase</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">get_map_from_points</span><span class="p">,</span> <span class="n">get_DIR_Nz</span>
+<span class="kn">import</span> <span class="nn">fitsio</span>
+<span class="kn">from</span> <span class="nn">astropy.table</span> <span class="kn">import</span> <span class="n">Table</span>
+<span class="kn">import</span> <span class="nn">pymaster</span> <span class="k">as</span> <span class="nn">nmt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">healpy</span> <span class="k">as</span> <span class="nn">hp</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+
+<div class="viewcode-block" id="MapperWIxSC"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC">[docs]</a><span class="k">class</span> <span class="nc">MapperWIxSC</span><span class="p">(</span><span class="n">MapperBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    **Config**</span>
+
+<span class="sd">    - mask_name: `&quot;mask_2MPZWISC&quot;`</span>
+<span class="sd">    - path_rerun: `&#39;.../Datasets/2MPZ_WIxSC/xcell_runs&#39;`</span>
+<span class="sd">    - z_edges: `[0.10, 0.15]` / `[0.15, 0.20]` / `[0.20, 0.25]` \</span>
+<span class="sd">               `[0.25, 0.30]` / `[0.30, 0.35]`</span>
+<span class="sd">    - bin_name: `&#39;z0p10_0p15&#39;` / `&#39;z0p15_0p20&#39;` / `&#39;z0p20_0p25&#39;` \</span>
+<span class="sd">                `&#39;z0p25_0p30&#39;` / `&#39;z0p30_0p35&#39;`</span>
+<span class="sd">    - nside_nl_threshold: `8129`</span>
+<span class="sd">    - lmin_nl_from_data: `8192`</span>
+<span class="sd">    - nl_analytic: `True`</span>
+<span class="sd">    - data_catalog: `&#39;.../Datasets/2MPZ_WIxSC/WIxSC.fits&#39;`</span>
+<span class="sd">    - spec_sample: `&#39;.../Datasets/2MPZ_WIxSC/zSpec-comp-WIxSC.csv&#39;`</span>
+<span class="sd">    - n_jk_dir: `100`</span>
+<span class="sd">    - apply_galactic_correction: `True`</span>
+<span class="sd">    - mask_G: `&#39;.../Datasets/2MPZ_WIxSC/WISExSCOSmask_galactic.fits.gz&#39;`</span>
+<span class="sd">    - mask_C: `&#39;.../Datasets/2MPZ_WIxSC/WISExSCOSmask_equatorial.fits.gz&#39;`</span>
+<span class="sd">    - star_map_G: `&#39;.../Datasets/2MPZ_WIxSC/allwise_total_galactic.fits&#39;`</span>
+<span class="sd">    - star_map_C: `&#39;.../Datasets/2MPZ_WIxSC/allwise_total_equatorial.fits&#39;`</span>
+<span class="sd">    - use_halo_model: `True`</span>
+<span class="sd">    - hod_params:</span>
+
+<span class="sd">        - lMmin_0: `11.697` / `11.859` / `12.103` / `12.144` / `12.084`</span>
+<span class="sd">        - siglM_0: `0.345` / `0.345` / `0.345` / `0.345` / `0.345`</span>
+<span class="sd">        - lM0_0: `11.697` / `11.859` / `12.103` / 12.144 / `13.013`</span>
+<span class="sd">        - lM1_0: `13.035` / `13.146` / `13.414` / 13.434 / `12.084`</span>
+<span class="sd">        - alpha_0: `1.0` / `1.0` / `1.0` / `1.0` /  `1.0`</span>
+<span class="sd">        - fc_0: `1.0` / `1.0` / `1.0` / `1.0` / `1.0`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_defaults</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z_edges</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;z_edges&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ra_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dec_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_rad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_coords</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">npix</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">nside2npix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;bin_name&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Angular mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dndz</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stars</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delta_map</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nside_nl_threshold</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;nside_nl_threshold&#39;</span><span class="p">,</span>
+                                             <span class="mi">4096</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lmin_nl_from_data</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;lmin_nl_from_data&#39;</span><span class="p">,</span>
+                                            <span class="mi">2000</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MapperWIxSC.get_radec"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_radec">[docs]</a>    <span class="k">def</span> <span class="nf">get_radec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cat</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the RA and DEC fields \</span>
+<span class="sd">        of the mapper&#39;s catalog.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            cat (Array): catalog</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ra (Array), dec (Array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_rad</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">cat</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ra_name</span><span class="p">]),</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">cat</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dec_name</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cat</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ra_name</span><span class="p">],</span> <span class="n">cat</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dec_name</span><span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_coords</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="c1"># Returns names of the coordinates \</span>
+        <span class="c1"># in the chosen coordinate \</span>
+        <span class="c1"># system (&#39;G&#39;-galactic or &#39;C&#39;-celestial).</span>
+
+        <span class="c1"># Args:</span>
+        <span class="c1">#     config (Dict): configuration file</span>
+
+        <span class="c1"># Returns:</span>
+        <span class="c1">#     coord1_name (String)</span>
+        <span class="c1">#     coord2_name (String)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span> <span class="o">==</span> <span class="s1">&#39;G&#39;</span><span class="p">:</span>  <span class="c1"># Galactic</span>
+            <span class="k">return</span> <span class="s1">&#39;L&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span>  <span class="c1"># Celestial/Equatorial</span>
+            <span class="k">return</span> <span class="s1">&#39;RA&#39;</span><span class="p">,</span> <span class="s1">&#39;DEC&#39;</span><span class="p">,</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown coordinates </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Loads chosen columns of the raw WIxSC catalog. \</span>
+        <span class="c1"># Selects the chosen bin and masks it.</span>
+        <span class="n">file_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;data_catalog&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_data</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File </span><span class="si">{</span><span class="n">file_data</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">)</span>
+        <span class="c1"># Read catalog</span>
+        <span class="n">cat</span> <span class="o">=</span> <span class="n">fitsio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">file_data</span><span class="p">,</span>
+                          <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ra_name</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">dec_name</span><span class="p">,</span>
+                                   <span class="s1">&#39;W1MCORR&#39;</span><span class="p">,</span> <span class="s1">&#39;W2MCORR&#39;</span><span class="p">,</span>
+                                   <span class="s1">&#39;RCALCORR&#39;</span><span class="p">,</span> <span class="s1">&#39;BCALCORR&#39;</span><span class="p">,</span>
+                                   <span class="s1">&#39;ZPHOTO_CORR&#39;</span><span class="p">])</span>
+        <span class="c1"># Bin in redshift</span>
+        <span class="n">cat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bin_z</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
+        <span class="c1"># Sky mask</span>
+        <span class="n">cat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_catalog</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cat</span>
+
+    <span class="k">def</span> <span class="nf">get_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="s1">&#39;WIxSC_rerun_bin&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bn</span> <span class="o">+</span> <span class="s1">&#39;.fits&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rerun_read_cycle</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">&#39;FITSTable&#39;</span><span class="p">,</span>
+                                                   <span class="bp">self</span><span class="o">.</span><span class="n">_get_catalog</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span>
+
+    <span class="k">def</span> <span class="nf">_mask_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cat</span><span class="p">):</span>
+        <span class="c1"># Applies binary mask to catalog.</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mask</span><span class="p">()</span>
+        <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_radec</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
+        <span class="n">ipix</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">ang2pix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">lonlat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># Mask is binary, so 0.1 or 0.00001 doesn&#39;t really matter</span>
+        <span class="k">return</span> <span class="n">cat</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">[</span><span class="n">ipix</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_bin_z</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cat</span><span class="p">):</span>
+        <span class="c1"># Removes all sources in the catalog \</span>
+        <span class="c1"># outside the chosen bin.</span>
+
+        <span class="k">return</span> <span class="n">cat</span><span class="p">[(</span><span class="n">cat</span><span class="p">[</span><span class="s1">&#39;ZPHOTO_CORR&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_edges</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span>
+                   <span class="p">(</span><span class="n">cat</span><span class="p">[</span><span class="s1">&#39;ZPHOTO_CORR&#39;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+
+    <span class="k">def</span> <span class="nf">_get_specsample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cat</span><span class="p">):</span>
+        <span class="c1"># Loads the spectroscopic catalog of \</span>
+        <span class="c1"># sources of the mapper and bins it.</span>
+
+        <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+        <span class="c1"># Read full spectroscopic sample</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">Table</span><span class="o">.</span><span class="n">from_pandas</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;spec_sample&#39;</span><span class="p">]))</span>
+        <span class="n">msk</span> <span class="o">=</span> <span class="p">((</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;zCorr&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_edges</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">&amp;</span>
+               <span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;zCorr&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_edges</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">ds</span><span class="p">[</span><span class="n">msk</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Uses the DIR algorithm to build \</span>
+        <span class="c1"># the redshift distribution of sources \</span>
+        <span class="c1"># from the mapper&#39;s photometric sample \</span>
+        <span class="c1"># given the spectroscopic sample.</span>
+
+        <span class="n">c_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
+        <span class="n">c_s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_specsample</span><span class="p">(</span><span class="n">c_p</span><span class="p">)</span>
+
+        <span class="c1"># Sort spec sample by nested pixel index so jackknife</span>
+        <span class="c1"># samples are spatially correlated.</span>
+        <span class="n">ip_s</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">ring2nest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span>
+                            <span class="n">hp</span><span class="o">.</span><span class="n">ang2pix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span> <span class="n">c_s</span><span class="p">[</span><span class="s1">&#39;ra_WISE&#39;</span><span class="p">],</span>
+                                       <span class="n">c_s</span><span class="p">[</span><span class="s1">&#39;dec_WISE&#39;</span><span class="p">],</span> <span class="n">lonlat</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+        <span class="n">idsort</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">ip_s</span><span class="p">)</span>
+        <span class="n">c_s</span> <span class="o">=</span> <span class="n">c_s</span><span class="p">[</span><span class="n">idsort</span><span class="p">]</span>
+
+        <span class="c1"># Compute DIR N(z)</span>
+        <span class="n">z</span><span class="p">,</span> <span class="n">nz</span><span class="p">,</span> <span class="n">nz_jk</span> <span class="o">=</span> <span class="n">get_DIR_Nz</span><span class="p">(</span><span class="n">c_s</span><span class="p">,</span> <span class="n">c_p</span><span class="p">,</span>
+                                  <span class="p">[</span><span class="s1">&#39;W1c&#39;</span><span class="p">,</span> <span class="s1">&#39;W2c&#39;</span><span class="p">,</span> <span class="s1">&#39;Bcc&#39;</span><span class="p">,</span> <span class="s1">&#39;Rcc&#39;</span><span class="p">],</span>
+                                  <span class="n">zflag</span><span class="o">=</span><span class="s1">&#39;Zspec&#39;</span><span class="p">,</span>
+                                  <span class="n">zrange</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">],</span>
+                                  <span class="n">nz</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span>
+                                  <span class="n">bands_photo</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;W1MCORR&#39;</span><span class="p">,</span> <span class="s1">&#39;W2MCORR&#39;</span><span class="p">,</span>
+                                               <span class="s1">&#39;BCALCORR&#39;</span><span class="p">,</span> <span class="s1">&#39;RCALCORR&#39;</span><span class="p">],</span>
+                                  <span class="n">njk</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;n_jk_dir&#39;</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span>
+        <span class="n">zm</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">z</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">z</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;z_mid&#39;</span><span class="p">:</span> <span class="n">zm</span><span class="p">,</span> <span class="s1">&#39;nz&#39;</span><span class="p">:</span> <span class="n">nz</span><span class="p">,</span> <span class="s1">&#39;nz_jk&#39;</span><span class="p">:</span> <span class="n">nz_jk</span><span class="p">}</span>
+
+<div class="viewcode-block" id="MapperWIxSC.get_nz"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_nz">[docs]</a>    <span class="k">def</span> <span class="nf">get_nz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">return_jk_error</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if mapper has already computed \</span>
+<span class="sd">        redshift distribution of sources. \</span>
+<span class="sd">        If so, loads it from the save file. \</span>
+<span class="sd">        Otherwise, it calculates it. \</span>
+<span class="sd">        Finally, it shifts it by a given amount \</span>
+<span class="sd">        (dz=0 default).</span>
+
+<span class="sd">        Kwargs:</span>
+<span class="sd">            dz=0</span>
+<span class="sd">            return_jk_error=False</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            [z, nz] (Array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dndz</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="s1">&#39;nz_WIxSC_bin&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bn</span> <span class="o">+</span> <span class="s1">&#39;.npz&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dndz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rerun_read_cycle</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">&#39;NPZ&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_nz</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shifted_nz</span><span class="p">(</span><span class="n">dz</span><span class="p">,</span> <span class="n">return_jk_error</span><span class="o">=</span><span class="n">return_jk_error</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MapperWIxSC.get_signal_map"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_signal_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_signal_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># If &#39;apply_galactic_correction&#39; = True,</span>
+        <span class="c1"># it applies the galactic correction.</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npix</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mask</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_stars</span><span class="p">()</span>
+            <span class="n">nmap_data</span> <span class="o">=</span> <span class="n">get_map_from_points</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span>
+                                            <span class="n">ra_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ra_name</span><span class="p">,</span>
+                                            <span class="n">dec_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dec_name</span><span class="p">,</span>
+                                            <span class="n">in_radians</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">in_rad</span><span class="p">)</span>
+            <span class="n">mean_n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_mean_n</span><span class="p">(</span><span class="n">nmap_data</span><span class="p">)</span>
+            <span class="n">goodpix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="c1"># Division by mask not really necessary, since it&#39;s binary.</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">goodpix</span><span class="p">]</span> <span class="o">=</span> <span class="n">nmap_data</span><span class="p">[</span><span class="n">goodpix</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">mean_n</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">[</span><span class="n">goodpix</span><span class="p">])</span><span class="o">-</span><span class="mi">1</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;apply_galactic_correction&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+                <span class="n">gcorr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_galactic_correction</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stars</span><span class="p">,</span>
+                                                      <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span>
+                <span class="n">d</span> <span class="o">-=</span> <span class="n">gcorr</span><span class="p">[</span><span class="s1">&#39;delta_map&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delta_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">d</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_map</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># We will assume the mask has been provided in the right</span>
+        <span class="c1"># coordinates, so no further conversion is needed.</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">ud_grade</span><span class="p">(</span><span class="n">hp</span><span class="o">.</span><span class="n">read_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;mask&#39;</span><span class="p">]),</span>
+                           <span class="n">nside_out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mask</span>
+
+    <span class="k">def</span> <span class="nf">_get_stars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Returns the mapper&#39;s stars catalog.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stars</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Power = -2 makes sure the total number of stars is conserved</span>
+            <span class="c1"># We assume the star map has been provided in the right coords</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stars</span> <span class="o">=</span> <span class="n">hp</span><span class="o">.</span><span class="n">ud_grade</span><span class="p">(</span><span class="n">hp</span><span class="o">.</span><span class="n">read_map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;star_map&#39;</span><span class="p">]),</span>
+                                     <span class="n">nside_out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span> <span class="n">power</span><span class="o">=-</span><span class="mi">2</span><span class="p">)</span>
+            <span class="c1"># Convert to stars per deg^2</span>
+            <span class="n">pix_srad</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">npix</span>
+            <span class="n">pix_deg2</span> <span class="o">=</span> <span class="n">pix_srad</span><span class="o">*</span><span class="p">(</span><span class="mi">180</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stars</span> <span class="o">/=</span> <span class="n">pix_deg2</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stars</span>
+
+    <span class="k">def</span> <span class="nf">_get_mean_n</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nmap</span><span class="p">):</span>
+        <span class="c1"># Returns mean of a given counts map.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_stars</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mask</span><span class="p">()</span>
+        <span class="n">goodpix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stars</span> <span class="o">&lt;</span> <span class="mi">8515</span>
+        <span class="n">goodpix</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="n">n_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">nmap</span><span class="p">[</span><span class="n">goodpix</span><span class="p">])</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">[</span><span class="n">goodpix</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">n_mean</span>
+
+    <span class="k">def</span> <span class="nf">_get_galactic_correction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delta</span><span class="p">,</span> <span class="n">stars</span><span class="p">,</span> <span class="n">bmask</span><span class="p">,</span> <span class="n">nbins</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">npoly</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="c1"># Computes the galactic correction.</span>
+
+        <span class="c1"># Args:</span>
+        <span class="c1">#     delta (Array): signal map</span>
+        <span class="c1">#     stars (Array): stars map</span>
+        <span class="c1">#     bmask (Array): binary mask</span>
+
+        <span class="c1"># Kwargs:</span>
+        <span class="c1">#     nbins=14 (Int): number of bins</span>
+        <span class="c1">#     npoly=3 (Int): order of the polynomial fit</span>
+
+        <span class="c1"># Returns:</span>
+        <span class="c1">#     {&#39;stars&#39; (Array): binned star density,</span>
+        <span class="c1">#      &#39;delta_mean&#39; (Array): stars&#39; bins mean,</span>
+        <span class="c1">#      &#39;delta_std&#39; (Array): stars&#39; bins std,</span>
+        <span class="c1">#      &#39;delta_func&#39; (Function): polynomial fit,</span>
+        <span class="c1">#      &#39;delta_map&#39; (Array): galactic correction} (Dict)</span>
+
+        <span class="c1"># Create bins of star density</span>
+        <span class="n">stbins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">stars</span><span class="p">[</span><span class="n">bmask</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span>
+                             <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">stars</span><span class="p">[</span><span class="n">bmask</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span> <span class="n">nbins</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">d_mean</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">d_std</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Loop over bins and compute &lt;delta&gt; and std(delta) in each star bin</span>
+        <span class="k">for</span> <span class="n">ib</span><span class="p">,</span> <span class="n">st</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">stbins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">stp1</span> <span class="o">=</span> <span class="n">stbins</span><span class="p">[</span><span class="n">ib</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">msk</span> <span class="o">=</span> <span class="n">bmask</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="n">msk</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">stars</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">stp1</span>
+            <span class="n">msk</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">stars</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">st</span>
+            <span class="n">dm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">delta</span><span class="p">[</span><span class="n">msk</span><span class="p">])</span>
+            <span class="n">dn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">msk</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">delta</span><span class="p">[</span><span class="n">msk</span><span class="p">])</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dn</span><span class="p">)</span>
+            <span class="n">d_mean</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dm</span><span class="p">)</span>
+            <span class="n">d_std</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+        <span class="n">d_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">d_mean</span><span class="p">)</span>
+        <span class="n">d_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">d_std</span><span class="p">)</span>
+        <span class="c1"># Now create a 3-rd order polynomial fitting these data</span>
+        <span class="n">stmid</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">stbins</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">+</span><span class="n">stbins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">stmid</span><span class="p">,</span> <span class="n">d_mean</span><span class="p">,</span> <span class="n">npoly</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mf">1.</span><span class="o">/</span><span class="n">d_std</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">poly1d</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="c1"># Create correction map</span>
+        <span class="n">d_corr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span>
+        <span class="n">d_corr</span><span class="p">[</span><span class="n">bmask</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">stars</span><span class="p">[</span><span class="n">bmask</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;stars&#39;</span><span class="p">:</span> <span class="n">stmid</span><span class="p">,</span>
+                <span class="s1">&#39;delta_mean&#39;</span><span class="p">:</span> <span class="n">d_mean</span><span class="p">,</span>
+                <span class="s1">&#39;delta_std&#39;</span><span class="p">:</span> <span class="n">d_std</span><span class="p">,</span>
+                <span class="s1">&#39;delta_func&#39;</span><span class="p">:</span> <span class="n">df</span><span class="p">,</span>
+                <span class="s1">&#39;delta_map&#39;</span><span class="p">:</span> <span class="n">d_corr</span><span class="p">}</span>
+
+<div class="viewcode-block" id="MapperWIxSC.get_nl_coupled"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_nl_coupled">[docs]</a>    <span class="k">def</span> <span class="nf">get_nl_coupled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nside_nl_threshold</span><span class="p">)</span> <span class="ow">or</span>
+                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;nl_analytic&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">))):</span>
+                <span class="n">cat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_catalog</span><span class="p">()</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="n">get_map_from_points</span><span class="p">(</span><span class="n">cat_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">,</span>
+                                        <span class="n">ra_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ra_name</span><span class="p">,</span>
+                                        <span class="n">dec_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dec_name</span><span class="p">,</span>
+                                        <span class="n">in_radians</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">in_rad</span><span class="p">)</span>
+                <span class="n">N_mean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_mean_n</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+                <span class="n">N_mean_srad</span> <span class="o">=</span> <span class="n">N_mean</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">npix</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mask</span><span class="p">()</span>
+                <span class="n">N_ell</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="o">/</span> <span class="n">N_mean_srad</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_nmt_field</span><span class="p">()</span>
+                <span class="n">cl</span> <span class="o">=</span> <span class="n">nmt</span><span class="o">.</span><span class="n">compute_coupled_cell</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">f</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">N_ell</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">cl</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">lmin_nl_from_data</span><span class="p">:</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span> <span class="o">=</span> <span class="n">N_ell</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nside</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_coupled</span></div>
+
+<div class="viewcode-block" id="MapperWIxSC.get_dtype"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galaxy_density&#39;</span></div>
+
+<div class="viewcode-block" id="MapperWIxSC.get_spin"><a class="viewcode-back" href="../../../mappers.html#xcell.mappers.mapper_WIxSC.MapperWIxSC.get_spin">[docs]</a>    <span class="k">def</span> <span class="nf">get_spin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Jaime.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
