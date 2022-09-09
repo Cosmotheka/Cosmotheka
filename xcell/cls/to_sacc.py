@@ -228,7 +228,8 @@ class ClSack():
             self.s.add_tracer('Map', tr, quantity=quantity, spin=spin,
                               ell=ell, beam=beam, beam_extra={'nl': nl})
         else:
-            raise NotImplementedError(f'Tracer type {quantity} not implemented')
+            raise NotImplementedError(f'Tracer type {quantity} not ' +
+                                      'implemented')
 
     def add_ell_cl(self, tr1, tr2):
         """
