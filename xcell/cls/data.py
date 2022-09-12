@@ -9,6 +9,10 @@ import numpy as np
 
 
 class CustomLoader(yaml.SafeLoader):
+    """
+    Custom yaml.SafeLoader class that allows to populate the yaml by reading
+    other by writing !include path_to_other_yaml
+    """
     # This was copied from https://stackoverflow.com/questions/528281
     def __init__(self, stream):
         super(CustomLoader, self).__init__(stream)
@@ -24,8 +28,32 @@ CustomLoader.add_constructor('!include', CustomLoader.include)
 
 
 class Data():
+    """
+    Data class. This is in charge of reading the configuration yaml file or
+    dictionary.
+    """
     def __init__(self, data_path='', data={}, override=False,
                  ignore_existing_yml=False):
+        """
+        Parameters
+        ----------
+        data_path: string
+            The path to the configuration yaml file
+        data: dict
+            The loaded configuration. Only one of data_path or data can be
+            given
+        override: bool
+            If True, override existing yaml in output directory.
+        ignore_existing_yml: bool
+            If True, ignore existing yaml in the output directory and use the
+            input configuration. Otherwise, use the existing yaml.
+
+        Raises
+        ------
+        ValueError
+            If both data_path and data are given
+
+        """
         if (data_path) and (data):
             raise ValueError('Only one of data_path or data must be given. \
                              Both set.')
@@ -60,13 +88,56 @@ class Data():
         self.default_clcov_from_data = 'None'
 
     def _get_tracers_defined(self):
+        """
+        Get the tracers listed in the configuration file (that might or might
+        not be used).
+
+        Returns
+        ----------
+        tracers: list
+            List of the tracers listed in the configuration file
+        """
         trs_section = self._get_section('tracers')
         return list(trs_section.keys())
 
     def _get_section(self, section):
+        """
+        Get the data of a given section of the configuration file.
+
+        Parameters
+        ----------
+        section: string
+            Name of the section whose content you want to get.
+
+        Returns
+        ----------
+        content: dictionary
+            Dictionary with the content of the given section. If it does not
+            exist in the configuration, it returns an empty dictionary
+        """
         return self.data.get(section, {})
 
     def _map_compute_to_bool_for_trs(self, tr1, tr2, value):
+        """
+        Return True or False if the Cell of a pair of tracers is requested or
+        not.
+
+        Parameters
+        ----------
+        tr1: str
+            Name of the first tracer
+        tr2: str
+            Name of the second tracer
+        value: str
+            If the Cell has to be computed. Possible values are: 'None' or
+            'none' if not; 'auto' if only auto-correlations are requested;
+            or 'all' if all correlations are requested.
+
+        Returns
+        ----------
+        compute: bool
+            True if the Cell of the pair has to be computed or False if not.
+        """
         auto = tr1 == tr2
         value = value.lower()
         if (value == 'none') or ((value == 'auto') and not auto):
@@ -80,6 +151,23 @@ class Data():
         return compute
 
     def _init_tracer_matrix(self):
+        """
+        Return the matrix with the information of the tracer pairs. If the Cell
+        has to be computed, if the Cell from data has to be used for the
+        covariance and if the pair of tracers has to be swapped when computing
+        the Cell.
+
+        Returns
+        ----------
+        matrix: dict
+            Dictionary with keys a tuple of a pair of tracers; i.e.(tr1, tr2)
+            and value a dictionary with the following keys:
+             - 'compute': if the Cell has to be computed
+             - 'clcov_from_data': if the data Cell has to be used for the
+               covariance
+             - 'inv': if the tracers order has to be swapped when computing the
+               Cell.
+        """
         trs = self._get_tracers_defined()
 
         # Default values should be 0, 1, 2
@@ -117,6 +205,26 @@ class Data():
         return tr_matrix
 
     def _get_clcov_from_data_matrix(self, return_default=True):
+        """
+        Return the matrix of tracer pairs with the information if the Cell for
+        the covariance has to be computed from data or not.
+
+        Parameters
+        ----------
+        return_default: bool
+            If True, this method returns the default computation value for the
+            Cells
+
+        Returns
+        ----------
+        matrix: dict
+            Dictionary with keys a tuple of a pair of tracers; i.e.(tr1, tr2)
+            and value the computation value requested (or the default if not
+            specified); i.e. one of 'None' or 'none', 'all', 'auto'.
+
+        default: str, (if return_default is True)
+            Default value for the cases not specified in the configuration.
+        """
         conf = self._get_section('cov').get('cls_from_data', {})
         # Backwards compatibility
         if isinstance(conf, str):
@@ -153,6 +261,26 @@ class Data():
         return survey_matrix
 
     def _get_requested_survey_cls_matrix(self, return_default=True):
+        """
+        Return the matrix of tracer pairs with the information if the Cell of
+        given pair has to be computed or not.
+
+        Parameters
+        ----------
+        return_default: bool
+            If True, this method returns the default computation value for the
+            Cells
+
+        Returns
+        ----------
+        matrix: dict
+            Dictionary with keys a tuple of a pair of tracers; i.e.(tr1, tr2)
+            and value the computation value requested (or the default if not
+            specified); i.e. one of 'None' or 'none', 'all', 'auto'.
+
+        default: str, (if return_default is True)
+            Default value for the cases not specified in the configuration.
+        """
         cls_conf = self._get_section('cls')
         default = self.default_cls_to_compute
         if isinstance(cls_conf, str):
@@ -170,6 +298,25 @@ class Data():
         return survey_matrix
 
     def _load_survey_cls_matrix(self, fname):
+        """
+        Read a npz file and return the matrix of tracer pairs with the
+        information if the Cell of given pair has to be computed or not.
+
+        Parameters
+        ----------
+        fname: str
+            Path to the npz file storing the matrix of tracer pairs with the
+            information if the Cell has to be computed or not. The elements of
+            the matrix are integers (2 for 'all'; 1 for 'auto', '0' for
+            'none').
+
+        Returns
+        ----------
+        matrix: dict
+            Dictionary with keys a tuple of a pair of tracers; i.e.(tr1, tr2)
+            and value the computation value requested (or the default if not
+            specified); i.e. one of 'None' or 'none', 'all', 'auto'.
+        """
         clsf = np.load(fname)
         surveys = clsf['surveys']
         survey_matrix = clsf['cls_matrix']
@@ -186,6 +333,18 @@ class Data():
         return matrix
 
     def _read_cls_section_matrix(self):
+        """
+        Read the 'cls' section of the configuration file and return a matrix of
+        tracer pairs with the information if the Cell of given pair has to be
+        computed or not. It can be a subset of the full matrix.
+
+        Returns
+        ----------
+        matrix: dict
+            Dictionary with keys a tuple of a pair of tracers; i.e.(tr1, tr2)
+            and value the computation value requested (or the default if not
+            specified); i.e. one of 'None' or 'none', 'all', 'auto'.
+        """
         cls_conf = self._get_section('cls')
         combs = cls_conf.keys()
         survey_matrix = {}
@@ -197,10 +356,41 @@ class Data():
 
         return survey_matrix
 
-    def get_bias(self, name):
-        return self.data['tracers'][name].get('bias', 1.)
+    def get_bias(self, tracer):
+        """
+        Get the linear galaxy bias assotiated with the input tracer
+
+        Parameters
+        ----------
+        tracer: string
+            Tracer name
+
+        Returns
+        ----------
+        bias: float
+            Linear galaxy bias
+        """
+        return self.data['tracers'][tracer].get('bias', 1.)
 
     def _check_yml_in_outdir(self, override=False, ignore_existing_yml=False):
+        """
+        Check if there is a configuration yaml file in the output directory.
+
+        Parameters
+        ----------
+        override: bool
+            If True, override existing yaml in output directory.
+
+        ignore_existing_yml: bool
+            If True, ignore existing yaml in the output directory and use the
+            input configuration.
+
+        Raises
+        ------
+        ValueError:
+            If both override and ignore_existing_yml are True or if there is
+            more than 1 yaml file in the output directory.
+        """
         outdir = self.data['output']
         fname = os.path.join(outdir, '*.yml')
         files = glob(fname)
@@ -230,17 +420,43 @@ class Data():
             self._dump_data()
 
     def _dump_data(self):
+        """
+        Write the loaded configuration to a yaml file called 'data.yml' in the
+        output directory
+        """
         outdir = self.data['output']
         fname = os.path.join(outdir, 'data.yml')
         with open(fname, 'w') as f:
             yaml.dump(self.data, f)
 
     def read_data(self, data_path):
+        """
+        Read the configuration yaml file.
+
+        Parameters
+        ----------
+        data_path: str
+            Path to the configuration yaml file
+        """
         with open(data_path) as f:
             data = yaml.load(f, CustomLoader)
         return data
 
     def get_tracers_used(self, wsp=False):
+        """
+        Return the tracers used to compute the requested Cell.
+
+        Parameters
+        ----------
+        wsp: bool
+            If True, return only the tracers with different masks
+
+        Return
+        ------
+        tracers: list
+            List of tracers used to compute the requested Cell.
+
+        """
         lab = ['all', 'wsp'][wsp]
         if self.tracers[lab] is None:
             # Get all tracers in the yaml file
@@ -266,12 +482,44 @@ class Data():
 
         return self.tracers[lab]
 
-    def get_tracer_bare_name(self, tr):
-        if '__' in tr:
-            tr = ''.join(tr.split('__')[:-1])
-        return tr
+    def get_tracer_bare_name(self, tracer):
+        """
+        Return the tracer name without the tomographic index (e.g. for
+        DES__0, it returns DES)
+
+        Parameters
+        ----------
+        tracer: str
+            Tracer name
+
+        Return
+        ------
+        tracer_bare_name: str
+            Tracer name without the tomographic index
+        """
+        if '__' in tracer:
+            tracer = ''.join(tracer.split('__')[:-1])
+        return tracer
 
     def will_pair_be_computed(self, tn1, tn2):
+        """
+        Return the ordered tracer pair for which the Cell will be computed. If
+        the Cell will not be computed, return None
+
+        Parameters
+        ----------
+        tn1: str
+            First tracer's name
+        tn2: str
+            Second tracer's name
+
+        Return
+        ------
+        tuple or None
+            Tupe of the ordered tracer pair for which the Cell will be
+            computed. If the Cell will not be computed, return None
+
+        """
         tmat = self.get_tracer_matrix()
         t = tmat[(tn1, tn2)]
         if t['compute']:
@@ -282,11 +530,47 @@ class Data():
         return None
 
     def get_tracer_matrix(self):
+        """
+        Return the matrix with the information of the tracer pairs. If the Cell
+        has to be computed, if the Cell from data has to be used for the
+        covariance and if the pair of tracers has to be swapped when computing
+        the Cell.
+
+        Return
+        ------
+        matrix: dict
+            Dictionary with keys a tuple of a pair of tracers; i.e.(tr1, tr2)
+            and value a dictionary with the following keys:
+             - 'compute': if the Cell has to be computed
+             - 'clcov_from_data': if the data Cell has to be used for the
+               covariance
+             - 'inv': if the tracers order has to be swapped when computing the
+               Cell.
+        """
         if self.tr_matrix is None:
             self.tr_matrix = self._init_tracer_matrix()
         return self.tr_matrix
 
     def get_tracers_bare_name_pair(self, tr1, tr2, connector='-'):
+        """
+        Return the tracer names without the tomographic index (e.g. for
+        DES__0, it returns DES) joined by a connector.
+
+        Parameters
+        ----------
+        tr1: str
+            First tracer's name
+        tr2: str
+            Second tracer's name
+        connector: str
+            Connector to join tr1 and tr2's bare names
+
+        Return
+        ------
+        str
+            First (tr1) and second (tr2) names without the tomographic index
+            (e.g. for DES__0, it returns DES) joined by a connector.
+        """
         tr1_nn = self.get_tracer_bare_name(tr1)
         tr2_nn = self.get_tracer_bare_name(tr2)
         trreq = connector.join([tr1_nn, tr2_nn])
@@ -296,13 +580,16 @@ class Data():
         """
         Return a list of pair of tracers for which to compute the Cell.
 
-
-        Args:
-            wsp (bool): If True, return the minimal subset of tracers pairs
+        Parameters
+        ----------
+        wsp: bool
+            If True, return the minimal subset of tracers pairs
             to compute all the needed workspaces. Default False.
 
-        Returns:
-            cl_tracers (list): List of pair of tracers.
+        Returns
+        -------
+        cl_tracers: list
+            List of pair of tracers for which to compute the Cell.
         """
         lab = ['all', 'wsp'][wsp]
         if self.cl_tracers[lab] is None:
@@ -326,12 +613,17 @@ class Data():
         Return a list of tuples with four tracers for which to compute the
         covariance matrix.
 
-        Args:
-            wsp (bool): If True, return the minimal subset of tracers pairs
-            to compute all the needed workspaces. Default False.
+        Parameters
+        ----------
+        wsp: bool
+            If True, return the minimal subset of 4 tracers tuples to compute
+            all the needed covariance workspaces. Default False.
 
-        Returns:
-            cov_tracers (list): List of tuples of 4 tracers.
+        Returns
+        -------
+        cov_tracers: list
+            List of tuples of 4 tracers with the tracers to compute a
+            covariance block.
         """
         lab = ['all', 'wsp'][wsp]
         if self.cov_tracers[lab] is None:
@@ -345,6 +637,22 @@ class Data():
         return self.cov_tracers[lab]
 
     def get_cov_extra_cl_tracers(self):
+        """
+        Return a list of pair of tracers in the order that the extra covariance
+        has been built.
+
+        Parameters
+        ----------
+        wsp: bool
+            If True, return the minimal subset of tracers pairs
+            to compute all the needed workspaces. Default False.
+
+        Returns
+        -------
+        cl_tracers: list
+            List of pair of tracers in the order that the extra covariance
+            has been built.
+        """
         cl_tracers = self.get_cl_trs_names()
         order_extra = self.data['cov']['extra']['order']
         cl_extra = [[] for i in order_extra]
@@ -370,6 +678,20 @@ class Data():
         return [item for sublist in cl_extra for item in sublist]
 
     def _filter_tracers_wsp(self, tracers):
+        """
+        Return the subset of the input tracers with different masks.
+
+        Parameters
+        ----------
+        tracers: list
+            List of tracers (they have to be defined in the configuration
+            file).
+
+        Returns
+        -------
+        tracers_wsp: list
+            List of tracers with different masks.
+        """
         tracers_torun = []
         masks = []
         for tr in tracers:
@@ -381,6 +703,27 @@ class Data():
         return tracers_torun
 
     def check_toeplitz(self, dtype):
+        """
+        Return the Toeplitz approximation parameters (see Fig. 3 of Louis et al
+        2020 (arXiv: 2010.14344)
+
+        Parameters
+        ----------
+        dtype: list
+            What you are approximating with Toeplitz ('cls' or 'cov')
+
+        Returns
+        -------
+        l_toeplitz: int
+             ell_toeplitz in Fig. 3 of that paper. Set to -1 if not specified
+             in the configuration file.
+        l_exact: int
+             ell_exact in Fig. 3 of that paper. Set to -1 if not specified in
+             the configuration file.
+        dl_band: int
+             Delta ell band in Fig. 3 of that paper. Set to -1 if not specified
+             in the configuration file.
+        """
         if ('toeplitz' in self.data) and (dtype in self.data['toeplitz']):
             toeplitz = self.data['toeplitz'][dtype]
 
@@ -393,6 +736,20 @@ class Data():
         return l_toeplitz, l_exact, dl_band
 
     def get_mapper(self, tr):
+        """
+        Return the initialized mapper class of the corresponding input tracer.
+
+        Parameters
+        ----------
+        tr: str
+            Tracer name
+
+        Returns
+        -------
+        mapper:
+            Initialized mapper class of the corresponding input tracer.
+
+        """
         config = self.data['tracers'][tr]
         nside = self.data['sphere']['nside']
         coords = self.data['sphere']['coords']
@@ -415,5 +772,23 @@ class Data():
         return mapper_from_name(mapper_class)(config)
 
     def read_symmetric(self, tr1, tr2):
+        """
+        Return the ordered version of the input tracers. Not that this is
+        completely arbitrary and internally fixed to avoid computing the same
+        power spectra twice.
+
+        Parameters
+        ----------
+        tr1: str
+            First tracer's name
+        tr1: str
+            Second tracer's name
+
+        Returns
+        -------
+        tracers: tuple
+            Tuple with the tracers ordered.
+
+        """
         tmat = self.get_tracer_matrix()
         return tmat[(tr1, tr2)]['inv']

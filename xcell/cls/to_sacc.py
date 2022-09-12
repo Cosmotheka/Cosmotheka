@@ -8,7 +8,30 @@ import os
 
 
 class ClSack():
+    """
+    ClSack class. Use it to generate a sacc file with the requested Cell and
+    covariance matrix.
+    """
     def __init__(self, datafile, output, use='cls', m_marg=False):
+        """
+        Parameters
+        ----------
+        datafile: str
+            The path to the configuration yaml file
+        output: str
+            The sacc file name
+        use: str
+            One of 'cls', 'nl' or 'fiducial'. It generates, respectively, a
+            sacc file with the data cls, the noise or the fiducial cls.
+        m_marg: bool
+            If True, the store the analytically marginalized multiplicative
+            bias covariance.
+
+        Raises
+        ------
+        ValueError
+            If use is not one of 'cls', 'nl' or 'fiducial'
+        """
         self.data = Data(data_path=datafile)
         self.outdir = self.data.data['output']
         self.use_nl = False
@@ -30,16 +53,36 @@ class ClSack():
         self.s.save_fits(fname, overwrite=True)
 
     def add_tracers(self):
+        """
+        Add the requested tracers to the sacc file
+        """
         tracers = self.data.get_tracers_used()
         for tr in tracers:
             self.add_tracer(tr)
 
     def add_ell_cls(self):
+        """
+        Add the requested Cells to the sacc file
+        """
         cl_tracers = self.data.get_cl_trs_names()
         for tr1, tr2 in cl_tracers:
             self.add_ell_cl(tr1, tr2)
 
     def read_covariance_extra(self):
+        """
+        Read the external covariance provided
+
+        Raises
+        ------
+        ValueError:
+            If the number of cls expecified in the configuration file for the
+            external covariance does not match the number of computed cls.
+
+        Return
+        ------
+        covariance: numpy.array
+            External covariance
+        """
         dtype = self.s.get_data_types()[0]
         cl_tracers = self.s.get_tracer_combinations(data_type=dtype)
         ell, _ = self.s.get_ell_cl(dtype, *cl_tracers[0])
@@ -52,7 +95,9 @@ class ClSack():
         ncls = int(cov.shape[0] / nbpw)
         cov = cov.reshape((ncls, nbpw, ncls, nbpw))
         if ('has_b' in cov_extra) and (cov_extra['has_b'] is True):
-            raise ValueError('Reading extra Cov with B-modes not implemented')
+            raise NotImplementedError('Reading extra Cov with B-modes not ' +
+                                      'implemented')
+
         else:
             if ncls != len(cl_extra_tracers):
                 raise ValueError('Number of cls do not match')
@@ -79,10 +124,22 @@ class ClSack():
         return covmat.reshape((ndim, ndim))
 
     def add_covariance_extra(self):
+        """
+        Adds the external covariance to the sacc file
+        """
         covmat = self.read_covariance_extra()
         self.s.add_covariance(covmat)
 
     def add_covariance_G(self, m_marg):
+        """
+        Adds the Gaussian covariance to the sacc file
+
+        Parameters
+        ----------
+        m_marg: bool
+            If True, add the analytically marginalized multiplicative bias
+            covariance. Else, add the Gaussian covariance
+        """
         # Get nbpw
         dtype = self.s.get_data_types()[0]
         tracers = self.s.get_tracer_combinations(data_type=dtype)[0]
@@ -126,6 +183,9 @@ class ClSack():
         self.s.add_covariance(covmat)
 
     def add_covariance(self):
+        """
+        Add the requested covariance to the sacc file
+        """
         if self.use_nl:
             if self.m_marg:
                 self.add_covariance_G(self.m_marg)
@@ -135,6 +195,21 @@ class ClSack():
             self.add_covariance_G(self.m_marg)
 
     def add_tracer(self, tr):
+        """
+        Add the input tracer to the sacc file
+
+        Parameters
+        ----------
+        tr: str
+            Tracer name of the tracer to be added.
+
+        Raises
+        ------
+        NotImplementedError
+            For tracers' quantities not implemented. The implemented ones are
+            'galaxy_density', 'galaxy_shear', 'cmb_convergence', 'cmb_tSZ' and
+            'generic'
+        """
         mapper = self.data.get_mapper(tr)
         quantity = mapper.get_dtype()
         spin = mapper.get_spin()
@@ -153,9 +228,20 @@ class ClSack():
             self.s.add_tracer('Map', tr, quantity=quantity, spin=spin,
                               ell=ell, beam=beam, beam_extra={'nl': nl})
         else:
-            raise ValueError(f'Tracer type {quantity} not implemented')
+            raise NotImplementedError(f'Tracer type {quantity} not ' +
+                                      'implemented')
 
     def add_ell_cl(self, tr1, tr2):
+        """
+        Add the Cell corresponding to tracers tr1 and tr2
+
+        Parameters
+        ----------
+        tr1: str
+            First tracer's name
+        tr2: str
+            Second tracer's name
+        """
         ells_nobin = np.arange(3 * self.data.data['sphere']['nside'])
         cl = Cl(self.data.data, tr1, tr2, ignore_existing_yml=True)
         ells_eff = cl.b.get_effective_ells()
@@ -187,11 +273,43 @@ class ClSack():
             self.s.add_ell_cl(cl_type, tr1, tr2, ells_eff, cli, window=wins)
 
     def get_dof_tracers(self, tracers):
+        """
+        Return the number of degrees of freedom for a pair of tracers
+
+        Parameters
+        ----------
+        tracers: list
+            List of pair of tracers
+
+        Return
+        ------
+        dof: int
+            Number of degrees of freedom
+        """
         cl = Cl(self.data.data, tracers[0], tracers[1],
                 ignore_existing_yml=True)
         return cl.get_n_cls()
 
     def get_datatypes_from_dof(self, dof):
+        """
+        Return a list of possible data types for a given number of degrees of
+        freedom
+
+        Parameters
+        ----------
+        dof: int
+            Degrees of freedom
+
+        Raises
+        ------
+        ValueError
+            If dof is not one of 1, 2 or 4
+
+        Return
+        ------
+        data_types: list
+            List of data types for the given number of degrees of freedom
+        """
         if dof == 1:
             cl_types = ['cl_00']
         elif dof == 2:
