@@ -51,8 +51,11 @@ class MapperP15tSZ(MapperPlanckBase):
                            f'coord{self.coords}',
                            f'ns{self.nside}.fits.gz'])
 
-            self.hm1_map, self.hm2_map = self._rerun_read_cycle(fn, 'FITSMap',
-                                                                get_hm_maps)
+            hm1_map, hm2_map = self._rerun_read_cycle(fn, 'FITSMap',
+                                                      get_hm_maps)
+
+            self.hm1_map = hm1_map.reshape((1, -1))
+            self.hm2_map = hm2_map.reshape((1, -1))
 
         return self.hm1_map, self.hm2_map
 
