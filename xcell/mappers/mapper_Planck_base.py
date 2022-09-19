@@ -70,8 +70,22 @@ class MapperPlanckBase(MapperBase):
                     self.ps_mask *= hp.read_map(self.file_ps_mask, field)
         return self.ps_mask
 
-    def _get_hm_maps(self):
+    def _generate_hm_maps(self):
         return NotImplementedError("Do not use base class")
+
+    def _get_hm_maps(self):
+        if self.hm1_map is None:
+            fn = '_'.join([f'{self.map_name}_hm_maps',
+                           f'coord{self.coords}',
+                           f'ns{self.nside}.fits.gz'])
+
+            hm1_map, hm2_map = self._rerun_read_cycle(fn, 'FITSMap',
+                                                      self._generate_hm_maps)
+
+            self.hm1_map = hm1_map.reshape((1, -1))
+            self.hm2_map = hm2_map.reshape((1, -1))
+
+        return self.hm1_map, self.hm2_map
 
     def _get_diff_map(self):
         if self.diff_map is None:
