@@ -44,18 +44,16 @@ def check_skip(data, skip, trs):
 
 
 def get_pyexec(comment, nc, queue, mem, onlogin, outdir, batches=False):
-    if onlogin:
-        pyexec = "/usr/bin/python3"
+    if batches:
+        pyexec = "/bin/bash"
     else:
+        pyexec = "/usr/bin/python3"
+
+    if not onlogin:
         logdir = os.path.join(outdir, 'log')
         os.makedirs(logdir, exist_ok=True)
         logfname = os.path.join(logdir, comment + '.log')
-        pyexec = "addqueue -o {} -c {} -n 1x{} -s -q {} -m {}".format(logfname, comment, nc, queue, mem)
-
-    if batches:
-        pyexec += " /bin/bash"
-    else:
-        pyexec += " /usr/bin/python3"
+        pyexec = "addqueue -o {} -c {} -n 1x{} -s -q {} -m {} {}".format(logfname, comment, nc, queue, mem, pyexec)
 
     return pyexec
 
@@ -118,7 +116,7 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
                 f.write(f'rm {cw}\n')
 
         pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir,
-                            batches=False)
+                            batches=True)
         print(pyexec + " " + sh_name)
         os.system(pyexec + " " + sh_name)
         c += 1
