@@ -1,5 +1,6 @@
 #!/usr/bin/python
 from xcell.cls.data import Data
+from xcell.cls.cov import Cov
 import os
 import time
 import subprocess
@@ -42,17 +43,85 @@ def check_skip(data, skip, trs):
     return False
 
 
-
-def get_pyexec(comment, nc, queue, mem, onlogin, outdir):
+def get_pyexec(comment, nc, queue, mem, onlogin, outdir, batches=False):
     if onlogin:
         pyexec = "/usr/bin/python3"
     else:
         logdir = os.path.join(outdir, 'log')
         os.makedirs(logdir, exist_ok=True)
         logfname = os.path.join(logdir, comment + '.log')
-        pyexec = "addqueue -o {} -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(logfname, comment, nc, queue, mem)
+        pyexec = "addqueue -o {} -c {} -n 1x{} -s -q {} -m {}".format(logfname, comment, nc, queue, mem)
+
+    if batches:
+        pyexec += " /bin/bash"
+    else:
+        pyexec += " /usr/bin/python3"
 
     return pyexec
+
+
+def get_jobs_with_same_cwsp(data):
+    cov_tracers = data.get_cov_trs_names(wsp=True)
+    cov_tracers += data.get_cov_trs_names(wsp=False)
+    cov_tracers = np.unique(cov_tracers, axis=0).tolist()
+
+    cwsp = {}
+    for trs in cov_tracers:
+        cov = Cov(data.data, *trs)
+        fname = cov.get_cwsp_path()
+        if fname in cwsp:
+            cwsp[fname].append(trs)
+        else:
+            cwsp[fname] = [trs]
+
+    return cwsp
+
+
+def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
+                       remove_cwsp=False):
+    outdir = data.data['output']
+    cwsp = get_jobs_with_same_cwsp(data)
+
+    if os.uname()[1] == 'glamdring':
+        qjobs = get_queued_jobs()
+    else:
+        qjobs = ''
+
+    # Create a folder to place the batch scripts. This is because I couldn't
+    # figure out how to pass it through STDIN
+    os.makedirs('run_batches', exist_ok=True)
+
+    c = 0
+    for cw, trs_list in cwsp.items():
+        comment = os.path.basename(cw)
+        sh_name = f'run_batches/{comment}.sh'
+
+        if c >= njobs:
+            break
+        elif comment in qjobs:
+            continue
+
+        with open(sh_name, 'a') as f:
+            f.write('#!/bin/bash')
+            pyrun = []
+            for trs in trs_list:
+                fname = os.path.join(outdir, 'cov', comment + '.npz')
+                recompute = data.data['recompute']['cov'] or data.data['recompute']['cmcm']
+                if (os.path.isfile(fname) and (not recompute)) or \
+                        check_skip(data, skip, trs):
+                    continue
+
+                f.write('/usr/bin/python3 -m xcell.cls.cov {} {} {} {} {}'.format(args.INPUT, *trs))
+
+            if remove_cwsp:
+                f.write(f'rm {cw}')
+
+        pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir,
+                            batches=False)
+        print(pyexec + " " + sh_name)
+        os.system(pyexec + " " + sh_name)
+        c += 1
+        time.sleep(1)
 
 
 def launch_cls(data, queue, njobs, nc, mem, fiducial=False, onlogin=False, skip=[]):
