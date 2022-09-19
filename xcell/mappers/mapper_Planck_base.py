@@ -20,7 +20,6 @@ class MapperPlanckBase(MapperBase):
         self.file_ps_mask = config.get('file_ps_mask', None)
         self.ps_mask_modes = []
         self.ps_mask_mode = {}
-        self.signal_map = None
         self.hm1_map = None
         self.hm2_map = None
         self.diff_map = None
@@ -30,17 +29,15 @@ class MapperPlanckBase(MapperBase):
         self.custom_auto = True
         self.ps_mask = None
 
-    def get_signal_map(self):
-        if self.signal_map is None:
-            signal_map = hp.read_map(self.file_map)
-            signal_map[signal_map == hp.UNSEEN] = 0.0
-            signal_map[np.isnan(signal_map)] = 0.0
-            ps_mask = self._get_ps_mask()
-            signal_map *= ps_mask
-            signal_map = rotate_map(signal_map, self.rot)
-            self.signal_map = np.array([hp.ud_grade(signal_map,
-                                        nside_out=self.nside)])
-        return self.signal_map
+    def _get_signal_map(self):
+        signal_map = hp.read_map(self.file_map)
+        signal_map[signal_map == hp.UNSEEN] = 0.0
+        signal_map[np.isnan(signal_map)] = 0.0
+        ps_mask = self._get_ps_mask()
+        signal_map *= ps_mask
+        signal_map = rotate_map(signal_map, self.rot)
+        signal_map = np.array([hp.ud_grade(signal_map, nside_out=self.nside)])
+        return signal_map
 
     def _get_mask(self):
         msk = None
