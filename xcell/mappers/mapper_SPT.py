@@ -6,6 +6,7 @@ import numpy as np
 
 class MapperSPT(MapperPlanckBase):
     map_name = 'SPT'
+
     def __init__(self, config):
         """
         config - dict

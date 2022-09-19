@@ -8,6 +8,7 @@ from .mapper_Planck_base import MapperPlanckBase
 
 class MapperCIBLenz(MapperPlanckBase):
     map_name = 'CIBLenz'
+
     def __init__(self, config):
         """
         config - dict
