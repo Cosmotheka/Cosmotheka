@@ -243,6 +243,13 @@ if __name__ == "__main__":
     parser.add_argument('--onlogin', default=False, action='store_true', help='Run the jobs in the login screen instead appending them to the queue')
     parser.add_argument('--skip', default=[], nargs='+', help='Skip the following tracers. It can be given as DELS__0 to skip only DELS__0 tracer or DELS to skip all DELS tracers')
     parser.add_argument('--override_yaml', default=False, action='store_true', help='Override the YAML file if already stored. Be ware that this could cause compatibility problems in your data!')
+    parser.add_argument('--batches', default=False, action='store_true',
+                        help='Run the covariances in batches with all the ' +
+                        'blocks sharing the same covariance workspace in a ' +
+                        'single job')
+    parser.add_argument('--remove_cwsp', default=False, action='store_true',
+                        help='Remove the covariance workspace once the ' +
+                        'batch job has finished')
     args = parser.parse_args()
 
     ##############################################################################
@@ -256,7 +263,12 @@ if __name__ == "__main__":
     if args.compute == 'cls':
         launch_cls(data, queue, njobs, args.nc, args.mem, args.cls_fiducial, onlogin, args.skip)
     elif args.compute == 'cov':
-        launch_cov(data, queue, njobs, args.nc, args.mem, onlogin, args.skip)
+        if args.batches:
+            launch_cov_batches(data, queue, njobs, args.nc, args.mem, onlogin,
+                               args.skip, args.remove_cwsp)
+        else:
+            launch_cov(data, queue, njobs, args.nc, args.mem, onlogin,
+                       args.skip)
     elif args.compute == 'to_sacc':
         if args.to_sacc_use_nl and args.to_sacc_use_fiducial:
             raise ValueError(
