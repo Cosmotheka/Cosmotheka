@@ -1,6 +1,7 @@
 from .utils import rotate_map
 from .mapper_Planck_base import MapperPlanckBase
 import healpy as hp
+import numpy as np
 
 
 class MapperP15tSZ(MapperPlanckBase):
@@ -31,7 +32,7 @@ class MapperP15tSZ(MapperPlanckBase):
 
     def _get_hm_maps(self):
         if self.hm1_map is None:
-            def get_hm_maps()
+            def get_hm_maps():
                 hm1_map = hp.read_map(self.file_hm1, 1)
                 ps_mask = self._get_ps_mask()
                 hm1_map *= ps_mask
@@ -45,6 +46,10 @@ class MapperP15tSZ(MapperPlanckBase):
                 hm2_map = hp.ud_grade(hm2_map, nside_out=self.nside)
 
                 return np.array([hm1_map, hm2_map])
+
+            fn = '_'.join([f'{self.map_name}_hm_maps',
+                           f'coord{self.coords}',
+                           f'ns{self.nside}.fits.gz'])
 
             self.hm1_map, self.hm2_map = self._rerun_read_cycle(fn, 'FITSMap',
                                                                 get_hm_maps)
