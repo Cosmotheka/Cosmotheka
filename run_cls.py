@@ -89,20 +89,21 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
 
     # Create a folder to place the batch scripts. This is because I couldn't
     # figure out how to pass it through STDIN
-    os.makedirs('run_batches', exist_ok=True)
+    outdir_batches = os.path.join(outdir, 'run_batches')
+    os.makedirs(outdir_batches, exist_ok=True)
 
     c = 0
     for cw, trs_list in cwsp.items():
         comment = os.path.basename(cw)
-        sh_name = f'run_batches/{comment}.sh'
+        sh_name = os.path.join(outdir_batches, f'{comment}.sh')
 
         if c >= njobs:
             break
         elif comment in qjobs:
             continue
 
-        with open(sh_name, 'a') as f:
-            f.write('#!/bin/bash')
+        with open(sh_name, 'w') as f:
+            f.write('#!/bin/bash\n')
             pyrun = []
             for trs in trs_list:
                 fname = os.path.join(outdir, 'cov', comment + '.npz')
@@ -111,10 +112,10 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
                         check_skip(data, skip, trs):
                     continue
 
-                f.write('/usr/bin/python3 -m xcell.cls.cov {} {} {} {} {}'.format(args.INPUT, *trs))
+                f.write('/usr/bin/python3 -m xcell.cls.cov {} {} {} {} {}\n'.format(args.INPUT, *trs))
 
             if remove_cwsp:
-                f.write(f'rm {cw}')
+                f.write(f'rm {cw}\n')
 
         pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir,
                             batches=False)
