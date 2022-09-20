@@ -1,6 +1,7 @@
 import numpy as np
 import xcell as xc
 import healpy as hp
+import os
 
 
 def get_config():
@@ -49,11 +50,19 @@ def test_get_mask():
 
 
 def test_get_signal_map():
-    m = get_mapper()
+    config = get_config()
+    config['path_rerun'] = 'xcell/tests/data/'
+    m = xc.mappers.MapperDESY1gc(config)
     d = m.get_signal_map()
     assert len(d) == 1
     d = d[0]
     assert np.all(np.fabs(d) < 1E-5)
+
+    # Test rerun
+    fn = 'xcell/tests/data/DELS_signal_map_bin0_coordC_ns32.fits.gz'
+    assert np.all(d == hp.read_map(fn))
+    os.remove(fn)
+
 
 
 def test_get_nl_coupled():

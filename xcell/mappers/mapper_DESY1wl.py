@@ -6,6 +6,7 @@ import healpy as hp
 
 
 class MapperDESY1wl(MapperBase):
+    map_name = 'DESY1wl'
     def __init__(self, config):
         """
         Data source:
@@ -166,6 +167,8 @@ class MapperDESY1wl(MapperBase):
         return we1, we2
 
     def get_signal_map(self, mode=None):
+        # We overwrite the MapperBase method because otherwise it becomes very
+        # convoluted
         e1f, e2f, mod = self._set_mode(mode)
         if self.maps[mod] is not None:
             self.signal_map = self.maps[mod]
@@ -175,7 +178,7 @@ class MapperDESY1wl(MapperBase):
         def get_ellip_maps():
             return self._get_ellipticity_maps(mode=mode)
 
-        fn = '_'.join([f'DESY1wl_signal_map_{mod}_bin{self.zbin}',
+        fn = '_'.join([f'{self.map_name}_signal_map_{mod}_bin{self.zbin}',
                        f'coord{self.coords}',
                        f'ns{self.nside}.fits.gz'])
         d = self._rerun_read_cycle(fn, 'FITSMap', get_ellip_maps,

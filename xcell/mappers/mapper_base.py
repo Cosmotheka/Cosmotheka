@@ -28,6 +28,9 @@ class MapperBase(object):
         self.coords = config['coords']
         self.mask = None
         self.signal_map = None
+        # Defined here for the signal_map file name
+        self.zbin = None
+        self.dndz = None
 
     def _get_rotator(self, coord_default):
         if self.coords != coord_default:
@@ -41,7 +44,9 @@ class MapperBase(object):
 
     def get_signal_map(self, **kwargs):
         if self.signal_map is None:
-            fn = '_'.join([f'{self.map_name}_signal_map',
+            fn = '_'.join([f'{self.map_name}_signal_map' + \
+                           f'_bin{self.zbin}' if self.zbin is not None else '',
+                           *[f'{k}{v}' for k, v in kwargs.items()],
                            f'coord{self.coords}',
                            f'ns{self.nside}.fits.gz'])
 
@@ -51,10 +56,9 @@ class MapperBase(object):
                 else:
                     return self._get_signal_map(**kwargs)
 
-            self.signal_map = self._rerun_read_cycle(fn, 'FITSMap', func)
-            # Check if signal_map is a 2D array
-            if len(self.signal_map.shape) == 1:
-                self.signal_map = self.signal_map.reshape((1, -1))
+            signal_map = self._rerun_read_cycle(fn, 'FITSMap', func)
+            self.signal_map = np.atleast_2d(signal_map)
+
         return self.signal_map
 
     def get_contaminants(self):

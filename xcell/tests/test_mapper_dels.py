@@ -42,6 +42,11 @@ def test_rerun():
     assert (dndz[1] == d['nz'][d['z_mid'] >= 0]).all()
     os.remove(fn)
 
+    d = m.get_signal_map(apply_galactic_correction=False)
+    fn = 'xcell/tests/data/DELS_signal_map_bin0_apply_galactic_correctionFalse_coordC_ns32.fits.gz'
+    assert np.all(d == hp.read_map(fn))
+    os.remove(fn)
+
 
 def test_get_nz():
     m = get_mapper()
