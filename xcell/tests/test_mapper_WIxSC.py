@@ -89,6 +89,7 @@ def test_get_signal_map(coord):
     assert np.all(d == hp.read_map(fn))
     cleanup_rerun()
 
+
 def test_get_mask():
     cleanup_rerun()
     m = get_mapper()

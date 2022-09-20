@@ -64,7 +64,6 @@ def test_get_signal_map():
     os.remove(fn)
 
 
-
 def test_get_nl_coupled():
     m = get_mapper()
     # Redicted value

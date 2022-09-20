@@ -43,7 +43,8 @@ def test_rerun():
     os.remove(fn)
 
     d = m.get_signal_map(apply_galactic_correction=False)
-    fn = 'xcell/tests/data/DELS_signal_map_bin0_apply_galactic_correctionFalse_coordC_ns32.fits.gz'
+    fn = 'xcell/tests/data/DELS_signal_map_bin0_' + \
+         'apply_galactic_correctionFalse_coordC_ns32.fits.gz'
     assert np.all(d == hp.read_map(fn))
     os.remove(fn)
 
