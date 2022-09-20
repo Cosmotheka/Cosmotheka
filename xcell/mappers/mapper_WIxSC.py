@@ -133,17 +133,16 @@ class MapperWIxSC(MapperBase):
         cat_data = self.get_catalog()
         mask = self.get_mask()
         stars = self._get_stars()
-        nmap_data = get_map_from_points(self.cat_data, self.nside,
+        nmap_data = get_map_from_points(cat_data, self.nside,
                                         ra_name=self.ra_name,
                                         dec_name=self.dec_name,
                                         in_radians=self.in_rad)
         mean_n = self._get_mean_n(nmap_data)
-        goodpix = self.mask > 0
+        goodpix = mask > 0
         # Division by mask not really necessary, since it's binary.
-        d[goodpix] = nmap_data[goodpix]/(mean_n*self.mask[goodpix])-1
+        d[goodpix] = nmap_data[goodpix]/(mean_n*mask[goodpix])-1
         if self.config.get('apply_galactic_correction', True):
-            gcorr = self._get_galactic_correction(d, self.stars,
-                                                  self.mask)
+            gcorr = self._get_galactic_correction(d, stars, mask)
             d -= gcorr['delta_map']
         signal_map = np.array([d])
         return signal_map

@@ -9,6 +9,7 @@ import os
 
 class MapperDELS(MapperBase):
     map_name = 'DELS'
+
     def __init__(self, config):
         """
         config - dict
@@ -113,14 +114,12 @@ class MapperDELS(MapperBase):
         comp_map = self._get_comp_map()
         bmask = self._get_binary_mask()
         stars = self._get_stars()
-        nmap_data = get_map_from_points(cat_data, self.nside,
-                                        rot=self.rot)
+        nmap_data = get_map_from_points(cat_data, self.nside, rot=self.rot)
         mean_n = self._get_mean_n(nmap_data)
-        goodpix = self.bmask > 0
-        d[goodpix] = nmap_data[goodpix]/(mean_n*self.comp_map[goodpix])-1
+        goodpix = bmask > 0
+        d[goodpix] = nmap_data[goodpix]/(mean_n*comp_map[goodpix])-1
         if apply_galactic_correction:
-            gcorr = self._get_galactic_correction(d, self.stars,
-                                                  self.bmask)
+            gcorr = self._get_galactic_correction(d, stars, bmask)
             d -= gcorr['delta_map']
         delta_map = np.array([d])
         return delta_map

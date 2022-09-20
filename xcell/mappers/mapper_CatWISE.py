@@ -61,7 +61,7 @@ class MapperCatWISE(MapperBase):
         d = np.zeros(self.npix)
         cat_data = self.get_catalog()
         mask = self.get_mask()
-        nmap_data = get_map_from_points(self.cat_data, self.nside,
+        nmap_data = get_map_from_points(cat_data, self.nside,
                                         rot=self.rot, ra_name='ra',
                                         dec_name='dec')
         # ecliptic latitude correction -- SvH 5/3/22
@@ -71,9 +71,9 @@ class MapperCatWISE(MapperBase):
             correction = np.zeros_like(d)
         nmap_data = nmap_data + correction
         goodpix = self.mask > 0
-        mean_n = np.average(nmap_data, weights=self.mask)
+        mean_n = np.average(nmap_data, weights=mask)
         # Division by mask not really necessary, since it's binary.
-        d[goodpix] = nmap_data[goodpix]/(mean_n*self.mask[goodpix])-1
+        d[goodpix] = nmap_data[goodpix]/(mean_n*mask[goodpix])-1
         delta_map = np.array([d])
         return delta_map
 

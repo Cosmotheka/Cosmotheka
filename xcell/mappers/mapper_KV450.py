@@ -7,6 +7,7 @@ import healpy as hp
 
 class MapperKV450(MapperBase):
     map_name = 'KV450'
+
     def __init__(self, config):
         """
         config - dict

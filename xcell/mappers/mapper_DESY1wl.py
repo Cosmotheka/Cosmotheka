@@ -7,6 +7,7 @@ import healpy as hp
 
 class MapperDESY1wl(MapperBase):
     map_name = 'DESY1wl'
+
     def __init__(self, config):
         """
         Data source:

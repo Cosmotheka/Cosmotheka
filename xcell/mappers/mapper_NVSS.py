@@ -70,14 +70,14 @@ class MapperNVSS(MapperBase):
         d = np.zeros(self.npix)
         cat_data = self.get_catalog()
         mask = self.get_mask()
-        nmap_data = get_map_from_points(self.cat_data, self.nside,
+        nmap_data = get_map_from_points(cat_data, self.nside,
                                         ra_name=self.ra_name,
                                         dec_name=self.dec_name,
                                         rot=self.rot)
-        mean_n = np.average(nmap_data, weights=self.mask)
-        goodpix = self.mask > 0
+        mean_n = np.average(nmap_data, weights=mask)
+        goodpix = mask > 0
         # Division by mask not really necessary, since it's binary.
-        d[goodpix] = nmap_data[goodpix]/(mean_n*self.mask[goodpix])-1
+        d[goodpix] = nmap_data[goodpix]/(mean_n*mask[goodpix])-1
         signal_map = np.array([d])
         return signal_map
 
