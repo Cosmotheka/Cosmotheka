@@ -6,6 +6,7 @@ import healpy as hp
 
 
 class MapperKV450(MapperBase):
+    map_name = 'KV450'
     def __init__(self, config):
         """
         config - dict
@@ -60,7 +61,7 @@ class MapperKV450(MapperBase):
 
     def get_catalog(self):
         if self.cat_data is None:
-            fn = f'KV450_cat_bin{self.zbin}.fits'
+            fn = f'{self.map_name}_cat_bin{self.zbin}.fits'
             self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
                                                    self._load_catalog,
                                                    saved_by_func=True)
@@ -84,7 +85,7 @@ class MapperKV450(MapperBase):
 
         for ibin, cat in enumerate(cat_bins):
             self._remove_multiplicative_bias(cat, ibin)
-            fn = f'KV450_cat_bin{ibin}.fits'
+            fn = f'{self.map_name}_cat_bin{ibin}.fits'
             save_rerun_data(self, fn, 'FITSTable', cat.as_array())
         return cat_bins[self.zbin].as_array()
 
@@ -150,12 +151,13 @@ class MapperKV450(MapperBase):
         return we1, we2
 
     def get_signal_map(self):
+        # Overwrite base method to simplify the handling of the mods
         kind, e1f, e2f, mod = self._set_mode()
         if self.maps[mod] is not None:
             self.signal_map = self.maps[mod]
             return self.signal_map
 
-        fn = '_'.join([f'KV450_signal_{mod}_bin{self.zbin}',
+        fn = '_'.join([f'{self.map_name}_signal_map_{mod}_bin{self.zbin}',
                        f'coord{self.coords}',
                        f'ns{self.nside}.fits.gz'])
         d = self._rerun_read_cycle(fn, 'FITSMap',
@@ -194,7 +196,7 @@ class MapperKV450(MapperBase):
                                        rot=self.rot)
             return w2s2
 
-        fn = '_'.join([f'KV450_w2s2_{kind}_bin{self.zbin}',
+        fn = '_'.join([f'{self.map_name}_w2s2_{kind}_bin{self.zbin}',
                        f'coord{self.coords}',
                        f'ns{self.nside}.fits.gz'])
         self.w2s2s[mod] = self._rerun_read_cycle(fn, 'FITSMap',

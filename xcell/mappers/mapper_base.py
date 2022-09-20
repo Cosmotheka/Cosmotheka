@@ -44,11 +44,14 @@ class MapperBase(object):
 
     def get_signal_map(self, **kwargs):
         if self.signal_map is None:
-            fn = '_'.join([f'{self.map_name}_signal_map' + \
-                           f'_bin{self.zbin}' if self.zbin is not None else '',
+            fn = '_'.join([f'{self.map_name}_signal_map' + (f'_bin{self.zbin}'
+                                                            if self.zbin is not
+                                                            None else ''),
                            *[f'{k}{v}' for k, v in kwargs.items()],
                            f'coord{self.coords}',
                            f'ns{self.nside}.fits.gz'])
+
+            print(fn)
 
             def func():
                 if not kwargs:

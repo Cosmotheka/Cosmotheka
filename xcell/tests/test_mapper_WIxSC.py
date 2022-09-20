@@ -24,6 +24,9 @@ def get_config():
 
 def cleanup_rerun():
     for fname in ['nz_WIxSC_bin0.npz', 'WIxSC_rerun_bin0.fits',
+                  'WIxSC_signal_map_bin0_coordC_ns32.fits.gz',
+                  'WIxSC_signal_map_bin0_coordG_ns32.fits.gz',
+                  'WIxSC_signal_map_bin0_coordE_ns32.fits.gz',
                   'mask_mask_coordC_ns32.fits.gz',
                   'mask_mask_coordG_ns32.fits.gz']:
         if os.path.isfile(fname):
@@ -82,6 +85,9 @@ def test_get_signal_map(coord):
     assert d.shape == (1, hp.nside2npix(m.nside))
     assert np.all(np.fabs(d) < 1E-15)
 
+    fn = f'WIxSC_signal_map_bin0_coord{coord}_ns32.fits.gz'
+    assert np.all(d == hp.read_map(fn))
+    cleanup_rerun()
 
 def test_get_mask():
     cleanup_rerun()

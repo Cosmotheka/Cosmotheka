@@ -20,7 +20,6 @@ class MapperSDSS(MapperBase):
         self.ws = {'data': None, 'random': None}
         self.alpha = None
         self.dndz = None
-        self.signal_map = None
         self.nl_coupled = None
         self.nside_nl_threshold = config.get('nside_nl_threshold',
                                              4096)
