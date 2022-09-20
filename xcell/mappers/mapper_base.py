@@ -46,6 +46,9 @@ class MapperBase(object):
                            f'ns{self.nside}.fits.gz'])
             self.signal_map = self._rerun_read_cycle(fn, 'FITSMap',
                                                      self._get_signal_map)
+            # Check if signal_map is a 2D array
+            if len(self.signal_map.shape) == 1:
+                self.signal_map = self.signal_map.reshape((1, -1))
         return self.signal_map
 
     def get_contaminants(self):
