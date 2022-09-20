@@ -39,13 +39,19 @@ class MapperBase(object):
     def _get_signal_map(self):
         raise NotImplementedError("Do not use base class")
 
-    def get_signal_map(self):
+    def get_signal_map(self, **kwargs):
         if self.signal_map is None:
             fn = '_'.join([f'{self.map_name}_signal_map',
                            f'coord{self.coords}',
                            f'ns{self.nside}.fits.gz'])
-            self.signal_map = self._rerun_read_cycle(fn, 'FITSMap',
-                                                     self._get_signal_map)
+
+            def func():
+                if not kwargs:
+                    return self._get_signal_map()
+                else:
+                    return self._get_signal_map(**kwargs)
+
+            self.signal_map = self._rerun_read_cycle(fn, 'FITSMap', func)
             # Check if signal_map is a 2D array
             if len(self.signal_map.shape) == 1:
                 self.signal_map = self.signal_map.reshape((1, -1))
