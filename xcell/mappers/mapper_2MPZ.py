@@ -27,7 +27,6 @@ class Mapper2MPZ(MapperBase):
 
         # Angular mask
         self.dndz = None
-        self.signal_map = None
         self.nl_coupled = None
 
     def _get_coords(self):
