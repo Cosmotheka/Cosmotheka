@@ -21,6 +21,7 @@ class MapperCIBLenz(MapperPlanckBase):
         self.beam_info = config.get('beam_info',
                                     [{'type': 'Gaussian',
                                       'FWHM_arcmin': 5.0}])
+        self.map_name += f"_{config.get('band')}"
 
     def _get_custom_beam(self, info):
         fname = info['file']

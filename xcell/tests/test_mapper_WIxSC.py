@@ -23,7 +23,8 @@ def get_config():
 
 
 def cleanup_rerun():
-    for fname in ['nz_WIxSC_bin0.npz', 'WIxSC_rerun_bin0.fits',
+    for fname in ['nz_WIxSC_bin0.npz', 'WIxSC_rerun_coordC_bin0.fits',
+                 'WIxSC_rerun_coordG_bin0.fits'
                   'WIxSC_signal_map_bin0_coordC_ns32.fits.gz',
                   'WIxSC_signal_map_bin0_coordG_ns32.fits.gz',
                   'WIxSC_signal_map_bin0_coordE_ns32.fits.gz',
@@ -143,3 +144,5 @@ def test_get_nl_coupled_data():
     nl = m.get_nl_coupled()
     assert np.all(nl == 0)
     cleanup_rerun()
+
+cleanup_rerun()
