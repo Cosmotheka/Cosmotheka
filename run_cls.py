@@ -1,6 +1,5 @@
 #!/usr/bin/python
 from xcell.cls.data import Data
-from multiprocessing import Pool
 import os
 import time
 import subprocess
@@ -110,7 +109,6 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
 
         with open(sh_name, 'w') as f:
             f.write('#!/bin/bash\n')
-            pyrun = []
             for trs in trs_list:
                 fname = os.path.join(outdir, 'cov', comment + '.npz')
                 recompute = data.data['recompute']['cov'] or data.data['recompute']['cmcm']
