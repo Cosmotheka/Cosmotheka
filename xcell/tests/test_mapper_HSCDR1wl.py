@@ -128,10 +128,10 @@ def test_rerun():
     bn = c['bin_name']
     nside = c['nside']
 
-    for fname in [f'.fits',
+    for fname in ['.fits',
                   f'_signal_map_coordC_ns{nside}.fits.gz',
                   f'_w2s2_coordC_ns{nside}.fits.gz',
-                  f'_nz.npz']:
+                  '_nz.npz']:
         print(os.system(f"ls -l {prerun}"))
         fname_full = os.path.join(prerun, f"HSCDR1wl_{bn}" + fname)
         assert os.path.isfile(fname_full)

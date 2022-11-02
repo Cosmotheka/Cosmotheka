@@ -86,7 +86,7 @@ def test_rerun():
     zbin = config['zbin']
     nside = config['nside']
 
-    for fname in [f'catalog_rerun.fits',
+    for fname in ['catalog_rerun.fits',
                   f'signal_map_shear_coordC_ns{nside}.fits.gz',
                   f'signal_map_PSF_coordC_ns{nside}.fits.gz',
                   f'shear_w2s2_coordC_ns{nside}.fits.gz',
