@@ -27,6 +27,7 @@ class MapperDESY1wl(MapperBase):
         self.rot = self._get_rotator('C')
         self.mode = config.get('mode', 'shear')
         self.zbin = config['zbin']
+        self.map_name += f"_bin{self.zbin}"
         self.npix = hp.nside2npix(self.nside)
         # dn/dz
         self.dndz = None
@@ -93,7 +94,7 @@ class MapperDESY1wl(MapperBase):
         return cat.as_array()
 
     def _load_catalog(self):
-        fn = f'DESY1wl_catalog_rerun_bin{self.zbin}.fits'
+        fn = f'{self.map_name}_catalog_rerun.fits'
         cat = self._rerun_read_cycle(fn, 'FITSTable',
                                      self._load_catalog_from_raw)
         return Table(cat)
@@ -179,7 +180,7 @@ class MapperDESY1wl(MapperBase):
         def get_ellip_maps():
             return self._get_ellipticity_maps(mode=mode)
 
-        fn = '_'.join([f'{self.map_name}_signal_map_{mod}_bin{self.zbin}',
+        fn = '_'.join([f'{self.map_name}_signal_map_{mod}',
                        f'coord{self.coords}',
                        f'ns{self.nside}.fits.gz'])
         d = self._rerun_read_cycle(fn, 'FITSMap', get_ellip_maps,
@@ -220,7 +221,7 @@ class MapperDESY1wl(MapperBase):
                                      rot=self.rot)
             return mp
 
-        fn = '_'.join([f'DESY1wl_{mod}_w2s2_bin{self.zbin}',
+        fn = '_'.join([f'{self.map_name}_{mod}_w2s2',
                        f'coord{self.coords}',
                        f'ns{self.nside}.fits.gz'])
         w2s2 = self._rerun_read_cycle(fn, 'FITSMap', get_w2s2)

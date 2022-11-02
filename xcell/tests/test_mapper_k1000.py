@@ -47,17 +47,17 @@ def test_rerun():
     predir = 'xcell/tests/data/'
     config = get_config()
     config['path_rerun'] = predir
-    prefix = f'{predir}KiDS1000'
+    prefix = f'{predir}KiDS1000_bin0'
     remove_rerun(predir)
     m = xc.mappers.MapperKiDS1000(config)
     m.get_catalog()
-    assert os.path.isfile(f'{prefix}_cat_bin0.fits')
+    assert os.path.isfile(f'{prefix}_cat.fits')
     map1 = np.array(m.get_signal_map())
     mask1 = m.get_mask()
-    assert os.path.isfile(f'{prefix}_signal_shear_bin0_coordC_ns32.fits.gz')
+    assert os.path.isfile(f'{prefix}_signal_map_shear_coordC_ns32.fits.gz')
     assert os.path.isfile(f'{predir}mask_mask_coordC_ns32.fits.gz')
     nl1 = m.get_nl_coupled()
-    assert os.path.isfile(f'{prefix}_w2s2_galaxies_bin0_coordC_ns32.fits.gz')
+    assert os.path.isfile(f'{prefix}_w2s2_galaxies_coordC_ns32.fits.gz')
 
     # Non-exsisting fits files - read from rerun
     config['data_catalog'] = 'whatever'

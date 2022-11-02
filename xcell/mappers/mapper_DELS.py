@@ -38,6 +38,7 @@ class MapperDELS(MapperBase):
 
         self.zbin = config['zbin']
         self.z_edges = bin_edges[self.zbin]
+        self.map_name += f"_bin{self.zbin}"
 
         # Angular mask flag
         self.mskflag = None
@@ -62,7 +63,7 @@ class MapperDELS(MapperBase):
 
     def get_catalog(self):
         if self.cat_data is None:
-            fn = f'{self.map_name}_cat_bin{self.zbin}.fits'
+            fn = f'{self.map_name}_cat.fits'
             self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
                                                    self._get_catalog)
         return self.cat_data
@@ -104,7 +105,7 @@ class MapperDELS(MapperBase):
 
     def get_nz(self, dz=0):
         if self.dndz is None:
-            fn = f'{self.map_name}_dndz_bin{self.zbin}.npz'
+            fn = f'{self.map_name}_dndz.npz'
             self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz)
 

@@ -23,11 +23,11 @@ def get_config():
 
 
 def cleanup_rerun():
-    for fname in ['nz_WIxSC_bin0.npz', 'WIxSC_rerun_coordC_bin0.fits',
-                  'WIxSC_rerun_coordG_bin0.fits'
-                  'WIxSC_signal_map_bin0_coordC_ns32.fits.gz',
-                  'WIxSC_signal_map_bin0_coordG_ns32.fits.gz',
-                  'WIxSC_signal_map_bin0_coordE_ns32.fits.gz',
+    for fname in ['WIxSC_bin0_nz.npz', 'WIxSC_bin0_rerun_coordC.fits',
+                  'WIxSC_bin0_rerun_coordG_bin0.fits'
+                  'WIxSC_bin0_signal_map_coordC_ns32.fits.gz',
+                  'WIxSC_bin0_signal_map_coordG_ns32.fits.gz',
+                  'WIxSC_bin0_signal_map_coordE_ns32.fits.gz',
                   'mask_mask_coordC_ns32.fits.gz',
                   'mask_mask_coordG_ns32.fits.gz']:
         if os.path.isfile(fname):
@@ -44,8 +44,8 @@ def test_smoke():
     cat = m.get_catalog()
     assert len(m.cat_data) == hp.nside2npix(32)
     # Check that the rerun catalog has been created
-    assert os.path.isfile('./WIxSC_rerun_coordC_bin0.fits')
-    t = Table.read('./WIxSC_rerun_coordC_bin0.fits')
+    assert os.path.isfile('./WIxSC_bin0_rerun_coordC.fits')
+    t = Table.read('./WIxSC_bin0_rerun_coordC.fits')
     assert (cat['RA'] == t['RA']).all()
 
 
@@ -64,7 +64,7 @@ def test_get_nz():
     assert np.all(np.fabs((nz-h)/np.amax(nz)) < 1E-3)
 
     # Read from file and compare again
-    assert os.path.isfile('nz_WIxSC_bin0.npz')
+    assert os.path.isfile('WIxSC_bin0_nz.npz')
     m = get_mapper()
     m.get_catalog()
     z2, nz2 = m.get_nz()
@@ -86,7 +86,7 @@ def test_get_signal_map(coord):
     assert d.shape == (1, hp.nside2npix(m.nside))
     assert np.all(np.fabs(d) < 1E-15)
 
-    fn = f'WIxSC_signal_map_bin0_coord{coord}_ns32.fits.gz'
+    fn = f'WIxSC_bin0_signal_map_coord{coord}_ns32.fits.gz'
     assert np.all(d == hp.read_map(fn))
     cleanup_rerun()
 

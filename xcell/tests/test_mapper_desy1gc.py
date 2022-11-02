@@ -59,7 +59,7 @@ def test_get_signal_map():
     assert np.all(np.fabs(d) < 1E-5)
 
     # Test rerun
-    fn = 'xcell/tests/data/DESY1gc_signal_map_bin2_coordC_ns32.fits.gz'
+    fn = 'xcell/tests/data/DESY1gc_bin2_signal_map_coordC_ns32.fits.gz'
     assert np.all(d == hp.read_map(fn))
     os.remove(fn)
 

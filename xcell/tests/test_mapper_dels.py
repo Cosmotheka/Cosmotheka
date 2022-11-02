@@ -30,20 +30,20 @@ def test_rerun():
     conf['path_rerun'] = 'xcell/tests/data/'
     m = xc.mappers.MapperDELS(conf)
     cat = m.get_catalog()
-    fn = 'xcell/tests/data/DELS_cat_bin0.fits'
+    fn = 'xcell/tests/data/DELS_bin0_cat.fits'
     catb = Table.read(fn)
     assert len(catb) == len(cat)
     os.remove(fn)
 
     dndz = m.get_nz()
-    fn = 'xcell/tests/data/DELS_dndz_bin0.npz'
+    fn = 'xcell/tests/data/DELS_bin0_dndz.npz'
     d = np.load(fn)
     assert (dndz[0] == d['z_mid'][d['z_mid'] >= 0]).all()
     assert (dndz[1] == d['nz'][d['z_mid'] >= 0]).all()
     os.remove(fn)
 
     d = m.get_signal_map(apply_galactic_correction=False)
-    fn = 'xcell/tests/data/DELS_signal_map_bin0_' + \
+    fn = 'xcell/tests/data/DELS_bin0_signal_map_' + \
          'apply_galactic_correctionFalse_coordC_ns32.fits.gz'
     assert np.all(d == hp.read_map(fn))
     os.remove(fn)

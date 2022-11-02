@@ -29,6 +29,7 @@ class MapperKiDS1000(MapperBase):
                                     [0.9, 1.2]])
         self.npix = hp.nside2npix(self.nside)
         self.zbin = int(config['zbin'])
+        self.map_name += f"_bin{self.zbin}"
         self.z_edges = self.zbin_edges[self.zbin]
         # Multiplicative bias
         # Values from Table 1 of 2007.01845
@@ -57,7 +58,7 @@ class MapperKiDS1000(MapperBase):
 
     def get_catalog(self):
         if self.cat_data is None:
-            fn = f'{self.map_name}_cat_bin{self.zbin}.fits'
+            fn = f'{self.map_name}_cat.fits'
             self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
                                                    self._load_catalog,
                                                    saved_by_func=True)
@@ -74,7 +75,9 @@ class MapperKiDS1000(MapperBase):
             self._remove_additive_bias(cat)
             self._remove_multiplicative_bias(cat, ibin)
             cat = cat.as_array()
-            fn = f'{self.map_name}_cat_bin{ibin}.fits'
+            map_name = self.map_name.split("_")[0] + f"_bin{ibin}"
+            fn = f'{map_name}_cat.fits'
+            print(fn)
             save_rerun_data(self, fn, 'FITSTable', cat)
             if ibin == self.zbin:
                 cat_out = cat
@@ -149,7 +152,7 @@ class MapperKiDS1000(MapperBase):
             return self.signal_map
 
         # This will only be computed if self.maps['mod'] is None
-        fn = '_'.join([f'{self.map_name}_signal_{mod}_bin{self.zbin}',
+        fn = '_'.join([f'{self.map_name}_signal_map_{mod}',
                        f'coord{self.coords}',
                        f'ns{self.nside}.fits.gz'])
         d = self._rerun_read_cycle(fn, 'FITSMap',
@@ -188,7 +191,7 @@ class MapperKiDS1000(MapperBase):
                                        rot=self.rot)
             return w2s2
 
-        fn = '_'.join([f'{self.map_name}_w2s2_{kind}_bin{self.zbin}',
+        fn = '_'.join([f'{self.map_name}_w2s2_{kind}',
                        f'coord{self.coords}',
                        f'ns{self.nside}.fits.gz'])
         self.w2s2s[mod] = self._rerun_read_cycle(fn, 'FITSMap', get_w2s2)

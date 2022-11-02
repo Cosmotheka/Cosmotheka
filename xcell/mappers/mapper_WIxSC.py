@@ -29,9 +29,8 @@ class MapperWIxSC(MapperBase):
 
         self.cat_data = None
         self.npix = hp.nside2npix(self.nside)
-        # TODO: I think this should be zbin since you're only passing a number
-        # Keeping self.bn for backward compatibility
-        self.zbin = self.bn = self.config['bin_name']
+        self.zbin = self.config['bin_name']
+        self.map_name += f"_bin{self.zbin}"
 
         # Angular mask
         self.dndz = None
@@ -76,7 +75,7 @@ class MapperWIxSC(MapperBase):
 
     def get_catalog(self):
         if self.cat_data is None:
-            fn = 'WIxSC_rerun_coord'+self.coords + '_bin' + self.bn + '.fits'
+            fn = f'{self.map_name}_rerun_coord{self.coords}.fits'
             self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
                                                    self._get_catalog)
         return self.cat_data
@@ -124,7 +123,7 @@ class MapperWIxSC(MapperBase):
 
     def get_nz(self, dz=0, return_jk_error=False):
         if self.dndz is None:
-            fn = 'nz_WIxSC_bin' + self.bn + '.npz'
+            fn = f'{self.map_name}_nz.npz'
             self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz, return_jk_error=return_jk_error)
 

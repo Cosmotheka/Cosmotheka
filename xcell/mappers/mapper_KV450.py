@@ -39,6 +39,7 @@ class MapperKV450(MapperBase):
                                     [0.9, 1.2]])
         self.npix = hp.nside2npix(self.nside)
         self.zbin = int(config['zbin'])
+        self.map_name += f"_bin{self.zbin}"
         self.z_edges = self.zbin_edges[self.zbin]
         # Multiplicative bias
         # Values from Table 2 of 1812.06076 (KV450 cosmo paper)
@@ -62,7 +63,7 @@ class MapperKV450(MapperBase):
 
     def get_catalog(self):
         if self.cat_data is None:
-            fn = f'{self.map_name}_cat_bin{self.zbin}.fits'
+            fn = f'{self.map_name}_cat.fits'
             self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
                                                    self._load_catalog,
                                                    saved_by_func=True)
@@ -86,7 +87,8 @@ class MapperKV450(MapperBase):
 
         for ibin, cat in enumerate(cat_bins):
             self._remove_multiplicative_bias(cat, ibin)
-            fn = f'{self.map_name}_cat_bin{ibin}.fits'
+            map_name = self.map_name.split('_')[0] + f"_bin{ibin}"
+            fn = f'{map_name}_cat.fits'
             save_rerun_data(self, fn, 'FITSTable', cat.as_array())
         return cat_bins[self.zbin].as_array()
 
@@ -158,7 +160,7 @@ class MapperKV450(MapperBase):
             self.signal_map = self.maps[mod]
             return self.signal_map
 
-        fn = '_'.join([f'{self.map_name}_signal_map_{mod}_bin{self.zbin}',
+        fn = '_'.join([f'{self.map_name}_signal_map_{mod}',
                        f'coord{self.coords}',
                        f'ns{self.nside}.fits.gz'])
         d = self._rerun_read_cycle(fn, 'FITSMap',
@@ -197,7 +199,7 @@ class MapperKV450(MapperBase):
                                        rot=self.rot)
             return w2s2
 
-        fn = '_'.join([f'{self.map_name}_w2s2_{kind}_bin{self.zbin}',
+        fn = '_'.join([f'{self.map_name}_w2s2_{kind}',
                        f'coord{self.coords}',
                        f'ns{self.nside}.fits.gz'])
         self.w2s2s[mod] = self._rerun_read_cycle(fn, 'FITSMap',

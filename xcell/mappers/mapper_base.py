@@ -28,8 +28,8 @@ class MapperBase(object):
         self.coords = config['coords']
         self.mask = None
         self.signal_map = None
-        # Defined here for the signal_map file name
-        self.zbin = None
+        # dndz needs to be defined for _get_shifted_nz. We should consider
+        # creating a subclass for Nz tracers, as in CCL.
         self.dndz = None
 
     def _get_rotator(self, coord_default):
@@ -44,9 +44,7 @@ class MapperBase(object):
 
     def get_signal_map(self, **kwargs):
         if self.signal_map is None:
-            fn = '_'.join([f'{self.map_name}_signal_map' + (f'_bin{self.zbin}'
-                                                            if self.zbin is not
-                                                            None else ''),
+            fn = '_'.join([f'{self.map_name}_signal_map',
                            *[f'{k}{v}' for k, v in kwargs.items()],
                            f'coord{self.coords}',
                            f'ns{self.nside}.fits.gz'])

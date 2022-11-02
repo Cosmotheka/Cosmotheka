@@ -27,6 +27,9 @@ class MapperHSCDR1wl(MapperBase):
         self.icut = config.get('depth_cut', 24.5)
         self.z_edges = config['z_edges']
         self.bn = self.config['bin_name']
+        # TODO: Consider using zbin instead of bin_name and let the user only
+        # input the zbin number
+        self.map_name += f"_{self.bn}"
         self.w_name = 'ishape_hsm_regauss_derived_shape_weight'
         self.npix = hp.nside2npix(self.nside)
 
@@ -86,7 +89,7 @@ class MapperHSCDR1wl(MapperBase):
 
     def get_catalog(self):
         if self.cat is None:
-            fn = f'{self.map_name}_{self.bn}.fits'
+            fn = f'{self.map_name}.fits'
             self.cat = self._rerun_read_cycle(fn, 'FITSTable',
                                               self._get_catalog_from_raw)
         return self.cat
@@ -154,7 +157,7 @@ class MapperHSCDR1wl(MapperBase):
             cats.append(c)
         return vstack(cats)
 
-    def _get_ellip_maps(self):
+    def _get_signal_map(self):
         print(f'Computing bin {self.bn} signal map')
         cat = self.get_catalog()
         we1, we2 = get_map_from_points(cat, self.nside,
@@ -168,21 +171,6 @@ class MapperHSCDR1wl(MapperBase):
         we1[goodpix] /= mask[goodpix]
         we2[goodpix] /= mask[goodpix]
         return we1, we2
-
-    def get_signal_map(self):
-        # We overwrite the MapperBase method since the bin names can be
-        # anything (because the z_eges can also be chosen)
-        if self.signal_map is None:
-            # TODO: We should at least update the name to signal_map not only
-            # signal.
-            fn = '_'.join([f'{self.map_name}_signal_{self.bn}',
-                           f'coord{self.coords}',
-                           f'ns{self.nside}.fits.gz'])
-            d = self._rerun_read_cycle(fn, 'FITSMap',
-                                       self._get_ellip_maps,
-                                       section=[0, 1])
-            self.signal_map = np.array([d[0], d[1]])
-        return self.signal_map
 
     def _get_mask(self):
         print(f'Computing bin {self.bn} mask')
@@ -208,7 +196,7 @@ class MapperHSCDR1wl(MapperBase):
         if self.nl_coupled is not None:
             return self.nl_coupled
 
-        fn = '_'.join([f'{self.map_name}_w2s2_{self.bn}',
+        fn = '_'.join([f'{self.map_name}_w2s2',
                        f'coord{self.coords}',
                        f'ns{self.nside}.fits.gz'])
         w2s2 = self._rerun_read_cycle(fn, 'FITSMap', self._get_w2s2)
@@ -246,7 +234,7 @@ class MapperHSCDR1wl(MapperBase):
 
     def get_nz(self, dz=0):
         if self.dndz is None:
-            fname = f'{self.map_name}_nz_{self.bn}.npz'
+            fname = f'{self.map_name}_nz.npz'
             self.dndz = self._rerun_read_cycle(fname, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz)
 

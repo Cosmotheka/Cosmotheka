@@ -27,7 +27,6 @@ class MapperCatWISE(MapperBase):
         # Angular mask
         self.delta_map = None
         self.nl_coupled = None
-        self.dndz = None
         self.rot = self._get_rotator('C')
 
     # CatWISE catalog
