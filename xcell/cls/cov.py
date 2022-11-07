@@ -9,8 +9,29 @@ import time
 
 
 class Cov():
+    """
+    Covariance class. This is in charge of computing the covariance block for
+    four given tracers.
+    """
     def __init__(self, data, trA1, trA2, trB1, trB2,
                  ignore_existing_yml=False):
+        """
+        Parameters
+        ----------
+        data: dict
+            The configuration dictionary (e.g. a read configuration yaml file).
+        trA1: str
+            First tracer of the first Cell
+        trA2: str
+            Second tracer of the first Cell
+        trB1: str
+            First tracer of the second Cell
+        trB2: str
+            Second tracer of the second Cell
+        ignore_existing_yml: bool
+            If True, ignore existing yaml in the output directory and use the
+            input configuration. Otherwise, use the existing yaml.
+        """
         self.data = Data(data=data, ignore_existing_yml=ignore_existing_yml)
         self.tmat = self.data.get_tracer_matrix()
         self.outdir = self.get_outdir()
@@ -48,6 +69,18 @@ class Cov():
         self.do_NG = self.data.data['cov'].get('non_Gaussian', False)
 
     def _load_Cls(self):
+        """
+        Return the Cells needed to compute the covariance block
+
+        Return
+        ------
+        cl_dic: dict
+            Dictionary of the data Cell needed. The keys are tuples of pair of
+            tracers.
+        clfid_dic: dict
+            Dictionary of the fiducial Cell needed. The keys are tuples of pair
+            of tracers.
+        """
         data = self.data.data
         trs_comb = [(self.trA1, self.trA2),
                     (self.trB1, self.trB2),
@@ -86,11 +119,31 @@ class Cov():
         return cl_dic, clfid_dic
 
     def get_outdir(self):
+        """
+        Return the output directory for the covariance blocks and workspaces
+
+        Return
+        ------
+        outdir: str
+            Path to the output directory for the covariance blocks and
+            workspaces
+        """
         root = self.data.data['output']
         outdir = os.path.join(root, 'cov')
         return outdir
 
     def get_covariance_workspace(self):
+        """
+        Return the covariance workspace needed to compute the Gaussian
+        covariance block. If 'recompute' is not set in the configuration file,
+        it will read it from the output directory if found.
+
+        Return
+        ------
+        cw: pymaster.NmtCovarianceWorkspace
+            Covariance workspace to compute the Gaussian covariance block
+
+        """
         mask1, mask2 = self.clA1A2.get_masks_names()
         mask3, mask4 = self.clB1B2.get_masks_names()
         fname = os.path.join(self.outdir,
@@ -117,6 +170,30 @@ class Cov():
         return cw
 
     def _get_cl_for_cov(self, clab, clab_fid, ma, mb):
+        """
+        Return the angular power spectra to use in the computation of the
+        covariance.
+
+        Parameters
+        ----------
+        clab: xcell.cls.Cl
+            Instance of the Cl class for fields `a1 and `b`.
+        clab_fid: xcell.cls.ClFid or xcell.cls.Cl
+            Instance of the ClFid class for fields `a1 and `b`. If it is not an
+            instance of ClFid, the data Cell will be used for the covariance.
+        ma: numpy.array
+            Mask of the field a
+        ma: numpy.array
+            Mask of the field b
+
+        Return
+        ------
+        clab: numpy.array
+            Array of angular power spectra between fields `a` and `b` to use in
+            the computation of the covariance. Its shape will be (ncls,
+            3*nside).
+
+        """
         mean_mamb = np.mean(ma * mb)
         if not mean_mamb:
             cl_cp = np.zeros((clab.get_n_cls(), 3*clab.nside))
@@ -134,6 +211,47 @@ class Cov():
 
     def _get_covariance_spin0_approx(self, cw,  s_a1, s_a2, s_b1, s_b2, cla1b1,
                                      cla1b2, cla2b1, cla2b2, wa, wb):
+        """
+        Return the block Gaussian covariance under the spin-0 approximation.
+
+        Parameters
+        ----------
+        cw: pymaster.NmtCovarianceWorkspace
+            Covariance workspace to compute the Gaussian covariance block
+        s_a1: int
+            Spin of the field `a1`
+        s_a2: int
+            Spin of the field `a2`
+        s_b1: int
+            Spin of the field `b1`
+        s_b2: int
+            Spin of the field `b2`
+        cla1b1: numpy.array
+            Array of angular power spectra between fields `a1` and `b1` to use
+            in the computation of the covariance. Its shape has to be (ncls,
+            3*nside).
+        cla1b2: numpy.array
+            Array of angular power spectra between fields `a1` and `b2` to use
+            in the computation of the covariance. Its shape has to be (ncls,
+            3*nside).
+        cla2b1: numpy.array
+            Array of angular power spectra between fields `a2` and `b1` to use
+            in the computation of the covariance. Its shape has to be (ncls,
+            3*nside).
+        cla2b2: numpy.array
+            Array of angular power spectra between fields `a2` and `b2` to use
+            in the computation of the covariance. Its shape has to be (ncls,
+            3*nside).
+        wa: pymaster.NmtWorkspace
+            Workspace for the Cell between the fields a1 and a2
+        wb: pymaster.NmtWorkspace
+            Workspace for the Cell between the fields b1 and b2
+
+        Return
+        ------
+        cov: numpy.array
+            Block covariance
+        """
         nbpw_a = wa.wsp.bin.n_bands
         nbpw_b = wb.wsp.bin.n_bands
         nclsa = np.max([1, s_a1 + s_a2])
@@ -399,6 +517,14 @@ class Cov():
         return cov.reshape([nclsa*nbpw_a, nclsb*nbpw_b])
 
     def get_covariance(self):
+        """
+        Return the block covariance with all requested contributions.
+
+        Return
+        ------
+        cov: numpy.array
+            Block covariance
+        """
         fname = os.path.join(self.outdir,
                              'cov_{}_{}_{}_{}.npz'.format(self.trA1,
                                                           self.trA2,
@@ -527,6 +653,30 @@ class Cov():
 
     def get_covariance_ng_halomodel(self, s_a1, s_a2, s_b1, s_b2,
                                     fsky, kind='1h'):
+        """
+        Return the block non-Guassian covariance under the halo model.
+
+        Parameters
+        ----------
+        s_a1: int
+            Spin of the field `a1`
+        s_a2: int
+            Spin of the field `a2`
+        s_b1: int
+            Spin of the field `b1`
+        s_b2: int
+            Spin of the field `b2`
+        fsky: float
+            Fraction of the observed sky
+        kind: str
+            Halo model term: '1h', '2h', '3h' or '4h' for the 1-, 2-, 3- and
+            4-halo terms.
+
+        Return
+        ------
+        cov: numpy.array
+            Block covariance
+        """
         ellA = self.clA1A2.b.get_effective_ells()
         ellB = self.clB1B2.b.get_effective_ells()
         nclsa = np.max([1, s_a1 + s_a2])
@@ -560,6 +710,14 @@ class Cov():
         return cov.reshape([ellA.size*nclsa, ellB.size*nclsb])
 
     def get_covariance_nl_marg(self):
+        """
+        Return the analytically marginalized noise block covariance.
+
+        Return
+        ------
+        cov: numpy.array
+            Block covariance
+        """
         _, nl = self.clA1A2.get_ell_nl()
         nl = nl.flatten()
         if (self.trA1 == self.trA2 == self.trB1 == self.trB2):
@@ -570,6 +728,15 @@ class Cov():
         return cov
 
     def get_covariance_m_marg(self):
+        """
+        Return the analytically marginalized multiplicative bias block
+        covariance.
+
+        Return
+        ------
+        cov: numpy.array
+            Block covariance
+        """
         _, cla1a2 = self.clfid_A1A2.get_ell_cl()
         _, clb1b2 = self.clfid_B1B2.get_ell_cl()
         # Window convolution only needed if computed from theory
