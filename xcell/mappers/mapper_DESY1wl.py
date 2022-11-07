@@ -36,7 +36,6 @@ class MapperDESY1wl(MapperBase):
         # get items for calibration
         self.Rs = None
 
-        self.signal_map = None
         self.maps = {'PSF': None, 'shear': None}
 
         self.nl_coupled = None

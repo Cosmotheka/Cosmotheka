@@ -25,7 +25,6 @@ class MapperNVSS(MapperBase):
 
         self.npix = hp.nside2npix(self.nside)
         # Angular mask
-        self.signal_map = None
         self.nl_coupled = None
         self.dndz = None
         self.cat_redshift = None

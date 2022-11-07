@@ -42,7 +42,6 @@ class MapperKiDS1000(MapperBase):
         self.dndz = None
         self.sel = {'galaxies': 1, 'stars': 0}
 
-        self.signal_map = None
         self.maps = {'PSF': None, 'shear': None, 'stars': None}
 
         self.masks = {'stars': None, 'galaxies': None}

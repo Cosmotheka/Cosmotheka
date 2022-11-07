@@ -44,7 +44,6 @@ class MapperROSATXray(MapperBase):
         self.expmap = None
         self.pholist = None
         # signal_map is a map of the countrate
-        self.signal_map = None
         self.nl_coupled = None
 
     def get_pholist(self):
