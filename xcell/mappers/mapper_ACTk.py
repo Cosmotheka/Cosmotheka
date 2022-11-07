@@ -35,6 +35,10 @@ class MapperACTk(MapperACTBase):
         msk = rotate_mask(msk, self.rot)
         return msk
 
+    def get_nl_coupled(self):
+        # raise NotImplementedError("No noise model for the ACT maps")
+        return np.zeros([1, 3*self.nside])
+
     def get_dtype(self):
         return 'cmb_convergence'
 

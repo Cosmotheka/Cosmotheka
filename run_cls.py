@@ -102,7 +102,8 @@ def launch_cls(data, queue, njobs, nc, mem, fiducial=False, onlogin=False, skip=
         time.sleep(1)
 
 
-def launch_cov(data, queue, njobs, nc, mem, onlogin=False, skip=[]):
+def launch_cov(data, queue, njobs, nc, mem, onlogin=False, skip=[],
+               nbatch=10000, reuse_jobs_list=True):
     #######
     #
     cov_tracers = data.get_cov_trs_names(wsp=True)
@@ -115,25 +116,38 @@ def launch_cov(data, queue, njobs, nc, mem, onlogin=False, skip=[]):
     else:
         qjobs = ''
 
-    c = 0
-    for trs in cov_tracers:
-        comment = 'cov_{}_{}_{}_{}'.format(*trs)
-        if c >= njobs:
-            break
-        elif comment in qjobs:
-            continue
-        elif check_skip(data, skip, trs):
-            continue
-        fname = os.path.join(outdir, 'cov', comment + '.npz')
+    # First, compile a list of all missing jobs
+    job_list = "cov_job_list.txt"
+    if not reuse_jobs_list:
+        ncovs = 0
         recompute = data.data['recompute']['cov'] or data.data['recompute']['cmcm']
-        if os.path.isfile(fname) and (not recompute):
-            continue
+        fo = open(job_list, "w")
+        for trs in cov_tracers:
+            t1, t2, t3 ,t4 = trs
+            comment = 'cov_{}_{}_{}_{}'.format(*trs)
+            fname = os.path.join(outdir, 'cov', comment + '.npz')
+            if os.path.isfile(fname) and (not recompute):
+                continue
+            fo.write(f"{t1} {t2} {t3} {t4}\n")
+            ncovs += 1
+        fo.close()
+    else:
+        ncovs = sum(1 for line in open(job_list, 'r'))
+
+    # Now, launch jobs in batches
+    print(ncovs)
+    for c in range(njobs):
+        linefirst = c*nbatch
+        linelast = min((c+1)*nbatch-1, ncovs-1)
+        print(c, linefirst, linelast)
+        if linefirst > ncovs:
+            break
+        job = f"run_cov_job.py {job_list} {linefirst} {linelast} {args.INPUT}"
+        comment = f"cov_job_{linefirst}_{linelast}"
         pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir)
-        pyrun = '-m xcell.cls.cov {} {} {} {} {}'.format(args.INPUT, *trs)
-        print(pyexec + " " + pyrun)
-        os.system(pyexec + " " + pyrun)
-        c += 1
-        time.sleep(1)
+        print(pyexec)
+        print(job)
+        print(pyexec + " " + job)
 
 
 def launch_to_sacc(data, name, use, queue, nc, mem, onlogin=False):
@@ -165,6 +179,9 @@ if __name__ == "__main__":
     parser.add_argument('-m', '--mem', type=int, default=7., help='Memory (in GB) per core to use')
     parser.add_argument('-q', '--queue', type=str, default='berg', help='SLURM queue to use')
     parser.add_argument('-j', '--njobs', type=int, default=100000, help='Maximum number of jobs to launch')
+    parser.add_argument('--nbatch_cov', type=int, default=100, help='Number of covariance jobs per batch')
+    parser.add_argument('--reuse_cov_jobs_list', default=False, action='store_true',
+                        help='Set if you want to reuse a previous covariance job list.')
     parser.add_argument('--to_sacc_name', type=str, default='cls_cov.fits', help='Sacc file name')
     parser.add_argument('--to_sacc_use_nl', default=False, action='store_true',
                         help='Set if you want to use nl and cov extra (if present) instead of cls and covG ')
@@ -187,7 +204,8 @@ if __name__ == "__main__":
     if args.compute == 'cls':
         launch_cls(data, queue, njobs, args.nc, args.mem, args.cls_fiducial, onlogin, args.skip)
     elif args.compute == 'cov':
-        launch_cov(data, queue, njobs, args.nc, args.mem, onlogin, args.skip)
+        launch_cov(data, queue, njobs, args.nc, args.mem, onlogin, args.skip,
+                   args.nbatch_cov, args.reuse_cov_jobs_list)
     elif args.compute == 'to_sacc':
         if args.to_sacc_use_nl and args.to_sacc_use_fiducial:
             raise ValueError(
