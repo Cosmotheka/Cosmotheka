@@ -54,7 +54,7 @@ def test_get_signal_map(cls):
     mm = m.get_signal_map()[0]
     assert (len(mm)/12)**(1/2) == 32
     assert (mb == mm).all()
-    fn = 'xcell/tests/data/ACT_test_signal_coordC_ns32.fits.gz'
+    fn = 'xcell/tests/data/ACT_test_signal_map_coordC_ns32.fits.gz'
     mrerun = hp.read_map(fn)
     assert (mrerun == mb).all()
     os.remove(fn)

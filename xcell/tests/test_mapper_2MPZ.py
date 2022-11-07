@@ -18,7 +18,9 @@ def get_config():
 def cleanup_rerun():
     for fname in ['nz_2MPZ.npz',
                   'mask_mask_coordC_ns32.fits.gz',
-                  'mask_mask_coordG_ns32.fits.gz']:
+                  'mask_mask_coordG_ns32.fits.gz',
+                  '2MPZ_signal_map_coordC_ns32.fits.gz',
+                  '2MPZ_signal_map_coordG_ns32.fits.gz']:
         if os.path.isfile(fname):
             os.remove(fname)
 
