@@ -50,7 +50,6 @@ class MapperKV450(MapperBase):
         self.w2s2 = None
         self.w2s2s = {'PSF': None, 'shear': None, 'stars': None}
 
-        self.dndz = None
         self.sel = {'galaxies': 1, 'stars': 0}
 
         self.maps = {'PSF': None, 'shear': None, 'stars': None}

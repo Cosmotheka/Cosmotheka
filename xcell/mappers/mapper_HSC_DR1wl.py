@@ -34,7 +34,6 @@ class MapperHSCDR1wl(MapperBase):
         self.npix = hp.nside2npix(self.nside)
 
         self.nl_coupled = None
-        self.dndz = None
         self.cat = None
 
     def _get_catalog_from_raw(self):

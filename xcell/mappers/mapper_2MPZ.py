@@ -26,7 +26,6 @@ class Mapper2MPZ(MapperBase):
         self.npix = hp.nside2npix(self.nside)
 
         # Angular mask
-        self.dndz = None
         self.nl_coupled = None
 
     def _get_coords(self):

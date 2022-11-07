@@ -42,7 +42,6 @@ class MapperDELS(MapperBase):
 
         # Angular mask flag
         self.mskflag = None
-        self.dndz = None
         self.delta_map = None
         self.nl_coupled = None
         self.comp_map = None

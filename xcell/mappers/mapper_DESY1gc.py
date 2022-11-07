@@ -36,7 +36,6 @@ class MapperDESY1gc(MapperBase):
         self.map_name += f"_bin{self.zbin}"
         self.z_edges = bin_edges[self.zbin]
         self.w = None
-        self.dndz = None
         self.nl_coupled = None
 
     def get_catalog(self):

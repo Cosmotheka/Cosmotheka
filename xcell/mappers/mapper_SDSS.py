@@ -23,7 +23,6 @@ class MapperSDSS(MapperBase):
         self.nside_mask = config.get('nside_mask', 512)
         self.ws = {'data': None, 'random': None}
         self.alpha = None
-        self.dndz = None
         self.nl_coupled = None
         self.nside_nl_threshold = config.get('nside_nl_threshold',
                                              4096)

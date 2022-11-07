@@ -30,7 +30,6 @@ class MapperDESY1wl(MapperBase):
         self.map_name += f"_bin{self.zbin}"
         self.npix = hp.nside2npix(self.nside)
         # dn/dz
-        self.dndz = None
         # load cat
         self.cat_data = None
         # get items for calibration

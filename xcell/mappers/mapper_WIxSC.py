@@ -33,7 +33,6 @@ class MapperWIxSC(MapperBase):
         self.map_name += f"_bin{self.zbin}"
 
         # Angular mask
-        self.dndz = None
         self.stars = None
         self.nl_coupled = None
         self.nside_nl_threshold = config.get('nside_nl_threshold',

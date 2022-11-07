@@ -60,7 +60,6 @@ class MapperDummy(MapperBase):
         self.cls_cov = None
         self.nl_coupled = None
         self.mask = None
-        self.dndz = None
         self.cl = None
         self.dec0 = self.config.get('dec0', 0.)
         self.ra0 = self.config.get('ra0', 0.)
