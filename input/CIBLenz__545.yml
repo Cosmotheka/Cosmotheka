@@ -1,4 +1,5 @@
 mapper_class: MapperCIBLenz
+band: 545
 file_map: /mnt/extraspace/damonge/Datasets/CIB_Lenz/545/2.5e+20_gp20/cib_fullmission.hpx.fits
 file_hm1: /mnt/extraspace/damonge/Datasets/CIB_Lenz/545/2.5e+20_gp20/cib_evenring.hpx.fits
 file_hm2: /mnt/extraspace/damonge/Datasets/CIB_Lenz/545/2.5e+20_gp20/cib_oddring.hpx.fits

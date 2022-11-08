@@ -9,6 +9,8 @@ import os
 
 
 class MapperWIxSC(MapperBase):
+    map_name = 'WIxSC'
+
     def __init__(self, config):
         """
         config - dict
@@ -27,12 +29,11 @@ class MapperWIxSC(MapperBase):
 
         self.cat_data = None
         self.npix = hp.nside2npix(self.nside)
-        self.bn = self.config['bin_name']
+        self.zbin = self.config['bin_name']
+        self.map_name += f"_bin{self.zbin}"
 
         # Angular mask
-        self.dndz = None
         self.stars = None
-        self.delta_map = None
         self.nl_coupled = None
         self.nside_nl_threshold = config.get('nside_nl_threshold',
                                              4096)
@@ -73,7 +74,7 @@ class MapperWIxSC(MapperBase):
 
     def get_catalog(self):
         if self.cat_data is None:
-            fn = 'WIxSC_rerun_coord'+self.coords + '_bin' + self.bn + '.fits'
+            fn = f'{self.map_name}_rerun_coord{self.coords}.fits'
             self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
                                                    self._get_catalog)
         return self.cat_data
@@ -121,30 +122,28 @@ class MapperWIxSC(MapperBase):
 
     def get_nz(self, dz=0, return_jk_error=False):
         if self.dndz is None:
-            fn = 'nz_WIxSC_bin' + self.bn + '.npz'
+            fn = f'{self.map_name}_nz.npz'
             self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz, return_jk_error=return_jk_error)
 
-    def get_signal_map(self):
-        if self.delta_map is None:
-            d = np.zeros(self.npix)
-            self.cat_data = self.get_catalog()
-            self.mask = self.get_mask()
-            self.stars = self._get_stars()
-            nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            ra_name=self.ra_name,
-                                            dec_name=self.dec_name,
-                                            in_radians=self.in_rad)
-            mean_n = self._get_mean_n(nmap_data)
-            goodpix = self.mask > 0
-            # Division by mask not really necessary, since it's binary.
-            d[goodpix] = nmap_data[goodpix]/(mean_n*self.mask[goodpix])-1
-            if self.config.get('apply_galactic_correction', True):
-                gcorr = self._get_galactic_correction(d, self.stars,
-                                                      self.mask)
-                d -= gcorr['delta_map']
-            self.delta_map = np.array([d])
-        return self.delta_map
+    def _get_signal_map(self):
+        d = np.zeros(self.npix)
+        cat_data = self.get_catalog()
+        mask = self.get_mask()
+        stars = self._get_stars()
+        nmap_data = get_map_from_points(cat_data, self.nside,
+                                        ra_name=self.ra_name,
+                                        dec_name=self.dec_name,
+                                        in_radians=self.in_rad)
+        mean_n = self._get_mean_n(nmap_data)
+        goodpix = mask > 0
+        # Division by mask not really necessary, since it's binary.
+        d[goodpix] = nmap_data[goodpix]/(mean_n*mask[goodpix])-1
+        if self.config.get('apply_galactic_correction', True):
+            gcorr = self._get_galactic_correction(d, stars, mask)
+            d -= gcorr['delta_map']
+        signal_map = np.array([d])
+        return signal_map
 
     def _get_mask(self):
         # We will assume the mask has been provided in the right

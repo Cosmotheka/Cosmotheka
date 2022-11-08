@@ -62,11 +62,16 @@ def test_mask_sanity():
 
 def test_map_sanity():
     c = get_config()
+    c['path_rerun'] = 'xcell/tests/data/'
     make_rosat_data(e0=1., ef=1.5)
     m = xc.mappers.MapperROSATXray(c)
     mp = m.get_signal_map()[0]
     apix = hp.nside2pixarea(m.nside)
     assert np.all(np.fabs(mp - 1./200./apix) < 1E-5)
+
+    fn = 'xcell/tests/data/ROSATXray_signal_map_coordC_ns32.fits.gz'
+    assert np.all(mp == hp.read_map(fn))
+    os.remove(fn)
     clean_rosat_data()
 
 

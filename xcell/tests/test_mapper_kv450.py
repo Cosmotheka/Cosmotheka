@@ -30,16 +30,16 @@ def test_rerun():
     config = get_config()
     config['path_rerun'] = 'xcell/tests/data/'
     ifile = 0
-    while os.path.isfile(f'xcell/tests/data/KV450_cat_bin{ifile}.fits'):
-        os.remove(f'xcell/tests/data/KV450_cat_bin{ifile}.fits')
+    while os.path.isfile(f'xcell/tests/data/KV450_bin{ifile}_cat.fits'):
+        os.remove(f'xcell/tests/data/KV450_bin{ifile}_cat.fits')
         ifile += 1
     m = xc.mappers.MapperKV450(config)
     m.get_catalog()
-    assert os.path.isfile('xcell/tests/data/KV450_cat_bin0.fits')
+    assert os.path.isfile('xcell/tests/data/KV450_bin0_cat.fits')
     ifile = 0
     # Cleanup
-    while os.path.isfile(f'xcell/tests/data/KV450_cat_bin{ifile}.fits'):
-        os.remove(f'xcell/tests/data/KV450_cat_bin{ifile}.fits')
+    while os.path.isfile(f'xcell/tests/data/KV450_bin{ifile}_cat.fits'):
+        os.remove(f'xcell/tests/data/KV450_bin{ifile}_cat.fits')
         ifile += 1
 
     # Non-exsisting fits files - read from rerun

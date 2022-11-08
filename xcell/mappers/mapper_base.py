@@ -6,6 +6,9 @@ from .utils import get_rerun_data, save_rerun_data
 
 
 class MapperBase(object):
+    # map_name is the name that will be used for rerun signal map files.
+    map_name = None
+
     def __init__(self, config):
         self._get_defaults(config)
 
@@ -24,6 +27,10 @@ class MapperBase(object):
         self.mask_power = config.get('mask_power', 1)
         self.coords = config['coords']
         self.mask = None
+        self.signal_map = None
+        # dndz needs to be defined for _get_shifted_nz. We should consider
+        # creating a subclass for Nz tracers, as in CCL.
+        self.dndz = None
 
     def _get_rotator(self, coord_default):
         if self.coords != coord_default:
@@ -32,8 +39,28 @@ class MapperBase(object):
             rot = None
         return rot
 
-    def get_signal_map(self):
+    def _get_signal_map(self):
         raise NotImplementedError("Do not use base class")
+
+    def get_signal_map(self, **kwargs):
+        if self.signal_map is None:
+            fn = '_'.join([f'{self.map_name}_signal_map',
+                           *[f'{k}{v}' for k, v in kwargs.items()],
+                           f'coord{self.coords}',
+                           f'ns{self.nside}.fits.gz'])
+
+            print(f'Saving signal_map: {fn}')
+
+            def func():
+                if not kwargs:
+                    return self._get_signal_map()
+                else:
+                    return self._get_signal_map(**kwargs)
+
+            signal_map = self._rerun_read_cycle(fn, 'FITSMap', func)
+            self.signal_map = np.atleast_2d(signal_map)
+
+        return self.signal_map
 
     def get_contaminants(self):
         return None

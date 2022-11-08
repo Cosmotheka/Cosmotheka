@@ -7,6 +7,8 @@ import os
 
 
 class Mapper2MPZ(MapperBase):
+    map_name = '2MPZ'
+
     def __init__(self, config):
         """
         config - dict
@@ -24,8 +26,6 @@ class Mapper2MPZ(MapperBase):
         self.npix = hp.nside2npix(self.nside)
 
         # Angular mask
-        self.dndz = None
-        self.delta_map = None
         self.nl_coupled = None
 
     def _get_coords(self):
@@ -92,20 +92,19 @@ class Mapper2MPZ(MapperBase):
             self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz, return_jk_error=return_jk_error)
 
-    def get_signal_map(self):
-        if self.delta_map is None:
-            d = np.zeros(self.npix)
-            self.cat_data = self.get_catalog()
-            self.mask = self.get_mask()
-            nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            ra_name=self.ra_name,
-                                            dec_name=self.dec_name)
-            mean_n = np.average(nmap_data, weights=self.mask)
-            goodpix = self.mask > 0
-            # Division by mask not really necessary, since it's binary.
-            d[goodpix] = nmap_data[goodpix]/(mean_n*self.mask[goodpix])-1
-            self.delta_map = np.array([d])
-        return self.delta_map
+    def _get_signal_map(self):
+        d = np.zeros(self.npix)
+        self.cat_data = self.get_catalog()
+        self.mask = self.get_mask()
+        nmap_data = get_map_from_points(self.cat_data, self.nside,
+                                        ra_name=self.ra_name,
+                                        dec_name=self.dec_name)
+        mean_n = np.average(nmap_data, weights=self.mask)
+        goodpix = self.mask > 0
+        # Division by mask not really necessary, since it's binary.
+        d[goodpix] = nmap_data[goodpix]/(mean_n*self.mask[goodpix])-1
+        signal_map = np.array([d])
+        return signal_map
 
     def _get_mask(self):
         # We will assume the mask has been provided in the right

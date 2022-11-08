@@ -56,12 +56,10 @@ class MapperDummy(MapperBase):
             self.nmaps = 2
         self.custom_auto = self.config.get('custom_auto', False)
         self.custom_offset = self.config.get('custom_offset', 0.)
-        self.signal_map = None
         self.cl_coupled = None
         self.cls_cov = None
         self.nl_coupled = None
         self.mask = None
-        self.dndz = None
         self.cl = None
         self.dec0 = self.config.get('dec0', 0.)
         self.ra0 = self.config.get('ra0', 0.)

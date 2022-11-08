@@ -6,6 +6,8 @@ import healpy as hp
 
 
 class MapperCatWISE(MapperBase):
+    map_name = 'CatWISE'
+
     def __init__(self, config):
         """
         config - dict
@@ -25,7 +27,6 @@ class MapperCatWISE(MapperBase):
         # Angular mask
         self.delta_map = None
         self.nl_coupled = None
-        self.dndz = None
         self.rot = self._get_rotator('C')
 
     # CatWISE catalog
@@ -55,26 +56,25 @@ class MapperCatWISE(MapperBase):
         return correction
 
     # Density Map
-    def get_signal_map(self):
-        if self.delta_map is None:
-            d = np.zeros(self.npix)
-            self.cat_data = self.get_catalog()
-            self.mask = self.get_mask()
-            nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            rot=self.rot, ra_name='ra',
-                                            dec_name='dec')
-            # ecliptic latitude correction -- SvH 5/3/22
-            if self.apply_ecliptic_correction:
-                correction = self._get_ecliptic_correction()
-            else:
-                correction = np.zeros_like(d)
-            nmap_data = nmap_data + correction
-            goodpix = self.mask > 0
-            mean_n = np.average(nmap_data, weights=self.mask)
-            # Division by mask not really necessary, since it's binary.
-            d[goodpix] = nmap_data[goodpix]/(mean_n*self.mask[goodpix])-1
-            self.delta_map = np.array([d])
-        return self.delta_map
+    def _get_signal_map(self):
+        d = np.zeros(self.npix)
+        cat_data = self.get_catalog()
+        mask = self.get_mask()
+        nmap_data = get_map_from_points(cat_data, self.nside,
+                                        rot=self.rot, ra_name='ra',
+                                        dec_name='dec')
+        # ecliptic latitude correction -- SvH 5/3/22
+        if self.apply_ecliptic_correction:
+            correction = self._get_ecliptic_correction()
+        else:
+            correction = np.zeros_like(d)
+        nmap_data = nmap_data + correction
+        goodpix = self.mask > 0
+        mean_n = np.average(nmap_data, weights=mask)
+        # Division by mask not really necessary, since it's binary.
+        d[goodpix] = nmap_data[goodpix]/(mean_n*mask[goodpix])-1
+        delta_map = np.array([d])
+        return delta_map
 
     def _cut_mask(self):
         mask = np.ones(self.npix)

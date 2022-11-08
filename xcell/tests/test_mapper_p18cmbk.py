@@ -2,6 +2,7 @@ import xcell as xc
 import numpy as np
 import healpy as hp
 import shutil
+import os
 
 
 def get_config():
@@ -24,13 +25,13 @@ def test_alm_cut():
     config = get_config()
     config['nside'] = 16
     m = xc.mappers.MapperP18CMBK(config)
-    m.get_signal_map()
+    klm = m._get_klm()
     alm_all, lmax = hp.read_alm(config['file_klm'], return_mmax=True)
     alm_all = m.rot.rotate_alm(alm_all)
     fl = np.ones(lmax+1)
     fl[3*16:] = 0
     alm_cut = hp.almxfl(alm_all, fl, inplace=True)
-    assert np.all(np.real(m.klm - alm_cut) == 0.)
+    assert np.all(np.real(klm - alm_cut) == 0.)
 
 
 def test_smoke():
@@ -48,11 +49,17 @@ def test_spin():
 
 
 def test_get_signal_map():
-    m = get_mapper()
+    config = get_config()
+    config['path_rerun'] = 'xcell/tests/data/'
+    m = xc.mappers.MapperP18CMBK(config)
     d = m.get_signal_map()
     assert len(d) == 1
     d = d[0]
     assert np.all(np.fabs(d-1) < 0.02)
+
+    fn = 'xcell/tests/data/P18CMBK_signal_map_coordC_ns32.fits.gz'
+    assert np.all(d == hp.read_map(fn))
+    os.remove(fn)
 
 
 def test_get_mask():

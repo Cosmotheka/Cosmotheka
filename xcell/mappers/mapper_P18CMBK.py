@@ -7,6 +7,8 @@ from .utils import rotate_mask
 
 
 class MapperP18CMBK(MapperBase):
+    map_name = 'P18CMBK'
+
     def __init__(self, config):
         """
         config - dict
@@ -28,24 +30,30 @@ class MapperP18CMBK(MapperBase):
         self.rot = self._get_rotator('G')
 
         # Defaults
-        self.signal_map = None
         self.nl_coupled = None
         self.cl_fid = None
+        self.klm = None
 
-    def get_signal_map(self):
-        if self.signal_map is None:
-            # Read alms
-            self.klm, lmax = hp.read_alm(self.config['file_klm'],
-                                         return_mmax=True)
+    def _get_klm(self):
+        if self.klm is None:
+            # Read alms and rotate if needed
+            klm, lmax = hp.read_alm(self.config['file_klm'], return_mmax=True)
             if self.rot is not None:
-                self.klm = self.rot.rotate_alm(self.klm)
+                klm = self.rot.rotate_alm(klm)
             # Filter if lmax is too large
             if lmax > 3*self.nside-1:
                 fl = np.ones(lmax+1)
                 fl[3*self.nside:] = 0
-                self.klm = hp.almxfl(self.klm, fl, inplace=True)
-            self.signal_map = np.array([hp.alm2map(self.klm, self.nside)])
-        return self.signal_map
+                klm = hp.almxfl(klm, fl, inplace=True)
+
+            self.klm = klm
+
+        return self.klm
+
+    def _get_signal_map(self):
+        klm = self._get_klm()
+        signal_map = np.array([hp.alm2map(klm, self.nside)])
+        return signal_map
 
     def _get_mask(self):
         msk = hp.read_map(self.config['file_mask'],
