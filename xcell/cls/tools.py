@@ -27,7 +27,7 @@ def save_wsp(wsp, fname):
             raise e
 
 
-def read_wsp(wsp, fname, read_unbinned_MCM):
+def read_wsp(wsp, fname, **kwargs):
     """
     Read a workspace or covariance workspace and removes it if fails
 
@@ -37,10 +37,12 @@ def read_wsp(wsp, fname, read_unbinned_MCM):
         Workspace or Covariance workspace to save
     fname: str
         Path to save the workspace to
+    kwargs:
+        Arguments accepted by the (cov)workspace read_from method.
     """
     # Recheck again in case other process has started writing it
     try:
-        wsp.read_from(fname, read_unbinned_MCM)
+        wsp.read_from(fname, **kwargs)
     except RuntimeError as e:
         if 'Error reading' in str(e):
             os.remove(fname)
