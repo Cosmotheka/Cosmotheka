@@ -65,7 +65,7 @@ def get_jobs_with_same_cwsp(data):
     nsteps = len(cov_tracers)
     cwsp = {}
     for i, trs in enumerate(cov_tracers):
-        print(f"Splitting jobs in batches. Step {i}/{nsteps}")
+        # print(f"Splitting jobs in batches. Step {i}/{nsteps}")
         # Instantiating the Cov class is too slow
         # cov = Cov(data.data, *trs)
         # fname = cov.get_cwsp_path()
@@ -110,7 +110,7 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
         # Find the covariances to be computed
         covs_tbc = []
         for trs in trs_list:
-            fname = os.path.join(outdir, 'cov', comment + '.npz')
+            fname = os.path.join(outdir, 'cov/cov_{}_{}_{}_{}.npz'.format(*trs))
             recompute = data.data['recompute']['cov'] or data.data['recompute']['cmcm']
             if (os.path.isfile(fname) and (not recompute)) or \
                     check_skip(data, skip, trs):
@@ -120,14 +120,16 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
 
         # To avoid writing and launching an empty file (which will fail if
         # remove_cwsp is True when it tries to remove the cw.
-        if len(covs_tbc) > 0:
-            with open(sh_name, 'w') as f:
-                f.write('#!/bin/bash\n')
-                for covi in covs_tbc:
-                    f.write(covi)
+        if len(covs_tbc) == 0:
+            continue
 
-                if remove_cwsp:
-                    f.write(f'rm {cw}\n')
+        with open(sh_name, 'w') as f:
+            f.write('#!/bin/bash\n')
+            for covi in covs_tbc:
+                f.write(covi)
+
+            if remove_cwsp:
+                f.write(f'rm {cw}\n')
 
         pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir,
                             batches=True)
