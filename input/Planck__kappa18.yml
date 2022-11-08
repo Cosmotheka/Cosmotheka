@@ -1,7 +1,8 @@
 mapper_class: MapperP18CMBK
 file_klm: /mnt/extraspace/damonge/Datasets/Planck_lensing/Lensing2018/MV/dat_klm.fits
 file_mask: /mnt/extraspace/damonge/Datasets/Planck_lensing/Lensing2018/mask.fits.gz
-file_noise: mnt/extraspace/damonge/Datasets/Planck_lensing/Lensing2018/MV/nlkk.dat 
+file_noise: /mnt/extraspace/damonge/Datasets/Planck_lensing/Lensing2018/MV/nlkk.dat 
 mask_aposize: 0.2
 mask_apotype: 'C1'
+mask_name: mask_P18kappa
 path_rerun: '/mnt/extraspace/damonge/Datasets/Planck_lensing/Lensing2018/xcell_runs'
