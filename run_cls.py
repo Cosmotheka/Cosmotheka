@@ -98,7 +98,8 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
     os.makedirs(outdir_batches, exist_ok=True)
 
     c = 0
-    for cw, trs_list in cwsp.items():
+    n_total_jobs = len(cwsp)
+    for ni, (cw, trs_list) in enumerate(cwsp.items()):
         comment = os.path.basename(cw)
         sh_name = os.path.join(outdir_batches, f'{comment}.sh')
 
@@ -133,7 +134,11 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
 
         pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir,
                             batches=True)
+        print("##################################")
+        print(f"Launching job {ni}/{n_total_jobs}")
         print(pyexec + " " + sh_name)
+        print("##################################")
+        print()
         os.system(pyexec + " " + sh_name)
         c += 1
         time.sleep(1)
