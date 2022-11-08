@@ -42,17 +42,91 @@ def check_skip(data, skip, trs):
     return False
 
 
-
-def get_pyexec(comment, nc, queue, mem, onlogin, outdir):
-    if onlogin:
-        pyexec = "/usr/bin/python3"
+def get_pyexec(comment, nc, queue, mem, onlogin, outdir, batches=False):
+    if batches:
+        pyexec = "/bin/bash"
     else:
+        pyexec = "/usr/bin/python3"
+
+    if not onlogin:
         logdir = os.path.join(outdir, 'log')
         os.makedirs(logdir, exist_ok=True)
         logfname = os.path.join(logdir, comment + '.log')
-        pyexec = "addqueue -o {} -c {} -n 1x{} -s -q {} -m {} /usr/bin/python3".format(logfname, comment, nc, queue, mem)
+        pyexec = "addqueue -o {} -c {} -n 1x{} -s -q {} -m {} {}".format(logfname, comment, nc, queue, mem, pyexec)
 
     return pyexec
+
+
+def get_jobs_with_same_cwsp(data):
+    cov_tracers = data.get_cov_trs_names(wsp=True)
+    cov_tracers += data.get_cov_trs_names(wsp=False)
+    cov_tracers = np.unique(cov_tracers, axis=0).tolist()
+
+    nsteps = len(cov_tracers)
+    cwsp = {}
+    for i, trs in enumerate(cov_tracers):
+        print(f"Splitting jobs in batches. Step {i}/{nsteps}")
+        # Instantiating the Cov class is too slow
+        # cov = Cov(data.data, *trs)
+        # fname = cov.get_cwsp_path()
+
+        # The problem with this is that any change in cov.py will not be seen here
+        mask1, mask2, mask3, mask4 = [data.data['tracers'][trsi]["mask_name"] for trsi in trs]
+        fname = os.path.join(data.data['output'],
+                             f'cov/cw__{mask1}__{mask2}__{mask3}__{mask4}.fits')
+        if fname in cwsp:
+            cwsp[fname].append(trs)
+        else:
+            cwsp[fname] = [trs]
+
+    return cwsp
+
+
+def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
+                       remove_cwsp=False):
+    outdir = data.data['output']
+    cwsp = get_jobs_with_same_cwsp(data)
+
+    if os.uname()[1] == 'glamdring':
+        qjobs = get_queued_jobs()
+    else:
+        qjobs = ''
+
+    # Create a folder to place the batch scripts. This is because I couldn't
+    # figure out how to pass it through STDIN
+    outdir_batches = os.path.join(outdir, 'run_batches')
+    os.makedirs(outdir_batches, exist_ok=True)
+
+    c = 0
+    for cw, trs_list in cwsp.items():
+        comment = os.path.basename(cw)
+        sh_name = os.path.join(outdir_batches, f'{comment}.sh')
+
+        if c >= njobs:
+            break
+        elif comment in qjobs:
+            continue
+
+        with open(sh_name, 'w') as f:
+            f.write('#!/bin/bash\n')
+            for trs in trs_list:
+                fname = os.path.join(outdir, 'cov', comment + '.npz')
+                recompute = data.data['recompute']['cov'] or data.data['recompute']['cmcm']
+                if (os.path.isfile(fname) and (not recompute)) or \
+                        check_skip(data, skip, trs):
+                    continue
+
+                f.write('/usr/bin/python3 -m xcell.cls.cov {} {} {} {} {}\n'.format(args.INPUT, *trs))
+
+            if remove_cwsp:
+                f.write(f'rm {cw}\n')
+
+        pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir,
+                            batches=True)
+        print(pyexec + " " + sh_name)
+        os.system(pyexec + " " + sh_name)
+        c += 1
+        time.sleep(1)
 
 
 def launch_cls(data, queue, njobs, nc, mem, fiducial=False, onlogin=False, skip=[]):
@@ -102,8 +176,7 @@ def launch_cls(data, queue, njobs, nc, mem, fiducial=False, onlogin=False, skip=
         time.sleep(1)
 
 
-def launch_cov(data, queue, njobs, nc, mem, onlogin=False, skip=[],
-               nbatch=10000, reuse_jobs_list=True):
+def launch_cov(data, queue, njobs, nc, mem, onlogin=False, skip=[]):
     #######
     #
     cov_tracers = data.get_cov_trs_names(wsp=True)
@@ -116,38 +189,25 @@ def launch_cov(data, queue, njobs, nc, mem, onlogin=False, skip=[],
     else:
         qjobs = ''
 
-    # First, compile a list of all missing jobs
-    job_list = "cov_job_list.txt"
-    if not reuse_jobs_list:
-        ncovs = 0
-        recompute = data.data['recompute']['cov'] or data.data['recompute']['cmcm']
-        fo = open(job_list, "w")
-        for trs in cov_tracers:
-            t1, t2, t3 ,t4 = trs
-            comment = 'cov_{}_{}_{}_{}'.format(*trs)
-            fname = os.path.join(outdir, 'cov', comment + '.npz')
-            if os.path.isfile(fname) and (not recompute):
-                continue
-            fo.write(f"{t1} {t2} {t3} {t4}\n")
-            ncovs += 1
-        fo.close()
-    else:
-        ncovs = sum(1 for line in open(job_list, 'r'))
-
-    # Now, launch jobs in batches
-    print(ncovs)
-    for c in range(njobs):
-        linefirst = c*nbatch
-        linelast = min((c+1)*nbatch-1, ncovs-1)
-        print(c, linefirst, linelast)
-        if linefirst > ncovs:
+    c = 0
+    for trs in cov_tracers:
+        comment = 'cov_{}_{}_{}_{}'.format(*trs)
+        if c >= njobs:
             break
-        job = f"run_cov_job.py {job_list} {linefirst} {linelast} {args.INPUT}"
-        comment = f"cov_job_{linefirst}_{linelast}"
+        elif comment in qjobs:
+            continue
+        elif check_skip(data, skip, trs):
+            continue
+        fname = os.path.join(outdir, 'cov', comment + '.npz')
+        recompute = data.data['recompute']['cov'] or data.data['recompute']['cmcm']
+        if os.path.isfile(fname) and (not recompute):
+            continue
         pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir)
-        print(pyexec)
-        print(job)
-        print(pyexec + " " + job)
+        pyrun = '-m xcell.cls.cov {} {} {} {} {}'.format(args.INPUT, *trs)
+        print(pyexec + " " + pyrun)
+        os.system(pyexec + " " + pyrun)
+        c += 1
+        time.sleep(1)
 
 
 def launch_to_sacc(data, name, use, queue, nc, mem, onlogin=False):
@@ -179,9 +239,6 @@ if __name__ == "__main__":
     parser.add_argument('-m', '--mem', type=int, default=7., help='Memory (in GB) per core to use')
     parser.add_argument('-q', '--queue', type=str, default='berg', help='SLURM queue to use')
     parser.add_argument('-j', '--njobs', type=int, default=100000, help='Maximum number of jobs to launch')
-    parser.add_argument('--nbatch_cov', type=int, default=100, help='Number of covariance jobs per batch')
-    parser.add_argument('--reuse_cov_jobs_list', default=False, action='store_true',
-                        help='Set if you want to reuse a previous covariance job list.')
     parser.add_argument('--to_sacc_name', type=str, default='cls_cov.fits', help='Sacc file name')
     parser.add_argument('--to_sacc_use_nl', default=False, action='store_true',
                         help='Set if you want to use nl and cov extra (if present) instead of cls and covG ')
@@ -191,6 +248,13 @@ if __name__ == "__main__":
     parser.add_argument('--onlogin', default=False, action='store_true', help='Run the jobs in the login screen instead appending them to the queue')
     parser.add_argument('--skip', default=[], nargs='+', help='Skip the following tracers. It can be given as DELS__0 to skip only DELS__0 tracer or DELS to skip all DELS tracers')
     parser.add_argument('--override_yaml', default=False, action='store_true', help='Override the YAML file if already stored. Be ware that this could cause compatibility problems in your data!')
+    parser.add_argument('--batches', default=False, action='store_true',
+                        help='Run the covariances in batches with all the ' +
+                        'blocks sharing the same covariance workspace in a ' +
+                        'single job')
+    parser.add_argument('--remove_cwsp', default=False, action='store_true',
+                        help='Remove the covariance workspace once the ' +
+                        'batch job has finished')
     args = parser.parse_args()
 
     ##############################################################################
@@ -204,8 +268,12 @@ if __name__ == "__main__":
     if args.compute == 'cls':
         launch_cls(data, queue, njobs, args.nc, args.mem, args.cls_fiducial, onlogin, args.skip)
     elif args.compute == 'cov':
-        launch_cov(data, queue, njobs, args.nc, args.mem, onlogin, args.skip,
-                   args.nbatch_cov, args.reuse_cov_jobs_list)
+        if args.batches:
+            launch_cov_batches(data, queue, njobs, args.nc, args.mem, onlogin,
+                               args.skip, args.remove_cwsp)
+        else:
+            launch_cov(data, queue, njobs, args.nc, args.mem, onlogin,
+                       args.skip)
     elif args.compute == 'to_sacc':
         if args.to_sacc_use_nl and args.to_sacc_use_fiducial:
             raise ValueError(
