@@ -1,6 +1,7 @@
 #!/usr/bin/python
 from .data import Data
 from .theory import Theory
+from . import tools
 import numpy as np
 import pymaster as nmt
 import os
@@ -337,12 +338,10 @@ class Cl(ClBase):
             w.compute_coupling_matrix(f1, f2, self.b, n_iter=n_iter,
                                       l_toeplitz=l_toeplitz, l_exact=l_exact,
                                       dl_band=dl_band)
-            # Recheck again in case other process has started writing it
-            if (not os.path.isfile(fname)):
-                w.write_to(fname)
+            tools.save_wsp(w, fname)
             self.recompute_mcmc = False
         else:
-            w.read_from(fname, read_unbinned_MCM)
+            tools.read_wsp(w, fname, read_unbinned_MCM)
         return w
 
     def get_cl_file(self):
