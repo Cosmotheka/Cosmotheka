@@ -132,23 +132,6 @@ class Cov():
         outdir = os.path.join(root, 'cov')
         return outdir
 
-    def get_cwsp_path(self):
-        """
-        Return the path to the covariance workspace.
-
-        Return
-        ------
-        str
-            Path to the covariance workspace
-        """
-        # This function is used by run_cls.py to get the covariance workspace
-        # path.
-        mask1, mask2 = self.clA1A2.get_masks_names()
-        mask3, mask4 = self.clB1B2.get_masks_names()
-        fname = os.path.join(self.outdir,
-                             f'cw__{mask1}__{mask2}__{mask3}__{mask4}.fits')
-        return fname
-
     def get_covariance_workspace(self):
         """
         Return the covariance workspace needed to compute the Gaussian
@@ -161,7 +144,10 @@ class Cov():
             Covariance workspace to compute the Gaussian covariance block
 
         """
-        fname = self.get_cwsp_path()
+        mask1, mask2 = self.clA1A2.get_masks_names()
+        mask3, mask4 = self.clB1B2.get_masks_names()
+        fname = os.path.join(self.outdir,
+                             f'cw__{mask1}__{mask2}__{mask3}__{mask4}.fits')
         cw = nmt.NmtCovarianceWorkspace()
         recompute = self.data.data['recompute']['cmcm']
         if recompute or (not os.path.isfile(fname)):

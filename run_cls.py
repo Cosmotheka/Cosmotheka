@@ -1,6 +1,5 @@
 #!/usr/bin/python
 from xcell.cls.data import Data
-from xcell.cls.cov import Cov
 import os
 import time
 import subprocess
@@ -63,10 +62,18 @@ def get_jobs_with_same_cwsp(data):
     cov_tracers += data.get_cov_trs_names(wsp=False)
     cov_tracers = np.unique(cov_tracers, axis=0).tolist()
 
+    nsteps = len(cov_tracers)
     cwsp = {}
-    for trs in cov_tracers:
-        cov = Cov(data.data, *trs)
-        fname = cov.get_cwsp_path()
+    for i, trs in enumerate(cov_tracers):
+        print(f"Splitting jobs in batches. Step {i}/{nsteps}")
+        # Instantiating the Cov class is too slow
+        # cov = Cov(data.data, *trs)
+        # fname = cov.get_cwsp_path()
+
+        # The problem with this is that any change in cov.py will not be seen here
+        mask1, mask2, mask3, mask4 = [data.data['tracers'][trsi]["mask_name"] for trsi in trs]
+        fname = os.path.join(data.data['output'],
+                             f'cov/cw__{mask1}__{mask2}__{mask3}__{mask4}.fits')
         if fname in cwsp:
             cwsp[fname].append(trs)
         else:
@@ -102,7 +109,6 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
 
         with open(sh_name, 'w') as f:
             f.write('#!/bin/bash\n')
-            pyrun = []
             for trs in trs_list:
                 fname = os.path.join(outdir, 'cov', comment + '.npz')
                 recompute = data.data['recompute']['cov'] or data.data['recompute']['cmcm']
