@@ -107,19 +107,27 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
         elif comment in qjobs:
             continue
 
-        with open(sh_name, 'w') as f:
-            f.write('#!/bin/bash\n')
-            for trs in trs_list:
-                fname = os.path.join(outdir, 'cov', comment + '.npz')
-                recompute = data.data['recompute']['cov'] or data.data['recompute']['cmcm']
-                if (os.path.isfile(fname) and (not recompute)) or \
-                        check_skip(data, skip, trs):
-                    continue
+        # Find the covariances to be computed
+        covs_tbc = []
+        for trs in trs_list:
+            fname = os.path.join(outdir, 'cov', comment + '.npz')
+            recompute = data.data['recompute']['cov'] or data.data['recompute']['cmcm']
+            if (os.path.isfile(fname) and (not recompute)) or \
+                    check_skip(data, skip, trs):
+                continue
 
-                f.write('/usr/bin/python3 -m xcell.cls.cov {} {} {} {} {}\n'.format(args.INPUT, *trs))
+            covs_tbc.append('/usr/bin/python3 -m xcell.cls.cov {} {} {} {} {}\n'.format(args.INPUT, *trs))
 
-            if remove_cwsp:
-                f.write(f'rm {cw}\n')
+        # To avoid writing and launching an empty file (which will fail if
+        # remove_cwsp is True when it tries to remove the cw.
+        if len(covs_tbc) > 0:
+            with open(sh_name, 'w') as f:
+                f.write('#!/bin/bash\n')
+                for covi in covs_tbc:
+                    f.write(covi)
+
+                if remove_cwsp:
+                    f.write(f'rm {cw}\n')
 
         pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir,
                             batches=True)
