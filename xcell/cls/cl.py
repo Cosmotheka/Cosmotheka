@@ -341,7 +341,7 @@ class Cl(ClBase):
             tools.save_wsp(w, fname)
             self.recompute_mcmc = False
         else:
-            tools.read_wsp(w, fname, read_unbinned_MCM)
+            tools.read_wsp(w, fname, read_unbinned_MCM=read_unbinned_MCM)
         return w
 
     def get_cl_file(self):
