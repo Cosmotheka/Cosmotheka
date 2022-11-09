@@ -12,11 +12,15 @@ import pyccl as ccl
 
 # Remove previous test results
 tmpdir1 = './xcell/tests/cls/dummy1'
-if os.path.isdir(tmpdir1):
-    shutil.rmtree(tmpdir1)
 tmpdir2 = './xcell/tests/cls/dummy2'
-if os.path.isdir(tmpdir2):
-    shutil.rmtree(tmpdir2)
+
+# Cleaning the tmp dir before running and after running the tests
+@pytest.fixture(autouse=True)
+def run_clean_tmp():
+    if os.path.isdir(tmpdir1):
+        shutil.rmtree(tmpdir1)
+    if os.path.isdir(tmpdir2):
+        shutil.rmtree(tmpdir2)
 
 
 def get_config(fsky=0.2, fsky2=0.3,
@@ -450,7 +454,7 @@ def test_cls_vs_namaster():
         assert np.fabs(chi2/chi2_m-1) < tol
 
         # Compare bandpower windows
-        assert np.all(win == bpwin)
+        assert np.max(np.abs(wn / bpwin -1)) < tol
 
     compare(cl_data, cov, win)
     compare(clfile['cl'], cov, clfile['wins'])
@@ -476,7 +480,8 @@ def test_symmetric():
     assert not os.path.isfile(fname)
     assert np.all(np.array(cl_class01.get_masks()) ==
                   np.array(cl_class10.get_masks()[::-1]))
-    assert np.all(cl_class01.get_ell_cl()[1] == cl_class10.get_ell_cl()[1])
+    assert np.max(np.abs((cl_class01.get_ell_cl()[1] /
+                          cl_class10.get_ell_cl()[1] - 1))) < 1e-10
     assert np.all(cl_class01.get_ell_nl()[1] == cl_class10.get_ell_nl()[1])
     assert np.all(cl_class01.get_ell_nl_cp()[1] ==
                   cl_class10.get_ell_nl_cp()[1])
