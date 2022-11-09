@@ -9,6 +9,7 @@ import pytest
 tmpdir = 'xcell/tests/cls/'
 dummyfile = tmpdir + 'dummyfile.fits'
 
+
 def get_wsp(cwsp=False):
     b = nmt.NmtBin(nside=32, nlb=10)
 
@@ -51,7 +52,7 @@ def test_save_wsp(cwsp):
     if not cwsp:
         mcm = w.get_coupling_matrix() + 1e-100
         mcm2 = w2.get_coupling_matrix() + 1e-100
-        assert np.max(np.abs((mcm/mcm2 -1))) < 1e-5
+        assert np.max(np.abs((mcm / mcm2 - 1))) < 1e-5
     else:
         assert w.wsp.lmax == w2.wsp.lmax
 
@@ -63,7 +64,6 @@ def test_save_wsp(cwsp):
     # TODO: We need to test that if it fails to save the file, it removes the
     # corrupted file and save it again.
     os.remove(dummyfile)
-
 
 
 @pytest.mark.parametrize('cwsp', [False, True])
@@ -78,7 +78,7 @@ def test_read_wsp(cwsp):
     if not cwsp:
         mcm = w.get_coupling_matrix() + 1e-100
         mcm2 = w2.get_coupling_matrix() + 1e-100
-        assert np.max(np.abs((mcm/mcm2 -1))) < 1e-5
+        assert np.max(np.abs((mcm / mcm2 - 1))) < 1e-5
     else:
         assert w.wsp.lmax == w2.wsp.lmax
 
