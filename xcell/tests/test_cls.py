@@ -14,6 +14,7 @@ import pyccl as ccl
 tmpdir1 = './xcell/tests/cls/dummy1'
 tmpdir2 = './xcell/tests/cls/dummy2'
 
+
 # Cleaning the tmp dir before running and after running the tests
 @pytest.fixture(autouse=True)
 def run_clean_tmp():
@@ -454,7 +455,7 @@ def test_cls_vs_namaster():
         assert np.fabs(chi2/chi2_m-1) < tol
 
         # Compare bandpower windows
-        assert np.max(np.abs(wn / bpwin -1)) < tol
+        assert np.max(np.abs(wn / bpwin - 1)) < tol
 
     compare(cl_data, cov, win)
     compare(clfile['cl'], cov, clfile['wins'])
