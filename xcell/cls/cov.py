@@ -151,21 +151,23 @@ class Cov():
                              f'cw__{mask1}__{mask2}__{mask3}__{mask4}.fits')
         cw = nmt.NmtCovarianceWorkspace()
         recompute = self.data.data['recompute']['cmcm']
-        if recompute or (not os.path.isfile(fname)):
-            n_iter = self.data.data['sphere']['n_iter_cmcm']
-            l_toeplitz, l_exact, dl_band = self.data.check_toeplitz('cov')
-            fA1, fB1 = self.clA1B1.get_nmt_fields()
-            fA2, fB2 = self.clA2B2.get_nmt_fields()
-            cw.compute_coupling_coefficients(fA1, fA2, fB1, fB2,
-                                             n_iter=n_iter,
-                                             l_toeplitz=l_toeplitz,
-                                             l_exact=l_exact,
-                                             dl_band=dl_band)
-            # Recheck again in case other process has started writing it
-            tools.save_wsp(cw, fname)
-            self.recompute_cmcm = False
-        else:
+        if (not recompute) and os.path.isfile(fname):
             tools.read_wsp(cw, fname)
+            if cw.wsp is not None:
+                return cw
+
+        n_iter = self.data.data['sphere']['n_iter_cmcm']
+        l_toeplitz, l_exact, dl_band = self.data.check_toeplitz('cov')
+        fA1, fB1 = self.clA1B1.get_nmt_fields()
+        fA2, fB2 = self.clA2B2.get_nmt_fields()
+        cw.compute_coupling_coefficients(fA1, fA2, fB1, fB2,
+                                         n_iter=n_iter,
+                                         l_toeplitz=l_toeplitz,
+                                         l_exact=l_exact,
+                                         dl_band=dl_band)
+        # Recheck again in case other process has started writing it
+        tools.save_wsp(cw, fname)
+        self.recompute_cmcm = False
 
         return cw
 

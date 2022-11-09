@@ -324,24 +324,27 @@ class Cl(ClBase):
         else:
             fname = os.path.join(self.outdir, f'w__{mask1}__{mask2}.fits')
         w = nmt.NmtWorkspace()
-        if self.recompute_mcm or (not os.path.isfile(fname)):
-            n_iter = self.data.data['sphere']['n_iter_mcm']
-            l_toeplitz, l_exact, dl_band = self.data.check_toeplitz('cls')
-            if spin0:
-                m1, m2 = self.get_mappers()
-                msk1 = m1.get_mask()
-                msk2 = m2.get_mask()
-                f1 = nmt.NmtField(msk1, None, spin=0)
-                f2 = nmt.NmtField(msk2, None, spin=0)
-            else:
-                f1, f2 = self.get_nmt_fields()
-            w.compute_coupling_matrix(f1, f2, self.b, n_iter=n_iter,
-                                      l_toeplitz=l_toeplitz, l_exact=l_exact,
-                                      dl_band=dl_band)
-            tools.save_wsp(w, fname)
-            self.recompute_mcmc = False
-        else:
+        if (not self.recompute_mcm) and os.path.isfile(fname):
             tools.read_wsp(w, fname, read_unbinned_MCM=read_unbinned_MCM)
+            if w.wsp is not None:
+                return w
+
+        n_iter = self.data.data['sphere']['n_iter_mcm']
+        l_toeplitz, l_exact, dl_band = self.data.check_toeplitz('cls')
+        if spin0:
+            m1, m2 = self.get_mappers()
+            msk1 = m1.get_mask()
+            msk2 = m2.get_mask()
+            f1 = nmt.NmtField(msk1, None, spin=0)
+            f2 = nmt.NmtField(msk2, None, spin=0)
+        else:
+            f1, f2 = self.get_nmt_fields()
+        w.compute_coupling_matrix(f1, f2, self.b, n_iter=n_iter,
+                                  l_toeplitz=l_toeplitz, l_exact=l_exact,
+                                  dl_band=dl_band)
+        tools.save_wsp(w, fname)
+        self.recompute_mcmc = False
+
         return w
 
     def get_cl_file(self):

@@ -46,5 +46,6 @@ def read_wsp(wsp, fname, **kwargs):
     except RuntimeError as e:
         if 'Error reading' in str(e):
             os.remove(fname)
+            return
 
         raise e
