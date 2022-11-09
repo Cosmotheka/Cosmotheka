@@ -20,7 +20,9 @@ def save_wsp(wsp, fname):
     try:
         wsp.write_to(fname)
     except RuntimeError as e:
-        if 'Error writing' in str(e):
+        if ('Error writing' in str(e)) and os.path.isfile(fname):
+            # Check that the file has been created and the error is not due to
+            # other problem (e.g. the folder does not exist)
             os.remove(fname)
             wsp.write_to(fname)
         else:
@@ -44,7 +46,7 @@ def read_wsp(wsp, fname, **kwargs):
     try:
         wsp.read_from(fname, **kwargs)
     except RuntimeError as e:
-        if 'Error reading' in str(e):
+        if ('Error reading' in str(e)) and os.path.isfile(fname):
             os.remove(fname)
             return
 
