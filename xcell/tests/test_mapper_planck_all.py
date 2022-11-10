@@ -146,6 +146,8 @@ def test_get_hm_maps(cls, mode):
         m1b *= ps_mask
         m2b *= ps_mask
     m1, m2 = m._get_hm_maps()
+    assert m1.shape == (1, m1b.size)
+    assert m2.shape == (1, m2b.size)
     assert np.all(m1 == m1b)
     assert np.all(m2 == m2b)
 
