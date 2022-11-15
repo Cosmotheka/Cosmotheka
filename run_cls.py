@@ -95,7 +95,7 @@ def clean_lock(data):
     raise NotImplementedError("Work in progress")
 
 
-def launch_cov_batches2(data, queue, njobs, nc, mem, onlogin=False, skip=[],
+def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
                         remove_cwsp=False, nnodes=1):
     # - Each job will have a given number of jobs (njobs)
     # - If we have to rerun some jobs we need to:
@@ -195,68 +195,6 @@ def launch_cov_batches2(data, queue, njobs, nc, mem, onlogin=False, skip=[],
         print("##################################")
         print()
         os.system(pyexec + " " + sh_name)
-        time.sleep(1)
-
-
-def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
-                       remove_cwsp=False):
-    outdir = data.data['output']
-    cwsp = get_jobs_with_same_cwsp(data)
-
-    if os.uname()[1] == 'glamdring':
-        qjobs = get_queued_jobs()
-    else:
-        qjobs = ''
-
-    # Create a folder to place the batch scripts. This is because I couldn't
-    # figure out how to pass it through STDIN
-    outdir_batches = os.path.join(outdir, 'run_batches')
-    os.makedirs(outdir_batches, exist_ok=True)
-
-    c = 0
-    n_total_jobs = len(cwsp)
-    for ni, (cw, trs_list) in enumerate(cwsp.items()):
-        comment = os.path.basename(cw)
-        sh_name = os.path.join(outdir_batches, f'{comment}.sh')
-
-        if c >= njobs:
-            break
-        elif comment in qjobs:
-            continue
-
-        # Find the covariances to be computed
-        covs_tbc = []
-        for trs in trs_list:
-            fname = os.path.join(outdir, 'cov/cov_{}_{}_{}_{}.npz'.format(*trs))
-            recompute = data.data['recompute']['cov'] or data.data['recompute']['cmcm']
-            if (os.path.isfile(fname) and (not recompute)) or \
-                    check_skip(data, skip, trs):
-                continue
-
-            covs_tbc.append('/usr/bin/python3 -m xcell.cls.cov {} {} {} {} {}\n'.format(args.INPUT, *trs))
-
-        # To avoid writing and launching an empty file (which will fail if
-        # remove_cwsp is True when it tries to remove the cw.
-        if len(covs_tbc) == 0:
-            continue
-
-        with open(sh_name, 'w') as f:
-            f.write('#!/bin/bash\n')
-            for covi in covs_tbc:
-                f.write(covi)
-
-            if remove_cwsp:
-                f.write(f'rm {cw}\n')
-
-        pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir,
-                            batches=True)
-        print("##################################")
-        print(f"Launching job {ni}/{n_total_jobs}")
-        print(pyexec + " " + sh_name)
-        print("##################################")
-        print()
-        os.system(pyexec + " " + sh_name)
-        c += 1
         time.sleep(1)
 
 
@@ -406,11 +344,8 @@ if __name__ == "__main__":
     elif args.compute == 'cls':
         launch_cls(data, queue, njobs, args.nc, args.mem, args.cls_fiducial, onlogin, args.skip)
     elif args.compute == 'cov':
-        if args.batches and (nnodes == 0):
+        if args.batches:
             launch_cov_batches(data, queue, njobs, args.nc, args.mem, onlogin,
-                               args.skip, args.remove_cwsp)
-        elif args.batches and (nnodes > 0):
-            launch_cov_batches2(data, queue, njobs, args.nc, args.mem, onlogin,
                                args.skip, args.remove_cwsp, nnodes)
         else:
             launch_cov(data, queue, njobs, args.nc, args.mem, onlogin,
