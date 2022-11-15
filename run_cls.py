@@ -4,6 +4,7 @@ import os
 import time
 import subprocess
 import numpy as np
+from datetime import datetime
 
 
 ##############################################################################
@@ -80,6 +81,98 @@ def get_jobs_with_same_cwsp(data):
             cwsp[fname] = [trs]
 
     return cwsp
+
+
+def launch_cov_batches2(data, queue, njobs, nc, mem, onlogin=False, skip=[],
+                        remove_cwsp=False, nnodes=1):
+    # - Each job will have a given number of jobs (njobs)
+    # - If we have to rerun some jobs we need to:
+    #   - avoid launching the same covariance as in other process
+    #   - unless it had failed in that process.
+    # Problem:
+    # - We cannot get the info from the queue job comments
+    # - We could check the script that launch the batch of covs but we would
+    # not know if it had been run and failed or not.
+    # - Keep track with an empty txt file? If it is there but not the npz, it
+    # means the job failed?
+    #  - Problem: If the cov has not run, it will not be created. Solution:
+    #  create it when populating the script?
+    def create_tmp_file(fname):
+        with open(fname + '.tmp', 'w') as f:
+            f.write('')
+
+    outdir = data.data['output']
+    cwsp = get_jobs_with_same_cwsp(data)
+
+    # Create a folder to place the batch scripts. This is because I couldn't
+    # figure out how to pass it through STDIN
+    outdir_batches = os.path.join(outdir, 'run_batches')
+    os.makedirs(outdir_batches, exist_ok=True)
+
+    c = 0
+    n_total_jobs = len(cwsp)
+    date = datetime.utcnow()
+    timestamp = date.strftime("%Y%m%d%H%M%S")
+    sh_tbc = []
+    for ni, (cw, trs_list) in enumerate(cwsp.items()):
+        create_tmp_file(cw)
+        comment = os.path.basename(cw)
+        sh_name = os.path.join(outdir_batches, f'{comment}.sh')
+
+        if c >= njobs * nnodes:
+            break
+        elif os.path.isfile(cw + '.tmp'):
+            continue
+
+        # Find the covariances to be computed
+        covs_tbc = []
+        for trs in trs_list:
+            fname = os.path.join(outdir, 'cov/cov_{}_{}_{}_{}.npz'.format(*trs))
+            recompute = data.data['recompute']['cov'] or data.data['recompute']['cmcm']
+            if (os.path.isfile(fname) and (not recompute)) or \
+                    check_skip(data, skip, trs):
+                continue
+
+            covs_tbc.append('/usr/bin/python3 -m xcell.cls.cov {} {} {} {} {}\n'.format(args.INPUT, *trs))
+
+        # To avoid writing and launching an empty file (which will fail if
+        # remove_cwsp is True when it tries to remove the cw.
+        if len(covs_tbc) == 0:
+            continue
+
+        with open(sh_name, 'w') as f:
+            f.write('#!/bin/bash\n')
+            for covi in covs_tbc:
+                f.write(covi)
+
+            f.write(f'rm {cw}' + '.tmp')
+            if remove_cwsp:
+                f.write(f'rm {cw}\n')
+
+        sh_tbc.append(sh_name)
+        c += 1
+
+    for nodei in range(nnodes):
+        if njobs > n_total_jobs / nnodes:
+            njobs = int(n_total_jobs / nnodes + 1)
+        # ~1min per job for nside 1024
+        time_expected = njobs / (60 * 24)
+        comment = f"batch{nodei}-{njobs} (~{time_expected} days) "
+        sh_name = os.path.join(outdir_batches,
+                               f'batch{nodei}-{njobs}_{timestamp}.sh')
+        with open(sh_name, 'w') as f:
+            f.write('#!/bin/bash\n')
+            for shi in sh_tbc[nodei : (nodei + 1) * njobs]:
+                f.write(shi)
+
+        pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir,
+                            batches=True)
+        print("##################################")
+        print(pyexec + " " + sh_name)
+        print("##################################")
+        print()
+        os.system(pyexec + " " + sh_name)
+        time.sleep(1)
 
 
 def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
@@ -253,6 +346,7 @@ if __name__ == "__main__":
     parser.add_argument('-n', '--nc', type=int, default=28, help='Number of cores to use')
     parser.add_argument('-m', '--mem', type=int, default=7., help='Memory (in GB) per core to use')
     parser.add_argument('-q', '--queue', type=str, default='berg', help='SLURM queue to use')
+    parser.add_argument('-N', '--nnodes', type=int, default=0, help='Number of nodes to use. If given, the jobs will be launched all in the same node')
     parser.add_argument('-j', '--njobs', type=int, default=100000, help='Maximum number of jobs to launch')
     parser.add_argument('--to_sacc_name', type=str, default='cls_cov.fits', help='Sacc file name')
     parser.add_argument('--to_sacc_use_nl', default=False, action='store_true',
@@ -279,13 +373,17 @@ if __name__ == "__main__":
     queue = args.queue
     njobs = args.njobs
     onlogin = args.onlogin
+    nnodes = args.nnodes
 
     if args.compute == 'cls':
         launch_cls(data, queue, njobs, args.nc, args.mem, args.cls_fiducial, onlogin, args.skip)
     elif args.compute == 'cov':
-        if args.batches:
+        if args.batches and (nnodes == 0):
             launch_cov_batches(data, queue, njobs, args.nc, args.mem, onlogin,
                                args.skip, args.remove_cwsp)
+        elif args.batches and (nnodes > 0):
+            launch_cov_batches2(data, queue, njobs, args.nc, args.mem, onlogin,
+                               args.skip, args.remove_cwsp, nnodes)
         else:
             launch_cov(data, queue, njobs, args.nc, args.mem, onlogin,
                        args.skip)
