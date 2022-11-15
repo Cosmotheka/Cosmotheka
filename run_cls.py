@@ -4,7 +4,9 @@ import os
 import time
 import subprocess
 import numpy as np
+import re
 from datetime import datetime
+from glob import glob
 
 
 ##############################################################################
@@ -82,6 +84,15 @@ def get_jobs_with_same_cwsp(data):
             cwsp[fname] = [trs]
 
     return cwsp
+
+
+def clean_lock(data):
+    outdir = os.path.join(data.data['output'], "cov")
+    lock_files = glob(os.path.join(outdir, "*.lock"))
+    qjobs = get_queued_jobs()
+    batches = re.findall(qjobs, '/mnt/.*/batch.*.sh')
+
+    raise NotImplementedError("Work in progress")
 
 
 def launch_cov_batches2(data, queue, njobs, nc, mem, onlogin=False, skip=[],
@@ -358,7 +369,7 @@ if __name__ == "__main__":
     parser.add_argument('-n', '--nc', type=int, default=28, help='Number of cores to use')
     parser.add_argument('-m', '--mem', type=int, default=7., help='Memory (in GB) per core to use')
     parser.add_argument('-q', '--queue', type=str, default='berg', help='SLURM queue to use')
-    parser.add_argument('-N', '--nnodes', type=int, default=0, help='Number of nodes to use. If given, the jobs will be launched all in the same node')
+    parser.add_argument('-N', '--nnodes', type=int, default=1, help='Number of nodes to use. If given, the jobs will be launched all in the same node')
     parser.add_argument('-j', '--njobs', type=int, default=100000, help='Maximum number of jobs to launch')
     parser.add_argument('--to_sacc_name', type=str, default='cls_cov.fits', help='Sacc file name')
     parser.add_argument('--to_sacc_use_nl', default=False, action='store_true',
@@ -376,6 +387,8 @@ if __name__ == "__main__":
     parser.add_argument('--remove_cwsp', default=False, action='store_true',
                         help='Remove the covariance workspace once the ' +
                         'batch job has finished')
+    parser.add_argument('--clean_lock', default=False, action="store_true",
+                        help="Remove lock files from failed runs.")
     args = parser.parse_args()
 
     ##############################################################################
@@ -387,7 +400,10 @@ if __name__ == "__main__":
     onlogin = args.onlogin
     nnodes = args.nnodes
 
-    if args.compute == 'cls':
+
+    if args.clean_lock:
+        clean_lock(data)
+    elif args.compute == 'cls':
         launch_cls(data, queue, njobs, args.nc, args.mem, args.cls_fiducial, onlogin, args.skip)
     elif args.compute == 'cov':
         if args.batches and (nnodes == 0):
