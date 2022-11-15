@@ -43,7 +43,7 @@ def check_skip(data, skip, trs):
     return False
 
 
-def get_pyexec(comment, nc, queue, mem, onlogin, outdir, batches=False):
+def get_pyexec(comment, nc, queue, mem, onlogin, outdir, batches=False, logfname=None):
     if batches:
         pyexec = "/bin/bash"
     else:
@@ -52,7 +52,8 @@ def get_pyexec(comment, nc, queue, mem, onlogin, outdir, batches=False):
     if not onlogin:
         logdir = os.path.join(outdir, 'log')
         os.makedirs(logdir, exist_ok=True)
-        logfname = os.path.join(logdir, comment + '.log')
+        if logfname is None:
+            logfname = os.path.join(logdir, comment + '.log')
         pyexec = "addqueue -o {} -c {} -n 1x{} -s -q {} -m {} {}".format(logfname, comment, nc, queue, mem, pyexec)
 
     return pyexec
@@ -97,8 +98,8 @@ def launch_cov_batches2(data, queue, njobs, nc, mem, onlogin=False, skip=[],
     # means the job failed?
     #  - Problem: If the cov has not run, it will not be created. Solution:
     #  create it when populating the script?
-    def create_tmp_file(fname):
-        with open(fname + '.tmp', 'w') as f:
+    def create_lock_file(fname):
+        with open(fname + '.lock', 'w') as f:
             f.write('')
 
     outdir = data.data['output']
@@ -107,6 +108,7 @@ def launch_cov_batches2(data, queue, njobs, nc, mem, onlogin=False, skip=[],
     # Create a folder to place the batch scripts. This is because I couldn't
     # figure out how to pass it through STDIN
     outdir_batches = os.path.join(outdir, 'run_batches')
+    logfolder = os.path.join(outdir, 'log')
     os.makedirs(outdir_batches, exist_ok=True)
 
     c = 0
@@ -115,13 +117,9 @@ def launch_cov_batches2(data, queue, njobs, nc, mem, onlogin=False, skip=[],
     timestamp = date.strftime("%Y%m%d%H%M%S")
     sh_tbc = []
     for ni, (cw, trs_list) in enumerate(cwsp.items()):
-        create_tmp_file(cw)
-        comment = os.path.basename(cw)
-        sh_name = os.path.join(outdir_batches, f'{comment}.sh')
-
         if c >= njobs * nnodes:
             break
-        elif os.path.isfile(cw + '.tmp'):
+        elif os.path.isfile(cw + '.lock'):
             continue
 
         # Find the covariances to be computed
@@ -140,14 +138,23 @@ def launch_cov_batches2(data, queue, njobs, nc, mem, onlogin=False, skip=[],
         if len(covs_tbc) == 0:
             continue
 
+        # Create a temporal file so that this cw script is not run elsewhere
+        # This will be removed once the script finishes (independently if it
+        # successes or fails)
+        create_lock_file(cw)
+        sh_name = os.path.join(outdir_batches, f'{os.path.basename(cw)}.sh')
         with open(sh_name, 'w') as f:
             f.write('#!/bin/bash\n')
             for covi in covs_tbc:
+                f.write(f"echo Running {covi}\n")
                 f.write(covi)
 
-            f.write(f'rm {cw}' + '.tmp')
+            f.write(f"echo Removing lock file: {cw}.lock\n")
+            f.write(f'rm {cw}.lock\n')
             if remove_cwsp:
+                f.write(f"echo Removing {cw}\n")
                 f.write(f'rm {cw}\n')
+            f.write(f"echo Finished running {covi}\n\n")
 
         sh_tbc.append(sh_name)
         c += 1
@@ -157,16 +164,21 @@ def launch_cov_batches2(data, queue, njobs, nc, mem, onlogin=False, skip=[],
             njobs = int(n_total_jobs / nnodes + 1)
         # ~1min per job for nside 1024
         time_expected = njobs / (60 * 24)
-        comment = f"batch{nodei}-{njobs} (~{time_expected} days) "
-        sh_name = os.path.join(outdir_batches,
-                               f'batch{nodei}-{njobs}_{timestamp}.sh')
+        name = f"batch{nodei}-{njobs}_{timestamp}"
+        comment = f"{name}\(~{time_expected:.1f}days\)"
+        sh_name = os.path.join(outdir_batches, f'{name}.sh')
+        logfname = os.path.join(logfolder, f'{name}.sh.log')
+
         with open(sh_name, 'w') as f:
             f.write('#!/bin/bash\n')
             for shi in sh_tbc[nodei : (nodei + 1) * njobs]:
-                f.write(shi)
+                command = f"/bin/bash {shi}"
+                f.write(f"echo Running {command}\n")
+                f.write(f"{command}\n")
+                f.write(f"echo Finished {command}\n\n")
 
         pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir,
-                            batches=True)
+                            batches=True, logfname=logfname)
         print("##################################")
         print(pyexec + " " + sh_name)
         print("##################################")
