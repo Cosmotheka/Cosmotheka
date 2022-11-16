@@ -47,7 +47,7 @@ def check_skip(data, skip, trs):
 
 def get_pyexec(comment, nc, queue, mem, onlogin, outdir, batches=False, logfname=None):
     if batches:
-        pyexec = "/bin/bash"
+        pyexec = ""
     else:
         pyexec = "/usr/bin/python3"
 
@@ -88,7 +88,8 @@ def get_jobs_with_same_cwsp(data):
 
 def clean_lock(data):
     qjobs = get_queued_jobs()
-    batches = re.findall(qjobs, '/mnt/.*/batch.*.sh')
+    # regexp without the path since it does not appear when in queuing
+    batches = re.findall('batch.*.sh', qjobs)
 
     batches_dir = os.path.join(data.data['output'], "run_batches")
     rm_lock_files = glob(os.path.join(batches_dir, "*_remove_locks.sh"))
@@ -101,11 +102,11 @@ def clean_lock(data):
                 rm_lock_files.remove(rm_lf)
 
     # Run the scripts of the processes that failed
-    print("Running cleaning scripts")
     for rm_lf in rm_lock_files:
+        print(f"Running cleaning script: {rm_lf}")
         os.system(f"/bin/bash {rm_lf}")
         os.remove(rm_lf)
-    print("Removed dead lock files and removed orphan cleaning scripts")
+    print("Finished cleaning lock files")
 
 
 def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
@@ -190,7 +191,7 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
         # Create the script that will be launched
         with open(sh_name, 'w') as f:
             f.write('#!/bin/bash\n')
-            for shi in sh_tbc[nodei : (nodei + 1) * njobs]:
+            for shi in sh_tbc[nodei * njobs : (nodei + 1) * njobs]:
                 command = f"/bin/bash {shi}"
                 f.write(f"echo Running {command}\n")
                 f.write(f"{command}\n")
@@ -202,7 +203,7 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
         with open(rm_name, 'w') as f:
             f.write('#!/bin/bash\n')
             f.write('echo Removing lock files\n')
-            for cwi in cw_tbc[nodei : (nodei + 1) * njobs]:
+            for cwi in cw_tbc[nodei * njobs : (nodei + 1) * njobs]:
                 f.write(f"[ -f {cwi}.lock ] && rm {cwi}.lock\n")
             f.write('echo Finished removing lock files\n')
 
@@ -212,6 +213,7 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
         print(pyexec + " " + sh_name)
         print("##################################")
         print()
+        os.system(f"chmod +x {sh_name}")
         os.system(pyexec + " " + sh_name)
         time.sleep(1)
 
