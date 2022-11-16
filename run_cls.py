@@ -87,31 +87,47 @@ def get_jobs_with_same_cwsp(data):
 
 
 def clean_lock(data):
-    outdir = os.path.join(data.data['output'], "cov")
-    lock_files = glob(os.path.join(outdir, "*.lock"))
     qjobs = get_queued_jobs()
     batches = re.findall(qjobs, '/mnt/.*/batch.*.sh')
 
-    raise NotImplementedError("Work in progress")
+    batches_dir = os.path.join(data.data['output'], "run_batches")
+    rm_lock_files = glob(os.path.join(batches_dir, "*_remove_locks.sh"))
+
+    # Remove from rm_lock_files those that are still running
+    for batch in batches:
+        name = os.path.basename(batch).replace('.sh', '')
+        for rm_lf in rm_lock_files.copy():
+            if name in rm_lf:
+                rm_lock_files.remove(rm_lf)
+
+    # Run the scripts of the processes that failed
+    print("Running cleaning scripts")
+    for rm_lf in rm_lock_files:
+        os.system(f"/bin/bash {rm_lf}")
+        os.remove(rm_lf)
+    print("Removed dead lock files and removed orphan cleaning scripts")
 
 
 def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
                         remove_cwsp=False, nnodes=1):
-    # - Each job will have a given number of jobs (njobs)
-    # - If we have to rerun some jobs we need to:
-    #   - avoid launching the same covariance as in other process
-    #   - unless it had failed in that process.
-    # Problem:
-    # - We cannot get the info from the queue job comments
-    # - We could check the script that launch the batch of covs but we would
-    # not know if it had been run and failed or not.
-    # - Keep track with an empty txt file? If it is there but not the npz, it
-    # means the job failed?
-    #  - Problem: If the cov has not run, it will not be created. Solution:
-    #  create it when populating the script?
     def create_lock_file(fname):
         with open(fname + '.lock', 'w') as f:
             f.write('')
+
+    def write_cw_sh(fname, cw, covs_tbc):
+        create_lock_file(cw)
+        with open(sh_name, 'w') as f:
+            f.write('#!/bin/bash\n')
+            for covi in covs_tbc:
+                f.write(f"echo Running {covi}\n")
+                f.write(covi)
+
+            f.write(f"echo Removing lock file: {cw}.lock\n")
+            f.write(f'rm {cw}.lock\n')
+            if remove_cwsp:
+                f.write(f"echo Removing {cw}\n")
+                f.write(f'rm {cw}\n')
+            f.write(f"echo Finished running {covi}\n\n")
 
     outdir = data.data['output']
     cwsp = get_jobs_with_same_cwsp(data)
@@ -126,6 +142,7 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
     n_total_jobs = len(cwsp)
     date = datetime.utcnow()
     timestamp = date.strftime("%Y%m%d%H%M%S")
+    cw_tbc = []
     sh_tbc = []
     for ni, (cw, trs_list) in enumerate(cwsp.items()):
         if c >= njobs * nnodes:
@@ -152,21 +169,10 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
         # Create a temporal file so that this cw script is not run elsewhere
         # This will be removed once the script finishes (independently if it
         # successes or fails)
-        create_lock_file(cw)
         sh_name = os.path.join(outdir_batches, f'{os.path.basename(cw)}.sh')
-        with open(sh_name, 'w') as f:
-            f.write('#!/bin/bash\n')
-            for covi in covs_tbc:
-                f.write(f"echo Running {covi}\n")
-                f.write(covi)
+        write_cw_sh(sh_name, cw, covs_tbc)
 
-            f.write(f"echo Removing lock file: {cw}.lock\n")
-            f.write(f'rm {cw}.lock\n')
-            if remove_cwsp:
-                f.write(f"echo Removing {cw}\n")
-                f.write(f'rm {cw}\n')
-            f.write(f"echo Finished running {covi}\n\n")
-
+        cw_tbc.append(cw)
         sh_tbc.append(sh_name)
         c += 1
 
@@ -178,8 +184,10 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
         name = f"batch{nodei}-{njobs}_{timestamp}"
         comment = f"{name}\(~{time_expected:.1f}days\)"
         sh_name = os.path.join(outdir_batches, f'{name}.sh')
+        rm_name = os.path.join(outdir_batches, f'{name}_remove_locks.sh')
         logfname = os.path.join(logfolder, f'{name}.sh.log')
 
+        # Create the script that will be launched
         with open(sh_name, 'w') as f:
             f.write('#!/bin/bash\n')
             for shi in sh_tbc[nodei : (nodei + 1) * njobs]:
@@ -187,6 +195,16 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
                 f.write(f"echo Running {command}\n")
                 f.write(f"{command}\n")
                 f.write(f"echo Finished {command}\n\n")
+            f.write("echo Removing cleaning script")
+            f.write(f"rm {rm_name}")
+
+        # Create a file that will be used to remove the orphan lock files
+        with open(rm_name, 'w') as f:
+            f.write('#!/bin/bash\n')
+            f.write('echo Removing lock files')
+            for cwi in cw_tbc[nodei : (nodei + 1) * njobs]:
+                f.write(f"[ -f {cwi}.lock ] && rm {cwi}.lock")
+            f.write('echo Finished removing lock files')
 
         pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir,
                             batches=True, logfname=logfname)
