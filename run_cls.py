@@ -95,17 +95,40 @@ def clean_lock(data):
     rm_lock_files = glob(os.path.join(batches_dir, "*_remove_locks.sh"))
 
     # Remove from rm_lock_files those that are still running
+    rm_lf_tokeep = []
     for batch in batches:
         name = os.path.basename(batch).replace('.sh', '')
         for rm_lf in rm_lock_files.copy():
             if name in rm_lf:
                 rm_lock_files.remove(rm_lf)
+                rm_lf_tokeep.append(rm_lf)
 
     # Run the scripts of the processes that failed
     for rm_lf in rm_lock_files:
         print(f"Running cleaning script: {rm_lf}")
         os.system(f"/bin/bash {rm_lf}")
         os.remove(rm_lf)
+
+    # Clean lock files of jobs that did not get to create the rm files
+    cov_dir = os.path.join(data.data['output'], "cov")
+    lock_files = glob(os.path.join(cov_dir, "*.lock"))
+    for rm_lf in rm_lf_tokeep:
+        with open(rm_lf, 'r') as f:
+            for l in f.readlines():
+                # [3:] to remove the rm
+                if 'rm' not in l:
+                    continue
+                fname = re.search("rm .*.lock", l).group()[3:]
+                # TODO: maybe a try it's faster
+                try:
+                    lock_files.remove(fname)
+                except ValueError as e:
+                    if 'not in list' in str(e):
+                        continue
+                    raise e
+
+    for lf in lock_files:
+        os.remove(lf)
     print("Finished cleaning lock files")
 
 
