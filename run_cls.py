@@ -140,9 +140,6 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
     os.makedirs(outdir_batches, exist_ok=True)
 
     c = 0
-    n_total_jobs = len(cwsp)
-    date = datetime.utcnow()
-    timestamp = date.strftime("%Y%m%d%H%M%S")
     cw_tbc = []
     sh_tbc = []
     for ni, (cw, trs_list) in enumerate(cwsp.items()):
@@ -177,6 +174,9 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
         sh_tbc.append(sh_name)
         c += 1
 
+    n_total_jobs = len(cw_tbc)
+    date = datetime.utcnow()
+    timestamp = date.strftime("%Y%m%d%H%M%S")
     for nodei in range(nnodes):
         if njobs > n_total_jobs / nnodes:
             njobs = int(n_total_jobs / nnodes + 1)
@@ -196,7 +196,7 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
                 f.write(f"echo Running {command}\n")
                 f.write(f"{command}\n")
                 f.write(f"echo Finished {command}\n\n")
-            f.write("echo Removing cleaning script")
+            f.write("echo Removing cleaning script\n")
             f.write(f"rm {rm_name}")
 
         # Create a file that will be used to remove the orphan lock files
