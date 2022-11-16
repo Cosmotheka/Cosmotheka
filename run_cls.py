@@ -142,9 +142,10 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
         create_lock_file(cw)
         with open(sh_name, 'w') as f:
             f.write('#!/bin/bash\n')
+            f.write(f"/usr/bin/python3 run_cwsp_batch.py {args.INPUT}")
             for covi in covs_tbc:
-                f.write(f"echo Running {covi}\n")
-                f.write(covi)
+                f.write(" -trs {} {} {} {}".format(*covi))
+            f.write("\n")
 
             f.write(f"echo Removing lock file: {cw}.lock\n")
             f.write(f'rm {cw}.lock\n')
@@ -180,7 +181,7 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
                     check_skip(data, skip, trs):
                 continue
 
-            covs_tbc.append('/usr/bin/python3 -m xcell.cls.cov {} {} {} {} {}\n'.format(args.INPUT, *trs))
+            covs_tbc.append(trs)
 
         # To avoid writing and launching an empty file (which will fail if
         # remove_cwsp is True when it tries to remove the cw.

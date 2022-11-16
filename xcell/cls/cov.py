@@ -68,6 +68,7 @@ class Cov():
         # Multiplicative bias marginalization
         self.m_marg = self.data.data['cov'].get('m_marg', False)
         self.do_NG = self.data.data['cov'].get('non_Gaussian', False)
+        self.cw = None
 
     def _load_Cls(self):
         """
@@ -145,6 +146,9 @@ class Cov():
             Covariance workspace to compute the Gaussian covariance block
 
         """
+        if self.cw is not None:
+            return self.cw
+
         mask1, mask2 = self.clA1A2.get_masks_names()
         mask3, mask4 = self.clB1B2.get_masks_names()
         fname = os.path.join(self.outdir,
@@ -168,8 +172,9 @@ class Cov():
         # Recheck again in case other process has started writing it
         tools.save_wsp(cw, fname)
         self.recompute_cmcm = False
+        self.cw = cw
 
-        return cw
+        return self.cw
 
     def _get_cl_for_cov(self, clab, clab_fid, ma, mb):
         """
