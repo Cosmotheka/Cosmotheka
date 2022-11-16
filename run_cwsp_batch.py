@@ -4,7 +4,7 @@ from xcell.cls.cov import Cov
 import os
 
 
-def run_cwsp_batch(data, trs_list):
+def run_cwsp_batch(data, trs_list, save_cw):
     """
     Parameters
     ----------
@@ -15,14 +15,14 @@ def run_cwsp_batch(data, trs_list):
     print("Runing covariance for tracers {} {} {} {} [1/{}]".format(*trs_list[0], ntrs))
     cov = Cov(data, *trs_list[0])
     cov.get_covariance()
-    cw = cov.get_covariance_workspace()
+    cw = cov.get_covariance_workspace(save_cw=save_cw)
     print()
 
     for i, trs in enumerate(trs_list[1:], 1):
         print("Runing covariance for tracers {} {} {} {} [{}/{}]".format(*trs, i+1, ntrs))
         cov = Cov(data, *trs)
         cov.cw = cw
-        cov.get_covariance()
+        cov.get_covariance(save_cw=save_cw)
         print()
 
 
@@ -49,10 +49,13 @@ if __name__ == "__main__":
     parser.add_argument('INPUT', type=str, help='Input YAML data file')
     parser.add_argument('-trs', type=str, nargs='+', action='append',
                         help='Tracers for a covariance block (i.e. 4 tracers)')
+    parser.add_argument('--no_save_cw', default=False, action='store_true',
+                        help='If True, the covariance workspaces are not saved')
     args = parser.parse_args()
 
     data = Data(data_path=args.INPUT).data
     trs_list = args.trs
+    save_cw = ~args.no_save_cw
 
     # Checks before run
     if check_same_cwsp(data, trs_list) is False:
@@ -63,4 +66,4 @@ if __name__ == "__main__":
             raise ValueError("A combination of tracers is not 4 items long")
 
     # Computation
-    run_cwsp_batch(data, trs_list)
+    run_cwsp_batch(data, trs_list, save_cw=save_cw)

@@ -134,11 +134,16 @@ class Cov():
         outdir = os.path.join(root, 'cov')
         return outdir
 
-    def get_covariance_workspace(self):
+    def get_covariance_workspace(self, save_cw=True):
         """
         Return the covariance workspace needed to compute the Gaussian
         covariance block. If 'recompute' is not set in the configuration file,
         it will read it from the output directory if found.
+
+        Parameters
+        ----------
+        save_cw: bool
+            If True, save the covariance workspace
 
         Return
         ------
@@ -169,8 +174,8 @@ class Cov():
                                          l_toeplitz=l_toeplitz,
                                          l_exact=l_exact,
                                          dl_band=dl_band)
-        # Recheck again in case other process has started writing it
-        tools.save_wsp(cw, fname)
+        if save_cw:
+            tools.save_wsp(cw, fname)
         self.recompute_cmcm = False
         self.cw = cw
 
@@ -523,9 +528,14 @@ class Cov():
 
         return cov.reshape([nclsa*nbpw_a, nclsb*nbpw_b])
 
-    def get_covariance(self):
+    def get_covariance(self, save_cw=True):
         """
         Return the block covariance with all requested contributions.
+
+        Parameters
+        ----------
+        save_cw: bool
+            If True, save the covariance workspace
 
         Return
         ------
@@ -597,7 +607,7 @@ class Cov():
                   flush=True)
 
             itime = time.time()
-            cw = self.get_covariance_workspace()
+            cw = self.get_covariance_workspace(save_cw=save_cw)
             ftime = time.time()
             print('Get covariance workspace. It took ' +
                   f'{(ftime - itime) / 60} min', flush=True)

@@ -352,6 +352,18 @@ def test_covar_from_data():
     assert np.allclose(cov1, cov2, atol=1E-10, rtol=0)
 
 
+@pytest.mark.parametrize('save_cw', [True, False])
+def test_save_cw(save_cw):
+    cov_class = get_cov_class()
+    config = cov_class.data.data
+    cwname = "cw__mask_dummy0__mask_dummy0__mask_dummy0__mask_dummy0.fits"
+    cwpath = os.path.join(os.path.join(config['output'], "cov"), cwname)
+
+    # get_covariance_workspace tested through get_covariance
+    cov_class.get_covariance(save_cw=save_cw)
+    assert os.path.isfile(cwpath) is save_cw
+
+
 @pytest.mark.parametrize('cldata', ['all', 'none'])
 def test_get_covariance(cldata):
     # Get cl from randomnly generated map ("data")

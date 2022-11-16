@@ -145,15 +145,14 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
         create_lock_file(cw)
         s = f"echo Running {cw}\n"
         s += f"/usr/bin/python3 run_cwsp_batch.py {args.INPUT}"
+        if remove_cwsp:
+            s += " --no_save_cw"
         for covi in covs_tbc:
             s += " -trs {} {} {} {}".format(*covi)
         s += "\n\n"
 
         s += f"echo Removing lock file: {cw}.lock\n"
         s += f'rm {cw}.lock\n\n'
-        if remove_cwsp:
-            s += f"echo Removing {cw}\n"
-            s += f'rm {cw}\n'
         s += f"echo Finished running {cw}\n\n"
         return s
 
