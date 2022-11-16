@@ -138,21 +138,24 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
         with open(fname + '.lock', 'w') as f:
             f.write('')
 
-    def write_cw_sh(fname, cw, covs_tbc):
+    def write_cw_sh(cw, covs_tbc):
+        # Create a temporal file so that this cw script is not run elsewhere
+        # This will be removed once the script finishes (independently if it
+        # successes or fails)
         create_lock_file(cw)
-        with open(sh_name, 'w') as f:
-            f.write('#!/bin/bash\n')
-            f.write(f"/usr/bin/python3 run_cwsp_batch.py {args.INPUT}")
-            for covi in covs_tbc:
-                f.write(" -trs {} {} {} {}".format(*covi))
-            f.write("\n")
+        s = f"echo Running {cw}\n"
+        s += f"/usr/bin/python3 run_cwsp_batch.py {args.INPUT}"
+        for covi in covs_tbc:
+            s += " -trs {} {} {} {}".format(*covi)
+        s += "\n\n"
 
-            f.write(f"echo Removing lock file: {cw}.lock\n")
-            f.write(f'rm {cw}.lock\n')
-            if remove_cwsp:
-                f.write(f"echo Removing {cw}\n")
-                f.write(f'rm {cw}\n')
-            f.write(f"echo Finished running {covi}\n\n")
+        s += f"echo Removing lock file: {cw}.lock\n"
+        s += f'rm {cw}.lock\n\n'
+        if remove_cwsp:
+            s += f"echo Removing {cw}\n"
+            s += f'rm {cw}\n'
+        s += f"echo Finished running {cw}\n\n"
+        return s
 
     outdir = data.data['output']
     cwsp = get_jobs_with_same_cwsp(data)
@@ -188,14 +191,8 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
         if len(covs_tbc) == 0:
             continue
 
-        # Create a temporal file so that this cw script is not run elsewhere
-        # This will be removed once the script finishes (independently if it
-        # successes or fails)
-        sh_name = os.path.join(outdir_batches, f'{os.path.basename(cw)}.sh')
-        write_cw_sh(sh_name, cw, covs_tbc)
-
         cw_tbc.append(cw)
-        sh_tbc.append(sh_name)
+        sh_tbc.append(write_cw_sh(cw, covs_tbc))
         c += 1
 
     n_total_jobs = len(cw_tbc)
@@ -214,18 +211,17 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
 
         # Create the script that will be launched
         with open(sh_name, 'w') as f:
-            f.write('#!/bin/bash\n')
-            for shi in sh_tbc[nodei * njobs : (nodei + 1) * njobs]:
-                command = f"/bin/bash {shi}"
-                f.write(f"echo Running {command}\n")
-                f.write(f"{command}\n")
-                f.write(f"echo Finished {command}\n\n")
+            f.write('#!/bin/bash\n\n')
+            for i, shi in enumerate(sh_tbc[nodei * njobs : (nodei + 1) * njobs], 1):
+                f.write(f"# Step {i} / {njobs}\n")
+                f.write(f"echo Step {i} / {njobs}\n")
+                f.write(shi)
             f.write("echo Removing cleaning script\n")
             f.write(f"rm {rm_name}")
 
         # Create a file that will be used to remove the orphan lock files
         with open(rm_name, 'w') as f:
-            f.write('#!/bin/bash\n')
+            f.write('#!/bin/bash\n\n')
             f.write('echo Removing lock files\n')
             for cwi in cw_tbc[nodei * njobs : (nodei + 1) * njobs]:
                 f.write(f"[ -f {cwi}.lock ] && rm {cwi}.lock\n")

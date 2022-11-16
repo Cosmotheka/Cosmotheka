@@ -11,26 +11,30 @@ def run_cwsp_batch(data, trs_list):
     data (dict)
     trs_list (list): list of tracers for cov
     """
-    print("Runing covariance for trs {} {} {} {}".format(*trs_list[0]))
+    ntrs =  len(trs_list)
+    print("Runing covariance for tracers {} {} {} {} [1/{}]".format(*trs_list[0], ntrs))
     cov = Cov(data, *trs_list[0])
     cov.get_covariance()
     cw = cov.get_covariance_workspace()
+    print()
 
-    for trs in trs_list[1:]:
-        print("Runing covariance for trs {} {} {} {}".format(*trs))
+    for i, trs in enumerate(trs_list[1:], 1):
+        print("Runing covariance for tracers {} {} {} {} [{}/{}]".format(*trs, i+1, ntrs))
         cov = Cov(data, *trs)
         cov.cw = cw
         cov.get_covariance()
+        print()
 
 
 def check_same_cwsp(data, trs_list):
     cwsp = []
     for trs  in trs_list:
         mask1, mask2, mask3, mask4 = [data['tracers'][trsi]["mask_name"] for trsi in trs]
-        fname = os.path.join(data.data['output'],
+        fname = os.path.join(data['output'],
                              f'cov/cw__{mask1}__{mask2}__{mask3}__{mask4}.fits')
         if fname in cwsp:
             continue
+        cwsp.append(fname)
 
     if len(cwsp) != 1:
         return False
