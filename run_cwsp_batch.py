@@ -16,12 +16,25 @@ def run_cwsp_batch(data, trs_list, save_cw):
     cov = Cov(data, *trs_list[0])
     cov.get_covariance()
     cw = cov.get_covariance_workspace(save_cw=save_cw)
+
+    masks = [*cov.clA1A2.get_masks(), *cov.clB1B2.get_masks()]
+    mask_names = [*cov.clA1A2.get_masks_names(), *cov.clB1B2.get_masks_names()]
+
+    masks = dict(zip(mask_names, masks))
     print()
+
 
     for i, trs in enumerate(trs_list[1:], 1):
         print("Runing covariance for tracers {} {} {} {} [{}/{}]".format(*trs, i+1, ntrs))
         cov = Cov(data, *trs)
+        # Avoid reading the cw
         cov.cw = cw
+        # Avoid reading the masks
+        mappers = [*cov.clA1A2.get_mappers(), *cov.clB1B2.get_mappers()]
+        mask_names = [*cov.clA1A2.get_masks_names(),
+                      *cov.clB1B2.get_masks_names()]
+        for mask_name, mapper in zip(mask_names, mappers):
+            mapper.mask = masks[mask_name]
         cov.get_covariance(save_cw=save_cw)
         print()
 
