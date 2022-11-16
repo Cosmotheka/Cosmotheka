@@ -201,10 +201,10 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
         # Create a file that will be used to remove the orphan lock files
         with open(rm_name, 'w') as f:
             f.write('#!/bin/bash\n')
-            f.write('echo Removing lock files')
+            f.write('echo Removing lock files\n')
             for cwi in cw_tbc[nodei : (nodei + 1) * njobs]:
-                f.write(f"[ -f {cwi}.lock ] && rm {cwi}.lock")
-            f.write('echo Finished removing lock files')
+                f.write(f"[ -f {cwi}.lock ] && rm {cwi}.lock\n")
+            f.write('echo Finished removing lock files\n')
 
         pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir,
                             batches=True, logfname=logfname)
