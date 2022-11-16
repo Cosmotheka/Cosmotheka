@@ -37,6 +37,8 @@ def get_rerun_data(mpr, fname, ftype, section=None, read=True):
     if not exists:
         return None
 
+    print(f"Reading {fname_full}")
+
     # Read
     if ftype == 'FITSTable':
         return fitsio.read(fname_full, ext=section)
@@ -56,6 +58,8 @@ def save_rerun_data(mpr, fname, ftype, data):
 
     if fname_full is None:
         return
+
+    print(f"Saving {fname_full}")
 
     if ftype == 'FITSTable':
         fitsio.write(fname_full, data, clobber=True)

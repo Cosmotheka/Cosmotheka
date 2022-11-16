@@ -49,8 +49,6 @@ class MapperBase(object):
                            f'coord{self.coords}',
                            f'ns{self.nside}.fits.gz'])
 
-            print(f'Saving signal_map: {fn}')
-
             def func():
                 if not kwargs:
                     return self._get_signal_map()
