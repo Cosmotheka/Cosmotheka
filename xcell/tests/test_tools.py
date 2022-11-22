@@ -39,6 +39,19 @@ def run_clean_tmp():
         os.remove(dummyfile)
 
 
+def test_save_npz():
+    fname = os.path.join(tmpdir, 'test.npz')
+    ell = np.arange(10)
+    cl = np.ones(10)
+    tools.save_npz(fname, ell=ell, cl=cl)
+    f = np.load(fname)
+    assert np.all(ell == f['ell'])
+    assert np.all(cl == f['cl'])
+
+    with pytest.raises(RuntimeError):
+        tools.save_npz(fname, ell=ell, cl=cl, fail=[np.nan])
+
+
 @pytest.mark.parametrize('cwsp', [False, True])
 def test_save_wsp(cwsp):
     w = get_wsp(cwsp)

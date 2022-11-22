@@ -461,12 +461,12 @@ class Cl(ClBase):
                 cl_cov_12_cp *= correction
                 cl_cov_22_cp *= correction
 
-            np.savez(fname, ell=ell, cl=cl, cl_cp=cl_cp, nl=nl,
-                     nl_cp=nl_cp, cl_cov_cp=cl_cov_cp,
-                     cl_cov_11_cp=cl_cov_11_cp,
-                     cl_cov_12_cp=cl_cov_12_cp,
-                     cl_cov_22_cp=cl_cov_22_cp,
-                     wins=wins, correction=correction)
+            tools.save_npz(fname, ell=ell, cl=cl, cl_cp=cl_cp, nl=nl,
+                           nl_cp=nl_cp, cl_cov_cp=cl_cov_cp,
+                           cl_cov_11_cp=cl_cov_11_cp,
+                           cl_cov_12_cp=cl_cov_12_cp,
+                           cl_cov_22_cp=cl_cov_22_cp, wins=wins,
+                           correction=correction)
             self.recompute_cls = False
 
         cl_file = np.load(fname)
@@ -737,8 +737,8 @@ class ClFid(ClBase):
             cl_cp = w.couple_cell(cl_vector)
             cl_binned = w.decouple_cell(cl_cp)
             ell_binned = self.cl_data.get_ell_cl()[0]
-            np.savez_compressed(fname, cl=cl_vector, ell=ell, cl_cp=cl_cp,
-                                ell_binned=ell_binned, cl_binned=cl_binned)
+            tools.save_npz(fname, cl=cl_vector, ell=ell, cl_cp=cl_cp,
+                           ell_binned=ell_binned, cl_binned=cl_binned)
 
         cl_file = np.load(fname)
         if np.any(cl_file['ell'] != ell):

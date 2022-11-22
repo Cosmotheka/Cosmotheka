@@ -1,5 +1,17 @@
 #!/usr/bin/python
 import os
+import random
+import time
+import numpy as np
+
+
+def save_npz(fname, **kwargs):
+    for kv in kwargs.values():
+        if np.any(np.isnan(kv)):
+            raise RuntimeError("Some computed values are nan. "
+                               "Stopping here")
+
+    np.savez_compressed(fname, **kwargs)
 
 
 def save_wsp(wsp, fname):
@@ -13,6 +25,9 @@ def save_wsp(wsp, fname):
     fname: str
         Path to save the workspace to
     """
+    # Sleep a random number of ms. Dirty trick to avoid writing the same file
+    # twice
+    time.sleep(random.random() * 0.01)
     # Recheck again in case other process has started writing it
     if os.path.isfile(fname):
         return
@@ -24,7 +39,9 @@ def save_wsp(wsp, fname):
             # Check that the file has been created and the error is not due to
             # other problem (e.g. the folder does not exist)
             os.remove(fname)
-            wsp.write_to(fname)
+            time.sleep(random.random() * 0.01)
+            if not os.path.isfile(fname):
+                wsp.write_to(fname)
         else:
             raise e
 

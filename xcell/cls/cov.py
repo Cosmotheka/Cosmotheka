@@ -660,8 +660,8 @@ class Cov():
               f'{(ftime - itime) / 60} min', flush=True)
 
         itime = time.time()
-        np.savez_compressed(fname, cov=self.cov, cov_G=cov_G, cov_NG=cov_NG,
-                            cov_nl_marg=cov_nlm, cov_m_marg=cov_mm)
+        tools.save_npz(fname, cov=self.cov, cov_G=cov_G, cov_NG=cov_NG,
+                       cov_nl_marg=cov_nlm, cov_m_marg=cov_mm)
         ftime = time.time()
         print(f'Saved cov npz file. It took {(ftime - itime) / 60} min',
               flush=True)
