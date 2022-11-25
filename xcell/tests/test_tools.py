@@ -51,6 +51,9 @@ def test_save_npz():
     with pytest.raises(RuntimeError):
         tools.save_npz(fname, ell=ell, cl=cl, fail=[np.nan])
 
+    with pytest.raises(RuntimeError):
+        tools.save_npz(fname, ell=ell, cl=cl, fail=[1e128])
+
 
 @pytest.mark.parametrize('cwsp', [False, True])
 def test_save_wsp(cwsp):
