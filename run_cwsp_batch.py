@@ -14,7 +14,7 @@ def run_cwsp_batch(data, trs_list, save_cw):
     ntrs =  len(trs_list)
     print("Runing covariance for tracers {} {} {} {} [1/{}]".format(*trs_list[0], ntrs))
     cov = Cov(data, *trs_list[0])
-    cov.get_covariance()
+    cov.get_covariance(save_cw=save_cw)
     cw = cov.get_covariance_workspace(save_cw=save_cw)
 
     masks = [*cov.clA1A2.get_masks(), *cov.clB1B2.get_masks()]
@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
     data = Data(data_path=args.INPUT).data
     trs_list = args.trs
-    save_cw = ~args.no_save_cw
+    save_cw = not args.no_save_cw
 
     # Checks before run
     if check_same_cwsp(data, trs_list) is False:
