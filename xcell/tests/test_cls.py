@@ -264,6 +264,22 @@ def test_get_ell_cl():
     assert np.all(cl_class.wins == w.get_bandpower_windows())
 
 
+def test_get_mean_mamb():
+    cl_class = get_cl_class()
+    mean_mamb = cl_class.get_mean_mamb()
+
+    m1, m2 = cl_class.get_mappers()
+    ma = m1.get_mask()
+    mb = m2.get_mask()
+
+    assert np.abs(np.mean(ma*mb) / mean_mamb - 1) < 1e-5
+
+    clfile = np.load(os.path.join(tmpdir1,
+                                  'Dummy_Dummy',
+                                  'cl_Dummy__0_Dummy__0.npz'))
+    assert clfile['mean_mamb'] == mean_mamb
+
+
 def test_custom_auto():
     # No custom auto
     data = get_config()

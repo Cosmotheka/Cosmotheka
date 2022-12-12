@@ -181,7 +181,7 @@ class Cov():
 
         return self.cw
 
-    def _get_cl_for_cov(self, clab, clab_fid, ma, mb):
+    def _get_cl_for_cov(self, clab, clab_fid):
         """
         Return the angular power spectra to use in the computation of the
         covariance.
@@ -193,10 +193,6 @@ class Cov():
         clab_fid: xcell.cls.ClFid or xcell.cls.Cl
             Instance of the ClFid class for fields `a1 and `b`. If it is not an
             instance of ClFid, the data Cell will be used for the covariance.
-        ma: numpy.array
-            Mask of the field a
-        ma: numpy.array
-            Mask of the field b
 
         Return
         ------
@@ -206,7 +202,7 @@ class Cov():
             3*nside).
 
         """
-        mean_mamb = np.mean(ma * mb)
+        mean_mamb = clab.get_mean_mamb()
         if not mean_mamb:
             cl_cp = np.zeros((clab.get_n_cls(), 3*clab.nside))
         else:
@@ -568,21 +564,17 @@ class Cov():
         # If so, get these C_ells
         itime = time.time()
         if aa_data:
-            mean_mamb = np.mean(m_a1**2)
+            mean_mamb = self.clA1B1.get_mean_mamb()
             _, cla1b1, cla1b2, cla2b2 = self.clA1B1.get_ell_cls_cp_cov_auto()
             cla2b2 = cla2b2 / mean_mamb
             cla2b1 = cla1b2 / mean_mamb
             cla1b2 = cla1b2 / mean_mamb
             cla1b1 = cla1b1 / mean_mamb
         else:
-            cla1b1 = self._get_cl_for_cov(self.clA1B1, self.clfid_A1B1,
-                                          m_a1, m_b1)
-            cla1b2 = self._get_cl_for_cov(self.clA1B2, self.clfid_A1B2,
-                                          m_a1, m_b2)
-            cla2b1 = self._get_cl_for_cov(self.clA2B1, self.clfid_A2B1,
-                                          m_a2, m_b1)
-            cla2b2 = self._get_cl_for_cov(self.clA2B2, self.clfid_A2B2,
-                                          m_a2, m_b2)
+            cla1b1 = self._get_cl_for_cov(self.clA1B1, self.clfid_A1B1)
+            cla1b2 = self._get_cl_for_cov(self.clA1B2, self.clfid_A1B2)
+            cla2b1 = self._get_cl_for_cov(self.clA2B1, self.clfid_A2B1)
+            cla2b2 = self._get_cl_for_cov(self.clA2B2, self.clfid_A2B2)
         ftime = time.time()
         print(f'Computed C_ells. It took {(ftime - itime) / 60} min',
               flush=True)

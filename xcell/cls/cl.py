@@ -387,6 +387,9 @@ class Cl(ClBase):
             f1, f2 = self.get_nmt_fields()
             w = self.get_workspace()
             wins = w.get_bandpower_windows()
+            w_a = mapper1.get_mask()
+            w_b = mapper2.get_mask()
+            mean_mamb = np.mean(w_a * w_b)
 
             # Compute power spectrum
             # If auto-correlation, compute noise and,
@@ -449,10 +452,9 @@ class Cl(ClBase):
                 # See ACTk for reference
                 n_a = mapper1.mask_power
                 n_b = mapper2.mask_power
-                w_a = mapper1.get_mask()
-                w_b = mapper2.get_mask()
 
-                correction = np.mean(w_a*w_b)/np.mean(w_a**n_a*w_b**n_b)
+                correction = mean_mamb/np.mean(w_a**n_a*w_b**n_b)
+                print("correction", correction)
                 # Apply correction to all Cl's
                 cl *= correction
                 cl_cp *= correction
@@ -466,7 +468,7 @@ class Cl(ClBase):
                            cl_cov_11_cp=cl_cov_11_cp,
                            cl_cov_12_cp=cl_cov_12_cp,
                            cl_cov_22_cp=cl_cov_22_cp, wins=wins,
-                           correction=correction)
+                           correction=correction, mean_mamb=mean_mamb)
             self.recompute_cls = False
 
         cl_file = np.load(fname)
@@ -486,6 +488,7 @@ class Cl(ClBase):
                         'auto_11': cl_file['cl_cov_11_cp'],
                         'auto_12': cl_file['cl_cov_12_cp'],
                         'auto_22': cl_file['cl_cov_22_cp']}
+        self.mean_mamb = cl_file['mean_mamb']
 
         return cl_file
 
@@ -589,6 +592,19 @@ class Cl(ClBase):
         m1 = mapper1.get_mask()
         m2 = mapper2.get_mask()
         return m1, m2
+
+    def get_mean_mamb(self):
+        """
+        Return the mean of the tracers' masks product.
+
+        Return
+        ------
+        <m1*m2>: float
+            Mean of the product of the tracers' masks
+        """
+        if self.ell is None:
+            self.get_cl_file()
+        return self.mean_mamb
 
     def get_masks_names(self):
         """
