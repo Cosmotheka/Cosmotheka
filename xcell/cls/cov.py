@@ -548,13 +548,6 @@ class Cov():
             self.cov = np.load(fname)['cov']
             return self.cov
 
-        # Load all masks once
-        itime = time.time()
-        m_a1, m_a2 = self.clA1A2.get_masks()
-        m_b1, m_b2 = self.clB1B2.get_masks()
-        ftime = time.time()
-        print(f'Masks read. It took {(ftime - itime) / 60} min', flush=True)
-
         # Compute weighted Cls
         # Check if it's the auto-covariance of an auto-correlation
         auto_auto = self.trA1 == self.trA2 == self.trB1 == self.trB2
@@ -636,6 +629,14 @@ class Cov():
         if self.do_NG and notnull:
             fsky = self.data.data['cov'].get('fsky_NG', None)
             if fsky is None:  # Calculate from masks
+                print("Computing fsky from masks", flush=True)
+                # Load all masks once
+                itime = time.time()
+                m_a1, m_a2 = self.clA1A2.get_masks()
+                m_b1, m_b2 = self.clB1B2.get_masks()
+                ftime = time.time()
+                print(f'Masks read. It took {(ftime - itime) / 60} min', flush=True)
+
                 fsky = np.mean(((m_a1 > 0) & (m_a2 > 0) &
                                 (m_b1 > 0) & (m_b2 > 0)))
             kinds = self.data.data['cov'].get('NG_terms',
