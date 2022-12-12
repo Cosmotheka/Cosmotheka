@@ -49,7 +49,7 @@ def get_pyexec(comment, nc, queue, mem, onlogin, outdir, batches=False, logfname
     if batches:
         pyexec = ""
     else:
-        pyexec = "/usr/bin/python3"
+        pyexec = "/usr/bin/python3.8"
 
     if not onlogin:
         logdir = os.path.join(outdir, 'log')
@@ -144,7 +144,7 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
         # successes or fails)
         create_lock_file(cw)
         s = f"echo Running {cw}\n"
-        s += f"/usr/bin/python3 run_cwsp_batch.py {args.INPUT}"
+        s += f"/usr/bin/python3.8 run_cwsp_batch.py {args.INPUT}"
         if remove_cwsp:
             s += " --no_save_cw"
         for covi in covs_tbc:

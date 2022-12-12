@@ -654,9 +654,7 @@ class Cov():
               f'{(ftime - itime) / 60} min', flush=True)
 
         itime = time.time()
-        print(self.data.data['cov'])
         threshold = self.data.data['cov'].get('error_threshold', None)
-        print('threshold', threshold)
         if threshold is None:
             err1 = np.max(self.clA1A2.get_ell_cl_crude_error()[1])
             err2 = np.max(self.clB1B2.get_ell_cl_crude_error()[1])
