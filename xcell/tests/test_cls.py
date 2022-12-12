@@ -276,7 +276,6 @@ def test_get_ell_cl():
 def test_get_ell_cl_crude_error():
     cl_class = get_cl_class()
     ell, err = cl_class.get_ell_cl_crude_error()
-    cl = cl_class.cl
     cl_cp = cl_class.cl_cp
     mean_mamb = cl_class.mean_mamb
     assert np.all(err == cl_class._get_cl_crude_error(cl_cp, mean_mamb))

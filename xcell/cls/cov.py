@@ -635,7 +635,8 @@ class Cov():
                 m_a1, m_a2 = self.clA1A2.get_masks()
                 m_b1, m_b2 = self.clB1B2.get_masks()
                 ftime = time.time()
-                print(f'Masks read. It took {(ftime - itime) / 60} min', flush=True)
+                print(f'Masks read. It took {(ftime - itime) / 60} min',
+                      flush=True)
 
                 fsky = np.mean(((m_a1 > 0) & (m_a2 > 0) &
                                 (m_b1 > 0) & (m_b2 > 0)))
