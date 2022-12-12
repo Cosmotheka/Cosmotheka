@@ -659,9 +659,8 @@ class Cov():
         print('threshold', threshold)
         if threshold is None:
             err1 = np.max(self.clA1A2.get_ell_cl_crude_error()[1])
-            err2 = np.max(self.clA1A2.get_ell_cl_crude_error()[1])
+            err2 = np.max(self.clB1B2.get_ell_cl_crude_error()[1])
             # Use order of magnitude
-            print(err1, err2)
             threshold = 10**int(np.log10(np.max([err1, err2]))) * 1e5
         tools.save_npz(fname, threshold=threshold, cov=self.cov, cov_G=cov_G,
                        cov_NG=cov_NG, cov_nl_marg=cov_nlm, cov_m_marg=cov_mm)
