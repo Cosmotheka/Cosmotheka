@@ -54,6 +54,11 @@ def test_save_npz():
     with pytest.raises(RuntimeError):
         tools.save_npz(fname, ell=ell, cl=cl, fail=[1e128])
 
+    # Threshold
+    tools.save_npz(fname, threshold=1e10, ell=ell, cl=cl, fail=[1e9])
+    with pytest.raises(RuntimeError):
+        tools.save_npz(fname, threshold=1e10, ell=ell, cl=cl, fail=[1e11])
+
 
 @pytest.mark.parametrize('cwsp', [False, True])
 def test_save_wsp(cwsp):

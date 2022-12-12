@@ -347,6 +347,46 @@ class Cl(ClBase):
 
         return w
 
+    def _get_cl_crude_error(self, cl_cp, mean_mamb):
+        b = self.b
+        nbpw = b.get_n_bands()
+        if mean_mamb == 0:
+            return np.zeros_like((cl_cp.shape[0], nbpw))
+
+        cl = b.bin_cell(cl_cp)
+        err = np.zeros_like(cl)
+        for i in range(nbpw):
+            ells_in_i = b.get_ell_list(i)
+
+            # Reshape to have shape (ncls, nells)
+            w_i = b.get_weight_list(i)[None, :]
+            cli = cl[:, i][:, None]
+            cl_cpi = cl_cp[:, ells_in_i]
+            # Number of non-zero weighs. We correct by M-1/M to take into
+            # account we have just a few elements per bin
+            nw_i = np.sum(w_i != 0)
+            sigma2 = np.sum(w_i*(cl_cpi - cli)**2, axis=1)
+            sigma2 /= ((nw_i - 1)/nw_i*np.sum(w_i))
+            err[:, i] = np.sqrt(sigma2)
+
+        return err / mean_mamb
+
+    def get_ell_cl_crude_error(self):
+        """
+        Return a crude estimation of the cl errors.
+
+        Return
+        ------
+        ell: numpy.array
+            The bandpowers.
+
+        crude_err: numpy.array
+            The estimated errors
+        """
+        if self.ell is None:
+            self.get_cl_file()
+        return self.ell, self.crude_err
+
     def get_cl_file(self):
         """
         Return the dictionary with the computed Cell, ells, etc.
@@ -463,12 +503,16 @@ class Cl(ClBase):
                 cl_cov_12_cp *= correction
                 cl_cov_22_cp *= correction
 
+            # Crude estimation of the error
+            crude_err = self._get_cl_crude_error(cl_cp+nl_cp, mean_mamb)
+
             tools.save_npz(fname, ell=ell, cl=cl, cl_cp=cl_cp, nl=nl,
                            nl_cp=nl_cp, cl_cov_cp=cl_cov_cp,
                            cl_cov_11_cp=cl_cov_11_cp,
                            cl_cov_12_cp=cl_cov_12_cp,
                            cl_cov_22_cp=cl_cov_22_cp, wins=wins,
-                           correction=correction, mean_mamb=mean_mamb)
+                           correction=correction, mean_mamb=mean_mamb,
+                           crude_err=crude_err)
             self.recompute_cls = False
 
         cl_file = np.load(fname)
@@ -489,6 +533,7 @@ class Cl(ClBase):
                         'auto_12': cl_file['cl_cov_12_cp'],
                         'auto_22': cl_file['cl_cov_22_cp']}
         self.mean_mamb = cl_file['mean_mamb']
+        self.crude_err = cl_file['crude_err']
 
         return cl_file
 

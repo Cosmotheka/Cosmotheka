@@ -129,6 +129,7 @@ def test_cov_nlmarg():
     data['tracers']['Dummy__0']['nl_marginalize'] = True
     data['tracers']['Dummy__0']['nl_prior'] = 1E30
     data['tracers']['Dummy__0']['noise_level'] = 1E-5
+    data['cov']['error_threshold'] = 1e100
     data['output'] = tmpdir2
     cov_class = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
     cov = cov_class.get_covariance()
@@ -136,6 +137,14 @@ def test_cov_nlmarg():
     oo = np.ones(num_l)
     chi2 = np.dot(oo, np.linalg.solve(cov, oo))
     assert np.fabs(chi2) < 1E-5*num_l
+    shutil.rmtree(tmpdir2)
+
+    # The prior is huge so check that it will fail if the error_threshold is
+    # not set (i.e. it is based on an estimation from data)
+    with pytest.raises(RuntimeError):
+        del data['cov']['error_threshold']
+        cov_class = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
+        cov = cov_class.get_covariance()
     shutil.rmtree(tmpdir2)
 
 
@@ -262,6 +271,35 @@ def test_get_ell_cl():
 
     assert np.all(np.fabs(cl_m1 - cl) < 5 * sigma)
     assert np.all(cl_class.wins == w.get_bandpower_windows())
+
+
+def test_get_ell_cl_crude_error():
+    cl_class = get_cl_class()
+    ell, err = cl_class.get_ell_cl_crude_error()
+    cl = cl_class.cl
+    cl_cp = cl_class.cl_cp
+    mean_mamb = cl_class.mean_mamb
+    assert np.all(err == cl_class._get_cl_crude_error(cl_cp, mean_mamb))
+
+
+def test__get_cl_crude_error():
+    cl_class = get_cl_class()
+    # Overwrite the bin class to have more Cells per bpw
+    b = nmt.NmtBin.from_nside_linear(4096, 3000)
+    cl_class.b = b
+    nell = 3 * 4096
+    b = cl_class.b
+    r0 = np.random.normal(loc=0, scale=0.1, size=nell)
+    r1 = np.random.normal(loc=1, scale=0.3, size=nell)
+    cl_cp = np.array([r0, r1])
+    mean_mamb = 0.1
+    err = cl_class._get_cl_crude_error(cl_cp, mean_mamb)
+
+    err2 = [[np.std(r0[i*3000:(i+1)*3000]),
+             np.std(r1[i*3000:(i+1)*3000])] for i in range(4)]
+    err2 = np.transpose(err2)
+
+    assert np.abs((err * mean_mamb) / err2 - 1).max() < 1e-2
 
 
 def test_get_mean_mamb():

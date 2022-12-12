@@ -5,11 +5,11 @@ import time
 import numpy as np
 
 
-def save_npz(fname, **kwargs):
+def save_npz(fname, threshold=1e100, **kwargs):
     for kv in kwargs.values():
-        if np.any(np.isnan(kv)) or np.any(np.array(kv) > 1e100):
-            raise RuntimeError("Some computed values are nan or >1e100. "
-                               "Stopping here")
+        if np.any(np.isnan(kv)) or np.any(np.array(kv) > threshold):
+            raise RuntimeError(f"Some computed values are nan or >{threshold}."
+                               " Stopping here")
 
     np.savez_compressed(fname, **kwargs)
 
