@@ -34,11 +34,16 @@ def save_wsp(wsp, fname):
         return
 
     try:
+        print(f"Saving {fname}")
         wsp.write_to(fname)
     except RuntimeError as e:
         if ('Error writing' in str(e)) and os.path.isfile(fname):
             # Check that the file has been created and the error is not due to
             # other problem (e.g. the folder does not exist)
+            print(f"Error writing {fname}. Probably two processes are writing "
+                  "at the same time. Removing it, computing it again and "
+                  "trying to save it.")
+
             os.remove(fname)
             time.sleep(random.random() * 0.01)
             if not os.path.isfile(fname):
@@ -62,9 +67,11 @@ def read_wsp(wsp, fname, **kwargs):
     """
     # Recheck again in case other process has started writing it
     try:
+        print(f"Reading {fname}")
         wsp.read_from(fname, **kwargs)
     except RuntimeError as e:
         if ('Error reading' in str(e)) and os.path.isfile(fname):
+            print(f"Error reading {fname}. Removing it and computing it again")
             os.remove(fname)
             return
 

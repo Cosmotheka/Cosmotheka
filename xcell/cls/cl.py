@@ -423,6 +423,7 @@ class Cl(ClBase):
         ell = self.b.get_effective_ells()
         recompute = self.recompute_cls or self.recompute_mcm
         if recompute or (not os.path.isfile(fname)):
+            print(f"Computing Cell for {self.tr1} {self.tr2}")
             mapper1, mapper2 = self.get_mappers()
             f1, f2 = self.get_nmt_fields()
             w = self.get_workspace()
@@ -486,7 +487,8 @@ class Cl(ClBase):
             # Note that while we have subtracted the noise
             # bias from `cl_cp`, `cl_cov_cp` still includes it.
             correction = 1
-            if (mapper1.mask_power > 1) or (mapper2.mask_power > 1):
+            if (mean_mamb != 0) and ((mapper1.mask_power > 1) or
+                                     (mapper2.mask_power > 1)):
                 # Applies correction factor if masks have been
                 # implicitly applied to the maps
                 # See ACTk for reference
@@ -774,6 +776,7 @@ class ClFid(ClBase):
             fname = os.path.join(self.outdir, f'cl_{self.tr1}_{self.tr2}.npz')
         ell = np.arange(3 * nside)
         if not os.path.isfile(fname):
+            print(f"Computing fiducial Cell for {self.tr1} {self.tr2}")
             ccl_tr1, ccl_tr2 = self.get_tracers_ccl()
             cl = self.th.get_ccl_cl(ccl_tr1, ccl_tr2, ell)
             b1 = self.data.get_bias(self.tr1)

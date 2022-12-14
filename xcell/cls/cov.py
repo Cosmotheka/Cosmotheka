@@ -569,7 +569,7 @@ class Cov():
             cla2b1 = self._get_cl_for_cov(self.clA2B1, self.clfid_A2B1)
             cla2b2 = self._get_cl_for_cov(self.clA2B2, self.clfid_A2B2)
         ftime = time.time()
-        print(f'Computed C_ells. It took {(ftime - itime) / 60} min',
+        print(f'Get C_ells. It took {(ftime - itime) / 60} min',
               flush=True)
 
         notnull = (np.any(cla1b1) or np.any(cla1b2) or
@@ -588,7 +588,7 @@ class Cov():
             wa = self.clA1A2.get_workspace_cov()
             wb = self.clB1B2.get_workspace_cov()
             ftime = time.time()
-            print(f'Read workspaces. It took {(ftime - itime) / 60} min',
+            print(f'Get workspaces. It took {(ftime - itime) / 60} min',
                   flush=True)
 
             itime = time.time()
