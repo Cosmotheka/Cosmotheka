@@ -6,3 +6,5 @@ file_map: /mnt/extraspace/damonge/Datasets/ACT_DR4/lensing_kappa_maps/act_planck
 file_mask: /mnt/extraspace/damonge/Datasets/ACT_DR4/masks/lensing_masks/act_dr4.01_s14s15_D56_lensing_mask.fits
 lmax: 6000
 mask_power: 2
+# Avoid ringing
+mask_threshold: 0.1
