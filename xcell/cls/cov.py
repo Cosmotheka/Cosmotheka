@@ -756,18 +756,9 @@ class Cov():
         """
         _, cla1a2 = self.clfid_A1A2.get_ell_cl()
         _, clb1b2 = self.clfid_B1B2.get_ell_cl()
-        # Window convolution only needed if computed from theory
-        if isinstance(self.clfid_A1A2, ClFid):
-            wins_a1a2 = self.clA1A2.get_bandpower_windows()
-            ncls_a1a2, nell_cp = cla1a2.shape
-            wins_a1a2 = wins_a1a2.reshape((-1, ncls_a1a2 * nell_cp))
-            cla1a2 = wins_a1a2.dot(cla1a2.flatten()).reshape((ncls_a1a2, -1))
-        if isinstance(self.clfid_B1B2, ClFid):
-            wins_b1b2 = self.clB1B2.get_bandpower_windows()
-            ncls_b1b2, nell_cp = clb1b2.shape
-            wins_b1b2 = wins_b1b2.reshape((-1, ncls_b1b2 * nell_cp))
-            clb1b2 = wins_b1b2.dot(clb1b2.flatten()).reshape((ncls_b1b2, -1))
 
+        # Check first if the covariance is not going to be 0's
+        # to avoid reading and multiplying by the window function
         t_a1, t_a2 = self.clA1A2.get_dtypes()
         t_b1, t_b2 = self.clB1B2.get_dtypes()
         #
@@ -780,10 +771,27 @@ class Cov():
             sigma_b1 = self.data.data['tracers'][self.trB1].get('sigma_m', 0)
         if t_b2 == 'galaxy_shear':
             sigma_b2 = self.data.data['tracers'][self.trB2].get('sigma_m', 0)
+
+        factor = (sigma_a1 * sigma_b1 + sigma_a1 * sigma_b2 +
+                  sigma_a2 * sigma_b1 + sigma_a2 * sigma_b2)
+
+        if factor == 0:
+            return np.zeros((cla1a2.size, clb1b2.size))
+
+        # Window convolution only needed if computed from theory
+        if isinstance(self.clfid_A1A2, ClFid):
+            wins_a1a2 = self.clA1A2.get_bandpower_windows()
+            ncls_a1a2, nell_cp = cla1a2.shape
+            wins_a1a2 = wins_a1a2.reshape((-1, ncls_a1a2 * nell_cp))
+            cla1a2 = wins_a1a2.dot(cla1a2.flatten()).reshape((ncls_a1a2, -1))
+        if isinstance(self.clfid_B1B2, ClFid):
+            wins_b1b2 = self.clB1B2.get_bandpower_windows()
+            ncls_b1b2, nell_cp = clb1b2.shape
+            wins_b1b2 = wins_b1b2.reshape((-1, ncls_b1b2 * nell_cp))
+            clb1b2 = wins_b1b2.dot(clb1b2.flatten()).reshape((ncls_b1b2, -1))
         #
         cov = cla1a2.flatten()[:, None] * clb1b2.flatten()[None, :]
-        cov *= (sigma_a1 * sigma_b1 + sigma_a1 * sigma_b2 +
-                sigma_a2 * sigma_b1 + sigma_a2 * sigma_b2)
+        cov *= factor
         return cov
 
 

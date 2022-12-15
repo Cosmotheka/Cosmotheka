@@ -233,9 +233,10 @@ class Theory():
             z, pz = mapper.get_nz(dz=0)
             # # Calculate bias IA
             ia_bias = None
-            if self.config['wl_ia']:
+            config_ia = self.config.get("wl_ia", None)
+            if config_ia is not None:
                 # TODO: Improve this in yml file
-                A, eta, z0 = self.config['wl_ia']
+                A, eta, z0 = config_ia
                 # pyccl2 -> has already the factor inside. Only needed bz
                 bz = A*((1.+z)/(1.+z0))**eta*0.0139/0.013872474
                 ia_bias = (z, bz)

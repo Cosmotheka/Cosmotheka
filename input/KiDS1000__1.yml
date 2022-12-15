@@ -5,3 +5,4 @@ mode: "shear"
 zbin: "1"
 mask_name: "mask_KiDS1000__1"
 path_rerun: '/mnt/extraspace/damonge/Datasets/KiDS1000/xcell_runs'
+sigma_m: 0.020
