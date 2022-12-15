@@ -234,7 +234,7 @@ class Theory():
             # # Calculate bias IA
             ia_bias = None
             config_ia = self.config.get("wl_ia", None)
-            if config_ia is not None:
+            if (config_ia is not None) and (config_ia is not False):
                 # TODO: Improve this in yml file
                 A, eta, z0 = config_ia
                 # pyccl2 -> has already the factor inside. Only needed bz
