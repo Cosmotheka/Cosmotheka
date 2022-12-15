@@ -630,11 +630,23 @@ def test_cov_mmarg():
     # Marginalized covariance term
     covmargb = 4*sm**2*cl[:, None]*cl[None, :]
 
-    # Do with xCell
+    # Do with xCell (it is ordered as in NaMaster)
     covc = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
     covmarg = covc.get_covariance_m_marg()
+
+    covmarg = covmarg.reshape((nbpw, 4, nbpw, 4))
+    covmarg00 = covmarg[:, 0, :, 0] + 1e-100
+    covmargb00 = covmargb[:nbpw][:, :nbpw] + 1e-100
+
+    assert np.amax(np.fabs(covmarg00 / covmargb00 -1)) < 1E-5
+    for i in range(4):
+        for j in range(4):
+            covmargij = covmarg[:, i, :, j] + 1e-100
+            covmargbij = covmargb[i*nbpw:(i+1)*nbpw][:, j*nbpw:(j+1)*nbpw] + 1e-100
+
+            assert np.amax(np.fabs(covmargij / covmargbij -1)) < 1E-5
+
     shutil.rmtree(tmpdir1)
-    assert np.amax(np.fabs(covmarg-covmargb))/np.mean(covmarg) < 1E-5
 
 
 @pytest.mark.parametrize('perm', [

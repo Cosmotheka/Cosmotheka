@@ -742,7 +742,7 @@ class Cov():
         else:
             cov = np.zeros((nl.size, nl.size))
 
-        return cov
+        return self._order_cov_as_NaMaster(cov)
 
     def get_covariance_m_marg(self):
         """
@@ -792,7 +792,35 @@ class Cov():
         #
         cov = cla1a2.flatten()[:, None] * clb1b2.flatten()[None, :]
         cov *= factor
-        return cov
+        return self._order_cov_as_NaMaster(cov)
+
+    def _order_cov_as_NaMaster(self, cov):
+        """
+        Return a covariance block ordered as NaMaster. It assumes the input
+        covariance is ordered as `Cell[:, None] * Cell[None, :]`.
+
+        Parameters
+        ----------
+        cov: numpy.array
+            Block covariance ordered as `Cell[:, None] * Cell[None, :]`
+
+        Return
+        ------
+        cov: numpy.array
+            Block covariance ordered as NaMaster
+        """
+        _, cla1a2 = self.clA1A2.get_ell_cl()
+        _, clb1b2 = self.clB1B2.get_ell_cl()
+        ncls_a1a2, nbpw = cla1a2.shape
+        ncls_b1b2, _ = clb1b2.shape
+
+        shape = cov.shape
+        cov = cov.reshape((ncls_a1a2, nbpw, ncls_b1b2, nbpw))
+        cov = np.moveaxis(cov, (0, 1, 2, 3), (1, 0, 3, 2))
+
+        return cov.reshape(shape)
+
+
 
 
 if __name__ == "__main__":
