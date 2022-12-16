@@ -786,7 +786,8 @@ def test_clfid_against_ccl(tr1, tr2):
 
     t1 = get_ccl_tracer(tr1)
     t2 = get_ccl_tracer(tr2)
-    clb = b1 * b2 * (1 + m1) * (1 + m2) * ccl.angular_cl(cosmo, t1, t2, d['ell'])
+    factor = b1 * b2 * (1 + m1) * (1 + m2)
+    clb = factor * ccl.angular_cl(cosmo, t1, t2, d['ell'])
 
     assert np.all(np.fabs(clb[2:]/d['cl'][0][2:]-1) < 1E-5)
 

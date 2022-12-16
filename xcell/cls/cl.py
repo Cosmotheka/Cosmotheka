@@ -783,7 +783,6 @@ class ClFid(ClBase):
             b2 = self.data.get_bias(self.tr2)
             cl *= b1*b2
             tracers = self.data.data['tracers']
-            fiducial = self.data.data['cov']['fiducial']
             d1, d2 = self.get_dtypes()
             for tr, dtype in zip([self.tr1, self.tr2], [d1, d2]):
                 if (dtype == 'galaxy_shear'):
