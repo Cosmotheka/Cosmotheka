@@ -822,8 +822,6 @@ class Cov():
         return cov.reshape(shape)
 
 
-
-
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Compute Cls and cov from \
