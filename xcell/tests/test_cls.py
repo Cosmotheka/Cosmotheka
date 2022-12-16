@@ -58,7 +58,7 @@ def get_config(fsky=0.2, fsky2=0.3,
                         'Dummy__2': dummy2},
             'cls': {'Dummy-Dummy': {'compute': 'all'}},
             'cov': {'fiducial': {'cosmo': cosmo,
-                                 'wl_m': False, 'wl_ia': False}},
+                                 'wl_ia': False}},
             'bpw_edges': bpw_edges,
             'sphere': {'n_iter_sht': 0,
                        'n_iter_mcm': 3,
@@ -747,16 +747,22 @@ def test_clfid_halomod_settings():
                                      ('cmb_convergence', 'cmb_convergence')])
 def test_clfid_against_ccl(tr1, tr2):
     data = get_config(dtype0=tr1, dtype1=tr2)
+    m1 = m2 = 0
+    b1 = b2 = 1
     if tr1 == 'galaxy_density':
-        data['tracers']['Dummy__0']['bias'] = 1.
+        b1 = 1.1
+        data['tracers']['Dummy__0']['bias'] = b1
         data['tracers']['Dummy__0']['magnif_s'] = 1
     elif tr1 == 'galaxy_shear':
-        data['tracers']['Dummy__0']['m'] = 0.
+        m1 = 0.1
+        data['tracers']['Dummy__0']['m'] = m1
     if tr2 == 'galaxy_density':
-        data['tracers']['Dummy__1']['bias'] = 1.
+        b2 = 1.3
+        data['tracers']['Dummy__1']['bias'] = b2
         data['tracers']['Dummy__1']['magnif_s'] = 1
     elif tr2 == 'galaxy_shear':
-        data['tracers']['Dummy__1']['m'] = 0.
+        m2 = 0.3
+        data['tracers']['Dummy__1']['m'] = m2
 
     cosmo = ccl.Cosmology(**data['cov']['fiducial']['cosmo'])
     clf = ClFid(data, 'Dummy__0', 'Dummy__1')
@@ -780,7 +786,7 @@ def test_clfid_against_ccl(tr1, tr2):
 
     t1 = get_ccl_tracer(tr1)
     t2 = get_ccl_tracer(tr2)
-    clb = ccl.angular_cl(cosmo, t1, t2, d['ell'])
+    clb = b1 * b2 * (1 + m1) * (1 + m2) * ccl.angular_cl(cosmo, t1, t2, d['ell'])
 
     assert np.all(np.fabs(clb[2:]/d['cl'][0][2:]-1) < 1E-5)
 
