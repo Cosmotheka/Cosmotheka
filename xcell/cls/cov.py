@@ -754,9 +754,6 @@ class Cov():
         cov: numpy.array
             Block covariance
         """
-        _, cla1a2 = self.clfid_A1A2.get_ell_cl()
-        _, clb1b2 = self.clfid_B1B2.get_ell_cl()
-
         # Check first if the covariance is not going to be 0's
         # to avoid reading and multiplying by the window function
         t_a1, t_a2 = self.clA1A2.get_dtypes()
@@ -776,8 +773,12 @@ class Cov():
                   sigma_a2 * sigma_b1 + sigma_a2 * sigma_b2)
 
         if factor == 0:
+            _, cla1a2 = self.clA1A2.get_ell_cl()
+            _, clb1b2 = self.clB1B2.get_ell_cl()
             return np.zeros((cla1a2.size, clb1b2.size))
 
+        _, cla1a2 = self.clfid_A1A2.get_ell_cl()
+        _, clb1b2 = self.clfid_B1B2.get_ell_cl()
         # Window convolution only needed if computed from theory
         if isinstance(self.clfid_A1A2, ClFid):
             wins_a1a2 = self.clA1A2.get_bandpower_windows()
