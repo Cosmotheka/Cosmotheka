@@ -350,8 +350,10 @@ class Cl(ClBase):
     def _get_cl_crude_error(self, cl_cp, mean_mamb):
         b = self.b
         nbpw = b.get_n_bands()
+
+        # To avoid dividing by 0, set mean_mamb to a small number
         if mean_mamb == 0:
-            return np.zeros_like((cl_cp.shape[0], nbpw))
+            mean_mamb = 1e-10
 
         cl = b.bin_cell(cl_cp)
         err = np.zeros_like(cl)
