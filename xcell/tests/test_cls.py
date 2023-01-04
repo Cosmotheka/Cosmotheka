@@ -12,11 +12,16 @@ import pyccl as ccl
 
 # Remove previous test results
 tmpdir1 = './xcell/tests/cls/dummy1'
-if os.path.isdir(tmpdir1):
-    shutil.rmtree(tmpdir1)
 tmpdir2 = './xcell/tests/cls/dummy2'
-if os.path.isdir(tmpdir2):
-    shutil.rmtree(tmpdir2)
+
+
+# Cleaning the tmp dir before running and after running the tests
+@pytest.fixture(autouse=True)
+def run_clean_tmp():
+    if os.path.isdir(tmpdir1):
+        shutil.rmtree(tmpdir1)
+    if os.path.isdir(tmpdir2):
+        shutil.rmtree(tmpdir2)
 
 
 def get_config(fsky=0.2, fsky2=0.3,
@@ -53,7 +58,7 @@ def get_config(fsky=0.2, fsky2=0.3,
                         'Dummy__2': dummy2},
             'cls': {'Dummy-Dummy': {'compute': 'all'}},
             'cov': {'fiducial': {'cosmo': cosmo,
-                                 'wl_m': False, 'wl_ia': False}},
+                                 'wl_ia': False}},
             'bpw_edges': bpw_edges,
             'sphere': {'n_iter_sht': 0,
                        'n_iter_mcm': 3,
@@ -124,6 +129,7 @@ def test_cov_nlmarg():
     data['tracers']['Dummy__0']['nl_marginalize'] = True
     data['tracers']['Dummy__0']['nl_prior'] = 1E30
     data['tracers']['Dummy__0']['noise_level'] = 1E-5
+    data['cov']['error_threshold'] = 1e100
     data['output'] = tmpdir2
     cov_class = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
     cov = cov_class.get_covariance()
@@ -131,6 +137,14 @@ def test_cov_nlmarg():
     oo = np.ones(num_l)
     chi2 = np.dot(oo, np.linalg.solve(cov, oo))
     assert np.fabs(chi2) < 1E-5*num_l
+    shutil.rmtree(tmpdir2)
+
+    # The prior is huge so check that it will fail if the error_threshold is
+    # not set (i.e. it is based on an estimation from data)
+    with pytest.raises(RuntimeError):
+        del data['cov']['error_threshold']
+        cov_class = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
+        cov = cov_class.get_covariance()
     shutil.rmtree(tmpdir2)
 
 
@@ -259,6 +273,50 @@ def test_get_ell_cl():
     assert np.all(cl_class.wins == w.get_bandpower_windows())
 
 
+def test_get_ell_cl_crude_error():
+    cl_class = get_cl_class()
+    ell, err = cl_class.get_ell_cl_crude_error()
+    cl_cp = cl_class.cl_cp
+    mean_mamb = cl_class.mean_mamb
+    assert np.all(err == cl_class._get_cl_crude_error(cl_cp, mean_mamb))
+
+
+def test__get_cl_crude_error():
+    cl_class = get_cl_class()
+    # Overwrite the bin class to have more Cells per bpw
+    b = nmt.NmtBin.from_nside_linear(4096, 3000)
+    cl_class.b = b
+    nell = 3 * 4096
+    b = cl_class.b
+    r0 = np.random.normal(loc=0, scale=0.1, size=nell)
+    r1 = np.random.normal(loc=1, scale=0.3, size=nell)
+    cl_cp = np.array([r0, r1])
+    mean_mamb = 0.1
+    err = cl_class._get_cl_crude_error(cl_cp, mean_mamb)
+
+    err2 = [[np.std(r0[i*3000:(i+1)*3000]),
+             np.std(r1[i*3000:(i+1)*3000])] for i in range(4)]
+    err2 = np.transpose(err2)
+
+    assert np.abs((err * mean_mamb) / err2 - 1).max() < 1e-2
+
+
+def test_get_mean_mamb():
+    cl_class = get_cl_class()
+    mean_mamb = cl_class.get_mean_mamb()
+
+    m1, m2 = cl_class.get_mappers()
+    ma = m1.get_mask()
+    mb = m2.get_mask()
+
+    assert np.abs(np.mean(ma*mb) / mean_mamb - 1) < 1e-5
+
+    clfile = np.load(os.path.join(tmpdir1,
+                                  'Dummy_Dummy',
+                                  'cl_Dummy__0_Dummy__0.npz'))
+    assert clfile['mean_mamb'] == mean_mamb
+
+
 def test_custom_auto():
     # No custom auto
     data = get_config()
@@ -345,6 +403,18 @@ def test_covar_from_data():
     shutil.rmtree(tmpdir1)
 
     assert np.allclose(cov1, cov2, atol=1E-10, rtol=0)
+
+
+@pytest.mark.parametrize('save_cw', [True, False])
+def test_save_cw(save_cw):
+    cov_class = get_cov_class()
+    config = cov_class.data.data
+    cwname = "cw__mask_dummy0__mask_dummy0__mask_dummy0__mask_dummy0.fits"
+    cwpath = os.path.join(os.path.join(config['output'], "cov"), cwname)
+
+    # get_covariance_workspace tested through get_covariance
+    cov_class.get_covariance(save_cw=save_cw)
+    assert os.path.isfile(cwpath) is save_cw
 
 
 @pytest.mark.parametrize('cldata', ['all', 'none'])
@@ -450,7 +520,7 @@ def test_cls_vs_namaster():
         assert np.fabs(chi2/chi2_m-1) < tol
 
         # Compare bandpower windows
-        assert np.all(win == bpwin)
+        assert np.max(np.abs(wn / bpwin - 1)) < tol
 
     compare(cl_data, cov, win)
     compare(clfile['cl'], cov, clfile['wins'])
@@ -476,7 +546,8 @@ def test_symmetric():
     assert not os.path.isfile(fname)
     assert np.all(np.array(cl_class01.get_masks()) ==
                   np.array(cl_class10.get_masks()[::-1]))
-    assert np.all(cl_class01.get_ell_cl()[1] == cl_class10.get_ell_cl()[1])
+    assert np.max(np.abs((cl_class01.get_ell_cl()[1] /
+                          cl_class10.get_ell_cl()[1] - 1))) < 1e-10
     assert np.all(cl_class01.get_ell_nl()[1] == cl_class10.get_ell_nl()[1])
     assert np.all(cl_class01.get_ell_nl_cp()[1] ==
                   cl_class10.get_ell_nl_cp()[1])
@@ -559,11 +630,24 @@ def test_cov_mmarg():
     # Marginalized covariance term
     covmargb = 4*sm**2*cl[:, None]*cl[None, :]
 
-    # Do with xCell
+    # Do with xCell (it is ordered as in NaMaster)
     covc = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
     covmarg = covc.get_covariance_m_marg()
+
+    covmarg = covmarg.reshape((nbpw, 4, nbpw, 4))
+    covmarg00 = covmarg[:, 0, :, 0] + 1e-100
+    covmargb00 = covmargb[:nbpw][:, :nbpw] + 1e-100
+
+    assert np.amax(np.fabs(covmarg00 / covmargb00 - 1)) < 1E-5
+    for i in range(4):
+        for j in range(4):
+            covmargij = covmarg[:, i, :, j] + 1e-100
+            covmargbij = covmargb[i*nbpw:(i+1)*nbpw][:, j*nbpw:(j+1)*nbpw]
+            covmargbij += 1e-100
+
+            assert np.amax(np.fabs(covmargij / covmargbij - 1)) < 1E-5
+
     shutil.rmtree(tmpdir1)
-    assert np.amax(np.fabs(covmarg-covmargb))/np.mean(covmarg) < 1E-5
 
 
 @pytest.mark.parametrize('perm', [
@@ -663,16 +747,22 @@ def test_clfid_halomod_settings():
                                      ('cmb_convergence', 'cmb_convergence')])
 def test_clfid_against_ccl(tr1, tr2):
     data = get_config(dtype0=tr1, dtype1=tr2)
+    m1 = m2 = 0
+    b1 = b2 = 1
     if tr1 == 'galaxy_density':
-        data['tracers']['Dummy__0']['bias'] = 1.
+        b1 = 1.1
+        data['tracers']['Dummy__0']['bias'] = b1
         data['tracers']['Dummy__0']['magnif_s'] = 1
     elif tr1 == 'galaxy_shear':
-        data['tracers']['Dummy__0']['m'] = 0.
+        m1 = 0.1
+        data['tracers']['Dummy__0']['m'] = m1
     if tr2 == 'galaxy_density':
-        data['tracers']['Dummy__1']['bias'] = 1.
+        b2 = 1.3
+        data['tracers']['Dummy__1']['bias'] = b2
         data['tracers']['Dummy__1']['magnif_s'] = 1
     elif tr2 == 'galaxy_shear':
-        data['tracers']['Dummy__1']['m'] = 0.
+        m2 = 0.3
+        data['tracers']['Dummy__1']['m'] = m2
 
     cosmo = ccl.Cosmology(**data['cov']['fiducial']['cosmo'])
     clf = ClFid(data, 'Dummy__0', 'Dummy__1')
@@ -696,7 +786,8 @@ def test_clfid_against_ccl(tr1, tr2):
 
     t1 = get_ccl_tracer(tr1)
     t2 = get_ccl_tracer(tr2)
-    clb = ccl.angular_cl(cosmo, t1, t2, d['ell'])
+    factor = b1 * b2 * (1 + m1) * (1 + m2)
+    clb = factor * ccl.angular_cl(cosmo, t1, t2, d['ell'])
 
     assert np.all(np.fabs(clb[2:]/d['cl'][0][2:]-1) < 1E-5)
 

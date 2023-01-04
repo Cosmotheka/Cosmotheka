@@ -30,7 +30,7 @@ class MapperSPT(MapperPlanckBase):
         ps_mask = self._get_ps_mask()
         hm1_map *= ps_mask
         hm1_map = rotate_map(hm1_map, self.rot)
-        hm1_map = [hp.ud_grade(hm1_map, nside_out=self.nside)]
+        hm1_map = hp.ud_grade(hm1_map, nside_out=self.nside)
 
         hm2_map = hp.read_map(self.file_hm2)
         hm2_map[hm2_map == hp.UNSEEN] = 0.0
@@ -38,7 +38,7 @@ class MapperSPT(MapperPlanckBase):
         ps_mask = self._get_ps_mask()
         hm2_map *= ps_mask
         hm2_map = rotate_map(hm2_map, self.rot)
-        hm2_map = [hp.ud_grade(hm2_map, nside_out=self.nside)]
+        hm2_map = hp.ud_grade(hm2_map, nside_out=self.nside)
 
         return np.array([hm1_map, hm2_map])
 

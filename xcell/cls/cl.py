@@ -1,6 +1,7 @@
 #!/usr/bin/python
 from .data import Data
 from .theory import Theory
+from . import tools
 import numpy as np
 import pymaster as nmt
 import os
@@ -323,27 +324,70 @@ class Cl(ClBase):
         else:
             fname = os.path.join(self.outdir, f'w__{mask1}__{mask2}.fits')
         w = nmt.NmtWorkspace()
-        if self.recompute_mcm or (not os.path.isfile(fname)):
-            n_iter = self.data.data['sphere']['n_iter_mcm']
-            l_toeplitz, l_exact, dl_band = self.data.check_toeplitz('cls')
-            if spin0:
-                m1, m2 = self.get_mappers()
-                msk1 = m1.get_mask()
-                msk2 = m2.get_mask()
-                f1 = nmt.NmtField(msk1, None, spin=0)
-                f2 = nmt.NmtField(msk2, None, spin=0)
-            else:
-                f1, f2 = self.get_nmt_fields()
-            w.compute_coupling_matrix(f1, f2, self.b, n_iter=n_iter,
-                                      l_toeplitz=l_toeplitz, l_exact=l_exact,
-                                      dl_band=dl_band)
-            # Recheck again in case other process has started writing it
-            if (not os.path.isfile(fname)):
-                w.write_to(fname)
-            self.recompute_mcmc = False
+        if (not self.recompute_mcm) and os.path.isfile(fname):
+            tools.read_wsp(w, fname, read_unbinned_MCM=read_unbinned_MCM)
+            if w.wsp is not None:
+                return w
+
+        n_iter = self.data.data['sphere']['n_iter_mcm']
+        l_toeplitz, l_exact, dl_band = self.data.check_toeplitz('cls')
+        if spin0:
+            m1, m2 = self.get_mappers()
+            msk1 = m1.get_mask()
+            msk2 = m2.get_mask()
+            f1 = nmt.NmtField(msk1, None, spin=0)
+            f2 = nmt.NmtField(msk2, None, spin=0)
         else:
-            w.read_from(fname, read_unbinned_MCM)
+            f1, f2 = self.get_nmt_fields()
+        w.compute_coupling_matrix(f1, f2, self.b, n_iter=n_iter,
+                                  l_toeplitz=l_toeplitz, l_exact=l_exact,
+                                  dl_band=dl_band)
+        tools.save_wsp(w, fname)
+        self.recompute_mcmc = False
+
         return w
+
+    def _get_cl_crude_error(self, cl_cp, mean_mamb):
+        b = self.b
+        nbpw = b.get_n_bands()
+
+        # To avoid dividing by 0, set mean_mamb to a small number
+        if mean_mamb == 0:
+            mean_mamb = 1e-10
+
+        cl = b.bin_cell(cl_cp)
+        err = np.zeros_like(cl)
+        for i in range(nbpw):
+            ells_in_i = b.get_ell_list(i)
+
+            # Reshape to have shape (ncls, nells)
+            w_i = b.get_weight_list(i)[None, :]
+            cli = cl[:, i][:, None]
+            cl_cpi = cl_cp[:, ells_in_i]
+            # Number of non-zero weighs. We correct by M-1/M to take into
+            # account we have just a few elements per bin
+            nw_i = np.sum(w_i != 0)
+            sigma2 = np.sum(w_i*(cl_cpi - cli)**2, axis=1)
+            sigma2 /= ((nw_i - 1)/nw_i*np.sum(w_i))
+            err[:, i] = np.sqrt(sigma2)
+
+        return err / mean_mamb
+
+    def get_ell_cl_crude_error(self):
+        """
+        Return a crude estimation of the cl errors.
+
+        Return
+        ------
+        ell: numpy.array
+            The bandpowers.
+
+        crude_err: numpy.array
+            The estimated errors
+        """
+        if self.ell is None:
+            self.get_cl_file()
+        return self.ell, self.crude_err
 
     def get_cl_file(self):
         """
@@ -381,10 +425,14 @@ class Cl(ClBase):
         ell = self.b.get_effective_ells()
         recompute = self.recompute_cls or self.recompute_mcm
         if recompute or (not os.path.isfile(fname)):
+            print(f"Computing Cell for {self.tr1} {self.tr2}")
             mapper1, mapper2 = self.get_mappers()
             f1, f2 = self.get_nmt_fields()
             w = self.get_workspace()
             wins = w.get_bandpower_windows()
+            w_a = mapper1.get_mask()
+            w_b = mapper2.get_mask()
+            mean_mamb = np.mean(w_a * w_b)
 
             # Compute power spectrum
             # If auto-correlation, compute noise and,
@@ -441,16 +489,16 @@ class Cl(ClBase):
             # Note that while we have subtracted the noise
             # bias from `cl_cp`, `cl_cov_cp` still includes it.
             correction = 1
-            if (mapper1.mask_power > 1) or (mapper2.mask_power > 1):
+            if (mean_mamb != 0) and ((mapper1.mask_power > 1) or
+                                     (mapper2.mask_power > 1)):
                 # Applies correction factor if masks have been
                 # implicitly applied to the maps
                 # See ACTk for reference
                 n_a = mapper1.mask_power
                 n_b = mapper2.mask_power
-                w_a = mapper1.get_mask()
-                w_b = mapper2.get_mask()
 
-                correction = np.mean(w_a*w_b)/np.mean(w_a**n_a*w_b**n_b)
+                correction = mean_mamb/np.mean(w_a**n_a*w_b**n_b)
+                print("correction", correction)
                 # Apply correction to all Cl's
                 cl *= correction
                 cl_cp *= correction
@@ -459,12 +507,16 @@ class Cl(ClBase):
                 cl_cov_12_cp *= correction
                 cl_cov_22_cp *= correction
 
-            np.savez(fname, ell=ell, cl=cl, cl_cp=cl_cp, nl=nl,
-                     nl_cp=nl_cp, cl_cov_cp=cl_cov_cp,
-                     cl_cov_11_cp=cl_cov_11_cp,
-                     cl_cov_12_cp=cl_cov_12_cp,
-                     cl_cov_22_cp=cl_cov_22_cp,
-                     wins=wins, correction=correction)
+            # Crude estimation of the error
+            crude_err = self._get_cl_crude_error(cl_cp+nl_cp, mean_mamb)
+
+            tools.save_npz(fname, ell=ell, cl=cl, cl_cp=cl_cp, nl=nl,
+                           nl_cp=nl_cp, cl_cov_cp=cl_cov_cp,
+                           cl_cov_11_cp=cl_cov_11_cp,
+                           cl_cov_12_cp=cl_cov_12_cp,
+                           cl_cov_22_cp=cl_cov_22_cp, wins=wins,
+                           correction=correction, mean_mamb=mean_mamb,
+                           crude_err=crude_err)
             self.recompute_cls = False
 
         cl_file = np.load(fname)
@@ -484,6 +536,8 @@ class Cl(ClBase):
                         'auto_11': cl_file['cl_cov_11_cp'],
                         'auto_12': cl_file['cl_cov_12_cp'],
                         'auto_22': cl_file['cl_cov_22_cp']}
+        self.mean_mamb = cl_file['mean_mamb']
+        self.crude_err = cl_file['crude_err']
 
         return cl_file
 
@@ -587,6 +641,19 @@ class Cl(ClBase):
         m1 = mapper1.get_mask()
         m2 = mapper2.get_mask()
         return m1, m2
+
+    def get_mean_mamb(self):
+        """
+        Return the mean of the tracers' masks product.
+
+        Return
+        ------
+        <m1*m2>: float
+            Mean of the product of the tracers' masks
+        """
+        if self.ell is None:
+            self.get_cl_file()
+        return self.mean_mamb
 
     def get_masks_names(self):
         """
@@ -711,17 +778,18 @@ class ClFid(ClBase):
             fname = os.path.join(self.outdir, f'cl_{self.tr1}_{self.tr2}.npz')
         ell = np.arange(3 * nside)
         if not os.path.isfile(fname):
+            print(f"Computing fiducial Cell for {self.tr1} {self.tr2}")
             ccl_tr1, ccl_tr2 = self.get_tracers_ccl()
             cl = self.th.get_ccl_cl(ccl_tr1, ccl_tr2, ell)
             b1 = self.data.get_bias(self.tr1)
             b2 = self.data.get_bias(self.tr2)
             cl *= b1*b2
             tracers = self.data.data['tracers']
-            fiducial = self.data.data['cov']['fiducial']
             d1, d2 = self.get_dtypes()
-            for dtype, tr in zip([self.tr1, self.tr2], [d1, d2]):
-                if (dtype == 'galaxy_shear') and fiducial['wl_m']:
-                    cl = (1 + tracers[tr]['m']) * cl
+            for tr, dtype in zip([self.tr1, self.tr2], [d1, d2]):
+                if (dtype == 'galaxy_shear'):
+                    m = tracers[tr].get('m', 0)
+                    cl = (1 + m) * cl
 
             # This is only valid for LCDM and spins 0 and 2.
             s1, s2 = self.get_spins()
@@ -735,8 +803,8 @@ class ClFid(ClBase):
             cl_cp = w.couple_cell(cl_vector)
             cl_binned = w.decouple_cell(cl_cp)
             ell_binned = self.cl_data.get_ell_cl()[0]
-            np.savez_compressed(fname, cl=cl_vector, ell=ell, cl_cp=cl_cp,
-                                ell_binned=ell_binned, cl_binned=cl_binned)
+            tools.save_npz(fname, cl=cl_vector, ell=ell, cl_cp=cl_cp,
+                           ell_binned=ell_binned, cl_binned=cl_binned)
 
         cl_file = np.load(fname)
         if np.any(cl_file['ell'] != ell):

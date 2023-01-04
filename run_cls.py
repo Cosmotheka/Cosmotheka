@@ -4,6 +4,9 @@ import os
 import time
 import subprocess
 import numpy as np
+import re
+from datetime import datetime
+from glob import glob
 
 
 ##############################################################################
@@ -42,16 +45,17 @@ def check_skip(data, skip, trs):
     return False
 
 
-def get_pyexec(comment, nc, queue, mem, onlogin, outdir, batches=False):
+def get_pyexec(comment, nc, queue, mem, onlogin, outdir, batches=False, logfname=None):
     if batches:
-        pyexec = "/bin/bash"
+        pyexec = ""
     else:
-        pyexec = "/usr/bin/python3"
+        pyexec = "/usr/bin/python3.8"
 
     if not onlogin:
         logdir = os.path.join(outdir, 'log')
         os.makedirs(logdir, exist_ok=True)
-        logfname = os.path.join(logdir, comment + '.log')
+        if logfname is None:
+            logfname = os.path.join(logdir, comment + '.log')
         pyexec = "addqueue -o {} -c {} -n 1x{} -s -q {} -m {} {}".format(logfname, comment, nc, queue, mem, pyexec)
 
     return pyexec
@@ -65,7 +69,7 @@ def get_jobs_with_same_cwsp(data):
     nsteps = len(cov_tracers)
     cwsp = {}
     for i, trs in enumerate(cov_tracers):
-        print(f"Splitting jobs in batches. Step {i}/{nsteps}")
+        # print(f"Splitting jobs in batches. Step {i}/{nsteps}")
         # Instantiating the Cov class is too slow
         # cov = Cov(data.data, *trs)
         # fname = cov.get_cwsp_path()
@@ -82,50 +86,154 @@ def get_jobs_with_same_cwsp(data):
     return cwsp
 
 
+def clean_lock(data):
+    qjobs = get_queued_jobs()
+    # regexp without the path since it does not appear when in queuing
+    batches = re.findall('batch.*.sh', qjobs)
+
+    batches_dir = os.path.join(data.data['output'], "run_batches")
+    rm_lock_files = glob(os.path.join(batches_dir, "*_remove_locks.sh"))
+
+    # Remove from rm_lock_files those that are still running
+    rm_lf_tokeep = []
+    for batch in batches:
+        name = os.path.basename(batch).replace('.sh', '')
+        for rm_lf in rm_lock_files.copy():
+            if name in rm_lf:
+                rm_lock_files.remove(rm_lf)
+                rm_lf_tokeep.append(rm_lf)
+
+    # Run the scripts of the processes that failed
+    for rm_lf in rm_lock_files:
+        print(f"Running cleaning script: {rm_lf}")
+        os.system(f"/bin/bash {rm_lf}")
+        os.remove(rm_lf)
+
+    # Clean lock files of jobs that did not get to create the rm files
+    cov_dir = os.path.join(data.data['output'], "cov")
+    lock_files = glob(os.path.join(cov_dir, "*.lock"))
+    for rm_lf in rm_lf_tokeep:
+        with open(rm_lf, 'r') as f:
+            for l in f.readlines():
+                # [3:] to remove the rm
+                if 'rm' not in l:
+                    continue
+                fname = re.search("rm .*.lock", l).group()[3:]
+                # TODO: maybe a try it's faster
+                try:
+                    lock_files.remove(fname)
+                except ValueError as e:
+                    if 'not in list' in str(e):
+                        continue
+                    raise e
+
+    for lf in lock_files:
+        os.remove(lf)
+    print("Finished cleaning lock files")
+
+
 def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
-                       remove_cwsp=False):
+                        remove_cwsp=False, nnodes=1):
+    def create_lock_file(fname):
+        with open(fname + '.lock', 'w') as f:
+            f.write('')
+
+    def write_cw_sh(cw, covs_tbc):
+        # Create a temporal file so that this cw script is not run elsewhere
+        # This will be removed once the script finishes (independently if it
+        # successes or fails)
+        create_lock_file(cw)
+        s = f"echo Running {cw}\n"
+        s += f"/usr/bin/python3.8 run_cwsp_batch.py {args.INPUT}"
+        if remove_cwsp:
+            s += " --no_save_cw"
+        for covi in covs_tbc:
+            s += " -trs {} {} {} {}".format(*covi)
+        s += "\n\n"
+
+        s += f"echo Removing lock file: {cw}.lock\n"
+        s += f'rm {cw}.lock\n\n'
+        s += f"echo Finished running {cw}\n\n"
+        return s
+
     outdir = data.data['output']
     cwsp = get_jobs_with_same_cwsp(data)
-
-    if os.uname()[1] == 'glamdring':
-        qjobs = get_queued_jobs()
-    else:
-        qjobs = ''
 
     # Create a folder to place the batch scripts. This is because I couldn't
     # figure out how to pass it through STDIN
     outdir_batches = os.path.join(outdir, 'run_batches')
+    logfolder = os.path.join(outdir, 'log')
     os.makedirs(outdir_batches, exist_ok=True)
 
     c = 0
-    for cw, trs_list in cwsp.items():
-        comment = os.path.basename(cw)
-        sh_name = os.path.join(outdir_batches, f'{comment}.sh')
-
-        if c >= njobs:
+    cw_tbc = []
+    sh_tbc = []
+    for ni, (cw, trs_list) in enumerate(cwsp.items()):
+        if c >= njobs * nnodes:
             break
-        elif comment in qjobs:
+        elif os.path.isfile(cw + '.lock'):
             continue
 
+        # Find the covariances to be computed
+        covs_tbc = []
+        for trs in trs_list:
+            fname = os.path.join(outdir, 'cov/cov_{}_{}_{}_{}.npz'.format(*trs))
+            recompute = data.data['recompute']['cov'] or data.data['recompute']['cmcm']
+            if (os.path.isfile(fname) and (not recompute)) or \
+                    check_skip(data, skip, trs):
+                continue
+
+            covs_tbc.append(trs)
+
+        # To avoid writing and launching an empty file (which will fail if
+        # remove_cwsp is True when it tries to remove the cw.
+        if len(covs_tbc) == 0:
+            continue
+
+        cw_tbc.append(cw)
+        sh_tbc.append(write_cw_sh(cw, covs_tbc))
+        c += 1
+
+    n_total_jobs = len(cw_tbc)
+    date = datetime.utcnow()
+    timestamp = date.strftime("%Y%m%d%H%M%S")
+    for nodei in range(nnodes):
+        if njobs > n_total_jobs / nnodes:
+            njobs = int(n_total_jobs / nnodes + 1)
+        # ~1min per job for nside 1024
+        time_expected = njobs / (60 * 24)
+        name = f"batch{nodei}-{njobs}_{timestamp}"
+        comment = f"{name}\(~{time_expected:.1f}days\)"
+        sh_name = os.path.join(outdir_batches, f'{name}.sh')
+        rm_name = os.path.join(outdir_batches, f'{name}_remove_locks.sh')
+        logfname = os.path.join(logfolder, f'{name}.sh.log')
+
+        # Create the script that will be launched
         with open(sh_name, 'w') as f:
-            f.write('#!/bin/bash\n')
-            for trs in trs_list:
-                fname = os.path.join(outdir, 'cov', comment + '.npz')
-                recompute = data.data['recompute']['cov'] or data.data['recompute']['cmcm']
-                if (os.path.isfile(fname) and (not recompute)) or \
-                        check_skip(data, skip, trs):
-                    continue
+            f.write('#!/bin/bash\n\n')
+            for i, shi in enumerate(sh_tbc[nodei * njobs : (nodei + 1) * njobs], 1):
+                f.write(f"# Step {i} / {njobs}\n")
+                f.write(f"echo Step {i} / {njobs}\n")
+                f.write(shi)
+            f.write("echo Removing cleaning script\n")
+            f.write(f"rm {rm_name}")
 
-                f.write('/usr/bin/python3 -m xcell.cls.cov {} {} {} {} {}\n'.format(args.INPUT, *trs))
-
-            if remove_cwsp:
-                f.write(f'rm {cw}\n')
+        # Create a file that will be used to remove the orphan lock files
+        with open(rm_name, 'w') as f:
+            f.write('#!/bin/bash\n\n')
+            f.write('echo Removing lock files\n')
+            for cwi in cw_tbc[nodei * njobs : (nodei + 1) * njobs]:
+                f.write(f"[ -f {cwi}.lock ] && rm {cwi}.lock\n")
+            f.write('echo Finished removing lock files\n')
 
         pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir,
-                            batches=True)
+                            batches=True, logfname=logfname)
+        print("##################################")
         print(pyexec + " " + sh_name)
+        print("##################################")
+        print()
+        os.system(f"chmod +x {sh_name}")
         os.system(pyexec + " " + sh_name)
-        c += 1
         time.sleep(1)
 
 
@@ -238,6 +346,7 @@ if __name__ == "__main__":
     parser.add_argument('-n', '--nc', type=int, default=28, help='Number of cores to use')
     parser.add_argument('-m', '--mem', type=int, default=7., help='Memory (in GB) per core to use')
     parser.add_argument('-q', '--queue', type=str, default='berg', help='SLURM queue to use')
+    parser.add_argument('-N', '--nnodes', type=int, default=1, help='Number of nodes to use. If given, the jobs will be launched all in the same node')
     parser.add_argument('-j', '--njobs', type=int, default=100000, help='Maximum number of jobs to launch')
     parser.add_argument('--to_sacc_name', type=str, default='cls_cov.fits', help='Sacc file name')
     parser.add_argument('--to_sacc_use_nl', default=False, action='store_true',
@@ -255,6 +364,8 @@ if __name__ == "__main__":
     parser.add_argument('--remove_cwsp', default=False, action='store_true',
                         help='Remove the covariance workspace once the ' +
                         'batch job has finished')
+    parser.add_argument('--clean_lock', default=False, action="store_true",
+                        help="Remove lock files from failed runs.")
     args = parser.parse_args()
 
     ##############################################################################
@@ -264,13 +375,17 @@ if __name__ == "__main__":
     queue = args.queue
     njobs = args.njobs
     onlogin = args.onlogin
+    nnodes = args.nnodes
 
-    if args.compute == 'cls':
+
+    if args.clean_lock:
+        clean_lock(data)
+    elif args.compute == 'cls':
         launch_cls(data, queue, njobs, args.nc, args.mem, args.cls_fiducial, onlogin, args.skip)
     elif args.compute == 'cov':
         if args.batches:
             launch_cov_batches(data, queue, njobs, args.nc, args.mem, onlogin,
-                               args.skip, args.remove_cwsp)
+                               args.skip, args.remove_cwsp, nnodes)
         else:
             launch_cov(data, queue, njobs, args.nc, args.mem, onlogin,
                        args.skip)

@@ -2,6 +2,7 @@
 from .cl import Cl, ClFid
 from .data import Data
 from .theory import Theory
+from . import tools
 import os
 import numpy as np
 import pymaster as nmt
@@ -67,6 +68,7 @@ class Cov():
         # Multiplicative bias marginalization
         self.m_marg = self.data.data['cov'].get('m_marg', False)
         self.do_NG = self.data.data['cov'].get('non_Gaussian', False)
+        self.cw = None
 
     def _load_Cls(self):
         """
@@ -132,11 +134,16 @@ class Cov():
         outdir = os.path.join(root, 'cov')
         return outdir
 
-    def get_covariance_workspace(self):
+    def get_covariance_workspace(self, save_cw=True):
         """
         Return the covariance workspace needed to compute the Gaussian
         covariance block. If 'recompute' is not set in the configuration file,
         it will read it from the output directory if found.
+
+        Parameters
+        ----------
+        save_cw: bool
+            If True, save the covariance workspace
 
         Return
         ------
@@ -144,32 +151,37 @@ class Cov():
             Covariance workspace to compute the Gaussian covariance block
 
         """
+        if self.cw is not None:
+            return self.cw
+
         mask1, mask2 = self.clA1A2.get_masks_names()
         mask3, mask4 = self.clB1B2.get_masks_names()
         fname = os.path.join(self.outdir,
                              f'cw__{mask1}__{mask2}__{mask3}__{mask4}.fits')
         cw = nmt.NmtCovarianceWorkspace()
         recompute = self.data.data['recompute']['cmcm']
-        if recompute or (not os.path.isfile(fname)):
-            n_iter = self.data.data['sphere']['n_iter_cmcm']
-            l_toeplitz, l_exact, dl_band = self.data.check_toeplitz('cov')
-            fA1, fB1 = self.clA1B1.get_nmt_fields()
-            fA2, fB2 = self.clA2B2.get_nmt_fields()
-            cw.compute_coupling_coefficients(fA1, fA2, fB1, fB2,
-                                             n_iter=n_iter,
-                                             l_toeplitz=l_toeplitz,
-                                             l_exact=l_exact,
-                                             dl_band=dl_band)
-            # Recheck again in case other process has started writing it
-            if (not os.path.isfile(fname)):
-                cw.write_to(fname)
-            self.recompute_cmcm = False
-        else:
-            cw.read_from(fname)
+        if (not recompute) and os.path.isfile(fname):
+            tools.read_wsp(cw, fname)
+            if cw.wsp is not None:
+                return cw
 
-        return cw
+        n_iter = self.data.data['sphere']['n_iter_cmcm']
+        l_toeplitz, l_exact, dl_band = self.data.check_toeplitz('cov')
+        fA1, fB1 = self.clA1B1.get_nmt_fields()
+        fA2, fB2 = self.clA2B2.get_nmt_fields()
+        cw.compute_coupling_coefficients(fA1, fA2, fB1, fB2,
+                                         n_iter=n_iter,
+                                         l_toeplitz=l_toeplitz,
+                                         l_exact=l_exact,
+                                         dl_band=dl_band)
+        if save_cw:
+            tools.save_wsp(cw, fname)
+        self.recompute_cmcm = False
+        self.cw = cw
 
-    def _get_cl_for_cov(self, clab, clab_fid, ma, mb):
+        return self.cw
+
+    def _get_cl_for_cov(self, clab, clab_fid):
         """
         Return the angular power spectra to use in the computation of the
         covariance.
@@ -181,10 +193,6 @@ class Cov():
         clab_fid: xcell.cls.ClFid or xcell.cls.Cl
             Instance of the ClFid class for fields `a1 and `b`. If it is not an
             instance of ClFid, the data Cell will be used for the covariance.
-        ma: numpy.array
-            Mask of the field a
-        ma: numpy.array
-            Mask of the field b
 
         Return
         ------
@@ -194,7 +202,7 @@ class Cov():
             3*nside).
 
         """
-        mean_mamb = np.mean(ma * mb)
+        mean_mamb = clab.get_mean_mamb()
         if not mean_mamb:
             cl_cp = np.zeros((clab.get_n_cls(), 3*clab.nside))
         else:
@@ -516,9 +524,14 @@ class Cov():
 
         return cov.reshape([nclsa*nbpw_a, nclsb*nbpw_b])
 
-    def get_covariance(self):
+    def get_covariance(self, save_cw=True):
         """
         Return the block covariance with all requested contributions.
+
+        Parameters
+        ----------
+        save_cw: bool
+            If True, save the covariance workspace
 
         Return
         ------
@@ -535,13 +548,6 @@ class Cov():
             self.cov = np.load(fname)['cov']
             return self.cov
 
-        # Load all masks once
-        itime = time.time()
-        m_a1, m_a2 = self.clA1A2.get_masks()
-        m_b1, m_b2 = self.clB1B2.get_masks()
-        ftime = time.time()
-        print(f'Masks read. It took {(ftime - itime) / 60} min', flush=True)
-
         # Compute weighted Cls
         # Check if it's the auto-covariance of an auto-correlation
         auto_auto = self.trA1 == self.trA2 == self.trB1 == self.trB2
@@ -551,23 +557,19 @@ class Cov():
         # If so, get these C_ells
         itime = time.time()
         if aa_data:
-            mean_mamb = np.mean(m_a1**2)
+            mean_mamb = self.clA1B1.get_mean_mamb()
             _, cla1b1, cla1b2, cla2b2 = self.clA1B1.get_ell_cls_cp_cov_auto()
             cla2b2 = cla2b2 / mean_mamb
             cla2b1 = cla1b2 / mean_mamb
             cla1b2 = cla1b2 / mean_mamb
             cla1b1 = cla1b1 / mean_mamb
         else:
-            cla1b1 = self._get_cl_for_cov(self.clA1B1, self.clfid_A1B1,
-                                          m_a1, m_b1)
-            cla1b2 = self._get_cl_for_cov(self.clA1B2, self.clfid_A1B2,
-                                          m_a1, m_b2)
-            cla2b1 = self._get_cl_for_cov(self.clA2B1, self.clfid_A2B1,
-                                          m_a2, m_b1)
-            cla2b2 = self._get_cl_for_cov(self.clA2B2, self.clfid_A2B2,
-                                          m_a2, m_b2)
+            cla1b1 = self._get_cl_for_cov(self.clA1B1, self.clfid_A1B1)
+            cla1b2 = self._get_cl_for_cov(self.clA1B2, self.clfid_A1B2)
+            cla2b1 = self._get_cl_for_cov(self.clA2B1, self.clfid_A2B1)
+            cla2b2 = self._get_cl_for_cov(self.clA2B2, self.clfid_A2B2)
         ftime = time.time()
-        print(f'Computed C_ells. It took {(ftime - itime) / 60} min',
+        print(f'Get C_ells. It took {(ftime - itime) / 60} min',
               flush=True)
 
         notnull = (np.any(cla1b1) or np.any(cla1b2) or
@@ -586,11 +588,11 @@ class Cov():
             wa = self.clA1A2.get_workspace_cov()
             wb = self.clB1B2.get_workspace_cov()
             ftime = time.time()
-            print(f'Read workspaces. It took {(ftime - itime) / 60} min',
+            print(f'Get workspaces. It took {(ftime - itime) / 60} min',
                   flush=True)
 
             itime = time.time()
-            cw = self.get_covariance_workspace()
+            cw = self.get_covariance_workspace(save_cw=save_cw)
             ftime = time.time()
             print('Get covariance workspace. It took ' +
                   f'{(ftime - itime) / 60} min', flush=True)
@@ -627,6 +629,15 @@ class Cov():
         if self.do_NG and notnull:
             fsky = self.data.data['cov'].get('fsky_NG', None)
             if fsky is None:  # Calculate from masks
+                print("Computing fsky from masks", flush=True)
+                # Load all masks once
+                itime = time.time()
+                m_a1, m_a2 = self.clA1A2.get_masks()
+                m_b1, m_b2 = self.clB1B2.get_masks()
+                ftime = time.time()
+                print(f'Masks read. It took {(ftime - itime) / 60} min',
+                      flush=True)
+
                 fsky = np.mean(((m_a1 > 0) & (m_a2 > 0) &
                                 (m_b1 > 0) & (m_b2 > 0)))
             kinds = self.data.data['cov'].get('NG_terms',
@@ -643,8 +654,15 @@ class Cov():
               f'{(ftime - itime) / 60} min', flush=True)
 
         itime = time.time()
-        np.savez_compressed(fname, cov=self.cov, cov_G=cov_G, cov_NG=cov_NG,
-                            cov_nl_marg=cov_nlm, cov_m_marg=cov_mm)
+        threshold = self.data.data['cov'].get('error_threshold', None)
+        if threshold is None:
+            err1 = np.max(self.clA1A2.get_ell_cl_crude_error()[1])
+            err2 = np.max(self.clB1B2.get_ell_cl_crude_error()[1])
+            # Use order of magnitude
+            # Squaring the errors to compare cov vs sigma^2, not sigma
+            threshold = 10**int(np.log10(np.max([err1, err2])**2)) * 1e5
+        tools.save_npz(fname, threshold=threshold, cov=self.cov, cov_G=cov_G,
+                       cov_NG=cov_NG, cov_nl_marg=cov_nlm, cov_m_marg=cov_mm)
         ftime = time.time()
         print(f'Saved cov npz file. It took {(ftime - itime) / 60} min',
               flush=True)
@@ -725,7 +743,7 @@ class Cov():
         else:
             cov = np.zeros((nl.size, nl.size))
 
-        return cov
+        return self._order_cov_as_NaMaster(cov)
 
     def get_covariance_m_marg(self):
         """
@@ -737,6 +755,29 @@ class Cov():
         cov: numpy.array
             Block covariance
         """
+        # Check first if the covariance is not going to be 0's
+        # to avoid reading and multiplying by the window function
+        t_a1, t_a2 = self.clA1A2.get_dtypes()
+        t_b1, t_b2 = self.clB1B2.get_dtypes()
+        #
+        sigma_a1 = sigma_a2 = sigma_b1 = sigma_b2 = 0
+        if t_a1 == 'galaxy_shear':
+            sigma_a1 = self.data.data['tracers'][self.trA1].get('sigma_m', 0)
+        if t_a2 == 'galaxy_shear':
+            sigma_a2 = self.data.data['tracers'][self.trA2].get('sigma_m', 0)
+        if t_b1 == 'galaxy_shear':
+            sigma_b1 = self.data.data['tracers'][self.trB1].get('sigma_m', 0)
+        if t_b2 == 'galaxy_shear':
+            sigma_b2 = self.data.data['tracers'][self.trB2].get('sigma_m', 0)
+
+        factor = (sigma_a1 * sigma_b1 + sigma_a1 * sigma_b2 +
+                  sigma_a2 * sigma_b1 + sigma_a2 * sigma_b2)
+
+        if factor == 0:
+            _, cla1a2 = self.clA1A2.get_ell_cl()
+            _, clb1b2 = self.clB1B2.get_ell_cl()
+            return np.zeros((cla1a2.size, clb1b2.size))
+
         _, cla1a2 = self.clfid_A1A2.get_ell_cl()
         _, clb1b2 = self.clfid_B1B2.get_ell_cl()
         # Window convolution only needed if computed from theory
@@ -750,24 +791,36 @@ class Cov():
             ncls_b1b2, nell_cp = clb1b2.shape
             wins_b1b2 = wins_b1b2.reshape((-1, ncls_b1b2 * nell_cp))
             clb1b2 = wins_b1b2.dot(clb1b2.flatten()).reshape((ncls_b1b2, -1))
-
-        t_a1, t_a2 = self.clA1A2.get_dtypes()
-        t_b1, t_b2 = self.clB1B2.get_dtypes()
-        #
-        sigma_a1 = sigma_a2 = sigma_b1 = sigma_b2 = 0
-        if t_a1 == 'galaxy_shear':
-            sigma_a1 = self.data.data['tracers'][self.trA1].get('sigma_m', 0)
-        if t_a2 == 'galaxy_shear':
-            sigma_a2 = self.data.data['tracers'][self.trA2].get('sigma_m', 0)
-        if t_b1 == 'galaxy_shear':
-            sigma_b1 = self.data.data['tracers'][self.trB1].get('sigma_m', 0)
-        if t_b2 == 'galaxy_shear':
-            sigma_b2 = self.data.data['tracers'][self.trB2].get('sigma_m', 0)
         #
         cov = cla1a2.flatten()[:, None] * clb1b2.flatten()[None, :]
-        cov *= (sigma_a1 * sigma_b1 + sigma_a1 * sigma_b2 +
-                sigma_a2 * sigma_b1 + sigma_a2 * sigma_b2)
-        return cov
+        cov *= factor
+        return self._order_cov_as_NaMaster(cov)
+
+    def _order_cov_as_NaMaster(self, cov):
+        """
+        Return a covariance block ordered as NaMaster. It assumes the input
+        covariance is ordered as `Cell[:, None] * Cell[None, :]`.
+
+        Parameters
+        ----------
+        cov: numpy.array
+            Block covariance ordered as `Cell[:, None] * Cell[None, :]`
+
+        Return
+        ------
+        cov: numpy.array
+            Block covariance ordered as NaMaster
+        """
+        _, cla1a2 = self.clA1A2.get_ell_cl()
+        _, clb1b2 = self.clB1B2.get_ell_cl()
+        ncls_a1a2, nbpw = cla1a2.shape
+        ncls_b1b2, _ = clb1b2.shape
+
+        shape = cov.shape
+        cov = cov.reshape((ncls_a1a2, nbpw, ncls_b1b2, nbpw))
+        cov = np.moveaxis(cov, (0, 1, 2, 3), (1, 0, 3, 2))
+
+        return cov.reshape(shape)
 
 
 if __name__ == "__main__":
