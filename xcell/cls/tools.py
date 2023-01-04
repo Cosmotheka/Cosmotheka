@@ -8,9 +8,10 @@ import numpy as np
 def save_npz(fname, threshold=1e100, **kwargs):
     print(f"Saving {fname}")
     for kn, kv in kwargs.items():
-        if np.any(np.isnan(kv)) or np.any(np.array(kv) > threshold):
-            raise RuntimeError(f"Some values (e.g. {kn}) are nan or "
-                               ">{threshold}. Stopping here")
+        maxv = np.max(np.abs(kv))
+        if np.isnan(maxv) or (maxv > threshold):
+            raise RuntimeError(f"Some values in {kn} are nan or "
+                               f">{threshold} (e.g. {maxv}). Stopping here")
 
     np.savez_compressed(fname, **kwargs)
 
