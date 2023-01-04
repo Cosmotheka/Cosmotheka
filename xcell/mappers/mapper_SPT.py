@@ -25,6 +25,8 @@ class MapperSPT(MapperPlanckBase):
         - mask_name: `"mask_SPT"`
         - path_rerun: `".../Datasets/SPT/xcell_runs"`
     """
+    map_name = 'SPT'
+
     def __init__(self, config):
         self._get_Planck_defaults(config)
         self.gp_mask_modes = {'default': 0}
@@ -34,31 +36,24 @@ class MapperSPT(MapperPlanckBase):
         # Fix rotation from Planck's default
         self.rot = self._get_rotator('C')
 
-    def _get_hm_maps(self):
-        """
-        Returns the half mission maps of the mapper \
-        after masking NaN values and applying the \
-        neccesary coordinate rotations.
+    def _generate_hm_maps(self):
+        hm1_map = hp.read_map(self.file_hm1)
+        hm1_map[hm1_map == hp.UNSEEN] = 0.0
+        hm1_map[np.isnan(hm1_map)] = 0.0
+        ps_mask = self._get_ps_mask()
+        hm1_map *= ps_mask
+        hm1_map = rotate_map(hm1_map, self.rot)
+        hm1_map = hp.ud_grade(hm1_map, nside_out=self.nside)
 
-        Returns:
-            hm1_map (Array)
-            hm2_map (Array)
-        """
-        if self.hm1_map is None:
-            hm1_map = hp.read_map(self.file_hm1)
-            hm1_map[hm1_map == hp.UNSEEN] = 0.0
-            hm1_map[np.isnan(hm1_map)] = 0.0
-            hm1_map = rotate_map(hm1_map, self.rot)
-            self.hm1_map = [hp.ud_grade(hm1_map,
-                            nside_out=self.nside)]
-        if self.hm2_map is None:
-            hm2_map = hp.read_map(self.file_hm2)
-            hm2_map[hm2_map == hp.UNSEEN] = 0.0
-            hm2_map[np.isnan(hm2_map)] = 0.0
-            hm2_map = rotate_map(hm2_map, self.rot)
-            self.hm2_map = [hp.ud_grade(hm2_map,
-                            nside_out=self.nside)]
-        return self.hm1_map, self.hm2_map
+        hm2_map = hp.read_map(self.file_hm2)
+        hm2_map[hm2_map == hp.UNSEEN] = 0.0
+        hm2_map[np.isnan(hm2_map)] = 0.0
+        ps_mask = self._get_ps_mask()
+        hm2_map *= ps_mask
+        hm2_map = rotate_map(hm2_map, self.rot)
+        hm2_map = hp.ud_grade(hm2_map, nside_out=self.nside)
+
+        return np.array([hm1_map, hm2_map])
 
     def get_dtype(self):
         return 'cmb_tSZ'

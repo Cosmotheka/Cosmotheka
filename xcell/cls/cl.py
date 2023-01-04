@@ -1,6 +1,7 @@
 #!/usr/bin/python
 from .data import Data
 from .theory import Theory
+from . import tools
 import numpy as np
 import pymaster as nmt
 import os
@@ -8,7 +9,24 @@ import warnings
 
 
 class ClBase():
+    """
+    ClBase class. It contains the basic and common methods for data and
+    fiducial Cell handling and computation.
+    """
     def __init__(self, data, tr1, tr2, ignore_existing_yml=False):
+        """
+        Parameters
+        ----------
+        data: dict
+            Configuration dictionary (e.g. read yaml)
+        tr1: str
+            First tracer
+        tr2: str
+            Second tracer
+        ignore_existing_yml: bool
+            If True, ignore existing yaml in the output directory and use the
+            input configuration. Otherwise, use the existing yaml.
+        """
         self.data = Data(data=data, ignore_existing_yml=ignore_existing_yml)
         self.tr1 = tr1
         self.tr2 = tr2
@@ -25,6 +43,19 @@ class ClBase():
         self.cl_cp = None
 
     def get_outdir(self, subdir=''):
+        """
+        Return the output directory.
+
+        Parameters
+        ----------
+        subdir: str
+            Subfolder name inside the output directory where to save the output
+            files.
+
+        Return
+        ------
+            Path to the output directory or subdirectory.
+        """
         root = self.data.data['output']
         if self._read_symmetric:
             trreq = self.data.get_tracers_bare_name_pair(self.tr2, self.tr1,
@@ -36,6 +67,16 @@ class ClBase():
         return outdir
 
     def get_mappers(self):
+        """
+        Return the mappers of the correlated tracers
+
+        Return
+        ------
+        mapper1: xcell.mappers.XXX
+            Mapper of the first tracer
+        mapper2: xcell.mappers.XXX
+            Mapper of the second tracer
+        """
         if self._mapper1 is None:
             self._mapper1 = self.data.get_mapper(self.tr1)
             self._mapper2 = self._mapper1 if self.tr1 == self.tr2 else \
@@ -43,34 +84,89 @@ class ClBase():
         return self._mapper1, self._mapper2
 
     def get_cl_file(self):
+        """
+        Return the dictionary with the computed Cell, ells, etc. The specific
+        output will depend on the child class implementation.
+        """
         raise ValueError('Cl_Base class is not to be used directly!')
 
     def get_ell_cl(self):
+        """
+        Return the noiseless computed ell and Cell.
+
+        Return
+        ------
+        ell: numpy.array
+            The angular modes. In the case of a data Cell, these will be the
+            bandpowers (i.e. bins on ell).
+
+        Cell: numpy.array
+            Noiseless angular power spectrum with shape (ncls, nell), where
+            ncls is the number of possible cls and nell the number of
+            multipoles. In the case of a data Cell, these will be the
+            bandpowers (i.e. bins on ell).
+        """
         if self.ell is None:
             self.get_cl_file()
         return self.ell, self.cl
 
     def get_ell_cl_cp(self):
         """
-        Return the noisless coupled Cell
+        Return the noiseless coupled cell
+
+        Return
+        ------
+        ell: numpy.array
+            The angular modes up to lmax = 3*nside - 1
+        Cell: numpy.array
+            Noiseless coupled angular power spectrum with shape (ncls,
+            3*nside), where ncls is the number of possible Cells.
         """
         if self.ell is None:
             self.get_cl_file()
         return np.arange(3 * self.nside), self.cl_cp
 
     def get_n_cls(self):
+        """
+        Return the number of possible Cells
+
+        Return
+        ------
+        ncls: float
+            Number of possible Cells
+        """
         s1, s2 = self.get_spins()
         nmap1 = 1 + (s1 > 0)
         nmap2 = 1 + (s2 > 0)
         return nmap1 * nmap2
 
     def get_spins(self):
+        """
+        Return the tracers' spin.
+
+        Return
+        ------
+        s1: float
+            Spin of tracer 1
+        s2: float
+            Spin of tracer 2
+        """
         mapper1, mapper2 = self.get_mappers()
         s1 = mapper1.get_spin()
         s2 = mapper2.get_spin()
         return s1, s2
 
     def get_dtypes(self):
+        """
+        Return the tracers' data types (e.g. galaxy_density).
+
+        Return
+        ------
+        d1: str
+            Data type of tracer 1
+        d2: str
+            Data type of tracer 2
+        """
         mapper1, mapper2 = self.get_mappers()
         d1 = mapper1.get_dtype()
         d2 = mapper2.get_dtype()
@@ -78,7 +174,24 @@ class ClBase():
 
 
 class Cl(ClBase):
+    """
+    Cl class. This is the class used to compute the data angular power spectrum
+    with a pseudo-Cell estimator (as implemented in NaMaster).
+    """
     def __init__(self, data, tr1, tr2, ignore_existing_yml=False):
+        """
+        Parameters
+        ----------
+        data: dict
+            Configuration dictionary (e.g. read yaml)
+        tr1: str
+            First tracer
+        tr2: str
+            Second tracer
+        ignore_existing_yml: bool
+            If True, ignore existing yaml in the output directory and use the
+            input configuration. Otherwise, use the existing yaml.
+        """
         super().__init__(data, tr1, tr2, ignore_existing_yml)
         self.outdir = self.get_outdir()
         os.makedirs(self.outdir, exist_ok=True)
@@ -96,6 +209,14 @@ class Cl(ClBase):
         self.cls_cov = None
 
     def get_NmtBin(self):
+        """
+        Return the pymaster.NmtBin instance with the requeseted binning.
+
+        Return
+        ------
+        b: pymaster.NmtBin
+            Binning
+        """
         if self._read_symmetric:
             trs = self.data.get_tracers_bare_name_pair(self.tr2, self.tr1)
         else:
@@ -116,18 +237,54 @@ class Cl(ClBase):
         return b
 
     def get_nmt_fields(self):
+        """
+        Return the pymaster.NmtField instances of the correlated tracers.
+
+        Return
+        ------
+        f1: pymaster.NmtField
+            Field of tracer 1
+        f2: pymaster.NmtField
+            Field of tracer 2
+        """
         mapper1, mapper2 = self.get_mappers()
         f1 = mapper1.get_nmt_field()
         f2 = mapper2.get_nmt_field()
         return f1, f2
 
     def get_workspace(self, read_unbinned_MCM=True):
+        """
+        Return the pymaster.NmtWorkspace instance with the mode-coupling matrix
+        of the correlated fields.
+
+        Parameters
+        ----------
+        read_unbinned_MCM: bool
+            If True, load the unbinned mode-coupling matrix as well
+
+        Return
+        ------
+        w: pymaster.NmtWorkspace
+            Workspace with the mode-coupling matrix of both tracers
+        """
         if self._w is None:
             self._w = \
                 self._compute_workspace(read_unbinned_MCM=read_unbinned_MCM)
         return self._w
 
     def get_workspace_cov(self):
+        """
+        Return the pymaster.NmtWorkspace instance with the mode-coupling matrix
+        of the correlated fields used to compute the covariance. It can be
+        different from the one to compute the Cells if requested in the
+        configuration file (e.g. for the spin-0 approximation).
+
+        Return
+        ------
+        w: pymaster.NmtWorkspace
+            Workspace with the mode-coupling matrix of both tracers used in the
+            covariance calculation.
+        """
         if self._wcov is None:
             spin0 = self.data.data['cov'].get('spin0', False)
             if spin0 and (self.get_spins() != (0, 0)):
@@ -139,6 +296,23 @@ class Cl(ClBase):
         return self._wcov
 
     def _compute_workspace(self, spin0=False, read_unbinned_MCM=True):
+        """
+        Return the pymaster.NmtWorkspace with the mode-coupling matrix of the
+        correlated fields.
+
+        Parameters
+        ----------
+        spin0: bool
+            If True, compute the workspace assuming th all fields have
+            spin-0.
+        read_unbinned_MCM: bool
+            If True, load the unbinned mode-coupling matrix as well
+
+        Return
+        ------
+        w: pymaster.NmtWorkspace
+            Workspace with the mode-coupling matrix of both tracers used.
+        """
         # Check if the fields are already of spin0 to avoid computing the
         # workspace twice
         spin0 = spin0 and (self.get_spins() != (0, 0))
@@ -150,29 +324,100 @@ class Cl(ClBase):
         else:
             fname = os.path.join(self.outdir, f'w__{mask1}__{mask2}.fits')
         w = nmt.NmtWorkspace()
-        if self.recompute_mcm or (not os.path.isfile(fname)):
-            n_iter = self.data.data['sphere']['n_iter_mcm']
-            l_toeplitz, l_exact, dl_band = self.data.check_toeplitz('cls')
-            if spin0:
-                m1, m2 = self.get_mappers()
-                msk1 = m1.get_mask()
-                msk2 = m2.get_mask()
-                f1 = nmt.NmtField(msk1, None, spin=0)
-                f2 = nmt.NmtField(msk2, None, spin=0)
-            else:
-                f1, f2 = self.get_nmt_fields()
-            w.compute_coupling_matrix(f1, f2, self.b, n_iter=n_iter,
-                                      l_toeplitz=l_toeplitz, l_exact=l_exact,
-                                      dl_band=dl_band)
-            # Recheck again in case other process has started writing it
-            if (not os.path.isfile(fname)):
-                w.write_to(fname)
-            self.recompute_mcmc = False
+        if (not self.recompute_mcm) and os.path.isfile(fname):
+            tools.read_wsp(w, fname, read_unbinned_MCM=read_unbinned_MCM)
+            if w.wsp is not None:
+                return w
+
+        n_iter = self.data.data['sphere']['n_iter_mcm']
+        l_toeplitz, l_exact, dl_band = self.data.check_toeplitz('cls')
+        if spin0:
+            m1, m2 = self.get_mappers()
+            msk1 = m1.get_mask()
+            msk2 = m2.get_mask()
+            f1 = nmt.NmtField(msk1, None, spin=0)
+            f2 = nmt.NmtField(msk2, None, spin=0)
         else:
-            w.read_from(fname, read_unbinned_MCM)
+            f1, f2 = self.get_nmt_fields()
+        w.compute_coupling_matrix(f1, f2, self.b, n_iter=n_iter,
+                                  l_toeplitz=l_toeplitz, l_exact=l_exact,
+                                  dl_band=dl_band)
+        tools.save_wsp(w, fname)
+        self.recompute_mcmc = False
+
         return w
 
+    def _get_cl_crude_error(self, cl_cp, mean_mamb):
+        b = self.b
+        nbpw = b.get_n_bands()
+
+        # To avoid dividing by 0, set mean_mamb to a small number
+        if mean_mamb == 0:
+            mean_mamb = 1e-10
+
+        cl = b.bin_cell(cl_cp)
+        err = np.zeros_like(cl)
+        for i in range(nbpw):
+            ells_in_i = b.get_ell_list(i)
+
+            # Reshape to have shape (ncls, nells)
+            w_i = b.get_weight_list(i)[None, :]
+            cli = cl[:, i][:, None]
+            cl_cpi = cl_cp[:, ells_in_i]
+            # Number of non-zero weighs. We correct by M-1/M to take into
+            # account we have just a few elements per bin
+            nw_i = np.sum(w_i != 0)
+            sigma2 = np.sum(w_i*(cl_cpi - cli)**2, axis=1)
+            sigma2 /= ((nw_i - 1)/nw_i*np.sum(w_i))
+            err[:, i] = np.sqrt(sigma2)
+
+        return err / mean_mamb
+
+    def get_ell_cl_crude_error(self):
+        """
+        Return a crude estimation of the cl errors.
+
+        Return
+        ------
+        ell: numpy.array
+            The bandpowers.
+
+        crude_err: numpy.array
+            The estimated errors
+        """
+        if self.ell is None:
+            self.get_cl_file()
+        return self.ell, self.crude_err
+
     def get_cl_file(self):
+        """
+        Return the dictionary with the computed Cell, ells, etc.
+
+        Return
+        ------
+        cl_file: dict
+            Dictionary with the computed quantities. The keys are
+             - ell: bandpowers,
+             - cl: noiseless uncoupled binned power spectrum,
+             - cl_cp: noiseless coupled power spectrum,
+             - nl: noise uncoupled binned power spectrum,
+             - nl_cp: noise coupled power spectrum,
+             - cl_cov_cp: the C_ell that should be used for the
+               auto-correlation of this mapper when calculating any
+               cross-covariance involving it. E.g. if we call this field "a",
+               this will play the role of C_ell^aa when computing the
+               cross-covariance Cov(C_ell^ab, C_ell^aa) or
+               Cov(C_ell^ab,C_ell^ac).
+             - cl_cov_11_cp: when computing the auto-covariance of this
+               mapper's auto-correlation, it will be computed as the
+               auto-covariance of a general power spectrum C_ell^12, which
+               involves 3 power spectra: C_ell^11, C_ell^12, C_ell^22.
+             - cl_cov_12_cp: as above for c_ell^12,
+             - cl_cov_22_cp: as above for c_ell^22,
+             - wins: bandpower window functions,
+             - correction: a mapper level correction applied to the power
+               spectra
+        """
         if self._read_symmetric:
             fname = os.path.join(self.outdir, f'cl_{self.tr2}_{self.tr1}.npz')
         else:
@@ -180,10 +425,14 @@ class Cl(ClBase):
         ell = self.b.get_effective_ells()
         recompute = self.recompute_cls or self.recompute_mcm
         if recompute or (not os.path.isfile(fname)):
+            print(f"Computing Cell for {self.tr1} {self.tr2}")
             mapper1, mapper2 = self.get_mappers()
             f1, f2 = self.get_nmt_fields()
             w = self.get_workspace()
             wins = w.get_bandpower_windows()
+            w_a = mapper1.get_mask()
+            w_b = mapper2.get_mask()
+            mean_mamb = np.mean(w_a * w_b)
 
             # Compute power spectrum
             # If auto-correlation, compute noise and,
@@ -240,16 +489,16 @@ class Cl(ClBase):
             # Note that while we have subtracted the noise
             # bias from `cl_cp`, `cl_cov_cp` still includes it.
             correction = 1
-            if (mapper1.mask_power > 1) or (mapper2.mask_power > 1):
+            if (mean_mamb != 0) and ((mapper1.mask_power > 1) or
+                                     (mapper2.mask_power > 1)):
                 # Applies correction factor if masks have been
                 # implicitly applied to the maps
                 # See ACTk for reference
                 n_a = mapper1.mask_power
                 n_b = mapper2.mask_power
-                w_a = mapper1.get_mask()
-                w_b = mapper2.get_mask()
 
-                correction = np.mean(w_a*w_b)/np.mean(w_a**n_a*w_b**n_b)
+                correction = mean_mamb/np.mean(w_a**n_a*w_b**n_b)
+                print("correction", correction)
                 # Apply correction to all Cl's
                 cl *= correction
                 cl_cp *= correction
@@ -258,12 +507,16 @@ class Cl(ClBase):
                 cl_cov_12_cp *= correction
                 cl_cov_22_cp *= correction
 
-            np.savez(fname, ell=ell, cl=cl, cl_cp=cl_cp, nl=nl,
-                     nl_cp=nl_cp, cl_cov_cp=cl_cov_cp,
-                     cl_cov_11_cp=cl_cov_11_cp,
-                     cl_cov_12_cp=cl_cov_12_cp,
-                     cl_cov_22_cp=cl_cov_22_cp,
-                     wins=wins, correction=correction)
+            # Crude estimation of the error
+            crude_err = self._get_cl_crude_error(cl_cp+nl_cp, mean_mamb)
+
+            tools.save_npz(fname, ell=ell, cl=cl, cl_cp=cl_cp, nl=nl,
+                           nl_cp=nl_cp, cl_cov_cp=cl_cov_cp,
+                           cl_cov_11_cp=cl_cov_11_cp,
+                           cl_cov_12_cp=cl_cov_12_cp,
+                           cl_cov_22_cp=cl_cov_22_cp, wins=wins,
+                           correction=correction, mean_mamb=mean_mamb,
+                           crude_err=crude_err)
             self.recompute_cls = False
 
         cl_file = np.load(fname)
@@ -283,25 +536,88 @@ class Cl(ClBase):
                         'auto_11': cl_file['cl_cov_11_cp'],
                         'auto_12': cl_file['cl_cov_12_cp'],
                         'auto_22': cl_file['cl_cov_22_cp']}
+        self.mean_mamb = cl_file['mean_mamb']
+        self.crude_err = cl_file['crude_err']
 
         return cl_file
 
     def get_ell_nl(self):
+        """
+        Return the ell and uncopuled binned noise power spectrum.
+
+        Return
+        ------
+        ell: numpy.array
+            The bandpowers.
+        nl: numpy.array
+            Uncopuled binned noise power spectrum.
+        """
         if self.ell is None:
             self.get_cl_file()
         return self.ell, self.nl
 
     def get_ell_nl_cp(self):
+        """
+        Return the ell and copuled noise power spectrum.
+
+        Return
+        ------
+        ell: numpy.array
+            The angular modes (up to lmax = 3nside-1).
+
+        nl: numpy.array
+            Uncopuled binned noise power spectrum.
+        """
         if self.nl_cp is None:
             self.get_cl_file()
         return np.arange(3 * self.nside), self.nl_cp
 
     def get_ell_cl_cp_cov(self):
+        """
+        Return the noiseless coupled cell to be used for the covariance. This
+        correspond to the C_ell that should be used for the auto-correlation of
+        this mapper when calculating any cross-covariance involving it. E.g. if
+        we call this field "a", this will play the role of C_ell^aa when
+        computing the cross-covariance Cov(C_ell^ab, C_ell^aa) or
+        Cov(C_ell^ab,C_ell^ac).
+
+        Return
+        ------
+        ell: numpy.array
+            The angular modes up to lmax = 3*nside - 1
+        Cell: numpy.array
+            Noiseless coupled angular power spectrum with shape (ncls,
+            3*nside), where ncls is the number of possible Cells.
+        """
         if self.ell is None:
             self.get_cl_file()
         return np.arange(3 * self.nside), self.cls_cov['cross']
 
     def get_ell_cls_cp_cov_auto(self):
+        """
+        Return the noiseless coupled cell to be used for the covariance. This
+        correspond to the C_ell that should be used when computing the
+        auto-covariance of this mapper's auto-correlation, it will be computed
+        as the auto-covariance of a general power spectrum C_ell^12, which
+        involves 3 power spectra: C_ell^11, C_ell^12, C_ell^22.
+
+        Return
+        ------
+        ell: numpy.array
+            The angular modes up to lmax = 3*nside - 1
+        cl11: numpy.array
+            Noiseless coupled angular power spectrum with shape (ncls,
+            3*nside), where ncls is the number of possible Cells. It
+            corresponds to C_ell^11
+        cl12: numpy.array
+            Noiseless coupled angular power spectrum with shape (ncls,
+            3*nside), where ncls is the number of possible Cells. It
+            corresponds to C_ell^12
+        cl22: numpy.array
+            Noiseless coupled angular power spectrum with shape (ncls,
+            3*nside), where ncls is the number of possible Cells. It
+            corresponds to C_ell^22
+        """
         if self.ell is None:
             self.get_cl_file()
         cl11 = self.cls_cov['auto_11']
@@ -311,25 +627,84 @@ class Cl(ClBase):
         return ell, cl11, cl12, cl22
 
     def get_masks(self):
+        """
+        Return the tracers' masks.
+
+        Return
+        ------
+        m1: numpy.array
+            HEALPix map corresponding to the first tracer mask
+        m2: numpy.array
+            HEALPix map corresponding to the second tracer mask
+        """
         mapper1, mapper2 = self.get_mappers()
         m1 = mapper1.get_mask()
         m2 = mapper2.get_mask()
         return m1, m2
 
+    def get_mean_mamb(self):
+        """
+        Return the mean of the tracers' masks product.
+
+        Return
+        ------
+        <m1*m2>: float
+            Mean of the product of the tracers' masks
+        """
+        if self.ell is None:
+            self.get_cl_file()
+        return self.mean_mamb
+
     def get_masks_names(self):
+        """
+        Return the tracers' mask names.
+
+        Return
+        ------
+        m1: str
+            Name of the first tracer's mask
+        m2: str
+            Name of the second tracer's mask
+        """
         mapper1, mapper2 = self.get_mappers()
         m1 = mapper1.mask_name
         m2 = mapper2.mask_name
         return m1, m2
 
     def get_bandpower_windows(self):
+        """
+        Return the bandpower windows. Applying these to a fiducial Cell
+        corresponds to the coupling-binning-uncoupling operation.
+
+        Return
+        ------
+        wins: numpy.array
+            Bandpower window function
+        """
         if self.ell is None:
             self.get_cl_file()
         return self.wins
 
 
 class ClFid(ClBase):
+    """
+    ClFid class. This is the class used to compute the fiducial angular power
+    spectrum from theory.
+    """
     def __init__(self, data, tr1, tr2, ignore_existing_yml=False):
+        """
+        Parameters
+        ----------
+        data: dict
+            Configuration dictionary (e.g. read yaml)
+        tr1: str
+            First tracer
+        tr2: str
+            Second tracer
+        ignore_existing_yml: bool
+            If True, ignore existing yaml in the output directory and use the
+            input configuration. Otherwise, use the existing yaml.
+        """
         super().__init__(data, tr1, tr2, ignore_existing_yml)
         self.supported_dtypes = ['galaxy_density',
                                  'galaxy_shear',
@@ -353,6 +728,24 @@ class ClFid(ClBase):
         self.ell_binned = None
 
     def get_tracers_ccl(self):
+        """
+        Return ccl tracer and extra information
+
+        Return
+        ------
+        ccl_tr1: dict
+            A dictionary for tracer1 with keys:
+             - 'name': the input tracer name
+             - 'ccl_tr': Instance of ccl.tracers.Tracer
+             - 'ccl_pr': Instance of ccl.halos.profiles
+             - 'ccl_pr_2pt': Instance of ccl.halos.profiles_2pt
+             - 'with_hm': True if halo model is used (i.e. if 'use_halo_model'
+               in tracer config_
+             - 'normed': True if the profiles are normalized
+        ccl_tr2: dict
+            A dictionary as ccl_tr1 but for the second tracer.
+
+        """
         if self._ccl_tr1 is None:
             mapper1, mapper2 = self.get_mappers()
             trlist = self.data.data['tracers']
@@ -365,6 +758,19 @@ class ClFid(ClBase):
         return self._ccl_tr1, self._ccl_tr2
 
     def get_cl_file(self):
+        """
+        Return the dictionary with the computed Cell, ells, etc.
+
+        Return
+        ------
+        cl_file: dict
+            Dictionary with the computed quantities. The keys are
+             - ell: multipoles up to lmax=3*nside -1,
+             - cl: fiducial power spectrum,
+             - cl_cp: fiducial coupled power spectrum
+             - ell_binned: bandpowers
+             - cl_binned: coupled-binned-uncoupled fiducial power spectrum
+        """
         nside = self.data.data['sphere']['nside']
         if self._read_symmetric:
             fname = os.path.join(self.outdir, f'cl_{self.tr2}_{self.tr1}.npz')
@@ -372,17 +778,18 @@ class ClFid(ClBase):
             fname = os.path.join(self.outdir, f'cl_{self.tr1}_{self.tr2}.npz')
         ell = np.arange(3 * nside)
         if not os.path.isfile(fname):
+            print(f"Computing fiducial Cell for {self.tr1} {self.tr2}")
             ccl_tr1, ccl_tr2 = self.get_tracers_ccl()
             cl = self.th.get_ccl_cl(ccl_tr1, ccl_tr2, ell)
             b1 = self.data.get_bias(self.tr1)
             b2 = self.data.get_bias(self.tr2)
             cl *= b1*b2
             tracers = self.data.data['tracers']
-            fiducial = self.data.data['cov']['fiducial']
             d1, d2 = self.get_dtypes()
-            for dtype, tr in zip([self.tr1, self.tr2], [d1, d2]):
-                if (dtype == 'galaxy_shear') and fiducial['wl_m']:
-                    cl = (1 + tracers[tr]['m']) * cl
+            for tr, dtype in zip([self.tr1, self.tr2], [d1, d2]):
+                if (dtype == 'galaxy_shear'):
+                    m = tracers[tr].get('m', 0)
+                    cl = (1 + m) * cl
 
             # This is only valid for LCDM and spins 0 and 2.
             s1, s2 = self.get_spins()
@@ -396,8 +803,8 @@ class ClFid(ClBase):
             cl_cp = w.couple_cell(cl_vector)
             cl_binned = w.decouple_cell(cl_cp)
             ell_binned = self.cl_data.get_ell_cl()[0]
-            np.savez_compressed(fname, cl=cl_vector, ell=ell, cl_cp=cl_cp,
-                                ell_binned=ell_binned, cl_binned=cl_binned)
+            tools.save_npz(fname, cl=cl_vector, ell=ell, cl_cp=cl_cp,
+                           ell_binned=ell_binned, cl_binned=cl_binned)
 
         cl_file = np.load(fname)
         if np.any(cl_file['ell'] != ell):
@@ -415,6 +822,14 @@ class ClFid(ClBase):
         """
         Return the binned Cell (i.e. decouple(couple(cl))). This one is the one
         you compare with data.
+
+        Return
+        ------
+        ell_binned: numpy.array
+            Bandpowers
+
+        cl_binned: numpy.array
+            Coupled-binned-uncoupled fiducial power spectrum
         """
         if self.ell is None:
             self.get_cl_file()

@@ -24,7 +24,8 @@ class MapperPlanckBase(MapperBase):
         self.file_mask = config.get('file_mask', None)
         self.file_gp_mask = config.get('file_gp_mask', None)
         self.file_ps_mask = config.get('file_ps_mask', None)
-        self.signal_map = None
+        self.ps_mask_modes = []
+        self.ps_mask_mode = {}
         self.hm1_map = None
         self.hm2_map = None
         self.diff_map = None
@@ -32,16 +33,17 @@ class MapperPlanckBase(MapperBase):
         self.cl_coupled = None
         self.cls_cov = None
         self.custom_auto = True
+        self.ps_mask = None
 
-    def get_signal_map(self):
-        if self.signal_map is None:
-            signal_map = hp.read_map(self.file_map)
-            signal_map[signal_map == hp.UNSEEN] = 0.0
-            signal_map[np.isnan(signal_map)] = 0.0
-            signal_map = rotate_map(signal_map, self.rot)
-            self.signal_map = np.array([hp.ud_grade(signal_map,
-                                        nside_out=self.nside)])
-        return self.signal_map
+    def _get_signal_map(self):
+        signal_map = hp.read_map(self.file_map)
+        signal_map[signal_map == hp.UNSEEN] = 0.0
+        signal_map[np.isnan(signal_map)] = 0.0
+        ps_mask = self._get_ps_mask()
+        signal_map *= ps_mask
+        signal_map = rotate_map(signal_map, self.rot)
+        signal_map = np.array([hp.ud_grade(signal_map, nside_out=self.nside)])
+        return signal_map
 
     def _get_mask(self):
         # Returns the mask of the mapper. \
@@ -65,22 +67,46 @@ class MapperPlanckBase(MapperBase):
             else:
                 msk *= gp_mask
         if self.file_ps_mask is not None:
-            for mode in self.ps_mask_mode:
-                field = self.ps_mask_modes[mode]
-                ps_mask = hp.read_map(self.file_ps_mask, field)
-                if msk is None:
-                    msk = ps_mask
-                else:
-                    msk *= ps_mask
+            ps_mask = self._get_ps_mask()
+            if msk is None:
+                msk = ps_mask
+            else:
+                msk *= ps_mask
         msk = rotate_mask(msk, self.rot)
         msk[msk < 0] = 0
         msk = hp.ud_grade(msk, nside_out=self.nside)
         return msk
 
-    def _get_hm_maps(self):
-        # Returns the half mission maps
-        # of the mapper
+    def _get_ps_mask(self):
+        if self.ps_mask is None:
+            if self.file_ps_mask is not None:
+                for mode in self.ps_mask_mode:
+                    field = self.ps_mask_modes[mode]
+                    msk = hp.read_map(self.file_ps_mask, field)
+                    if self.ps_mask is None:
+                        self.ps_mask = msk
+                    else:
+                        self.ps_mask *= msk
+            if self.ps_mask is None:
+                self.ps_mask = 1
+        return self.ps_mask
+
+    def _generate_hm_maps(self):
         return NotImplementedError("Do not use base class")
+
+    def _get_hm_maps(self):
+        if self.hm1_map is None:
+            fn = '_'.join([f'{self.map_name}_hm_maps',
+                           f'coord{self.coords}',
+                           f'ns{self.nside}.fits.gz'])
+
+            hm1_map, hm2_map = self._rerun_read_cycle(fn, 'FITSMap',
+                                                      self._generate_hm_maps)
+
+            self.hm1_map = hm1_map.reshape((1, -1))
+            self.hm2_map = hm2_map.reshape((1, -1))
+
+        return self.hm1_map, self.hm2_map
 
     def _get_diff_map(self):
         # Substracts the two half mission maps \

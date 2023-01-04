@@ -22,16 +22,6 @@ def get_config(mode, wbeam=True):
              'file_gp_mask': 'xcell/tests/data/mask1.fits',
              'gp_mask_mode': '0.4',
              'nside': 32}
-    elif mode == 'P15CIB':
-        c = {'file_map': 'xcell/tests/data/map.fits',
-             'file_hm1': 'xcell/tests/data/hm1_map.fits',
-             'file_hm2': 'xcell/tests/data/hm2_map.fits',
-             'file_mask': 'xcell/tests/data/map.fits',
-             'file_gp_mask': 'xcell/tests/data/mask1.fits',
-             'file_ps_mask': 'xcell/tests/data/mask2.fits',
-             'gp_mask_mode': '0.2',
-             'ps_mask_mode': ['100'],
-             'nside': 32}
     elif mode == 'CIBLenz':
         c = {'file_map': 'xcell/tests/data/map.fits',
              'file_hm1': 'xcell/tests/data/hm1_map.fits',
@@ -49,6 +39,7 @@ def get_config(mode, wbeam=True):
         c = {'file_map': 'xcell/tests/data/map.fits',
              'file_hm1': 'xcell/tests/data/hm1_map.fits',
              'file_hm2': 'xcell/tests/data/hm2_map.fits',
+             'file_ps_mask': 'xcell/tests/data/mask2.fits',
              'nside': 32}
     else:
         print('Mode not recognized')
@@ -75,7 +66,6 @@ def test_get_signal_map():
 @pytest.mark.parametrize('m',
                          [xc.mappers.MapperP15tSZ(get_config('tSZ')),
                           xc.mappers.MapperP18SMICA(get_config('SMICA')),
-                          xc.mappers.MapperP15CIB(get_config('P15CIB')),
                           xc.mappers.MapperCIBLenz(get_config('CIBLenz')),
                           xc.mappers.MapperSPT(get_config('SPT'))])
 def test_get_nl_coupled(m):
@@ -85,7 +75,6 @@ def test_get_nl_coupled(m):
 
 @pytest.mark.parametrize('cls,mode', [(xc.mappers.MapperP15tSZ, 'tSZ'),
                                       (xc.mappers.MapperP18SMICA, 'SMICA'),
-                                      (xc.mappers.MapperP15CIB, 'P15CIB'),
                                       (xc.mappers.MapperCIBLenz, 'CIBLenz'),
                                       (xc.mappers.MapperSPT, 'SPT')])
 def test_get_cl_coupled(cls, mode):
@@ -98,6 +87,9 @@ def test_get_cl_coupled(cls, mode):
     nl_diff = m.get_nl_coupled()[0]
     m1 = hp.read_map(conf_ref['file_hm1'])
     m2 = hp.read_map(conf_ref['file_hm2'])
+    ps_mask = m._get_ps_mask()
+    m1 *= ps_mask
+    m2 *= ps_mask
     cl_cross_bm = hp.anafast(m1*mask, m2*mask, iter=0)
     nl_diff_bm = hp.anafast(0.5*(m1-m2)*mask, iter=0)
     # Typical C_ell value for comparison (~1E-3 in this case)
@@ -111,7 +103,6 @@ def test_get_cl_coupled(cls, mode):
 
 @pytest.mark.parametrize('cls,mode', [(xc.mappers.MapperP15tSZ, 'tSZ'),
                                       (xc.mappers.MapperP18SMICA, 'SMICA'),
-                                      (xc.mappers.MapperP15CIB, 'P15CIB'),
                                       (xc.mappers.MapperCIBLenz, 'CIBLenz'),
                                       (xc.mappers.MapperSPT, 'SPT')])
 def test_get_cls_covar_coupled(cls, mode):
@@ -124,6 +115,10 @@ def test_get_cls_covar_coupled(cls, mode):
     m1 = hp.read_map(conf_ref['file_hm1'])
     m2 = hp.read_map(conf_ref['file_hm2'])
     mc = hp.read_map(conf['file_map'])
+    ps_mask = m._get_ps_mask()
+    m1 *= ps_mask
+    m2 *= ps_mask
+    mc *= ps_mask
     cls_bm = {'cross': hp.anafast(mc*mask, mc*mask, iter=0),
               'auto_11': hp.anafast(m1*mask, m1*mask, iter=0),
               'auto_12': hp.anafast(m1*mask, m2*mask, iter=0),
@@ -138,7 +133,6 @@ def test_get_cls_covar_coupled(cls, mode):
 
 @pytest.mark.parametrize('cls,mode', [(xc.mappers.MapperP15tSZ, 'tSZ'),
                                       (xc.mappers.MapperP18SMICA, 'SMICA'),
-                                      (xc.mappers.MapperP15CIB, 'P15CIB'),
                                       (xc.mappers.MapperCIBLenz, 'CIBLenz'),
                                       (xc.mappers.MapperSPT, 'SPT')])
 def test_get_hm_maps(cls, mode):
@@ -147,15 +141,19 @@ def test_get_hm_maps(cls, mode):
     conf_ref = get_config('base')
     m1b = hp.read_map(conf_ref['file_hm1'])
     m2b = hp.read_map(conf_ref['file_hm2'])
+    if m.file_ps_mask:
+        ps_mask = hp.read_map(conf_ref['file_ps_mask'])
+        m1b *= ps_mask
+        m2b *= ps_mask
     m1, m2 = m._get_hm_maps()
+    assert m1.shape == (1, m1b.size)
+    assert m2.shape == (1, m2b.size)
     assert np.all(m1 == m1b)
     assert np.all(m2 == m2b)
 
 
 @pytest.mark.parametrize('cls,mode,frac', [(xc.mappers.MapperP15tSZ,
                                             'tSZ', 0.75),
-                                           (xc.mappers.MapperP15CIB,
-                                            'P15CIB', 0.5),
                                            (xc.mappers.MapperCIBLenz,
                                             'CIBLenz', 1),
                                            (xc.mappers.MapperP18SMICA,
@@ -166,13 +164,11 @@ def test_get_mask(cls, mode, frac):
     m = cls(get_config(mode))
     npix = hp.nside2npix(m.nside)
     mask = m.get_mask()
-    assert(np.fabs(sum(mask) - npix*frac) < 1E-5)
+    assert np.fabs(sum(mask) - npix*frac) < 1E-5
 
 
 @pytest.mark.parametrize('cls,mode,typ', [(xc.mappers.MapperP15tSZ,
                                            'tSZ', 'cmb_tSZ'),
-                                          (xc.mappers.MapperP15CIB,
-                                           'P15CIB', 'generic'),
                                           (xc.mappers.MapperCIBLenz,
                                            'CIBLenz', 'generic'),
                                           (xc.mappers.MapperP18SMICA,
@@ -186,8 +182,6 @@ def test_get_dtype(cls, mode, typ):
 
 @pytest.mark.parametrize('cls,mode,fwhm', [(xc.mappers.MapperP15tSZ,
                                             'tSZ', 10.),
-                                           (xc.mappers.MapperP15CIB,
-                                            'P15CIB', 5.),
                                            (xc.mappers.MapperCIBLenz,
                                             'CIBLenz', 5.),
                                            (xc.mappers.MapperP18SMICA,

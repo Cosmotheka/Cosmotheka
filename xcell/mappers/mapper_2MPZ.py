@@ -27,27 +27,20 @@ class Mapper2MPZ(MapperBase):
               - alpha_0: `1.0`
               - fc_0: `1.0`
     """
+    map_name = '2MPZ'
+
     def __init__(self, config):
         self._get_defaults(config)
         self.z_edges = config.get('z_edges', [0, 0.5])
-        self.ra_name, self.dec_name = self._get_coords(config)
+        self.ra_name, self.dec_name = self._get_coords()
 
         self.cat_data = None
         self.npix = hp.nside2npix(self.nside)
 
         # Angular mask
-        self.dndz = None
-        self.delta_map = None
         self.nl_coupled = None
 
-    def _get_coords(self, config):
-        # Returns mapper's ra and dec names \
-        # in the mapper's catalog given the coordinates \
-        # designated in the cofiguration file
-
-        # Returns:
-        #     ra_name (String), dec_name (String)
-
+    def _get_coords(self):
         if self.coords == 'G':  # Galactic
             return 'L', 'B'
         elif self.coords == 'C':  # Celestial/Equatorial
@@ -144,20 +137,19 @@ class Mapper2MPZ(MapperBase):
             self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz, return_jk_error=return_jk_error)
 
-    def get_signal_map(self, apply_galactic_correction=True):
-        if self.delta_map is None:
-            d = np.zeros(self.npix)
-            self.cat_data = self.get_catalog()
-            self.mask = self.get_mask()
-            nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            ra_name=self.ra_name,
-                                            dec_name=self.dec_name)
-            mean_n = np.average(nmap_data, weights=self.mask)
-            goodpix = self.mask > 0
-            # Division by mask not really necessary, since it's binary.
-            d[goodpix] = nmap_data[goodpix]/(mean_n*self.mask[goodpix])-1
-            self.delta_map = np.array([d])
-        return self.delta_map
+    def _get_signal_map(self):
+        d = np.zeros(self.npix)
+        self.cat_data = self.get_catalog()
+        self.mask = self.get_mask()
+        nmap_data = get_map_from_points(self.cat_data, self.nside,
+                                        ra_name=self.ra_name,
+                                        dec_name=self.dec_name)
+        mean_n = np.average(nmap_data, weights=self.mask)
+        goodpix = self.mask > 0
+        # Division by mask not really necessary, since it's binary.
+        d[goodpix] = nmap_data[goodpix]/(mean_n*self.mask[goodpix])-1
+        signal_map = np.array([d])
+        return signal_map
 
     def _get_mask(self):
         # Reads the mask of the mappper from a file \
@@ -165,7 +157,7 @@ class Mapper2MPZ(MapperBase):
 
         # We will assume the mask has been provided in the right
         # coordinates, so no further conversion is needed.
-        mask = hp.ud_grade(hp.read_map(self.config['mask']),
+        mask = hp.ud_grade(hp.read_map(self.config[f'mask_{self.coords}']),
                            nside_out=self.nside)
         return mask
 

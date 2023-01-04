@@ -1,0 +1,10 @@
+zbin: 3
+mode: shear
+zbin_cat: '/mnt/extraspace/damonge/Datasets/DES_Y1/shear_catalog/y1_source_redshift_binning_v1.fits'
+data_cat:  '/mnt/extraspace/damonge/Datasets/DES_Y1/shear_catalog/mcal-y1a1-combined-riz-unblind-v4-matched.fits'
+file_nz: '/mnt/extraspace/damonge/Datasets/DES_Y1/shear_catalog/y1_redshift_distributions_v1.fits'
+path_rerun: '/mnt/extraspace/damonge/Datasets/DES_Y1/xcell_reruns/'
+mask_name: 'mask_DESY1wl3'
+mapper_class: 'MapperDESY1wl'
+m: 0.012
+sigma_m: 0.023

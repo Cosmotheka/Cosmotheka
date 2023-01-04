@@ -23,21 +23,21 @@ class MapperDESY1wl(MapperBase):
         - mask_name: `'mask_DESY1wli'`
         - mapper_class: `'MapperDESY1wl'`
     """
+    map_name = 'DESY1wl'
     def __init__(self, config):
         self._get_defaults(config)
         self.config = config
         self.rot = self._get_rotator('C')
         self.mode = config.get('mode', 'shear')
         self.zbin = config['zbin']
+        self.map_name += f"_bin{self.zbin}"
         self.npix = hp.nside2npix(self.nside)
         # dn/dz
-        self.dndz = None
         # load cat
         self.cat_data = None
         # get items for calibration
         self.Rs = None
 
-        self.signal_map = None
         self.maps = {'PSF': None, 'shear': None}
 
         self.nl_coupled = None
@@ -108,9 +108,7 @@ class MapperDESY1wl(MapperBase):
         return cat.as_array()
 
     def _load_catalog(self):
-        # Loads the lite DESY1 catalog.
-
-        fn = f'DESY1wl_catalog_rerun_bin{self.zbin}.fits'
+        fn = f'{self.map_name}_catalog_rerun.fits'
         cat = self._rerun_read_cycle(fn, 'FITSTable',
                                      self._load_catalog_from_raw)
         return Table(cat)
@@ -201,6 +199,8 @@ class MapperDESY1wl(MapperBase):
         return we1, we2
 
     def get_signal_map(self, mode=None):
+        # We overwrite the MapperBase method because otherwise it becomes very
+        # convoluted
         e1f, e2f, mod = self._set_mode(mode)
         if self.maps[mod] is not None:
             self.signal_map = self.maps[mod]
@@ -210,7 +210,7 @@ class MapperDESY1wl(MapperBase):
         def get_ellip_maps():
             return self._get_ellipticity_maps(mode=mode)
 
-        fn = '_'.join([f'DESY1wl_signal_map_{mod}_bin{self.zbin}',
+        fn = '_'.join([f'{self.map_name}_signal_map_{mod}',
                        f'coord{self.coords}',
                        f'ns{self.nside}.fits.gz'])
         d = self._rerun_read_cycle(fn, 'FITSMap', get_ellip_maps,
@@ -264,7 +264,7 @@ class MapperDESY1wl(MapperBase):
                                      rot=self.rot)
             return mp
 
-        fn = '_'.join([f'DESY1wl_{mod}_w2s2_bin{self.zbin}',
+        fn = '_'.join([f'{self.map_name}_{mod}_w2s2',
                        f'coord{self.coords}',
                        f'ns{self.nside}.fits.gz'])
         w2s2 = self._rerun_read_cycle(fn, 'FITSMap', get_w2s2)

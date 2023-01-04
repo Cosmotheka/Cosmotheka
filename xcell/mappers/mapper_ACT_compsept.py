@@ -14,17 +14,13 @@ class MapperACTCompSept(MapperACTBase):
         self._get_ACT_defaults(config)
 
     def _get_signal_map(self):
-        # Loads pixell map and converts it
-        # to healpy
-
-        if self.signal_map is None:
-            # The 'Weights' FITS file contains the 2D Fourier space
-            # weight for each pixel corresponding to the detector array.
-            signal_map = enmap.read_map(self.file_map)
-            signal_map = reproject.healpix_from_enmap(signal_map,
-                                                      lmax=self.lmax,
-                                                      nside=self.nside)
-            signal_map = rotate_map(signal_map, self.rot)
+        # The 'Weights' FITS file contains the 2D Fourier space
+        # weight for each pixel corresponding to the detector array.
+        signal_map = enmap.read_map(self.file_map)
+        signal_map = reproject.healpix_from_enmap(signal_map,
+                                                  lmax=self.lmax,
+                                                  nside=self.nside)
+        signal_map = rotate_map(signal_map, self.rot)
         return signal_map
 
     def _get_mask(self):
@@ -43,7 +39,8 @@ class MapperACTCompSept(MapperACTBase):
         return msk
 
     def get_nl_coupled(self):
-        raise NotImplementedError("No noise model for the ACT maps")
+        # raise NotImplementedError("No noise model for the ACT maps")
+        return np.zeros([1, 3*self.nside])
 
     def _get_custom_beam(self, info):
         # Loads beam from file

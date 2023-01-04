@@ -17,6 +17,8 @@ class MapperCatWISE(MapperBase):
         - mask_name: `"mask_CatWISE"`
         - path_rerun: `".../Datasets/CatWISE/xcell_runs"`
     """
+    map_name = 'CatWISE'
+
     def __init__(self, config):
         self._get_defaults(config)
         self.file_sourcemask = config.get('mask_sources', None)
@@ -28,7 +30,6 @@ class MapperCatWISE(MapperBase):
         # Angular mask
         self.delta_map = None
         self.nl_coupled = None
-        self.dndz = None
         self.rot = self._get_rotator('C')
 
     def get_catalog(self):
@@ -64,26 +65,26 @@ class MapperCatWISE(MapperBase):
         correction = 0.0513 * np.abs(ec_lat_map) * pixarea_deg2
         return correction
 
-    def get_signal_map(self):
-        if self.delta_map is None:
-            d = np.zeros(self.npix)
-            self.cat_data = self.get_catalog()
-            self.mask = self.get_mask()
-            nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            rot=self.rot, ra_name='ra',
-                                            dec_name='dec')
-            # ecliptic latitude correction -- SvH 5/3/22
-            if self.apply_ecliptic_correction:
-                correction = self._get_ecliptic_correction()
-            else:
-                correction = np.zeros_like(d)
-            nmap_data = nmap_data + correction
-            goodpix = self.mask > 0
-            mean_n = np.average(nmap_data, weights=self.mask)
-            # Division by mask not really necessary, since it's binary.
-            d[goodpix] = nmap_data[goodpix]/(mean_n*self.mask[goodpix])-1
-            self.delta_map = np.array([d])
-        return self.delta_map
+    # Density Map
+    def _get_signal_map(self):
+        d = np.zeros(self.npix)
+        cat_data = self.get_catalog()
+        mask = self.get_mask()
+        nmap_data = get_map_from_points(cat_data, self.nside,
+                                        rot=self.rot, ra_name='ra',
+                                        dec_name='dec')
+        # ecliptic latitude correction -- SvH 5/3/22
+        if self.apply_ecliptic_correction:
+            correction = self._get_ecliptic_correction()
+        else:
+            correction = np.zeros_like(d)
+        nmap_data = nmap_data + correction
+        goodpix = self.mask > 0
+        mean_n = np.average(nmap_data, weights=mask)
+        # Division by mask not really necessary, since it's binary.
+        d[goodpix] = nmap_data[goodpix]/(mean_n*mask[goodpix])-1
+        delta_map = np.array([d])
+        return delta_map
 
     def _cut_mask(self):
         # Generates the mask given the chosen resolution \
@@ -101,7 +102,8 @@ class MapperCatWISE(MapperBase):
                                               30))] = 0
         if self.file_sourcemask is not None:
             # holes catalog
-            mask_holes = Table.read(self.file_sourcemask)
+            mask_holes = Table.read(self.file_sourcemask,
+                                    format='ascii.commented_header')
             vecmask = hp.ang2vec(mask_holes['ra'],
                                  mask_holes['dec'],
                                  lonlat=True)

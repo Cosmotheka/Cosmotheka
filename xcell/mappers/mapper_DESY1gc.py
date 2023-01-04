@@ -24,6 +24,8 @@ class MapperDESY1gc(MapperBase):
         - mapper_class: `'MapperDESY1gc'`
         - bias: `1.48`/`1.76`/`1.78`/`2.19`/`2.23`
     """
+    map_name = 'DESY1gc'
+
     def __init__(self, config):
         self._get_defaults(config)
         self.rot = self._get_rotator('C')
@@ -36,10 +38,9 @@ class MapperDESY1gc(MapperBase):
         self.cat_data = None
         self.npix = hp.nside2npix(self.nside)
         self.zbin = config['zbin']
+        self.map_name += f"_bin{self.zbin}"
         self.z_edges = bin_edges[self.zbin]
         self.w = None
-        self.dndz = None
-        self.delta_map = None
         self.nl_coupled = None
 
     def get_catalog(self):
@@ -76,6 +77,7 @@ class MapperDESY1gc(MapperBase):
         # the mapper's threshold.
 
         mask = hp.read_map(self.config['file_mask'])
+        mask[mask == hp.UNSEEN] = 0
         mask = rotate_mask(mask, self.rot)
         mask = hp.ud_grade(mask, nside_out=self.nside)
         # Cap it
@@ -100,19 +102,18 @@ class MapperDESY1gc(MapperBase):
                          'nz': f['BIN%d' % (self.zbin+1)]}
         return self._get_shifted_nz(dz)
 
-    def get_signal_map(self):
-        if self.delta_map is None:
-            mask = self.get_mask()
-            cat_data = self.get_catalog()
-            w = self._get_w()
-            nmap_w = get_map_from_points(cat_data, self.nside,
-                                         w=w, rot=self.rot)
-            self.delta_map = np.zeros(self.npix)
-            goodpix = mask > 0
-            N_mean = np.sum(nmap_w[goodpix])/np.sum(mask[goodpix])
-            nm = mask*N_mean
-            self.delta_map[goodpix] = (nmap_w[goodpix])/(nm[goodpix])-1
-        return [self.delta_map]
+    def _get_signal_map(self):
+        mask = self.get_mask()
+        cat_data = self.get_catalog()
+        w = self._get_w()
+        nmap_w = get_map_from_points(cat_data, self.nside,
+                                     w=w, rot=self.rot)
+        signal_map = np.zeros(self.npix)
+        goodpix = mask > 0
+        N_mean = np.sum(nmap_w[goodpix])/np.sum(mask[goodpix])
+        nm = mask*N_mean
+        signal_map[goodpix] = (nmap_w[goodpix])/(nm[goodpix])-1
+        return np.array([signal_map])
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:

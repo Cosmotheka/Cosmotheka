@@ -11,20 +11,21 @@ class MapperSDSS(MapperBase):
     """
     Base mapper class for the SDSS data sets mappers. \
     """
+    # The SDSS_name passed in the configuration file will be added to map_name
+    map_name = 'SDSS'
+
     def __init__(self, config):
         raise NotImplementedError("Do not use base class")
 
     def _get_SDSS_defaults(self, config):
         self._get_defaults(config)
         self.SDSS_name = config['SDSS_name']
+        self.map_name += f'_{self.SDSS_name}'
         self.cats = {'data': None, 'random': None}
         self.num_z_bins = config.get('num_z_bins', 50)
         self.nside_mask = config.get('nside_mask', 512)
-        self.npix = hp.nside2npix(self.nside)
         self.ws = {'data': None, 'random': None}
         self.alpha = None
-        self.dndz = None
-        self.signal_map = None
         self.nl_coupled = None
         self.nside_nl_threshold = config.get('nside_nl_threshold',
                                              4096)
@@ -81,7 +82,7 @@ class MapperSDSS(MapperBase):
             [z, nz] (Array)
         """
         if self.dndz is None:
-            fn = f'SDSS_{self.SDSS_name}_dndz.npz'
+            fn = f'{self.map_name}_dndz.npz'
             self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz)
 
@@ -112,16 +113,6 @@ class MapperSDSS(MapperBase):
         delta_map = (nmap_data - alpha * nmap_random)
         delta_map[goodpix] /= mask[goodpix]
         return delta_map
-
-    def get_signal_map(self):
-        if self.signal_map is None:
-            fn = '_'.join([f'SDSS_{self.SDSS_name}_signal',
-                           f'coord{self.coords}',
-                           f'ns{self.nside}.fits.gz'])
-            self.signal_map = self._rerun_read_cycle(fn, 'FITSMap',
-                                                     self._get_signal_map)
-            self.signal_map = np.array([self.signal_map])
-        return self.signal_map
 
     def _get_mask(self):
         # Calculates the mask of the SDSS \
@@ -177,7 +168,7 @@ class MapperSDSS(MapperBase):
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
-            fn = '_'.join([f'SDSS_{self.SDSS_name}_Nell',
+            fn = '_'.join([f'{self.map_name}_Nell',
                            f'coord{self.coords}',
                            f'ns{self.nside}.npz'])
             d = self._rerun_read_cycle(fn, 'NPZ',

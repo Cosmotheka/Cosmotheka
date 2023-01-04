@@ -1,6 +1,7 @@
 from .mapper_Planck_base import MapperPlanckBase
 from .utils import rotate_map
 import healpy as hp
+import numpy as np
 
 
 class MapperP18SMICA(MapperPlanckBase):
@@ -26,6 +27,8 @@ class MapperP18SMICA(MapperPlanckBase):
         - mask_name: `mask_P18SMICA`
         - path_rerun: `'.../Datasets/Planck_SMICA/xcell_runs'`
     """
+    map_name = "P18SMICA"
+
     def __init__(self, config):
         self._get_Planck_defaults(config)
         self.beam_info = config.get('beam_info',
@@ -40,29 +43,27 @@ class MapperP18SMICA(MapperPlanckBase):
                               '0.9': 5,
                               '0.97': 6,
                               '0.99': 7}
+        self.ps_mask_modes = {'F100': 0,
+                              'F143': 1,
+                              'F217': 2,
+                              'F353': 3}
+        self.ps_mask_mode = config.get('ps_mask_mode',
+                                       ['F100', 'F143', 'F217', 'F353'])
 
-    def _get_hm_maps(self):
-        """
-        Returns the half mission maps of the mapper \
-        after applying the \
-        neccesary coordinate rotations. \
-        Args:
-            None
-        Returns:
-            hm1_map (Array)
-            hm2_map (Array)
-        """
-        if self.hm1_map is None:
-            hm1_map = hp.read_map(self.file_hm1)
-            hm1_map = rotate_map(hm1_map, self.rot)
-            self.hm1_map = [hp.ud_grade(hm1_map,
-                            nside_out=self.nside)]
-        if self.hm2_map is None:
-            hm2_map = hp.read_map(self.file_hm2)
-            hm2_map = rotate_map(hm2_map, self.rot)
-            self.hm2_map = [hp.ud_grade(hm2_map,
-                            nside_out=self.nside)]
-        return self.hm1_map, self.hm2_map
+    def _generate_hm_maps(self):
+        hm1_map = hp.read_map(self.file_hm1)
+        ps_mask = self._get_ps_mask()
+        hm1_map *= ps_mask
+        hm1_map = rotate_map(hm1_map, self.rot)
+        hm1_map = hp.ud_grade(hm1_map, nside_out=self.nside)
+
+        hm2_map = hp.read_map(self.file_hm2)
+        ps_mask = self._get_ps_mask()
+        hm2_map *= ps_mask
+        hm2_map = rotate_map(hm2_map, self.rot)
+        hm2_map = hp.ud_grade(hm2_map, nside_out=self.nside)
+
+        return np.array([hm1_map, hm2_map])
 
     def get_dtype(self):
         """

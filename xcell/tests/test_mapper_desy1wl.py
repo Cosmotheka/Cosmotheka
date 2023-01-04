@@ -63,8 +63,8 @@ def test_load_catalog():
     cat_data.remove_rows(cat_data['dec'] < -90)
     cat_data.remove_rows(cat_data['dec'] > -35)
 
-    assert(len(cat_data) == len(cat))
-    assert(np.all(cat_data == cat))
+    assert len(cat_data) == len(cat)
+    assert np.all(cat_data == cat)
 
 
 def test_rerun():
@@ -86,12 +86,13 @@ def test_rerun():
     zbin = config['zbin']
     nside = config['nside']
 
-    for fname in [f'catalog_rerun_bin{zbin}.fits',
-                  f'signal_map_shear_bin{zbin}_coordC_ns{nside}.fits.gz',
-                  f'signal_map_PSF_bin{zbin}_coordC_ns{nside}.fits.gz',
-                  f'shear_w2s2_bin{zbin}_coordC_ns{nside}.fits.gz',
-                  f'PSF_w2s2_bin{zbin}_coordC_ns{nside}.fits.gz']:
-        assert os.path.isfile(os.path.join(prerun, "DESY1wl_" + fname))
+    for fname in ['catalog_rerun.fits',
+                  f'signal_map_shear_coordC_ns{nside}.fits.gz',
+                  f'signal_map_PSF_coordC_ns{nside}.fits.gz',
+                  f'shear_w2s2_coordC_ns{nside}.fits.gz',
+                  f'PSF_w2s2_coordC_ns{nside}.fits.gz']:
+        assert os.path.isfile(os.path.join(prerun,
+                                           f"DESY1wl_bin{zbin}_{fname}"))
     assert os.path.isfile(os.path.join(prerun,
                                        f'mask_mask_coordC_ns{nside}.fits.gz'))
 

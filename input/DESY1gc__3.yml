@@ -1,0 +1,9 @@
+zbin: 3
+mask_threshold: 0.5
+data_catalog: '/mnt/extraspace/damonge/Datasets/DES_Y1/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits'
+file_mask: '/mnt/extraspace/damonge/Datasets/DES_Y1/redmagic_catalog/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits'
+file_nz: '/mnt/extraspace/damonge/Datasets/DES_Y1/data_vector/2pt_NG_mcal_1110.fits'
+path_rerun: '/mnt/extraspace/damonge/Datasets/DES_Y1/xcell_reruns/'
+mask_name: 'mask_DESY1gc'
+mapper_class: 'MapperDESY1gc'
+bias: 2.19

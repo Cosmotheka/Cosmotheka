@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest ]
-        py: [ 3.6 ]
+        py: [ 3.7 ]
         CC: [ gcc ]
 
     steps:
@@ -52,12 +52,12 @@ jobs:
                pip install -U $i;
             done
 
+        - name: Python unit tests
+          run: pytest -vv xcell --cov=xcell
+
         - name: Flake
           run: |
             flake8 xcell/
-
-        - name: Python unit tests
-          run: pytest -vv xcell --cov=xcell
 
         - name: coveralls
           env:

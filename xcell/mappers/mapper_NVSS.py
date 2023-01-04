@@ -19,6 +19,8 @@ class MapperNVSS(MapperBase):
         - mask_name: `"mask_NVSS"`
         - path_rerun: `".../Datasets/NVSS/xcell_runs"`
     """
+    map_name = 'NVSS'
+
     def __init__(self, config):
         self._get_defaults(config)
         self.rot = self._get_rotator('C')
@@ -29,9 +31,7 @@ class MapperNVSS(MapperBase):
 
         self.npix = hp.nside2npix(self.nside)
         # Angular mask
-        self.delta_map = None
         self.nl_coupled = None
-        self.dndz = None
         self.cat_redshift = None
 
     def get_catalog(self):
@@ -84,21 +84,20 @@ class MapperNVSS(MapperBase):
                 (self.cat_redshift['redshift'] <= 5)]
         return self.cat_redshift
 
-    def get_signal_map(self, apply_galactic_correction=True):
-        if self.delta_map is None:
-            d = np.zeros(self.npix)
-            self.cat_data = self.get_catalog()
-            self.mask = self.get_mask()
-            nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            ra_name=self.ra_name,
-                                            dec_name=self.dec_name,
-                                            rot=self.rot)
-            mean_n = np.average(nmap_data, weights=self.mask)
-            goodpix = self.mask > 0
-            # Division by mask not really necessary, since it's binary.
-            d[goodpix] = nmap_data[goodpix]/(mean_n*self.mask[goodpix])-1
-            self.delta_map = np.array([d])
-        return self.delta_map
+    def _get_signal_map(self):
+        d = np.zeros(self.npix)
+        cat_data = self.get_catalog()
+        mask = self.get_mask()
+        nmap_data = get_map_from_points(cat_data, self.nside,
+                                        ra_name=self.ra_name,
+                                        dec_name=self.dec_name,
+                                        rot=self.rot)
+        mean_n = np.average(nmap_data, weights=mask)
+        goodpix = mask > 0
+        # Division by mask not really necessary, since it's binary.
+        d[goodpix] = nmap_data[goodpix]/(mean_n*mask[goodpix])-1
+        signal_map = np.array([d])
+        return signal_map
 
     def _get_mask(self):
         if self.config.get('mask_file', None) is not None:

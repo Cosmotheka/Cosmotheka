@@ -40,6 +40,8 @@ class MapperROSATXray(MapperBase):
         - mask_name: `'mask_ROSAT'`
         - mapper_class: `'MapperROSATXray'`
     """
+    map_name = 'ROSATXray'
+
     def __init__(self, config):
         self._get_defaults(config)
         self.rot = self._get_rotator('C')
@@ -52,7 +54,7 @@ class MapperROSATXray(MapperBase):
 
         self.expmap = None
         self.pholist = None
-        self.countrate_map = None
+        # signal_map is a map of the countrate
         self.nl_coupled = None
 
     def get_pholist(self):
@@ -86,22 +88,21 @@ class MapperROSATXray(MapperBase):
             self.expmap = hp.ud_grade(mp, nside_out=self.nside)
         return self.expmap
 
-    def get_signal_map(self):
-        if self.countrate_map is None:
-            cat = self.get_pholist()
-            xpmap = self.get_expmap()
-            mask = self.get_mask()
-            count_map = get_map_from_points(cat, self.nside,
-                                            ra_name='raj2000',
-                                            dec_name='dej2000',
-                                            rot=self.rot)
-            self.countrate_map = np.zeros(self.npix)
-            goodpix = mask > 0.0
-            self.countrate_map[goodpix] = count_map[goodpix] / xpmap[goodpix]
-            pixA = hp.nside2pixarea(self.nside)
-            self.countrate_map *= 1/pixA
-            self.countrate_map = np.array([self.countrate_map])
-        return self.countrate_map
+    def _get_signal_map(self):
+        cat = self.get_pholist()
+        xpmap = self.get_expmap()
+        mask = self.get_mask()
+        count_map = get_map_from_points(cat, self.nside,
+                                        ra_name='raj2000',
+                                        dec_name='dej2000',
+                                        rot=self.rot)
+        signal_map = np.zeros(self.npix)
+        goodpix = mask > 0.0
+        signal_map[goodpix] = count_map[goodpix] / xpmap[goodpix]
+        pixA = hp.nside2pixarea(self.nside)
+        signal_map *= 1/pixA
+        signal_map = np.array([signal_map])
+        return signal_map
 
     def _get_mask(self):
         mask = np.ones(self.npix)

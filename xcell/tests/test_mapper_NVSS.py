@@ -83,11 +83,18 @@ def test_get_signal_map():
     config['DEC_min_deg'] = -90.
     config['GLAT_max_deg'] = 0.
     config.pop('mask_sources')
+    config['path_rerun'] = 'xcell/tests/data/'
+
     m = xc.mappers.MapperNVSS(config)
     d = m.get_signal_map()
     d = np.array(d)
     assert d.shape == (1, hp.nside2npix(m.nside))
     assert np.all(np.fabs(d) < 1E-15)
+
+    fn = 'xcell/tests/data/NVSS_signal_map_coordC_ns32.fits.gz'
+    assert np.all(d == hp.read_map(fn))
+    os.remove(fn)
+
     clean_fake_data()
 
 

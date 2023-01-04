@@ -31,6 +31,8 @@ class MapperDELS(MapperBase):
         - mapper_class: `'MapperDELS'`
         - bias: `1.13` / v1.40` / `1.35` / `1.77`
     """
+    map_name = 'DELS'
+
     def __init__(self, config):
         self._get_defaults(config)
         self.rot = self._get_rotator('C')
@@ -47,10 +49,10 @@ class MapperDELS(MapperBase):
 
         self.zbin = config['zbin']
         self.z_edges = bin_edges[self.zbin]
+        self.map_name += f"_bin{self.zbin}"
 
         # Angular mask flag
         self.mskflag = None
-        self.dndz = None
         self.delta_map = None
         self.nl_coupled = None
         self.comp_map = None
@@ -83,7 +85,7 @@ class MapperDELS(MapperBase):
             catalog (Array)
         """
         if self.cat_data is None:
-            fn = f'DELS_cat_bin{self.zbin}.fits'
+            fn = f'{self.map_name}_cat.fits'
             self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
                                                    self._get_catalog)
         return self.cat_data
@@ -149,28 +151,25 @@ class MapperDELS(MapperBase):
             [z, nz] (Array)
         """
         if self.dndz is None:
-            fn = f'DELS_dndz_bin{self.zbin}.npz'
+            fn = f'{self.map_name}_dndz.npz'
             self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz)
 
-    def get_signal_map(self, apply_galactic_correction=True):
-        if self.delta_map is None:
-            d = np.zeros(self.npix)
-            cat_data = self.get_catalog()
-            self.comp_map = self._get_comp_map()
-            self.bmask = self._get_binary_mask()
-            self.stars = self._get_stars()
-            nmap_data = get_map_from_points(cat_data, self.nside,
-                                            rot=self.rot)
-            mean_n = self._get_mean_n(nmap_data)
-            goodpix = self.bmask > 0
-            d[goodpix] = nmap_data[goodpix]/(mean_n*self.comp_map[goodpix])-1
-            if apply_galactic_correction:
-                gcorr = self._get_galactic_correction(d, self.stars,
-                                                      self.bmask)
-                d -= gcorr['delta_map']
-            self.delta_map = np.array([d])
-        return self.delta_map
+    def _get_signal_map(self, apply_galactic_correction=True):
+        d = np.zeros(self.npix)
+        cat_data = self.get_catalog()
+        comp_map = self._get_comp_map()
+        bmask = self._get_binary_mask()
+        stars = self._get_stars()
+        nmap_data = get_map_from_points(cat_data, self.nside, rot=self.rot)
+        mean_n = self._get_mean_n(nmap_data)
+        goodpix = bmask > 0
+        d[goodpix] = nmap_data[goodpix]/(mean_n*comp_map[goodpix])-1
+        if apply_galactic_correction:
+            gcorr = self._get_galactic_correction(d, stars, bmask)
+            d -= gcorr['delta_map']
+        delta_map = np.array([d])
+        return delta_map
 
     def _get_galactic_correction(self, delta, stars, bmask, nbins=14, npoly=5):
         # Calculates the galactic correction \
@@ -252,7 +251,7 @@ class MapperDELS(MapperBase):
             comp_map = rotate_mask(comp_map, self.rot)
             self.comp_map = hp.ud_grade(comp_map,
                                         nside_out=self.nside)
-            self.comp_map[comp_map < 0.1] = 0.
+            self.comp_map[self.comp_map < 0.1] = 0.
         return self.comp_map
 
     def _get_binary_mask(self):

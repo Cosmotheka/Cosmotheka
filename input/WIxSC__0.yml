@@ -1,0 +1,24 @@
+mapper_class: MapperWIxSC
+mask_name: mask_2MPZWISC
+path_rerun: '/mnt/extraspace/damonge/Datasets/2MPZ_WIxSC/xcell_runs'
+z_edges: [0.10, 0.15]
+bin_name: 'z0p10_0p15'
+nside_nl_threshold: 8129
+lmin_nl_from_data: 8192
+nl_analytic: True
+data_catalog: '/mnt/extraspace/damonge/Datasets/2MPZ_WIxSC/WIxSC.fits'
+spec_sample: '/mnt/extraspace/damonge/Datasets/2MPZ_WIxSC/zSpec-comp-WIxSC.csv'
+n_jk_dir: 100
+apply_galactic_correction: True
+mask_G: '/mnt/extraspace/damonge/Datasets/2MPZ_WIxSC/WISExSCOSmask_galactic.fits.gz'
+mask_C: '/mnt/extraspace/damonge/Datasets/2MPZ_WIxSC/WISExSCOSmask_equatorial.fits.gz'
+star_map_G: '/mnt/extraspace/damonge/Datasets/2MPZ_WIxSC/allwise_total_galactic.fits'
+star_map_C: '/mnt/extraspace/damonge/Datasets/2MPZ_WIxSC/allwise_total_equatorial.fits'
+use_halo_model: True
+hod_params:
+  lMmin_0: 11.697270950691191
+  siglM_0: 0.345
+  lM0_0: 11.697270950691191
+  lM1_0: 13.034845796270286
+  alpha_0: 1.0
+  fc_0: 1.0

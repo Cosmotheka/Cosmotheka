@@ -1,0 +1,16 @@
+SDSS_name: 'ELG'
+num_z_bins: 50
+nside_mask: 512
+nside_nl_threshold: 4096
+lmin_nl_from_data: 2000
+data_catalogs:
+  - '/mnt/extraspace/damonge/Datasets/eBOSS/eBOSS_ELG_clustering_data-NGC-vDR16.fits'
+  - '/mnt/extraspace/damonge/Datasets/eBOSS/eBOSS_ELG_clustering_data-SGC-vDR16.fits'
+random_catalogs:
+  - '/mnt/extraspace/damonge/Datasets/eBOSS/eBOSS_ELG_clustering_random-NGC-vDR16.fits'
+  - '/mnt/extraspace/damonge/Datasets/eBOSS/eBOSS_ELG_clustering_random-SGC-vDR16.fits'
+z_edges: [0.6, 1.1]
+path_rerun: '/mnt/extraspace/damonge/Datasets/eBOSS/xcell_runs'
+mask_name: 'mask_ELG'
+mapper_class: 'MappereBOSS'
+bias: 1.45

@@ -7,7 +7,8 @@ import pytest
 
 def get_config():
     return {'data_catalog': 'xcell/tests/data/catalog_2mpz.fits',
-            'mask': 'xcell/tests/data/map.fits',
+            'mask_C': 'xcell/tests/data/map.fits',
+            'mask_G': 'xcell/tests/data/map.fits',
             'z_edges': [-1E-10, 0.5],
             'path_rerun': '.',
             'coords': 'C',
@@ -17,7 +18,9 @@ def get_config():
 def cleanup_rerun():
     for fname in ['nz_2MPZ.npz',
                   'mask_mask_coordC_ns32.fits.gz',
-                  'mask_mask_coordG_ns32.fits.gz']:
+                  'mask_mask_coordG_ns32.fits.gz',
+                  '2MPZ_signal_map_coordC_ns32.fits.gz',
+                  '2MPZ_signal_map_coordG_ns32.fits.gz']:
         if os.path.isfile(fname):
             os.remove(fname)
 

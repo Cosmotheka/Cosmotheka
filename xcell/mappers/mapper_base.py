@@ -10,6 +10,9 @@ class MapperBase(object):
     Base mapper class used as foundation \
     for the rest of mappers.
     """
+    # map_name is the name that will be used for rerun signal map files.
+    map_name = None
+
     def __init__(self, config):
         self._get_defaults(config)
 
@@ -18,6 +21,7 @@ class MapperBase(object):
         self.mask_name = config.get('mask_name', None)
         self.beam_info = config.get('beam_info', [])
         self.nside = config['nside']
+        self.npix = hp.nside2npix(self.nside)
         self.nmt_field = None
         self.beam = None
         self.custom_auto = False
@@ -27,6 +31,10 @@ class MapperBase(object):
         self.mask_power = config.get('mask_power', 1)
         self.coords = config['coords']
         self.mask = None
+        self.signal_map = None
+        # dndz needs to be defined for _get_shifted_nz. We should consider
+        # creating a subclass for Nz tracers, as in CCL.
+        self.dndz = None
 
     def _get_rotator(self, coord_default):
         if self.coords != coord_default:
@@ -35,14 +43,26 @@ class MapperBase(object):
             rot = None
         return rot
 
-    def get_signal_map(self):
-        """
-        Returns the signal map of the mapper.
-
-        Returns:
-            delta_map (Array): signal mapper.
-        """
+    def _get_signal_map(self):
         raise NotImplementedError("Do not use base class")
+
+    def get_signal_map(self, **kwargs):
+        if self.signal_map is None:
+            fn = '_'.join([f'{self.map_name}_signal_map',
+                           *[f'{k}{v}' for k, v in kwargs.items()],
+                           f'coord{self.coords}',
+                           f'ns{self.nside}.fits.gz'])
+
+            def func():
+                if not kwargs:
+                    return self._get_signal_map()
+                else:
+                    return self._get_signal_map(**kwargs)
+
+            signal_map = self._rerun_read_cycle(fn, 'FITSMap', func)
+            self.signal_map = np.atleast_2d(signal_map)
+
+        return self.signal_map
 
     def get_contaminants(self):
         """

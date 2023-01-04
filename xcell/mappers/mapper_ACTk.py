@@ -26,6 +26,7 @@ class MapperACTk(MapperACTBase):
     def __init__(self, config):
         self._get_ACT_defaults(config)
         self.mask_power = config.get('mask_power', 2)
+        self.mask_threshold = config.get('mask_threshold', 0.1)
 
     def _get_signal_map(self):
         # Loads the signal_map in pixell format
@@ -49,7 +50,14 @@ class MapperACTk(MapperACTBase):
                                            lmax=self.lmax,
                                            nside=self.nside)
         msk = rotate_mask(msk, self.rot)
+        # Cap it (there is noise due to the change of pixelization)
+        goodpix = msk > self.mask_threshold
+        msk[~goodpix] = 0
         return msk
+
+    def get_nl_coupled(self):
+        # raise NotImplementedError("No noise model for the ACT maps")
+        return np.zeros([1, 3*self.nside])
 
     def get_dtype(self):
         return 'cmb_convergence'
