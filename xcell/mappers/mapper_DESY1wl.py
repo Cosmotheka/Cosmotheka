@@ -24,6 +24,7 @@ class MapperDESY1wl(MapperBase):
         - mapper_class: `'MapperDESY1wl'`
     """
     map_name = 'DESY1wl'
+
     def __init__(self, config):
         self._get_defaults(config)
         self.config = config
