@@ -69,9 +69,9 @@ class MapperBase(object):
         Returns the contaminants maps of the mapper.
 
         Returns:
-            contaminants (Array): contaminant mapper.
+            contaminants (Array or None): contaminant map.
         """
-        raise NotImplementedError("Do not use base class")
+        return None
 
     def get_mask(self):
         """
@@ -210,21 +210,3 @@ class MapperBase(object):
         if self.nmt_field is None:
             self.nmt_field = self._get_nmt_field(signal=None, **kwargs)
         return self.nmt_field
-
-    def get_dtype(self):
-        """
-        Returns the type of the mapper
-
-        Returns:
-            mapper_type (String)
-        """
-        raise NotImplementedError("Do not use base class")
-
-    def get_spin(self):
-        """
-        Returns the spin of the mapper.
-
-        Returns:
-            spin (Int)
-        """
-        raise NotImplementedError("Do not use base class")
