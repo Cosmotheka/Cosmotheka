@@ -47,6 +47,7 @@ extensions = [
 
 autoapi_type = "python"
 autoapi_dirs = ["../../xcell"]
+autoapi_ignore = ["*test*"]
 # We are using both the class and the __init__ docstring to document their
 # initialization
 autoapi_python_class_content = "both"
