@@ -93,7 +93,7 @@ class Data():
         not be used).
 
         Returns
-        ----------
+        -------
         tracers: list
             List of the tracers listed in the configuration file
         """
@@ -110,7 +110,7 @@ class Data():
             Name of the section whose content you want to get.
 
         Returns
-        ----------
+        -------
         content: dictionary
             Dictionary with the content of the given section. If it does not
             exist in the configuration, it returns an empty dictionary
@@ -134,7 +134,7 @@ class Data():
             or 'all' if all correlations are requested.
 
         Returns
-        ----------
+        -------
         compute: bool
             True if the Cell of the pair has to be computed or False if not.
         """
@@ -158,15 +158,16 @@ class Data():
         the Cell.
 
         Returns
-        ----------
+        -------
         matrix: dict
             Dictionary with keys a tuple of a pair of tracers; i.e.(tr1, tr2)
             and value a dictionary with the following keys:
-             - 'compute': if the Cell has to be computed
-             - 'clcov_from_data': if the data Cell has to be used for the
-               covariance
-             - 'inv': if the tracers order has to be swapped when computing the
-               Cell.
+
+            - 'compute': if the Cell has to be computed
+            - 'clcov_from_data': if the data Cell has to be used for the
+              covariance
+            - 'inv': if the tracers order has to be swapped when computing the
+              Cell.
         """
         trs = self._get_tracers_defined()
 
@@ -216,7 +217,7 @@ class Data():
             Cells
 
         Returns
-        ----------
+        -------
         matrix: dict
             Dictionary with keys a tuple of a pair of tracers; i.e.(tr1, tr2)
             and value the computation value requested (or the default if not
@@ -272,7 +273,7 @@ class Data():
             Cells
 
         Returns
-        ----------
+        -------
         matrix: dict
             Dictionary with keys a tuple of a pair of tracers; i.e.(tr1, tr2)
             and value the computation value requested (or the default if not
@@ -311,7 +312,7 @@ class Data():
             'none').
 
         Returns
-        ----------
+        -------
         matrix: dict
             Dictionary with keys a tuple of a pair of tracers; i.e.(tr1, tr2)
             and value the computation value requested (or the default if not
@@ -339,7 +340,7 @@ class Data():
         computed or not. It can be a subset of the full matrix.
 
         Returns
-        ----------
+        -------
         matrix: dict
             Dictionary with keys a tuple of a pair of tracers; i.e.(tr1, tr2)
             and value the computation value requested (or the default if not
@@ -366,7 +367,7 @@ class Data():
             Tracer name
 
         Returns
-        ----------
+        -------
         bias: float
             Linear galaxy bias
         """
@@ -541,11 +542,12 @@ class Data():
         matrix: dict
             Dictionary with keys a tuple of a pair of tracers; i.e.(tr1, tr2)
             and value a dictionary with the following keys:
-             - 'compute': if the Cell has to be computed
-             - 'clcov_from_data': if the data Cell has to be used for the
-               covariance
-             - 'inv': if the tracers order has to be swapped when computing the
-               Cell.
+
+            - 'compute': if the Cell has to be computed
+            - 'clcov_from_data': if the data Cell has to be used for the
+              covariance
+            - 'inv': if the tracers order has to be swapped when computing the
+              Cell.
         """
         if self.tr_matrix is None:
             self.tr_matrix = self._init_tracer_matrix()
