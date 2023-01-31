@@ -1,3 +1,4 @@
+"""Implements a Dummy mapper that can be used to test the MapperBase."""
 from .mapper_base import MapperBase
 import numpy as np
 import healpy as hp
@@ -6,27 +7,20 @@ import pymaster as nmt
 
 
 class MapperDummy(MapperBase):
+    """Dummy mapper used to test MapperBase."""
+
     def __init__(self, config):
-        """
-        config - dict
-          {'dtype': 'galaxy_density',
-           'seed': None,
-           'nside': ***,
-           'fsky': 0.2,
-           'cosmo': {
-                'Omega_c': 0.2640,
-                'Omega_b': 0.0493,
-                'h': 0.6736,
-                'n_s': 0.9649,
-                'sigma8': 0.8111,
-                'w0': -1,
-                'wa': 0,
-                'transfer_function': 'boltzmann_camb',
-                'baryons_power_spectrum': 'nobaryons'
-                }
-            'zbin': 0,
-            'width': 0.5,
-            }
+        """Init the MapperDummy class with a dictionary.
+
+        Args:
+            config (dict): Dictionary with the following keys:
+                - dtype: One of the `sacc.tracers.quantity`
+                - seed: None
+                - nside: HEALPix map nside
+                - fsky: 0.2
+                - cosmo: Parameters accepted by `:obj:~ccl.Cosmology`
+                - zbin: 0
+                - width: 0.5
         """
         self._get_defaults(config)
         self.seed = self.config.get('seed', None)
