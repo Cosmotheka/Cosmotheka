@@ -1,3 +1,4 @@
+"""Mapper class for the KV450 weak lensing data set."""
 from .mapper_base import MapperBase
 from .utils import get_map_from_points, save_rerun_data
 from astropy.table import Table, vstack
@@ -6,25 +7,25 @@ import healpy as hp
 
 
 class MapperKV450(MapperBase):
-    """
-    Mapper for the KiDS-1000 weak lensing data set. \
-    """
+    """Mapper for the KV450 weak lensing data set."""
+
     map_name = 'KV450'
 
     def __init__(self, config):
         """
-        config - dict
-          {'data_catalogs': ['KV450_G12_reweight_3x4x4_v2_good.cat',
-                             'KV450_G23_reweight_3x4x4_v2_good.cat',
-                             'KV450_GS_reweight_3x4x4_v2_good.cat',
-                             'KV450_G15_reweight_3x4x4_v2_good.cat',
-                             'KV450_G9_reweight_3x4x4_v2_good.cat'] ,
-          'file_nz': Nz_DIR_z0.1t0.3.asc,
-          'zbin':0,
-          'nside':nside,
-          'mask_name': 'mask_KV450_0'}
-        """
+        Args:
+            config (dict): configuration dictionary with keys:
 
+                - data_catalogs: [KV450_G12_reweight_3x4x4_v2_good.cat,
+                  KV450_G23_reweight_3x4x4_v2_good.cat,
+                  KV450_GS_reweight_3x4x4_v2_good.cat,
+                  KV450_G15_reweight_3x4x4_v2_good.cat,
+                  KV450_G9_reweight_3x4x4_v2_good.cat]
+                - file_nz: Nz_DIR_z0.1t0.3.asc
+                - zbin: 0
+                - nside: HEALPix map nside
+                - mask_name: e.g. mask_KV450_0
+        """
         self._get_defaults(config)
         self.rot = self._get_rotator('C')
 
@@ -63,12 +64,10 @@ class MapperKV450(MapperBase):
         self.nls = {'PSF': None, 'shear': None, 'stars': None}
 
     def get_catalog(self):
-        """
-        Returns the chosen redshift bin of the \
-        mappers catalog.
+        """Return the catalog subset from the chosen redshift bin.
 
         Returns:
-            cat_data (Array)
+            array: catalog data
         """
         if self.cat_data is None:
             fn = f'{self.map_name}_cat.fits'
@@ -251,17 +250,13 @@ class MapperKV450(MapperBase):
         return self.nl_coupled
 
     def get_nz(self, dz=0):
-        """
-        Loads the redshift distribution of sources \
-        from the data products.
-        Then, it shifts the distribution by "dz" (default dz=0). \
-        Finally, it returns the redshift distribtuion.
+        """Return the redshift distribution, possibly shifted if requested.
 
-        Kwargs:
-            dz=0
+        Args:
+            dz (float): redshift shift
 
         Returns:
-            [z, nz] (Array)
+            array: Array containing [z, nz]
         """
         if self.dndz is None:
             z, nz = np.loadtxt(self.config['file_nz'], unpack=True)
