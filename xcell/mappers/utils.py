@@ -1,3 +1,4 @@
+"""Library with functions used across different mappers."""
 import numpy as np
 import healpy as hp
 import fitsio
@@ -5,6 +6,17 @@ import os
 
 
 def _build_rerun_fname(mpr, fname):
+    """Return path to the cached version of the given file.
+
+    Args:
+        mpr (:class:`~xcell.mapper_base.MapperBase`): A mapper object.
+        fname (str): name of the cached files.
+
+    Returns:
+        tuple:
+            - Path to the cached file if exists. None, otherwise.
+            - True if the file exists. False if not.
+    """
     # Check if we want to save rerun data
     path = mpr.config.get('path_rerun', None)
     if path is None:
@@ -18,17 +30,19 @@ def _build_rerun_fname(mpr, fname):
 
 
 def get_rerun_data(mpr, fname, ftype, section=None, read=True):
-    """Loads files from previous runs of a given mapper
+    """Return files from previous runs of a given mapper.
+
     Args:
         mpr (:class:`~xcell.mapper_base.MapperBase`): A mapper object.
-        fname (string): path to rerun files.
-        ftype (string): type of rerun files FITSTable, FITSMap, ASCII or NPZ
-        section (Int): if `ftype == FITSTable` or `ftype == FITSMap` selects \
+        fname (str): path to rerun files.
+        ftype (str): type of rerun files FITSTable, FITSMap, ASCII or NPZ
+        section (int): if `ftype == FITSTable` or `ftype == FITSMap` selects
             field of file.
-        read (`True` or `False`): if `False` only checks for existance of \
-            files as opposed to reading them.
+        read (`True` or `False`): if `False` only checks for existance of files
+            as opposed to reading them.
+
     Returns:
-        file
+        array or None: Loaded file or None if not present.
     """
     # Ignore rerun file if required
     ignore = mpr.config.get('ignore_rerun', False)
@@ -66,14 +80,13 @@ def get_rerun_data(mpr, fname, ftype, section=None, read=True):
 
 
 def save_rerun_data(mpr, fname, ftype, data):
-    """Saves files from previous runs of a given mapper
+    """Save files from previous runs of a given mapper.
+
     Args:
         mpr (:class:`~xcell.mapper_base.MapperBase`): A mapper object.
-        fname (string): path to rerun files.
-        ftype (string): type of rerun files FITSTable, FITSMap, ASCII or NPZ
+        fname (str): path to rerun files.
+        ftype (str): type of rerun files FITSTable, FITSMap, ASCII or NPZ
         data: the data that will be saved to a file
-    Returns:
-
     """
     fname_full, _ = _build_rerun_fname(mpr, fname)
 
@@ -95,19 +108,17 @@ def save_rerun_data(mpr, fname, ftype, data):
 
 
 def rotate_mask(mask, rot, binarize=False):
-    """Applies a given rotator object to mask
+    """Rotate a mask with the given rotator object.
+
     Args:
-        mask (Array): mask to be rotated.
-        rot (:class:`healpy.rotator.Rotator`): rotator \
-            object containing the current and target \
-            coordinates.
-        binarize(`True` or `False`): if `True` pixels \
-            with values smaller than 0.5 are set to 0 \
-            Pixels with values bigger than 0.5 are set \
-            to 1.
+        mask (array): mask to be rotated.
+        rot (:class:`healpy.rotator.Rotator`): rotator object containing the
+            current and target coordinates.
+        binarize(`True` or `False`): if `True` pixels with values smaller than
+            0.5 are set to 0 Pixels with values bigger than 0.5 are set to 1.
 
     Returns:
-        mask (Array)
+        array: rotated mask
     """
     if rot is None:
         return mask
@@ -120,19 +131,17 @@ def rotate_mask(mask, rot, binarize=False):
 
 
 def rotate_map(mapp, rot):
-    """
-    Applies a given rotator object to map. \
-    The rotation is performed in Fourrier
-    space.
+    """Rotate a map with the given rotator object.
+
+    The rotation is performed in Fourier space.
 
     Args:
-        - mapp (Array): map to be rotated.
-        - rot (:class:`healpy.rotator.Rotator`): rotator \
-               object containing the current and target \
-               coordinates.
+        mapp (array): map to be rotated.
+        rot (:class:`healpy.rotator.Rotator`): rotator object containing the
+              current and target coordinates.
 
     Returns:
-        map (Array)
+        array: rotated map
     """
     if rot is None:
         return mapp
@@ -142,31 +151,23 @@ def rotate_map(mapp, rot):
 def get_map_from_points(cat, nside, w=None, rot=None,
                         ra_name='RA', dec_name='DEC',
                         in_radians=False, qu=None):
-    """
-    Creates a map given a catalog of objects and \
-    a number of pixels.
+    """Return a map given a catalog of objects and a number of pixels.
 
     Args:
-        cat (Array): catalog of sources.
-        nside (:class:`healpy.rotator.Rotator`): rotator \
-            object containing the current and target \
-            coordinates.
-        w (Array): weights of sources in catalaog. \
-                   Defaults to `None`.
-       rot (:class:`healpy.rotator.Rotator`): If not `None` \
-           rotates sources in catalog to target \
-           coordinates. Defaults to "None". \
-       ra_name (String): name of RA field in catalog. \
-                         Defaults to "RA".
-       dec_name (String): name of DEC field in catalog. \
-                          Defaults to "DEC".
-       in_radians (`True` or `False`): Flags if input catalog. \
-           If `True`, converts angles in catalog to degrees.
-       qu (Array): weights for spin-2 quantities. \
-                   Defaults to `None`.
+        cat (array): catalog of sources.
+        nside (:class:`healpy.rotator.Rotator`): rotator object containing the
+            current and target coordinates.
+        w (array): weights of sources in catalaog. Defaults to `None`.
+        rot (:class:`healpy.rotator.Rotator`): If not `None` rotates sources in
+            catalog to target coordinates. Defaults to "None".
+        ra_name (str): name of RA field in catalog. Defaults to "RA".
+        dec_name (str): name of DEC field in catalog. Defaults to "DEC".
+        in_radians (bool): Flags if input catalog. If `True`, converts angles
+            in catalog to degrees.
+        qu (array): weights for spin-2 quantities. Defaults to `None`.
 
     Returns:
-        numcount (Array)
+        array: map
     """
     npix = hp.nside2npix(nside)
     if in_radians:
@@ -198,36 +199,30 @@ def get_map_from_points(cat, nside, w=None, rot=None,
 def get_DIR_Nz(cat_spec, cat_photo, bands, zflag,
                zrange, nz, nearest_neighbors=10, njk=100,
                bands_photo=None):
-    """
-    Implementation of the DIR algorithm that \
-    calibrates a photometric galaxy redshift \
-    distribution given a reference \
-    spectroscopic sample. \
-    The code makes use of sklearn nearest \
-    neighbors algorthim
+    """Return the redshift distribution calibrated with DIR.
+
+    Implementation of the DIR algorithm that calibrates a photometric galaxy
+    redshift distribution given a reference spectroscopic sample. The code
+    makes use of sklearn nearest neighbors algorthim
 
     Args:
-        - cat_spec (Array): catalog of spectroscopic \
-                            samples.
-        - cat_photo (Array): catalog of photometric \
-                             samples.
-        - bands (Array): bands for spectroscopic \
-                         and photometric samples.
-        - zflag (String): name of the redshift field \
-                        in the samples catalog.
-        - zrange (Array): redshift range for the calibrated \
-           galaxy redshift distribution.
-        - nz (Int): number of bins for calibrated \
-          galaxy redshift distribution.
-        - nearest_neighbors = 10 (float): number of nearest neighbors \
-           found by the algorithm.
-        - njk (float) = 100: Loop over JK region.
-        - bands_photo = None: bands of phometric catalog.
+        cat_spec (array): catalog of spectroscopic samples.
+        cat_photo (array): catalog of photometric samples.
+        bands (array): bands for spectroscopic and photometric samples.
+        zflag (str): name of the redshift field in the samples catalog.
+        zrange (array): redshift range for the calibrated galaxy redshift
+            distribution.
+        nz (int): number of bins for calibrated galaxy redshift distribution.
+        nearest_neighbors = 10 (float): number of nearest neighbors found by
+            the algorithm.
+        njk (float) = 100: Loop over JK region.
+        bands_photo (list): bands of phometric catalog.
 
     Returns:
-        - zz (Array): position of bins in redshift
-        - dndz (Array): elements per bin
-        - dndz_jk (Array):
+        tuple:
+            - zz (array): position of bins in redshift
+            - dndz (array): elements per bin
+            - dndz_jk (array):
     """
     from sklearn.neighbors import NearestNeighbors
     from scipy.spatial import cKDTree
