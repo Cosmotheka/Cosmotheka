@@ -5,15 +5,31 @@ import numpy as np
 
 
 class MapperP18SMICA(MapperPlanckBase):
+    """
+    path = `".../Datasets/Planck_SMICA"`
+    **Config**
+
+        - file_map: `path+"COM_CMB_IQU-smica-nosz_2048_R3.00_full.fits"`
+        - file_hm1: `path+"COM_CMB_IQU-smica-nosz_2048_R3.00_hm1.fits"`
+        - file_hm2: `path+"COM_CMB_IQU-smica-nosz_2048_R3.00_hm2.fits"`
+        - file_gp_mask: \
+        `".../Datasets/Planck_masks/HFI_Mask_GalPlane-apo2_2048_R2.00.fits"`
+        - file_ps_mask: \
+        `".../Datasets/Planck_masks/HFI_Mask_PointSrc_2048_R2.00.fits"`
+
+        - beam_info:
+
+            - type: `'Gaussian'`
+            - FWHM_arcmin: `5.0`
+
+        - gp_mask_mode: `'0.6'`
+        - ps_mask_mode: `['F100', 'F143', 'F217', 'F353']`
+        - mask_name: `mask_P18SMICA`
+        - path_rerun: `'.../Datasets/Planck_SMICA/xcell_runs'`
+    """
     map_name = "P18SMICA"
 
     def __init__(self, config):
-        """
-        config - dict
-        {'file_map': [path+'COM_CMB_IQU-smica-nosz_2048_R3.00_full.fits'],
-         '',
-         'nside':512}
-        """
         self._get_Planck_defaults(config)
         self.beam_info = config.get('beam_info',
                                     [{'type': 'Gaussian',
@@ -50,4 +66,12 @@ class MapperP18SMICA(MapperPlanckBase):
         return np.array([hm1_map, hm2_map])
 
     def get_dtype(self):
+        """
+        Returns the type of the mapper. \
+
+        Args:
+            None
+        Returns:
+            mapper_type (String)
+        """
         return 'cmb_temperature'

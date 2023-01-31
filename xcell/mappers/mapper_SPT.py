@@ -5,16 +5,29 @@ import numpy as np
 
 
 class MapperSPT(MapperPlanckBase):
+    """
+    path = `.../Datasets/SPT/sptsz_planck_ymap_healpix/"`
+    **Config**
+
+        - file_map: `path+"SPTSZ_Planck_min_variance_ymap.fits.gz"`
+        - file_hm1: `path+"SPTSZ_Planck_min_variance_ymap_half1.fits.gz"`
+        - file_hm2: `path+"SPTSZ_Planck_min_variance_ymap_half2.fits.gz"`
+        - file_gp_mask: `path+"SPTSZ_dust_mask_top_5percent.fits.gz"`
+        - gp_mask_mode: `"default"`
+        - file_ps_mask: `path+ \
+          "SPTSZ_point_source_mask_nside_8192_binary_mask.fits.gz"`
+        - ps_mask_mode: `['default']`
+
+        - beam_info:
+            - type: `"Gaussian"`
+            - FWHM_arcmin: `1.6`
+
+        - mask_name: `"mask_SPT"`
+        - path_rerun: `".../Datasets/SPT/xcell_runs"`
+    """
     map_name = 'SPT'
 
     def __init__(self, config):
-        """
-        config - dict
-        {'file_map': path+'COM_CompMap_Compton-SZMap-ymaps_2048_R2.00.fits',
-         'file_mask': path+'COM_CompMap_Compton-SZMap-masks_2048_R2.01.fits',
-         'mask_name': 'mask_tSZ',
-         'nside':512}
-        """
         self._get_Planck_defaults(config)
         self.gp_mask_modes = {'default': 0}
         self.gp_mask_mode = config.get('gp_mask_mode', 'default')

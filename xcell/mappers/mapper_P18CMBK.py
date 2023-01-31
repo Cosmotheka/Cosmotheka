@@ -7,19 +7,24 @@ from .utils import rotate_mask
 
 
 class MapperP18CMBK(MapperBase):
+    """
+    Note that this mapper is a child of `MapperBase`, /
+    not of `MapperPlanckBase`.
+
+    **Config**
+
+        - file_klm: `".../Datasets/Planck_lensing/Lensing2018/MV/dat_klm.fits"`
+        - file_mask: `".../Datasets/Planck_lensing/Lensing2018/mask.fits.gz"`
+        - file_noise: `".../Datasets/Planck_lensing/Lensing2018/MV/nlkk.dat"`
+        - mask_aposize: `0.2`
+        - mask_apotype: `"C12"`
+        - mask_name: `"mask_P18kappa"`
+        - path_rerun: `".../Datasets/Planck_lensing/Lensing2018/xcell_runs"`
+
+    """
     map_name = 'P18CMBK'
 
     def __init__(self, config):
-        """
-        config - dict
-        {'file_klm':'COM_Lensing_4096_R3.00/MV/dat_klm.fits',
-         'file_mask':'COM_Lensing_4096_R3.00/mask.fits.gz',
-         'file_noise':'COM_Lensing_4096_R3.00/MV/nlkk.dat',
-         'mask_aposize': 0.2,
-         'mask_apotype': 'C1',
-         'mask_name': 'mask_CMBK',
-         'nside':4096}
-        """
         self._get_defaults(config)
         self.mask_apotype = config.get('mask_apotype', 'C1')
         self.mask_aposize = config.get('mask_aposize', 0.2)
@@ -81,6 +86,13 @@ class MapperP18CMBK(MapperBase):
         return self.nl_coupled
 
     def get_cl_fiducial(self):
+        """
+        Returns the signal power spectrum \
+        of the mapper.
+
+        Returns:
+            cl_fid (Array)
+        """
         if self.cl_fid is None:
             ell = self.get_ell()
             noise = self._get_noise()
@@ -91,6 +103,14 @@ class MapperP18CMBK(MapperBase):
         return self.cl_fid
 
     def _get_noise(self):
+        # Returns the decoupled noise power spectrum of the \
+        # auto-correlation of the covergence map.
+
+        # Returns:
+        #     [l (Array): multipole list,
+        #      Nl (Array): noise power spectrum,
+        #      Nl+Cl (Array): noise + signal power spectrum] (Array)
+
         if self.noise is None:
             # Read noise file. Column order is: ['l', 'Nl', 'Nl+Cl']
             self.noise = np.loadtxt(self.config['file_noise'], unpack=True)
@@ -98,7 +118,7 @@ class MapperP18CMBK(MapperBase):
         return self.noise
 
     def get_dtype(self):
-        return 'cmb_convergence'
+        return "cmb_convergence"
 
     def get_spin(self):
         return 0

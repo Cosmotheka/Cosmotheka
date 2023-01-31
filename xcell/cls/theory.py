@@ -3,7 +3,7 @@ import numpy as np
 
 
 class ConcentrationDuffy08M500c(ccl.halos.Concentration):
-    """ Concentration-mass relation by Duffy et al. 2008
+    """Concentration-mass relation by Duffy et al. 2008
     (arXiv:0804.2486) extended to Delta = 500-critical.
     """
     name = 'Duffy08M500c'
@@ -12,10 +12,9 @@ class ConcentrationDuffy08M500c(ccl.halos.Concentration):
         """
         Parameters
         ----------
-            mdef (:class:`~pyccl.halos.massdef.MassDef`): a mass
-                definition object that fixes
-                the mass definition used by this c(M)
-                parametrization.
+            mdef: :class:`~pyccl.halos.massdef.MassDef`)
+                a mass definition object that fixes the mass definition used by
+                this c(M) parametrization.
         """
         super(ConcentrationDuffy08M500c, self).__init__(mdef)
 
@@ -33,7 +32,7 @@ class ConcentrationDuffy08M500c(ccl.halos.Concentration):
 
         Parameters
         ----------
-        mdef: ccl.halos.MassDef
+        mdef: :obj:`~ccl.halos.MassDef`
             Mass definition instance
 
         Return
@@ -61,7 +60,7 @@ class ConcentrationDuffy08M500c(ccl.halos.Concentration):
 
         Parameters
         ----------
-        cosmo: ccl.Cosmology
+        cosmo: `:obj:~ccl.Cosmology`
             Cosmology instance
         M: float
             Halo mass
@@ -95,7 +94,7 @@ class Theory():
 
         Return
         ------
-        cosmo: ccl.Cosmology
+        cosmo: `:obj:~ccl.Cosmology`
             ccl.Cosmology instance
         """
         if self._cosmo is None:
@@ -111,15 +110,16 @@ class Theory():
         dict or None:
             If 'halo_model' not in the configuration return None; else, return
             a dictionary with keys:
-             - 'mass_def': Mass definition (config key: 'mass_def')
-             - 'mass_func': Mass function  (config key: 'mass_function')
-             - 'halo_bias:; Halo bias (config key: 'halo_bias')
-             - 'cM': concentration (config key: 'concentration')
-             - 'prof_NFW': NFW profile (ccl.halos.HaloProfileNFW)
-             - 'prof_2pt': 2pt profile (ccl.halos.profiles_2pt)
-             - 'calculator': ccl.halos.HaloModelCalculator
-             - 'alpha': alpha parameter of HMCODE
-             - 'k_suppress': Small-k damping
+
+            - 'mass_def': Mass definition (config key: 'mass_def')
+            - 'mass_func': Mass function  (config key: 'mass_function')
+            - 'halo_bias:; Halo bias (config key: 'halo_bias')
+            - 'cM': concentration (config key: 'concentration')
+            - 'prof_NFW': NFW profile (ccl.halos.HaloProfileNFW)
+            - 'prof_2pt': 2pt profile (ccl.halos.profiles_2pt)
+            - 'calculator': ccl.halos.HaloModelCalculator
+            - 'alpha': alpha parameter of HMCODE
+            - 'k_suppress': Small-k damping
         """
         if self._hm_par is not None:
             return self._hm_par
@@ -187,7 +187,7 @@ class Theory():
             Name of the tracer
         tracer: dict
             Tracer section of the configuration
-        mapper: xcell.mappers.MapperXXX
+        mapper: `:class:~xcell.mappers.MapperBase`
             Mapper instance
 
         Return
@@ -199,7 +199,7 @@ class Theory():
              - 'ccl_pr': Instance of ccl.halos.profiles
              - 'ccl_pr_2pt': Instance of ccl.halos.profiles_2pt
              - 'with_hm': True if halo model is used (i.e. if 'use_halo_model'
-               in tracer config_
+               in tracer config
              - 'normed': True if the profiles are normalized
         """
         cosmo = self.get_cosmo_ccl()

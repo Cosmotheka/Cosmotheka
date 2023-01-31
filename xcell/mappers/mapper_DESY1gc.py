@@ -7,21 +7,26 @@ import healpy as hp
 
 
 class MapperDESY1gc(MapperBase):
+    """
+    path = `'.../Datasets/DES_Y1/redmagic_catalog/'`
+
+    **Config**
+
+        - zbin: `0` / `1` / `2` / `3` / `4`
+        - mask_threshold: `0.5`
+        - data_catalog: \
+          `path+'DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits'`
+        - file_mask: \
+          `path+'DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits'`
+        - file_nz: \
+          `'.../Datasets/DES_Y1/data_vector/2pt_NG_mcal_1110.fits'`
+        - mask_name: `'mask_DESY1gc'`
+        - mapper_class: `'MapperDESY1gc'`
+        - bias: `1.48`/`1.76`/`1.78`/`2.19`/`2.23`
+    """
     map_name = 'DESY1gc'
 
     def __init__(self, config):
-        """
-        Data source:
-        https://des.ncsa.illinois.edu/releases/y1a1/key-catalogs/key-shape
-        config - dict
-          {'data_catalog':'/home/zcapjru/PhD/Data/DES_redm/DES_Y1A1_3x2pt_redMaGiC_zerr_CATALOG.fits',
-           'file_mask':'/home/zcapjru/PhD/Data/DES_redm/DES_Y1A1_3x2pt_redMaGiC_MASK_HPIX4096RING.fits',
-           'file_nz':'/home/zcapjru/PhD/Data/DES_redm/2pt_NG_mcal_1110.fits',
-           'zbin':1,
-           'nside':nside,
-           'mask_name': 'mask_DESgc_1'}
-        """
-
         self._get_defaults(config)
         self.rot = self._get_rotator('C')
         self.mask_threshold = config.get('mask_threshold', 0.5)
@@ -39,23 +44,38 @@ class MapperDESY1gc(MapperBase):
         self.nl_coupled = None
 
     def get_catalog(self):
+        """
+        Returns the mapper's binned catalog.
+
+        Returns:
+            catalog (Array)
+        """
         if self.cat_data is None:
             self.cat_data = Table.read(self.config['data_catalog'])
             self.cat_data = self._bin_z(self.cat_data)
         return self.cat_data
 
     def _bin_z(self, cat):
+        # Removes all but the catalog sources \
+        # inside the chosen redshift bin.
+
         z_key = 'ZREDMAGIC'
         return cat[(cat[z_key] >= self.z_edges[0]) &
                    (cat[z_key] < self.z_edges[1])]
 
     def _get_w(self):
+        # Returns the weights for the sources of \
+        # the mapper's catalog.
+
         if self.w is None:
             cat_data = self.get_catalog()
             self.w = np.array(cat_data['weight'])
         return self.w
 
     def _get_mask(self):
+        # Returns the mapper's mask after applying. \
+        # the mapper's threshold.
+
         mask = hp.read_map(self.config['file_mask'])
         mask[mask == hp.UNSEEN] = 0
         mask = rotate_mask(mask, self.rot)
@@ -66,6 +86,16 @@ class MapperDESY1gc(MapperBase):
         return mask
 
     def get_nz(self, dz=0):
+        """
+        Returns the mappers redshift \
+        distribtuion of sources from a file.
+
+        Kwargs:
+            dz=0
+
+        Returns:
+            [z, nz] (Array)
+        """
         if self.dndz is None:
             f = fits.open(self.config['file_nz'])[7].data
             self.dndz = {'z_mid': f['Z_MID'],

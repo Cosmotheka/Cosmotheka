@@ -6,22 +6,26 @@ import healpy as hp
 
 
 class MapperDESY1wl(MapperBase):
+    """
+    Note that last letter of the the mask name stands for the \
+    chosen redshdift bin (`i = [1,2,3,4]`).
+
+    path = `'.../Datasets/DES_Y1/shear_catalog/'`
+
+    ***Config***
+
+        - zbin: `0` / `1` / `2` /`3`
+        - mode: `shear` / `PSF`
+        - zbin_cat: `path+'y1_source_redshift_binning_v1.fits'`
+        - data_cat: `path+'mcal-y1a1-combined-riz-unblind-v4-matched.fits'`
+        - file_nz: `path+'y1_redshift_distributions_v1.fits'`
+        - path_rerun: `'.../Datasets/DES_Y1/xcell_reruns/'`
+        - mask_name: `'mask_DESY1wli'`
+        - mapper_class: `'MapperDESY1wl'`
+    """
     map_name = 'DESY1wl'
 
     def __init__(self, config):
-        """
-        Data source:
-        https://des.ncsa.illinois.edu/releases/y1a1/key-catalogs/key-shape
-        config - dict
-          {'zbin_cat': 'y1_source_redshift_binning_v1.fits',
-           'data_cat':  'mcal-y1a1-combined-riz-unblind-v4-matched.fits',
-           'file_nz': '/.../.../y1_redshift_distributions_v1.fits'
-           'nside': Nside,
-           'zbin': zbin,
-           'mask_name': name,
-           }
-        """
-
         self._get_defaults(config)
         self.config = config
         self.rot = self._get_rotator('C')
@@ -41,6 +45,14 @@ class MapperDESY1wl(MapperBase):
         self.nls = {'PSF': None, 'shear': None}
 
     def get_catalog(self):
+        """
+        Returns the chosen redshift bin of the \
+        mappers catalog after removing the \
+        additive and multiplicative bias.
+
+        Returns:
+            cat_data (Array)
+        """
         if self.cat_data is None:
             # load cat
             self.cat_data = self._load_catalog()
@@ -55,6 +67,11 @@ class MapperDESY1wl(MapperBase):
         return self.cat_data
 
     def _load_catalog_from_raw(self):
+        # Loads the raw DESY1 catalog and \
+        # produces a lite version only with the \
+        # columns of interest and after applying \
+        # a -90 < DEC < 35 filter.
+
         # Read catalogs
         # Columns explained in
         #
@@ -98,6 +115,16 @@ class MapperDESY1wl(MapperBase):
         return Table(cat)
 
     def _set_mode(self, mode=None):
+        # Given the chose mapper mode ('shear' or 'PSF'), \
+        # it returns the corresponding name of the \
+        # ellipticity fields in the catalog.
+
+        # Kwargs:
+        #    mode=None
+
+        # Returns:
+        #     e1_flag (String), e2_flag (String), mode (String)
+
         if mode is None:
             mode = self.mode
 
@@ -112,6 +139,9 @@ class MapperDESY1wl(MapperBase):
         return e1_flag, e2_flag, mode
 
     def _get_Rs(self):
+        # Computes the R factor used to calculate \
+        # the multiplicative bias of the maps.
+
         if self.Rs is None:
             data_1p = self.cat_data[self.cat_data['zbin_mcal_1p'] == self.zbin]
             data_1m = self.cat_data[self.cat_data['zbin_mcal_1m'] == self.zbin]
@@ -152,6 +182,9 @@ class MapperDESY1wl(MapperBase):
         return
 
     def _get_ellipticity_maps(self, mode=None):
+        # Returns the ellipticity maps of the \
+        # chose catalog ('shear' or 'PSF').
+
         e1f, e2f, mod = self._set_mode(mode)
         print('Computing bin{} signal map'.format(self.zbin))
         cat_data = self.get_catalog()
@@ -188,6 +221,16 @@ class MapperDESY1wl(MapperBase):
         return self.signal_map
 
     def get_nz(self, dz=0):
+        """
+        Returns the mappers redshift \
+        distribtuion of sources from a file.
+
+        Kwargs:
+            dz=0
+
+        Returns:
+            [z, nz] (Array)
+        """
         if self.dndz is None:
             f = Table.read(self.config['file_nz'], format='fits',
                            hdu=1)['Z_MID', 'BIN{}'.format(self.zbin + 1)]
@@ -196,6 +239,9 @@ class MapperDESY1wl(MapperBase):
         return self._get_shifted_nz(dz)
 
     def _get_mask(self):
+        # Returns the mapper's mask after applying. \
+        # the mapper's threshold.
+
         cat_data = self.get_catalog()
         msk = get_map_from_points(cat_data, self.nside,
                                   ra_name='ra', dec_name='dec',

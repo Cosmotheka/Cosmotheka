@@ -28,6 +28,17 @@ class MapperROSATXray(MapperBase):
     The mask is constructed by thresholding the exposure map
     and combining it with any other externa map (e.g. aiming
     to remove Galactic emission).
+
+    **Config**
+
+        - exposure_map: `'.../Datasets/ROSAT/exposure/exposure_mean.fits'`
+        - photon_list: `'.../Datasets/ROSAT/rosat_photons_Egt0p4keV.fits'`
+        - energy_range: `[0.5, 3.0]`
+        - exposure_min: `100.0`
+        - external_mask: \
+        `'.../Datasets/2MPZ_WIxSC/WISExSCOSmask_equatorial.fits.gz'`
+        - mask_name: `'mask_ROSAT'`
+        - mapper_class: `'MapperROSATXray'`
     """
     map_name = 'ROSATXray'
 
@@ -47,6 +58,14 @@ class MapperROSATXray(MapperBase):
         self.nl_coupled = None
 
     def get_pholist(self):
+        """
+        Returns the mapper's catalog \
+        after applying energy boundaries. \
+
+        Returns:
+            pholist (Arrays): catalog
+
+        """
         if self.pholist is None:
             f = fitsio.FITS(self.fname_pholist)
             cat = f[1].read()
@@ -56,6 +75,13 @@ class MapperROSATXray(MapperBase):
         return self.pholist
 
     def get_expmap(self):
+        """
+        Returns the mapper exposure map. \
+
+        Returns:
+            expmap (Array)
+
+        """
         if self.expmap is None:
             mp = hp.read_map(self.fname_expmap)
             mp = rotate_map(mp, self.rot)

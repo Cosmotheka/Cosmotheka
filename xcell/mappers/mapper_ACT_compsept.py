@@ -6,17 +6,11 @@ from scipy.interpolate import interp1d
 
 
 class MapperACTCompSept(MapperACTBase):
+    """
+    Base mapper class for the ACT \
+    component separated mappers. \
+    """
     def __init__(self, config):
-        """
-        config - dict
-        {'file_map':'tilec_single_tile_D56_cmb_map_v1.2.0_joint.fits',
-         'file_mask':'tilec_mask.fits',
-         'file_noise': 'tilec_single_tile_D56_cmb_map_v1.2.0_joint_noise.fits',
-         'beam_file': 'tilec_single_tile_D56_cmb_map_v1.2.0_joint_beam.txt',
-         'mask_name': 'mask_ACTtsz',
-         'nside': 1024,
-         'lmax': 6000}
-        """
         self._get_ACT_defaults(config)
 
     def _get_signal_map(self):
@@ -49,6 +43,8 @@ class MapperACTCompSept(MapperACTBase):
         return np.zeros([1, 3*self.nside])
 
     def _get_custom_beam(self, info):
+        # Loads beam from file
+
         fname = info['file']
         beam_file = np.transpose(np.loadtxt(fname))
         ells = beam_file[0]

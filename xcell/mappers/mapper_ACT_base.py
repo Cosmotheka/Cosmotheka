@@ -3,6 +3,10 @@ from pixell import enmap
 
 
 class MapperACTBase(MapperBase):
+    """
+    Base ACT mapper class used as foundation \
+    for the rest of ACT mappers.
+    """
     # For backwards compatibility, this mapper allows to pass a 'map_name'
     # configuration argument that will be appended to this map_name
     map_name = 'ACT'
@@ -21,6 +25,13 @@ class MapperACTBase(MapperBase):
         self.nl_coupled = None
 
     def _get_pixell_mask(self):
+        """
+        Returns the mask of the mapper \
+        in pixell format.
+
+        Returns
+            pixel_mask (Array)
+        """
         if self.pixell_mask is None:
             self.pixell_mask = enmap.read_map(self.file_mask)
         return self.pixell_mask
