@@ -740,7 +740,7 @@ class ClFid(ClBase):
              - 'ccl_pr': Instance of ccl.halos.profiles
              - 'ccl_pr_2pt': Instance of ccl.halos.profiles_2pt
              - 'with_hm': True if halo model is used (i.e. if 'use_halo_model'
-               in tracer config_
+               in tracer config
              - 'normed': True if the profiles are normalized
         ccl_tr2: dict
             A dictionary as ccl_tr1 but for the second tracer.

@@ -7,17 +7,29 @@ import os
 
 
 class Mapper2MPZ(MapperBase):
+    """
+    **Config**
+
+        - mask_name: `mask_2MPZWISC`
+        - path_rerun: `'.../Datasets/2MPZ_WIxSC/xcell_runs'`
+        - z_edges: `[0.0, 0.1]`
+        - data_catalog: `'.../Datasets/2MPZ_WIxSC/2MPZ.fits'`
+        - n_jk_dir: `100`
+        - mask_G: `'.../Datasets/2MPZ_WIxSC/WISExSCOSmask_galactic.fits.gz'`
+        - mask_C: `'.../Datasets/2MPZ_WIxSC/WISExSCOSmask_equatorial.fits.gz'`
+        - use_halo_model: `True`
+        - hod_params:
+
+              - lMmin_0: `12.708493552845066`
+              - siglM_0: `0.345`
+              - lM0_0: `12.708493552845066`
+              - lM1_0: `14.260818060157721`
+              - alpha_0: `1.0`
+              - fc_0: `1.0`
+    """
     map_name = '2MPZ'
 
     def __init__(self, config):
-        """
-        config - dict
-          {'data_catalog': 'Legacy_Survey_BASS-MZLS_galaxies-selection.fits',
-           'mask': 'mask.fits',
-           'z_edges': [0, 0.5],
-           'n_jk_dir': 100,
-           'mask_name': 'mask_2MPZ'}
-        """
         self._get_defaults(config)
         self.z_edges = config.get('z_edges', [0, 0.5])
         self.ra_name, self.dec_name = self._get_coords()
@@ -37,6 +49,12 @@ class Mapper2MPZ(MapperBase):
             raise NotImplementedError(f"Unknown coordinates {self.coords}")
 
     def get_catalog(self):
+        """
+        Returns the mapper catalog of sources.
+
+        Returns:
+            catalog (Array)
+        """
         if self.cat_data is None:
             file_data = self.config['data_catalog']
             if not os.path.isfile(file_data):
@@ -48,6 +66,8 @@ class Mapper2MPZ(MapperBase):
         return self.cat_data
 
     def _mask_catalog(self, cat):
+        # Applies binary mask to catalog
+
         self.mask = self.get_mask()
         ipix = hp.ang2pix(self.nside, cat[self.ra_name],
                           cat[self.dec_name], lonlat=True)
@@ -55,14 +75,27 @@ class Mapper2MPZ(MapperBase):
         return cat[self.mask[ipix] > 0.1]
 
     def _bin_z(self, cat):
+        # Removes all but the catalog sources \
+        # inside the chosen redshift bin.
+
         return cat[(cat['ZPHOTO'] > self.z_edges[0]) &
                    (cat['ZPHOTO'] <= self.z_edges[1])]
 
     def _get_specsample(self, cat):
+        # Selects the spectroscopic samples \
+        # in the catalog
+
         ids = cat['ZSPEC'] > -1
         return cat[ids]
 
     def _get_nz(self):
+        # Employs the DIR algorithm to build \
+        # the sources redshift distribution of the \
+        # catalog and returns it in the shape of a \
+        # dictionary containing "z_mid"; the mid redshift \
+        # of the redshift histogram, "nz"; the heights of \
+        # the histogram, and "nz_jk".
+
         c_p = self.get_catalog()
         c_s = self._get_specsample(c_p)
         # Sort spec sample by nested pixel index so jackknife
@@ -87,6 +120,18 @@ class Mapper2MPZ(MapperBase):
         return {'z_mid': zm, 'nz': nz, 'nz_jk': nz_jk}
 
     def get_nz(self, dz=0, return_jk_error=False):
+        """
+        Checks if mapper has precomputed the redshift \
+        distribution. If not, it uses "_get_nz()" to obtain it. \
+        Then, it shifts the distribution by "dz" (default dz=0).
+
+        Kwargs:
+            dz=0
+            return_jk_error=False
+
+        Returns:
+            [z, nz] (Array)
+        """
         if self.dndz is None:
             fn = 'nz_2MPZ.npz'
             self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
@@ -107,6 +152,9 @@ class Mapper2MPZ(MapperBase):
         return signal_map
 
     def _get_mask(self):
+        # Reads the mask of the mappper from a file \
+        # and upgrades it to the chosen resolution.
+
         # We will assume the mask has been provided in the right
         # coordinates, so no further conversion is needed.
         mask = hp.ud_grade(hp.read_map(self.config[f'mask_{self.coords}']),

@@ -6,6 +6,10 @@ from .utils import get_rerun_data, save_rerun_data
 
 
 class MapperBase(object):
+    """
+    Base mapper class used as foundation \
+    for the rest of mappers.
+    """
     # map_name is the name that will be used for rerun signal map files.
     map_name = None
 
@@ -61,9 +65,21 @@ class MapperBase(object):
         return self.signal_map
 
     def get_contaminants(self):
+        """
+        Returns the contaminants maps of the mapper.
+
+        Returns:
+            contaminants (Array or None): contaminant map.
+        """
         return None
 
     def get_mask(self):
+        """
+        Returns the mask of the mapper.
+
+        Returns:
+            mask (Array): mapper's mask
+        """
         if self.mask is None:
             fn = '_'.join([f'mask_{self.mask_name}',
                            f'coord{self.coords}',
@@ -75,6 +91,12 @@ class MapperBase(object):
         raise NotImplementedError("Do not use base class")
 
     def get_nl_coupled(self):
+        """
+        Returns the coupled noise power spectrum of the mapper.
+
+        Returns:
+            nl_coupled (Array): coupled noise power spectrum
+        """
         raise NotImplementedError("Do not use base class")
 
     def get_nl_covariance(self):
@@ -104,12 +126,37 @@ class MapperBase(object):
             return np.array([z_dz[sel], nz[sel]])
 
     def get_ell(self):
+        """
+        Returns the array of multipoles associted with the \
+        mapper's pixel resolution.
+
+        Returns:
+            ells (Array): multipoles array.
+        """
         return np.arange(3 * self.nside)
 
     def _get_custom_beam(self, info):
         raise ValueError("This mapper does not support custom beams")
 
     def get_beam(self):
+        """ Calculates the value of the mapper's beam at each \
+            multipole. The beam is calculated following the \
+            information contained in "self.beam_info". \
+            Currently three types of beam are implemented:
+
+                - Gaussian: a Gaussian beam defined by a FWHM \
+                   in arcmin.
+                - PixWin: the pixel window function associated \
+                   resolution down/up-scalings.
+                - Custom: loads beam from file.
+
+            "self.beam_info" can contain information for many beams. \
+            If this is the case, the final beam is the product of \
+            individual beams.
+
+            Returns:
+                beam (Array): value of the beam at each multipole.
+        """
         if self.beam is not None:
             return self.beam
 
@@ -152,6 +199,14 @@ class MapperBase(object):
                             templates=cont, n_iter=n_iter)
 
     def get_nmt_field(self, **kwargs):
+        """
+        Returns an instance of Namaster field given a mapper's \
+        signal map, mask and beam.
+
+        Returns:
+            nmt_field (:class:`NaMaster.NmtField`): a Namaster \
+            field instance. \
+        """
         if self.nmt_field is None:
             self.nmt_field = self._get_nmt_field(signal=None, **kwargs)
         return self.nmt_field

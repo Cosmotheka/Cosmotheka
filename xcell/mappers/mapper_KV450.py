@@ -1,3 +1,4 @@
+"""Mapper class for the KV450 weak lensing data set."""
 from .mapper_base import MapperBase
 from .utils import get_map_from_points, save_rerun_data
 from astropy.table import Table, vstack
@@ -6,22 +7,25 @@ import healpy as hp
 
 
 class MapperKV450(MapperBase):
+    """Mapper for the KV450 weak lensing data set."""
+
     map_name = 'KV450'
 
     def __init__(self, config):
         """
-        config - dict
-          {'data_catalogs': ['KV450_G12_reweight_3x4x4_v2_good.cat',
-                             'KV450_G23_reweight_3x4x4_v2_good.cat',
-                             'KV450_GS_reweight_3x4x4_v2_good.cat',
-                             'KV450_G15_reweight_3x4x4_v2_good.cat',
-                             'KV450_G9_reweight_3x4x4_v2_good.cat'] ,
-          'file_nz': Nz_DIR_z0.1t0.3.asc,
-          'zbin':0,
-          'nside':nside,
-          'mask_name': 'mask_KV450_0'}
-        """
+        Args:
+            config (dict): configuration dictionary with keys:
 
+                - data_catalogs: [KV450_G12_reweight_3x4x4_v2_good.cat,
+                  KV450_G23_reweight_3x4x4_v2_good.cat,
+                  KV450_GS_reweight_3x4x4_v2_good.cat,
+                  KV450_G15_reweight_3x4x4_v2_good.cat,
+                  KV450_G9_reweight_3x4x4_v2_good.cat]
+                - file_nz: Nz_DIR_z0.1t0.3.asc
+                - zbin: 0
+                - nside: HEALPix map nside
+                - mask_name: e.g. mask_KV450_0
+        """
         self._get_defaults(config)
         self.rot = self._get_rotator('C')
 
@@ -60,6 +64,11 @@ class MapperKV450(MapperBase):
         self.nls = {'PSF': None, 'shear': None, 'stars': None}
 
     def get_catalog(self):
+        """Return the catalog subset from the chosen redshift bin.
+
+        Returns:
+            array: catalog data
+        """
         if self.cat_data is None:
             fn = f'{self.map_name}_cat.fits'
             self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
@@ -68,6 +77,10 @@ class MapperKV450(MapperBase):
         return self.cat_data
 
     def _load_catalog(self):
+        # Loads the lite DESY1 catalog. \
+        # Selects the chosen bin in the catalog. \
+        # Removes the additive and multiplicative  biases.
+
         nzbins = self.zbin_edges.shape[0]
         cat_bins = [Table() for i in range(nzbins)]
 
@@ -91,6 +104,16 @@ class MapperKV450(MapperBase):
         return cat_bins[self.zbin].as_array()
 
     def _set_mode(self):
+        # Given the chosen mapper mode ('shear', 'PSF' and 'stars), \
+        # it returns the kind of the map associated \
+        # ('shear', 'PSF' --> 'galaxy' and 'stars' --> stars) \
+        # with the mode and corresponding name of the \
+        # ellipticity fields in the catalog.
+
+        # Returns:
+        #     kind (String), e1_flag (String), \
+        #     e2_flag (String), mode (String)
+
         mode = self.mode
 
         if mode == 'shear':
@@ -110,6 +133,9 @@ class MapperKV450(MapperBase):
         return kind, e1_flag, e2_flag, mode
 
     def _bin_z(self, cat, zbin):
+        # Removes all sources in the catalog \
+        # outside the chosen redshift bin.
+
         z_key = 'Z_B'
         z_edges = self.zbin_edges[zbin]
         return ((cat[z_key] > z_edges[0]) &
@@ -131,11 +157,15 @@ class MapperKV450(MapperBase):
         cat_data['bias_corrected_e2'][sel_gals] /= 1 + self.m[zbin]
 
     def _get_gals_or_stars(self, kind='galaxies'):
+        # Returns the mapper's chosen catalog.
+
         cat_data = self.get_catalog()
         sel = cat_data['SG_FLAG'] == self.sel[kind]
         return cat_data[sel]
 
     def _get_ellip_maps(self):
+        # Returns the ellipticity fields of the mapper's catalog.
+
         kind, e1f, e2f, mod = self._set_mode()
         print('Computing bin{} signal map'.format(self.zbin))
         data = self._get_gals_or_stars(kind)
@@ -183,6 +213,9 @@ class MapperKV450(MapperBase):
         return msk
 
     def _get_w2s2(self):
+        # Computes the weight-squared map for
+        # noise power spectrum estimation.
+
         kind, e1f, e2f, mod = self._set_mode()
         if self.w2s2s[mod] is not None:
             self.w2s2 = self.w2s2s[mod]
@@ -217,6 +250,14 @@ class MapperKV450(MapperBase):
         return self.nl_coupled
 
     def get_nz(self, dz=0):
+        """Return the redshift distribution, possibly shifted if requested.
+
+        Args:
+            dz (float): redshift shift
+
+        Returns:
+            array: Array containing [z, nz]
+        """
         if self.dndz is None:
             z, nz = np.loadtxt(self.config['file_nz'], unpack=True)
             self.dndz = {'z_mid': z, 'nz': nz}

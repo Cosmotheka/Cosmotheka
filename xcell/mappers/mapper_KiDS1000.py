@@ -6,17 +6,26 @@ import healpy as hp
 
 
 class MapperKiDS1000(MapperBase):
+    """
+    Note that last letter of the the mask name stands for the \
+    chosen redshdift bin (`i = [1,2,3,4]`).
+
+    path = `".../Datasets/KiDS1000/"`
+
+    **Config**
+
+        - data_catalog: \
+        `path+"KiDS_DR4.1_ugriZYJHKs_SOM_gold_WL_cat.fits"`
+        - file_nz: \
+        `path+"SOM_N_of_Z/K1000_NS_V1.0.0A_ugriZYJHKs_photoz_SG_mask_LF_svn_309c_2Dbins_v2_SOMcols_Fid_blindC_TOMO2_Nz.asc"`
+        - mode: `"shear"` / `"PSF"` / `"stars"`
+        - zbin: `"1"` / `"1"` / `"2"` / `"3"` / `"4"`
+        - mask_name: `"mask_KiDS1000__i"`
+        - path_rerun: `path+'xcell_runs'`
+    """
     map_name = 'KiDS1000'
 
     def __init__(self, config):
-        """
-        config - dict
-          {'data_catalog': 'KiDS_DR4.1_ugriZYJHKs_SOM_gold_WL_cat.fits',
-           'file_nz': SOM_N_of_Z/K1000_..._TOMO1_Nz.asc
-          'zbin':0,
-          'nside':nside,
-          'mask_name': 'mask_KiDS1000_0'}
-        """
 
         self._get_defaults(config)
         self.rot = self._get_rotator('C')
@@ -55,6 +64,13 @@ class MapperKiDS1000(MapperBase):
                              self.e1_flag, self.e2_flag, 'weight']
 
     def get_catalog(self):
+        """
+        Returns the chosen redshift bin of the \
+        mappers catalog.
+
+        Returns:
+            cat_data (Array)
+        """
         if self.cat_data is None:
             fn = f'{self.map_name}_cat.fits'
             self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
@@ -63,6 +79,12 @@ class MapperKiDS1000(MapperBase):
         return self.cat_data
 
     def _load_catalog(self):
+
+        # Loads the lite DESY1 catalog. \
+        # Selects the chosen bin in the catalog. \
+        # Removes the additive and multiplicative biases.
+        # Returns the catalog.
+
         nzbins = self.zbin_edges.shape[0]
         cat_out = None
         cat_full = Table.read(self.config['data_catalog'],
@@ -82,8 +104,17 @@ class MapperKiDS1000(MapperBase):
         return cat_out
 
     def _set_mode(self):
-        mode = self.mode
+        # Given the chosen mapper mode ('shear', 'PSF' and 'stars), \
+        # it returns the kind of the map associated \
+        # ('shear', 'PSF' --> 'galaxy' and 'stars' --> stars) \
+        # with the mode and corresponding name of the \
+        # ellipticity fields in the catalog.
 
+        # Returns:
+        #     kind (String), e1_flag (String),
+        #     e2_flag (String), mode (String)
+
+        mode = self.mode
         if mode == 'shear':
             kind = 'galaxies'
             e1_flag = self.e1_flag
@@ -101,6 +132,9 @@ class MapperKiDS1000(MapperBase):
         return kind, e1_flag, e2_flag, mode
 
     def _bin_z(self, cat, zbin):
+        # Removes all sources in the catalog \
+        # outside the chosen redshift bin.
+
         z_key = 'Z_B'
         z_edges = self.zbin_edges[zbin]
         return ((cat[z_key] > z_edges[0]) &
@@ -122,11 +156,19 @@ class MapperKiDS1000(MapperBase):
         cat[self.e2_flag][sel_gals] /= 1 + self.m[zbin]
 
     def _get_gals_or_stars(self, kind='galaxies'):
+        # Returns the sources of the catalog \
+        # corresponding to the chosen kind \
+        # of source ('galaxies' or 'stars').
+
         cat_data = self.get_catalog()
         sel = cat_data['SG_FLAG'] == self.sel[kind]
         return cat_data[sel]
 
     def _get_ellip_maps(self):
+        # Returns the ellipticity fields of the mapper's catalog.
+        # Returns:
+        #     we1 (Array), we2 (Array)
+
         kind, e1f, e2f, mod = self._set_mode()
         print('Computing bin{} signal map'.format(self.zbin))
         data = self._get_gals_or_stars(kind)
@@ -175,6 +217,9 @@ class MapperKiDS1000(MapperBase):
         return msk
 
     def _get_w2s2(self):
+        # Computes squared-weights map for
+        # noise power spectrum estimation.
+
         kind, e1f, e2f, mod = self._set_mode()
         if self.w2s2s[mod] is not None:
             self.w2s2 = self.w2s2s[mod]
@@ -208,6 +253,18 @@ class MapperKiDS1000(MapperBase):
         return self.nl_coupled
 
     def get_nz(self, dz=0):
+        """
+        Loads the redshift distribution of sources \
+        from the data products. \
+        Then, it shifts the distribution by "dz" (default dz=0). \
+        Finally, it returns the redshift distribtuion.
+
+        Kwargs:
+            dz=0
+
+        Returns:
+            [z, nz] (Array)
+        """
         if self.dndz is None:
             z, nz = np.loadtxt(self.config['file_nz'], unpack=True)[:2]
             self.dndz = {'z_mid': z, 'nz': nz}

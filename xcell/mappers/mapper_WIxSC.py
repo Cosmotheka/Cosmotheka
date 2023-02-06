@@ -9,20 +9,39 @@ import os
 
 
 class MapperWIxSC(MapperBase):
+    """
+    **Config**
+
+    - mask_name: `"mask_2MPZWISC"`
+    - path_rerun: `'.../Datasets/2MPZ_WIxSC/xcell_runs'`
+    - z_edges: `[0.10, 0.15]` / `[0.15, 0.20]` / `[0.20, 0.25]` \
+               `[0.25, 0.30]` / `[0.30, 0.35]`
+    - bin_name: `'z0p10_0p15'` / `'z0p15_0p20'` / `'z0p20_0p25'` \
+                `'z0p25_0p30'` / `'z0p30_0p35'`
+    - nside_nl_threshold: `8129`
+    - lmin_nl_from_data: `8192`
+    - nl_analytic: `True`
+    - data_catalog: `'.../Datasets/2MPZ_WIxSC/WIxSC.fits'`
+    - spec_sample: `'.../Datasets/2MPZ_WIxSC/zSpec-comp-WIxSC.csv'`
+    - n_jk_dir: `100`
+    - apply_galactic_correction: `True`
+    - mask_G: `'.../Datasets/2MPZ_WIxSC/WISExSCOSmask_galactic.fits.gz'`
+    - mask_C: `'.../Datasets/2MPZ_WIxSC/WISExSCOSmask_equatorial.fits.gz'`
+    - star_map_G: `'.../Datasets/2MPZ_WIxSC/allwise_total_galactic.fits'`
+    - star_map_C: `'.../Datasets/2MPZ_WIxSC/allwise_total_equatorial.fits'`
+    - use_halo_model: `True`
+    - hod_params:
+
+        - lMmin_0: `11.697` / `11.859` / `12.103` / `12.144` / `12.084`
+        - siglM_0: `0.345` / `0.345` / `0.345` / `0.345` / `0.345`
+        - lM0_0: `11.697` / `11.859` / `12.103` / 12.144 / `13.013`
+        - lM1_0: `13.035` / `13.146` / `13.414` / 13.434 / `12.084`
+        - alpha_0: `1.0` / `1.0` / `1.0` / `1.0` /  `1.0`
+        - fc_0: `1.0` / `1.0` / `1.0` / `1.0` / `1.0`
+    """
     map_name = 'WIxSC'
 
     def __init__(self, config):
-        """
-        config - dict
-          {'data_catalog': 'WIxSC.fits',
-           'mask': 'mask.fits',
-           'star_map': 'stars.fits',
-           'spec_sample': 'zSpec-comp-WIxSC.csv',
-           'bin_name': '0',
-           'z_edges': [0, 0.5],
-           'n_jk_dir': 100,
-           'mask_name': 'mask_WIxSC'}
-        """
         self._get_defaults(config)
         self.z_edges = config.get('z_edges', [0, 0.5])
         self.ra_name, self.dec_name, self.in_rad = self._get_coords()
@@ -41,6 +60,16 @@ class MapperWIxSC(MapperBase):
                                             2000)
 
     def get_radec(self, cat):
+        """
+        Returns the RA and DEC fields \
+        of the mapper's catalog.
+
+        Args:
+            cat (Array): catalog
+
+        Returns:
+            ra (Array), dec (Array)
+        """
         if self.in_rad:
             return (np.degrees(cat[self.ra_name]),
                     np.degrees(cat[self.dec_name]))
@@ -56,6 +85,8 @@ class MapperWIxSC(MapperBase):
             raise NotImplementedError(f"Unknown coordinates {self.coords}")
 
     def _get_catalog(self):
+        # Loads chosen columns of the raw WIxSC catalog. \
+        # Selects the chosen bin and masks it.
         file_data = self.config['data_catalog']
         if not os.path.isfile(file_data):
             raise ValueError(f"File {file_data} not found")
@@ -80,6 +111,8 @@ class MapperWIxSC(MapperBase):
         return self.cat_data
 
     def _mask_catalog(self, cat):
+        # Applies binary mask to catalog.
+
         self.mask = self.get_mask()
         ra, dec = self.get_radec(cat)
         ipix = hp.ang2pix(self.nside, ra, dec, lonlat=True)
@@ -87,10 +120,16 @@ class MapperWIxSC(MapperBase):
         return cat[self.mask[ipix] > 0.1]
 
     def _bin_z(self, cat):
+        # Removes all sources in the catalog \
+        # outside the chosen bin.
+
         return cat[(cat['ZPHOTO_CORR'] > self.z_edges[0]) &
                    (cat['ZPHOTO_CORR'] <= self.z_edges[1])]
 
     def _get_specsample(self, cat):
+        # Loads the spectroscopic catalog of \
+        # sources of the mapper and bins it.
+
         import pandas as pd
         # Read full spectroscopic sample
         ds = Table.from_pandas(pd.read_csv(self.config['spec_sample']))
@@ -99,8 +138,14 @@ class MapperWIxSC(MapperBase):
         return ds[msk]
 
     def _get_nz(self):
+        # Uses the DIR algorithm to build \
+        # the redshift distribution of sources \
+        # from the mapper's photometric sample \
+        # given the spectroscopic sample.
+
         c_p = self.get_catalog()
         c_s = self._get_specsample(c_p)
+
         # Sort spec sample by nested pixel index so jackknife
         # samples are spatially correlated.
         ip_s = hp.ring2nest(self.nside,
@@ -108,6 +153,7 @@ class MapperWIxSC(MapperBase):
                                        c_s['dec_WISE'], lonlat=True))
         idsort = np.argsort(ip_s)
         c_s = c_s[idsort]
+
         # Compute DIR N(z)
         z, nz, nz_jk = get_DIR_Nz(c_s, c_p,
                                   ['W1c', 'W2c', 'Bcc', 'Rcc'],
@@ -121,6 +167,21 @@ class MapperWIxSC(MapperBase):
         return {'z_mid': zm, 'nz': nz, 'nz_jk': nz_jk}
 
     def get_nz(self, dz=0, return_jk_error=False):
+        """
+        Checks if mapper has already computed \
+        redshift distribution of sources. \
+        If so, loads it from the save file. \
+        Otherwise, it calculates it. \
+        Finally, it shifts it by a given amount \
+        (dz=0 default).
+
+        Kwargs:
+            dz=0
+            return_jk_error=False
+
+        Returns:
+            [z, nz] (Array)
+        """
         if self.dndz is None:
             fn = f'{self.map_name}_nz.npz'
             self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
@@ -153,6 +214,7 @@ class MapperWIxSC(MapperBase):
         return mask
 
     def _get_stars(self):
+        # Returns the mapper's stars catalog.
         if self.stars is None:
             # Power = -2 makes sure the total number of stars is conserved
             # We assume the star map has been provided in the right coords
@@ -166,6 +228,7 @@ class MapperWIxSC(MapperBase):
         return self.stars
 
     def _get_mean_n(self, nmap):
+        # Returns mean of a given counts map.
         self.stars = self._get_stars()
         self.mask = self.get_mask()
         goodpix = self.stars < 8515
@@ -174,6 +237,24 @@ class MapperWIxSC(MapperBase):
         return n_mean
 
     def _get_galactic_correction(self, delta, stars, bmask, nbins=14, npoly=3):
+        # Computes the galactic correction.
+
+        # Args:
+        #     delta (Array): signal map
+        #     stars (Array): stars map
+        #     bmask (Array): binary mask
+
+        # Kwargs:
+        #     nbins=14 (Int): number of bins
+        #     npoly=3 (Int): order of the polynomial fit
+
+        # Returns:
+        #     {'stars' (Array): binned star density,
+        #      'delta_mean' (Array): stars' bins mean,
+        #      'delta_std' (Array): stars' bins std,
+        #      'delta_func' (Function): polynomial fit,
+        #      'delta_map' (Array): galactic correction} (Dict)
+
         # Create bins of star density
         stbins = np.linspace(np.log10(stars[bmask > 0].min()),
                              np.log10(stars[bmask > 0].max()), nbins+1)

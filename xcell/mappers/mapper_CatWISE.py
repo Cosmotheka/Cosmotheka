@@ -6,17 +6,20 @@ import healpy as hp
 
 
 class MapperCatWISE(MapperBase):
+    """
+    **Config**
+
+        - data_catalog: \
+          `".../Datasets/CatWISE/catwise_agns_masked_final_w1lt16p5_alpha.fits"`
+        - file_mask: \
+          `".../Datasets/CatWISE/MASKS_exclude_master_final.fits"`
+        - apply_ecliptic_correction: `True`
+        - mask_name: `"mask_CatWISE"`
+        - path_rerun: `".../Datasets/CatWISE/xcell_runs"`
+    """
     map_name = 'CatWISE'
 
     def __init__(self, config):
-        """
-        config - dict
-        {'data_catalog':
-        'xcell/tests/data/catwise_agns_masked_final_w1lt16p5_alpha.fits',
-        'mask': 'xcell/tests/data/MASKS_exclude_master_final.fits',
-        'mask_name': 'mask_CatWISE',
-        'apply_ecliptic_correction': True}
-        """
         self._get_defaults(config)
         self.file_sourcemask = config.get('mask_sources', None)
         self.apply_ecliptic_correction = \
@@ -29,8 +32,14 @@ class MapperCatWISE(MapperBase):
         self.nl_coupled = None
         self.rot = self._get_rotator('C')
 
-    # CatWISE catalog
     def get_catalog(self):
+        """
+        Returns the mapper's catalog after \
+        applying flux thershold.
+
+        Returns:
+            catalog (Array)
+        """
         if self.cat_data is None:
             file_data = self.config['data_catalog']
             self.cat_data = Table.read(file_data)
@@ -40,8 +49,9 @@ class MapperCatWISE(MapperBase):
                  self.config.get('flux_max_W1', 16.4))]
         return self.cat_data
 
-    # Correction to Density
     def _get_ecliptic_correction(self):
+        # Correction to Density
+
         pixarea_deg2 = (hp.nside2resol(self.nside, arcmin=True)/60)**2
         # Transforms equatorial to ecliptic coordinates
         r = hp.Rotator(coord=[self.coords, 'E'])
@@ -77,6 +87,11 @@ class MapperCatWISE(MapperBase):
         return delta_map
 
     def _cut_mask(self):
+        # Generates the mask given the chosen resolution \
+        # and the angular conditions in the configuration \
+        # file. If "file_sourcemask" is not None it applies \
+        # holes to the mask.
+
         mask = np.ones(self.npix)
         r = hp.Rotator(coord=['C', 'G'])
         RApix, DEpix = hp.pix2ang(self.nside, np.arange(self.npix),
@@ -101,6 +116,11 @@ class MapperCatWISE(MapperBase):
         return mask
 
     def _get_mask(self):
+        # Checks if the mapper has already computed \
+        # the mask. If so, it loads it from a file. \
+        # Otherwise, it calculates using "_cut_mask()". \
+        # It also rotates the mask to the chose coordinates.
+
         if self.config.get('mask_file', None) is not None:
             mask = hp.ud_grade(hp.read_map(self.config['mask_file']),
                                nside_out=self.nside)
@@ -109,8 +129,9 @@ class MapperCatWISE(MapperBase):
         mask = rotate_mask(mask, self.rot, binarize=True)
         return mask
 
-    # Shot noise
     def get_nl_coupled(self):
+        # Shot noise
+
         if self.nl_coupled is None:
             self.cat_data = self.get_catalog()
             self.mask = self.get_mask()
@@ -124,12 +145,13 @@ class MapperCatWISE(MapperBase):
         return self.nl_coupled
 
     def get_nz(self, dz=0):
+        """
+        Not implemented yet.
+        """
         raise NotImplementedError("No dNdz for CatWISE yet")
 
-    # Type
     def get_dtype(self):
         return 'galaxy_density'
 
-    # Spin
     def get_spin(self):
         return 0

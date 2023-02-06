@@ -6,16 +6,22 @@ import healpy as hp
 
 
 class MapperNVSS(MapperBase):
+    """
+    **Config**
+
+        - data_catalog: `".../Datasets/NVSS/nvss.fits"`
+        - mask_sources: `".../Datasets/NVSS/source_masks_nvss.txt"`
+        - redshift_catalog: ".../Datasets/NVSS/100sqdeg_1uJy_s1400.fits"`
+        - DEC_min_deg: `-40`
+        - flux_min_mJy: `10`
+        - fux_max_mJy: `1000`
+        - GLAT_max_deg: `10`
+        - mask_name: `"mask_NVSS"`
+        - path_rerun: `".../Datasets/NVSS/xcell_runs"`
+    """
     map_name = 'NVSS'
 
     def __init__(self, config):
-        """
-        config - dict
-          {'data_catalog': 'nvss.fits',
-           'mask': 'mask.fits',
-           'mask_name': 'mask_NVSS'
-           'redshift_catalog':'100sqdeg_1uJy_s1400.fits'}
-        """
         self._get_defaults(config)
         self.rot = self._get_rotator('C')
         self.file_sourcemask = config.get('mask_sources', None)
@@ -29,6 +35,13 @@ class MapperNVSS(MapperBase):
         self.cat_redshift = None
 
     def get_catalog(self):
+        """
+        Returns the mapper's catalog of sources \
+        (RA & DEC) after applying flux filters.
+
+        Returns:
+            cat_data (Array)
+        """
         if self.cat_data is None:
             file_data = self.config['data_catalog']
             self.cat_data = Table.read(file_data)
@@ -51,6 +64,13 @@ class MapperNVSS(MapperBase):
         return self.cat_data
 
     def get_catalog_redshift(self):
+        """
+        Returns the mapper's catalog of redshifts \
+        after applying flux filters.
+
+        Returns:
+            cat_redshift (Array)
+        """
         if self.cat_redshift is None:
             file_data = self.config['redshift_catalog']
             self.cat_redshift = Table.read(file_data)
@@ -123,6 +143,17 @@ class MapperNVSS(MapperBase):
         return self.nl_coupled
 
     def get_nz(self, dz=0):
+        """
+        Loads the redshift distribution catalog. \
+        Then, it shifts the distribution by "dz" (default dz=0). \
+        Finally, it returns the redshift distribtuion.
+
+        Kwargs:
+            dz=0
+
+        Returns:
+            [z, nz] (Array)
+        """
         if self.dndz is None:
             self.cat_redshift = self.get_catalog_redshift()
             bins = np.arange(0, max(self.cat_redshift['redshift'])+0.1, 0.1)
