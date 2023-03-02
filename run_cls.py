@@ -165,6 +165,10 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
     logfolder = os.path.join(outdir, 'log')
     os.makedirs(outdir_batches, exist_ok=True)
 
+    # Create the covariance output directory
+    covdir = os.path.join(outdir, "cov")
+    os.makedirs(covdir, exist_ok=True)
+
     c = 0
     cw_tbc = []
     sh_tbc = []
@@ -177,7 +181,7 @@ def launch_cov_batches(data, queue, njobs, nc, mem, onlogin=False, skip=[],
         # Find the covariances to be computed
         covs_tbc = []
         for trs in trs_list:
-            fname = os.path.join(outdir, 'cov/cov_{}_{}_{}_{}.npz'.format(*trs))
+            fname = os.path.join(covdir, 'cov_{}_{}_{}_{}.npz'.format(*trs))
             recompute = data.data['recompute']['cov'] or data.data['recompute']['cmcm']
             if (os.path.isfile(fname) and (not recompute)) or \
                     check_skip(data, skip, trs):

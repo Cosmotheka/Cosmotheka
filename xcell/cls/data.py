@@ -350,6 +350,8 @@ class Data():
         combs = cls_conf.keys()
         survey_matrix = {}
         for c in combs:
+            if c == "default":
+                continue
             s1, s2 = c.split('-')
             val = cls_conf[c]['compute']
             survey_matrix[(s1, s2)] = val

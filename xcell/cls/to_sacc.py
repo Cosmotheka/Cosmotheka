@@ -207,29 +207,31 @@ class ClSack():
         ------
         NotImplementedError
             For tracers' quantities not implemented. The implemented ones are
-            'galaxy_density', 'galaxy_shear', 'cmb_convergence', 'cmb_tSZ' and
-            'generic'
+            'galaxy_density', 'galaxy_shear', 'cmb_convergence', 'cmb_tSZ',
+            'cmb_kSZ' and 'generic'
         """
         mapper = self.data.get_mapper(tr)
         quantity = mapper.get_dtype()
         spin = mapper.get_spin()
-        if quantity == 'galaxy_density':
-            z, nz = mapper.get_nz(dz=0)
-            self.s.add_tracer('NZ', tr, quantity=quantity, spin=spin,
-                              z=z, nz=nz)
-        elif quantity == 'galaxy_shear':
-            z, nz = mapper.get_nz(dz=0)
-            self.s.add_tracer('NZ', tr, quantity=quantity, spin=spin,
-                              z=z, nz=nz)
-        elif quantity in ['cmb_convergence', 'cmb_tSZ', 'generic']:
-            ell = mapper.get_ell()
-            nl = mapper.get_nl_coupled()[0]
-            beam = mapper.get_beam()
-            self.s.add_tracer('Map', tr, quantity=quantity, spin=spin,
-                              ell=ell, beam=beam, beam_extra={'nl': nl})
+        if quantity in ['galaxy_density', 'galaxy_shear']:
+            try:
+                z, nz = mapper.get_nz(dz=0)
+                self.s.add_tracer('NZ', tr, quantity=quantity, spin=spin,
+                                  z=z, nz=nz)
+                return
+            except NotImplementedError:
+                pass
+        elif quantity in ['cmb_convergence', 'cmb_tSZ', 'cmb_kSZ', 'generic',
+                          'cmb_temperature']:
+            pass
         else:
             raise NotImplementedError(f'Tracer type {quantity} not ' +
                                       'implemented')
+        ell = mapper.get_ell()
+        nl = mapper.get_nl_coupled()[0]
+        beam = mapper.get_beam()
+        self.s.add_tracer('Map', tr, quantity=quantity, spin=spin,
+                          ell=ell, beam=beam, beam_extra={'nl': nl})
 
     def add_ell_cl(self, tr1, tr2):
         """
