@@ -34,8 +34,6 @@ class MapperDESY3wl(MapperBase):
     #  -
 
     def __init__(self, config):
-        raise NotImplementedError("DESY3 not yet implemented")
-
         self._get_defaults(config)
         self.config = config
         self.rot = self._get_rotator('C')
@@ -61,20 +59,20 @@ class MapperDESY3wl(MapperBase):
 
         # Initialize to nones some usefuld dictionaries
         # Selection cuts
-        self.select = dict((self.mcal_groups, nones))
+        self.select = dict(zip(self.mcal_groups, nones))
         # Galaxies position after the selection cuts have been applied
-        self.position = dict((self.mcal_groups, nones))
+        self.position = dict(zip(self.mcal_groups, nones))
         # Ellipticities after the selection cuts have been applied
-        self.ellips = {'PSF': dict((self.mcal_groups, nones)),
-                       'shear': dict((self.mcal_groups, nones))}
+        self.ellips = {'PSF': dict(zip(self.mcal_groups, nones)),
+                       'shear': dict(zip(self.mcal_groups, nones))}
         # Weights after the selection cuts have been applied
-        self.weights = dict((self.mcal_groups, nones))
+        self.weights = dict(zip(self.mcal_groups, nones))
         # Final ellipticities; i.e. the ones to be used for maps
         self.ellips_unbiased = {'PSF': None, 'shear': None}
 
     def _check_kind(self, kind):
         if kind not in self.mcal_groups:
-            raise ValueError("kind={kind} not valid. It needs to be one of "
+            raise ValueError(f"kind={kind} not valid. It needs to be one of " +
                              ", ".join(self.mcal_groups))
 
     def _get_cat_index(self):
@@ -90,9 +88,10 @@ class MapperDESY3wl(MapperBase):
         self._check_kind(kind)
         if self.select[kind] is None:
             index = self._get_cat_index()
-            subgroup = "select" + kind[-3:] if kind != 'unsheared' else ''
-            select = index[f'index/metacal/{subgroup}'][:]
-            select *= index[f'catalog/sompz/{kind}']['bhat'] == self.zbin
+            subgroup = "select"
+            subgroup += kind[-3:] if kind != 'unsheared' else ''
+            select = index[f'catalog/sompz/{kind}']['bhat'][:] == self.zbin
+            select[index[f'index/metacal/{subgroup}'][:]] *= True
             self.select[kind] = select
 
         return self.select[kind]
@@ -111,11 +110,11 @@ class MapperDESY3wl(MapperBase):
 
     def get_ellips_unbiased(self, mode):
         if self.ellips_unbiased[mode] is None:
-            ellips = self._get_ellips(mode)
+            ellips = self._get_ellips(mode=mode)
             # TODO: Only for shear??
             if mode == 'shear':
                 # Remove additive bias
-                ellips -= np.mean(ellips, axis=1)
+                ellips -= np.mean(ellips, axis=1)[:, None]
                 # Remove multiplicative bias
                 ellips = self._remove_multiplicative_bias(ellips)
             self.ellips_unbiased[mode] = ellips
@@ -200,12 +199,13 @@ class MapperDESY3wl(MapperBase):
 
     def _remove_multiplicative_bias(self, ellips):
         index = self._get_cat_index()
-        cat = index['catalog/metcal/unsheared']
+        cat = index['catalog/metacal/unsheared']
         w = self.get_weights()
-        Rg = np.array([[np.average(cat['R11'], weights=w),
-                        np.average(cat['R12'], weights=w)],
-                       [np.average(cat['R21'], weights=w),
-                        np.average(cat['R22'], weights=w)]])
+        sel = self._get_select()
+        Rg = np.array([[np.average(cat['R11'][sel], weights=w),
+                        np.average(cat['R12'][sel], weights=w)],
+                       [np.average(cat['R21'][sel], weights=w),
+                        np.average(cat['R22'][sel], weights=w)]])
         Rs = self._get_Rs()
         Rmat = Rg + Rs
         one_plus_m = np.sum(np.diag(Rmat))*0.5
@@ -240,7 +240,7 @@ class MapperDESY3wl(MapperBase):
 
         # This will only be computed if self.maps['mod'] is None
         def get_ellip_maps():
-            return self._get_ellipticity_maps(mode=mode)
+            return self._get_ellipticity_maps(mode=mod)
 
         fn = '_'.join([f'{self.map_name}_signal_map_{mod}',
                        f'coord{self.coords}',
