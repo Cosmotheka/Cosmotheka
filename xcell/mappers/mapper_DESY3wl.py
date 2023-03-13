@@ -1,8 +1,9 @@
 from .utils import get_map_from_points
 from .mapper_base import MapperBase
-from astropy.table import Table, hstack
+import h5py
 import numpy as np
 import healpy as hp
+import fitsio
 
 
 class MapperDESY3wl(MapperBase):
@@ -17,9 +18,7 @@ class MapperDESY3wl(MapperBase):
 
         - zbin: `0` / `1` / `2` /`3`
         - mode: `shear` / `PSF`
-        - zbin_cat: `'DESY3_sompz_v0.40.h5'`
         - indexcat: `'DESY3_indexcat.h5'`
-        - data_cat: `'DESY3_metacal_v03-004.h5'`
         - file_nz: `'2pt_NG_final_2ptunblind_02_24_21_wnz_redmagic_covupdate.fits'`
         - path_rerun: `'/mnt/extraspace/damonge/Datasets/DES_Y3/xcell_reruns/'`
         - mask_name: `'mask_DESY3wli'`
@@ -30,9 +29,6 @@ class MapperDESY3wl(MapperBase):
     # We follow some aspects of https://github.com/des-science/DESY3Cats
 
     # TODO:
-    #   - Instead of loading the metcal catalog, we should use the
-    #   DESY3_indexcat.h5 file which links to the other ones. I hope this will
-    #   prevent us from killing the jobs due to memory issues.
     #  - If we are going to combine it with KiDS, we have to remove the
     #  overlapping area!
     #  -
@@ -49,7 +45,7 @@ class MapperDESY3wl(MapperBase):
         self.npix = hp.nside2npix(self.nside)
         # dn/dz
         # load cat
-        self.cat_data = None
+        self.cat_index = None
         # get items for calibration
         self.Rs = None
 
@@ -58,81 +54,94 @@ class MapperDESY3wl(MapperBase):
         self.nl_coupled = None
         self.nls = {'PSF': None, 'shear': None}
 
-    def get_catalog(self):
-        """
-        Returns the chosen redshift bin of the \
-        mappers catalog after removing the \
-        additive and multiplicative bias.
+        self.mask = None
+        self.mcal_groups = ['unsheared', 'sheared_1p', 'sheared_1m',
+                            'sheared_2p', 'sheared_2m']
+        nones = [None] * len(self.mcal_groups)
 
-        Returns:
-            cat_data (Array)
-        """
-        if self.cat_data is None:
-            # load cat
-            self.cat_data = self._load_catalog()
-            # get items for calibration
-            self.Rs = self._get_Rs()
-            # clean data
-            self.cat_data.remove_rows(self.cat_data['zbin_mcal'] != self.zbin)
-            # calibrate
-            self._remove_additive_bias()
-            self._remove_multiplicative_bias()
+        # Initialize to nones some usefuld dictionaries
+        # Selection cuts
+        self.select = dict((self.mcal_groups, nones))
+        # Galaxies position after the selection cuts have been applied
+        self.position = dict((self.mcal_groups, nones))
+        # Ellipticities after the selection cuts have been applied
+        self.ellips = {'PSF': dict((self.mcal_groups, nones)),
+                       'shear': dict((self.mcal_groups, nones))}
+        # Weights after the selection cuts have been applied
+        self.weights = dict((self.mcal_groups, nones))
+        # Final ellipticities; i.e. the ones to be used for maps
+        self.ellips_unbiased = {'PSF': None, 'shear': None}
 
-        return self.cat_data
+    def _check_kind(self, kind):
+        if kind not in self.mcal_groups:
+            raise ValueError("kind={kind} not valid. It needs to be one of "
+                             ", ".join(self.mcal_groups))
 
-    def _load_catalog_from_raw(self):
-        # Read catalogs
-
-        # We cannot load the full catalog because it's too heavy. We should use
-        # the indexcat.
-
+    def _get_cat_index(self):
+        # Read the index catalog that links to the other ones.
         # Columns explained in
         # https://des.ncsa.illinois.edu/releases/y3a2/Y3key-catalogs
+        if self.cat_index is None:
+            self.cat_index = h5py.File(self.config['indexcat'], mode='r')
 
-        # Galaxy catalog
-        columns_data = ['coadd_objects_id', 'e_1', 'e_2',
-                        'psf_e1', 'psf_e2', 'ra', 'dec',
-                        'R11', 'R12', 'R21', 'R22', 'weight',
-                        'flags_select']
-        # z-bin catalog
-        zbin_groups = ['unsheared', 'sheared_1p', 'sheared_1m', 'sheared_2p',
-                       'sheared_2m']
-        columns_zbin = ['coadd_objects_id', 'bhat']
-        print('Loading full cat')
-        cat = Table.read(self.config['data_cat'],
-                         format='fits', memmap=True)
-        cat.keep_columns(columns_data)
-        cat_zbin = Table.read(self.config['zbin_cat'],
-                              format='fits', memmap=True)
-        cat_zbin.keep_columns(columns_zbin)
-        cat = hstack([cat, cat_zbin])
+        return self.cat_index
 
-        # remove bins which are not the one of interest
-        # Logic: If item in one of zbins --> sel = False
-        # Thus it is not removed by next line
-        sel = (cat[zbin_groups[0]]['bhat'] != self.zbin) * \
-              (cat[zbin_groups[1]]['bhat'] != self.zbin) * \
-              (cat[zbin_groups[2]]['bhat'] != self.zbin) * \
-              (cat[zbin_groups[3]]['bhat'] != self.zbin) * \
-              (cat[zbin_groups[4]]['bhat'] != self.zbin)
-        cat.remove_rows(sel)
-        # Remove flagged galaxies
-        # Selection: DESY3_indexcat.h5//index/metacal/select*
-        # flags == 0
-        # snr > 10
-        # snr < 1000
-        # size_ratio > 0.5 [size_ratio is T/mcal_T_psf]
-        # T<10
-        # Not: T>2 AND SNR<30
-        # Not: log10(T) < (22.25 - mag_r)/3.5 AND sqrt(e_1**2 + e_2**2) > 0.8
-        cat.remove_rows(cat['flags_select'] != 0)
-        return cat.as_array()
+    def _get_select(self, kind='unsheared'):
+        self._check_kind(kind)
+        if self.select[kind] is None:
+            index = self._get_cat_index()
+            subgroup = "select" + kind[-3:] if kind != 'unsheared' else ''
+            select = index[f'index/metacal/{subgroup}'][:]
+            select *= index[f'catalog/sompz/{kind}']['bhat'] == self.zbin
+            self.select[kind] = select
 
-    def _load_catalog(self):
-        fn = f'{self.map_name}_catalog_rerun.fits'
-        cat = self._rerun_read_cycle(fn, 'FITSTable',
-                                     self._load_catalog_from_raw)
-        return Table(cat)
+        return self.select[kind]
+
+    def _get_ellips(self, kind='unsheared', mode='shear'):
+        self._check_kind(kind)
+        if self.ellips[mode][kind] is None:
+            e1f, e2f, mode = self._set_mode(mode)
+            sel = self._get_select(kind)
+            index = self._get_cat_index()
+            e1 = index[f'catalog/metacal/{kind}'][e1f][sel]
+            e2 = index[f'catalog/metacal/{kind}'][e2f][sel]
+            self.ellips[mode][kind] = np.array((e1, e2))
+
+        return self.ellips[mode][kind]
+
+    def get_ellips_unbiased(self, mode):
+        if self.ellips_unbiased[mode] is None:
+            ellips = self._get_ellips(mode)
+            # TODO: Only for shear??
+            if mode == 'shear':
+                # Remove additive bias
+                ellips -= np.mean(ellips, axis=1)
+                # Remove multiplicative bias
+                ellips = self._remove_multiplicative_bias(ellips)
+            self.ellips_unbiased[mode] = ellips
+
+        return self.ellips_unbiased[mode]
+
+    def get_positions(self, kind='unsheared'):
+        self._check_kind(kind)
+        if self.position[kind] is None:
+            sel = self._get_select()
+            index = self._get_cat_index()
+            ra = index[f'catalog/metacal/{kind}']['RA'][sel]
+            dec = index[f'catalog/metacal/{kind}']['DEC'][sel]
+            self.position[kind] = {'ra': ra, 'dec': dec}
+
+        return self.position[kind]
+
+    def get_weights(self, kind='unsheared'):
+        self._check_kind(kind)
+        if self.weights[kind] is None:
+            sel = self._get_select()
+            index = self._get_cat_index()
+            w = index[f'catalog/metacal/{kind}']['weight'][sel]
+            self.weights[kind] = w
+
+        return self.weights[kind]
 
     def _set_mode(self, mode=None):
         # Given the chose mapper mode ('shear' or 'PSF'), \
@@ -149,8 +158,8 @@ class MapperDESY3wl(MapperBase):
             mode = self.mode
 
         if mode == 'shear':
-            e1_flag = 'e1'
-            e2_flag = 'e2'
+            e1_flag = 'e_1'
+            e2_flag = 'e_2'
         elif mode == 'PSF':
             e1_flag = 'psf_e1'
             e2_flag = 'psf_e2'
@@ -164,19 +173,24 @@ class MapperDESY3wl(MapperBase):
         # See https://arxiv.org/pdf/1702.02601.pdf
 
         if self.Rs is None:
-            data_1p = self.cat_data[self.cat_data['zbin_mcal_1p'] == self.zbin]
-            data_1m = self.cat_data[self.cat_data['zbin_mcal_1m'] == self.zbin]
-            data_2p = self.cat_data[self.cat_data['zbin_mcal_2p'] == self.zbin]
-            data_2m = self.cat_data[self.cat_data['zbin_mcal_2m'] == self.zbin]
+            data_1p = self._get_ellips("sheared_1p")
+            data_1m = self._get_ellips("sheared_1m")
+            data_2p = self._get_ellips("sheared_2p")
+            data_2m = self._get_ellips("sheared_2m")
 
-            mean_e1_1p = np.mean(data_1p['e1'])
-            mean_e2_1p = np.mean(data_1p['e2'])
-            mean_e1_1m = np.mean(data_1m['e1'])
-            mean_e2_1m = np.mean(data_1m['e2'])
-            mean_e1_2p = np.mean(data_2p['e1'])
-            mean_e2_2p = np.mean(data_2p['e2'])
-            mean_e1_2m = np.mean(data_2m['e1'])
-            mean_e2_2m = np.mean(data_2m['e2'])
+            w_1p = self.get_weights("sheared_1p")
+            w_1m = self.get_weights("sheared_1m")
+            w_2p = self.get_weights("sheared_2p")
+            w_2m = self.get_weights("sheared_2m")
+
+            mean_e1_1p = np.mean(data_1p[0] * w_1p)
+            mean_e2_1p = np.mean(data_1p[1] * w_1p)
+            mean_e1_1m = np.mean(data_1m[0] * w_1m)
+            mean_e2_1m = np.mean(data_1m[1] * w_1m)
+            mean_e1_2p = np.mean(data_2p[0] * w_2p)
+            mean_e2_2p = np.mean(data_2p[1] * w_2p)
+            mean_e1_2m = np.mean(data_2m[0] * w_2m)
+            mean_e2_2m = np.mean(data_2m[1] * w_2m)
 
             self.Rs = np.array([[(mean_e1_1p-mean_e1_1m)/0.02,
                                  (mean_e1_2p-mean_e1_2m)/0.02],
@@ -184,33 +198,29 @@ class MapperDESY3wl(MapperBase):
                                  (mean_e2_2p-mean_e2_2m)/0.02]])
         return self.Rs
 
-    def _remove_additive_bias(self):
-        self.cat_data['e1'] -= np.mean(self.cat_data['e1'])
-        self.cat_data['e2'] -= np.mean(self.cat_data['e2'])
-        return
-
-    def _remove_multiplicative_bias(self):
-        # Should be done only with galaxies truly in zbin
-        Rg = np.array([[np.mean(self.cat_data['R11']),
-                        np.mean(self.cat_data['R12'])],
-                       [np.mean(self.cat_data['R21']),
-                        np.mean(self.cat_data['R22'])]])
-        Rmat = Rg + self.Rs
+    def _remove_multiplicative_bias(self, ellips):
+        index = self._get_cat_index()
+        cat = index['catalog/metcal/unsheared']
+        w = self.get_weights()
+        Rg = np.array([[np.average(cat['R11'], weights=w),
+                        np.average(cat['R12'], weights=w)],
+                       [np.average(cat['R21'], weights=w),
+                        np.average(cat['R22'], weights=w)]])
+        Rs = self._get_Rs()
+        Rmat = Rg + Rs
         one_plus_m = np.sum(np.diag(Rmat))*0.5
 
-        self.cat_data['e1'] /= one_plus_m
-        self.cat_data['e2'] /= one_plus_m
-        return
+        return ellips / one_plus_m
 
     def _get_ellipticity_maps(self, mode=None):
-        # Returns the ellipticity maps of the \
-        # chose catalog ('shear' or 'PSF').
-
-        e1f, e2f, mod = self._set_mode(mode)
+        # Returns the ellipticity maps of the chosen catalog ('shear' or 'PSF').
         print('Computing bin{} signal map'.format(self.zbin))
-        cat_data = self.get_catalog()
-        we1, we2 = get_map_from_points(cat_data, self.nside,
-                                       qu=[-cat_data[e1f], cat_data[e2f]],
+        weights = self.get_weights()
+        ellips = self.get_ellips_unbiased(mode)
+        ellips *= weights[None, :]
+        pos = self.get_positions()
+        we1, we2 = get_map_from_points(pos, self.nside,
+                                       qu=[-ellips[0], ellips[1]],
                                        ra_name='ra',
                                        dec_name='dec',
                                        rot=self.rot)
@@ -243,8 +253,7 @@ class MapperDESY3wl(MapperBase):
 
     def get_nz(self, dz=0):
         """
-        Returns the mappers redshift \
-        distribtuion of sources from a file.
+        Returns the mappers redshift distribtuion of sources from a file.
 
         Kwargs:
             dz=0
@@ -253,18 +262,17 @@ class MapperDESY3wl(MapperBase):
             [z, nz] (Array)
         """
         if self.dndz is None:
-            f = Table.read(self.config['file_nz'], format='fits',
-                           hdu=1)['Z_MID', 'BIN{}'.format(self.zbin + 1)]
-            self.dndz = {'z_mid': f['Z_MID'],
-                         'nz': f['BIN{}'.format(self.zbin + 1)]}
+            bn = f"BIN{self.zbin + 1}"
+            f = fitsio.read(self.config['file_nz'], ext="nz_source",
+                            columns=["Z_MID", bn])
+            self.dndz = {'z_mid': f['Z_MID'], 'nz': f[bn]}
         return self._get_shifted_nz(dz)
 
     def _get_mask(self):
-        # Returns the mapper's mask after applying. \
-        # the mapper's threshold.
+        # Returns the  mask.
 
-        cat_data = self.get_catalog()
-        msk = get_map_from_points(cat_data, self.nside,
+        pos = self.get_positions()
+        msk = get_map_from_points(pos, self.nside, w=self.get_weights(),
                                   ra_name='ra', dec_name='dec',
                                   rot=self.rot)
         return msk
@@ -277,11 +285,11 @@ class MapperDESY3wl(MapperBase):
 
         # This will only be computed if self.nls['mod'] is None
         def get_w2s2():
-            e1f, e2f, mod = self._set_mode(mode)
-            cat_data = self.get_catalog()
-            mp = get_map_from_points(cat_data, self.nside,
-                                     w=0.5*(cat_data[e1f]**2 +
-                                            cat_data[e2f]**2),
+            pos = self.get_positions()
+            weights = self.get_weights()
+            ellips = self.get_ellips_unbiased(mode) * weights[None, :]
+            mp = get_map_from_points(pos, self.nside,
+                                     w=0.5*np.sum(ellips**2, axis=0),
                                      ra_name='ra', dec_name='dec',
                                      rot=self.rot)
             return mp
