@@ -126,8 +126,8 @@ class MapperDESY3wl(MapperBase):
         if self.position[kind] is None:
             sel = self._get_select()
             index = self._get_cat_index()
-            ra = index[f'catalog/metacal/{kind}']['RA'][sel]
-            dec = index[f'catalog/metacal/{kind}']['DEC'][sel]
+            ra = index[f'catalog/metacal/{kind}']['ra'][sel]
+            dec = index[f'catalog/metacal/{kind}']['dec'][sel]
             self.position[kind] = {'ra': ra, 'dec': dec}
 
         return self.position[kind]
@@ -135,7 +135,7 @@ class MapperDESY3wl(MapperBase):
     def get_weights(self, kind='unsheared'):
         self._check_kind(kind)
         if self.weights[kind] is None:
-            sel = self._get_select()
+            sel = self._get_select(kind)
             index = self._get_cat_index()
             w = index[f'catalog/metacal/{kind}']['weight'][sel]
             self.weights[kind] = w
