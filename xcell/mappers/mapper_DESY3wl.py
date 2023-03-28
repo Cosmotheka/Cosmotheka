@@ -69,6 +69,7 @@ class MapperDESY3wl(MapperBase):
         self.weights = dict(zip(self.mcal_groups, nones))
         # Final ellipticities; i.e. the ones to be used for maps
         self.ellips_unbiased = {'PSF': None, 'shear': None}
+        self.debug = config.get("debug", False)
 
     def _check_kind(self, kind):
         if kind not in self.mcal_groups:
@@ -90,8 +91,13 @@ class MapperDESY3wl(MapperBase):
             index = self._get_cat_index()
             subgroup = "select"
             subgroup += kind[-3:] if kind != 'unsheared' else ''
-            select = index[f'catalog/sompz/{kind}']['bhat'][:] == self.zbin
-            select[index[f'index/metacal/{subgroup}'][:]] *= True
+            # select is an array of indices
+            select = index[f'index/metacal/{subgroup}'][:]
+            # For some reason [:][select] is faster than [select]
+            selz = index[f'catalog/sompz/{kind}']['bhat'][:][select] == self.zbin
+            select = select[selz]
+            if self.debug:
+                select = select[:10000]
             self.select[kind] = select
 
         return self.select[kind]
@@ -102,8 +108,9 @@ class MapperDESY3wl(MapperBase):
             e1f, e2f, mode = self._set_mode(mode)
             sel = self._get_select(kind)
             index = self._get_cat_index()
-            e1 = index[f'catalog/metacal/{kind}'][e1f][sel]
-            e2 = index[f'catalog/metacal/{kind}'][e2f][sel]
+            # For some reason [:][sel] is faster than [sel]
+            e1 = index[f'catalog/metacal/{kind}'][e1f][:][sel]
+            e2 = index[f'catalog/metacal/{kind}'][e2f][:][sel]
             self.ellips[mode][kind] = np.array((e1, e2))
 
         return self.ellips[mode][kind]
@@ -126,8 +133,9 @@ class MapperDESY3wl(MapperBase):
         if self.position[kind] is None:
             sel = self._get_select()
             index = self._get_cat_index()
-            ra = index[f'catalog/metacal/{kind}']['ra'][sel]
-            dec = index[f'catalog/metacal/{kind}']['dec'][sel]
+            # For some reason [:][sel] is faster than [sel]
+            ra = index[f'catalog/metacal/{kind}']['ra'][:][sel]
+            dec = index[f'catalog/metacal/{kind}']['dec'][:][sel]
             self.position[kind] = {'ra': ra, 'dec': dec}
 
         return self.position[kind]
@@ -137,7 +145,8 @@ class MapperDESY3wl(MapperBase):
         if self.weights[kind] is None:
             sel = self._get_select(kind)
             index = self._get_cat_index()
-            w = index[f'catalog/metacal/{kind}']['weight'][sel]
+            # For some reason [:][sel] is faster than [sel]
+            w = index[f'catalog/metacal/{kind}']['weight'][:][sel]
             self.weights[kind] = w
 
         return self.weights[kind]
@@ -202,10 +211,10 @@ class MapperDESY3wl(MapperBase):
         cat = index['catalog/metacal/unsheared']
         w = self.get_weights()
         sel = self._get_select()
-        Rg = np.array([[np.average(cat['R11'][sel], weights=w),
-                        np.average(cat['R12'][sel], weights=w)],
-                       [np.average(cat['R21'][sel], weights=w),
-                        np.average(cat['R22'][sel], weights=w)]])
+        Rg = np.array([[np.average(cat['R11'][:][sel], weights=w),
+                        np.average(cat['R12'][:][sel], weights=w)],
+                       [np.average(cat['R21'][:][sel], weights=w),
+                        np.average(cat['R22'][:][sel], weights=w)]])
         Rs = self._get_Rs()
         Rmat = Rg + Rs
         one_plus_m = np.sum(np.diag(Rmat))*0.5
@@ -217,10 +226,10 @@ class MapperDESY3wl(MapperBase):
         print('Computing bin{} signal map'.format(self.zbin))
         weights = self.get_weights()
         ellips = self.get_ellips_unbiased(mode)
-        ellips *= weights[None, :]
         pos = self.get_positions()
         we1, we2 = get_map_from_points(pos, self.nside,
                                        qu=[-ellips[0], ellips[1]],
+                                       w=weights,
                                        ra_name='ra',
                                        dec_name='dec',
                                        rot=self.rot)
@@ -287,9 +296,9 @@ class MapperDESY3wl(MapperBase):
         def get_w2s2():
             pos = self.get_positions()
             weights = self.get_weights()
-            ellips = self.get_ellips_unbiased(mode) * weights[None, :]
+            ellips = self.get_ellips_unbiased(mode)
             mp = get_map_from_points(pos, self.nside,
-                                     w=0.5*np.sum(ellips**2, axis=0),
+                                     w=0.5*np.sum(ellips**2, axis=0) * weights,
                                      ra_name='ra', dec_name='dec',
                                      rot=self.rot)
             return mp
