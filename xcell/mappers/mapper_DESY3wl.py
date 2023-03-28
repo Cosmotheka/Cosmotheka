@@ -4,6 +4,7 @@ import h5py
 import numpy as np
 import healpy as hp
 import fitsio
+import os
 
 
 class MapperDESY3wl(MapperBase):
@@ -296,7 +297,7 @@ class MapperDESY3wl(MapperBase):
         def get_w2s2():
             pos = self.get_positions()
             weights = self.get_weights()
-            ellips = self.get_ellips_unbiased(mode)
+            ellips = self.get_ellips_unbiased(mod)
             mp = get_map_from_points(pos, self.nside,
                                      w=0.5*np.sum(ellips**2, axis=0) * weights,
                                      ra_name='ra', dec_name='dec',
@@ -320,3 +321,41 @@ class MapperDESY3wl(MapperBase):
 
     def get_spin(self):
         return 2
+
+def save_index_short(path):
+    index = h5py.File(path, mode='r')
+
+    fname = '_short'.join(os.path.splitext(path))
+    with h5py.File(fname, mode='a') as f:
+        # Catalog
+        columns = ['ra', 'dec', 'weight', 'e_1', 'e_2', 'psf_e1', 'psf_e2',
+                   'R11', 'R12', 'R21', 'R22']
+        for col in columns:
+            ds = f"catalog/metacal/unsheared/{col}"
+            print(f"Loading {ds}", flush=True)
+            if ds not in f:
+                f.update({ds: index[ds][:]})
+
+        groups = ['sheared_1p', 'sheared_1m', 'sheared_2p', 'sheared_2m']
+        columns = ['weight', 'e_1', 'e_2']
+        for grp in groups:
+            for col in columns:
+                ds = f"catalog/metacal/{grp}/{col}"
+                print(f"Loading {ds}", flush=True)
+                if ds not in f:
+                    f.update({ds: index[ds][:]})
+
+        # zbins
+        for grp in groups + ['unsheared']:
+            ds = f'catalog/sompz/{grp}/bhat'
+            print(f"Loading {ds}", flush=True)
+            if ds not in f:
+                f.update({ds: index[ds][:]})
+
+        # Selection
+        subgroups = ['select' + ix for ix in ['', '_1p', '_2p', '_1m', '_2m']]
+        for subgrp in subgroups:
+            ds = f'index/metacal/{subgrp}'
+            print(f"Loading {ds}", flush=True)
+            if ds not in f:
+                f.update({ds: index[ds][:]})
