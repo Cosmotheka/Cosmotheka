@@ -359,3 +359,64 @@ def save_index_short(path):
             print(f"Loading {ds}", flush=True)
             if ds not in f:
                 f.update({ds: index[ds][:]})
+
+def save_index_short_per_bin(path):
+    def append_column(zbin, ds, col):
+        fname = f'_zbin{zbin}'.join(os.path.splitext(path))
+        print(f"Creating {fname}")
+        with h5py.File(fname, mode='a') as f:
+            if ds not in f:
+                f.update({ds: col})
+
+
+    index = h5py.File(path, mode='r')
+
+    # Unsheared
+    columns = ['ra', 'dec', 'weight', 'e_1', 'e_2', 'psf_e1', 'psf_e2',
+               'R11', 'R12', 'R21', 'R22']
+    select = index[f'index/metacal/select'][:]
+    bhat = index[f'catalog/sompz/unsheared/bhat'][:][select]
+
+    for col in columns:
+        ds = f"catalog/metacal/unsheared/{col}"
+        print(f"Loading {ds}", flush=True)
+        col = index[ds][:]
+        for zbin in range(4):
+            append_column(zbin, ds, col[select[bhat == zbin]])
+
+    for zbin in range(4):
+        nrows = np.sum(bhat == zbin)
+        # zbins
+        ds = f'catalog/sompz/unsheared/bhat'
+        print(f"Loading {ds}", flush=True)
+        append_column(zbin, ds, np.ones(nrows) * zbin)
+
+        # Selection
+        ds = f'index/metacal/select'
+        print(f"Loading {ds}", flush=True)
+        append_column(zbin, ds, np.arange(nrows))
+
+    # Sheared
+    for grp in ['sheared_1p', 'sheared_1m', 'sheared_2p', 'sheared_2m']:
+        suffix = grp.split("_")[-1]
+        select = index[f'index/metacal/select_{suffix}']
+        bhat = index[f'catalog/sompz/{grp}/bhat'][:][select]
+
+        for col in ['weight', 'e_1', 'e_2']:
+            ds = f"catalog/metacal/{grp}/{col}"
+            print(f"Loading {ds}", flush=True)
+            col = index[ds][:]
+            for zbin in range(4):
+                append_column(zbin, ds, col[select[bhat == zbin]])
+
+        for zbin in range(4):
+            nrows = np.sum(bhat == zbin)
+            # zbins
+            ds = f'catalog/sompz/{grp}/bhat'
+            print(f"Loading {ds}", flush=True)
+            append_column(zbin, ds, np.ones(nrows) * zbin)
+
+            # Selection
+            ds = f'index/metacal/select_{suffix}'
+            print(f"Loading {ds}", flush=True)
+            append_column(zbin, ds, np.arange(np.sum(bhat == zbin)))
