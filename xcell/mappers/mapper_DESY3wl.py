@@ -62,7 +62,7 @@ class MapperDESY3wl(MapperBase):
         # Selection cuts
         self.select = dict(zip(self.mcal_groups, nones))
         # Galaxies position after the selection cuts have been applied
-        self.position = dict(zip(self.mcal_groups, nones))
+        self.position = None
         # Ellipticities after the selection cuts have been applied
         self.ellips = {'PSF': dict(zip(self.mcal_groups, nones)),
                        'shear': dict(zip(self.mcal_groups, nones))}
@@ -93,18 +93,16 @@ class MapperDESY3wl(MapperBase):
             subgroup = "select"
             subgroup += kind[-3:] if kind != 'unsheared' else ''
             # select is an array of indices
-            select = index[f'index/metacal/{subgroup}'][:]
-            # For some reason [:][select] is faster than [select]
-            selz = index[f'catalog/sompz/{kind}']['bhat'][:][select] == self.zbin
-            select = select[selz]
+            select = index[f'index/{subgroup}_bin{self.zbin+1}'][:]
             if self.debug:
                 select = select[:10000]
             self.select[kind] = select
 
         return self.select[kind]
 
-    def _get_ellips(self, kind='unsheared', mode='shear'):
+    def _get_ellips(self, kind='unsheared', mode=None):
         self._check_kind(kind)
+        _, _, mode = self._set_mode(mode)
         if self.ellips[mode][kind] is None:
             e1f, e2f, mode = self._set_mode(mode)
             sel = self._get_select(kind)
@@ -116,30 +114,34 @@ class MapperDESY3wl(MapperBase):
 
         return self.ellips[mode][kind]
 
-    def get_ellips_unbiased(self, mode):
+    def get_ellips_unbiased(self, mode=None):
+        _, _, mode = self._set_mode(mode)
         if self.ellips_unbiased[mode] is None:
-            ellips = self._get_ellips(mode=mode)
+            ellips = self._get_ellips(mode=mode).copy()
             # TODO: Only for shear??
             if mode == 'shear':
                 # Remove additive bias
-                ellips -= np.mean(ellips, axis=1)[:, None]
+                #ellips -= np.mean(ellips, axis=1)[:, None]
+                w = self.get_weights()
+                c = np.average(ellips, weights=w, axis=1)[:, None]
+                print(f"Additive bias: {c}")
+                ellips -= c
                 # Remove multiplicative bias
                 ellips = self._remove_multiplicative_bias(ellips)
             self.ellips_unbiased[mode] = ellips
 
         return self.ellips_unbiased[mode]
 
-    def get_positions(self, kind='unsheared'):
-        self._check_kind(kind)
-        if self.position[kind] is None:
+    def get_positions(self):
+        if self.position is None:
             sel = self._get_select()
             index = self._get_cat_index()
             # For some reason [:][sel] is faster than [sel]
-            ra = index[f'catalog/metacal/{kind}']['ra'][:][sel]
-            dec = index[f'catalog/metacal/{kind}']['dec'][:][sel]
-            self.position[kind] = {'ra': ra, 'dec': dec}
+            ra = index[f'catalog/metacal/unsheared']['ra'][:][sel]
+            dec = index[f'catalog/metacal/unsheared']['dec'][:][sel]
+            self.position = {'ra': ra, 'dec': dec}
 
-        return self.position[kind]
+        return self.position
 
     def get_weights(self, kind='unsheared'):
         self._check_kind(kind)
@@ -192,14 +194,10 @@ class MapperDESY3wl(MapperBase):
             w_2p = self.get_weights("sheared_2p")
             w_2m = self.get_weights("sheared_2m")
 
-            mean_e1_1p = np.mean(data_1p[0] * w_1p)
-            mean_e2_1p = np.mean(data_1p[1] * w_1p)
-            mean_e1_1m = np.mean(data_1m[0] * w_1m)
-            mean_e2_1m = np.mean(data_1m[1] * w_1m)
-            mean_e1_2p = np.mean(data_2p[0] * w_2p)
-            mean_e2_2p = np.mean(data_2p[1] * w_2p)
-            mean_e1_2m = np.mean(data_2m[0] * w_2m)
-            mean_e2_2m = np.mean(data_2m[1] * w_2m)
+            mean_e1_1p, mean_e2_1p = np.average(data_1p, weights=w_1p, axis=1)
+            mean_e1_1m, mean_e2_1m = np.average(data_1m, weights=w_1m, axis=1)
+            mean_e1_2p, mean_e2_2p = np.average(data_2p, weights=w_2p, axis=1)
+            mean_e1_2m, mean_e2_2m = np.average(data_2m, weights=w_2m, axis=1)
 
             self.Rs = np.array([[(mean_e1_1p-mean_e1_1m)/0.02,
                                  (mean_e1_2p-mean_e1_2m)/0.02],
@@ -219,6 +217,7 @@ class MapperDESY3wl(MapperBase):
         Rs = self._get_Rs()
         Rmat = Rg + Rs
         one_plus_m = np.sum(np.diag(Rmat))*0.5
+        print("Multiplicative bias:", one_plus_m - 1, "Rg:", Rg, "Rs:", Rs)
 
         return ellips / one_plus_m
 
@@ -298,8 +297,8 @@ class MapperDESY3wl(MapperBase):
             pos = self.get_positions()
             weights = self.get_weights()
             ellips = self.get_ellips_unbiased(mod)
-            mp = get_map_from_points(pos, self.nside,
-                                     w=0.5*np.sum(ellips**2, axis=0) * weights,
+            w = 0.5*np.sum(ellips**2, axis=0) * weights**2
+            mp = get_map_from_points(pos, self.nside, w=w,
                                      ra_name='ra', dec_name='dec',
                                      rot=self.rot)
             return mp
@@ -322,101 +321,49 @@ class MapperDESY3wl(MapperBase):
     def get_spin(self):
         return 2
 
-def save_index_short(path):
+def save_index_short_per_bin(path):
+    def append_column(f, ds, col):
+        if ds not in f:
+            f.update({ds: col})
+
     index = h5py.File(path, mode='r')
 
-    fname = '_short'.join(os.path.splitext(path))
-    with h5py.File(fname, mode='a') as f:
-        # Catalog
-        columns = ['ra', 'dec', 'weight', 'e_1', 'e_2', 'psf_e1', 'psf_e2',
-                   'R11', 'R12', 'R21', 'R22']
+    # Unsheared columns
+    columns = ['ra', 'dec', 'weight', 'e_1', 'e_2', 'psf_e1', 'psf_e2',
+               'R11', 'R12', 'R21', 'R22']
+    for zbin in range(4):
+        fname = f'_zbin{zbin}'.join(os.path.splitext(path))
+        print(f"Creating {fname}")
+        f = h5py.File(fname, mode='w')
+
+        # Unsheared
+        # Selection
+        ds = f'index/select_bin{zbin+1}'
+        select = index[ds][:]
+        nrows = select.size
+        print(f"Loading {ds}", flush=True)
+        append_column(f, ds, np.arange(nrows))
         for col in columns:
             ds = f"catalog/metacal/unsheared/{col}"
             print(f"Loading {ds}", flush=True)
-            if ds not in f:
-                f.update({ds: index[ds][:]})
+            col = index[ds][:][select]
+            append_column(f, ds, col)
 
-        groups = ['sheared_1p', 'sheared_1m', 'sheared_2p', 'sheared_2m']
-        columns = ['weight', 'e_1', 'e_2']
-        for grp in groups:
-            for col in columns:
+
+        # Sheared
+        for grp in ['sheared_1p', 'sheared_1m', 'sheared_2p', 'sheared_2m']:
+            # Selection
+            suffix = grp.split("_")[-1]
+            ds = f'index/select_{suffix}_bin{zbin+1}'
+            print(f"Loading {ds}", flush=True)
+            select = index[ds][:]
+            nrows = select.size
+            append_column(f, ds, np.arange(nrows))
+
+            # Columns
+            for col in ['weight', 'e_1', 'e_2']:
                 ds = f"catalog/metacal/{grp}/{col}"
                 print(f"Loading {ds}", flush=True)
-                if ds not in f:
-                    f.update({ds: index[ds][:]})
-
-        # zbins
-        for grp in groups + ['unsheared']:
-            ds = f'catalog/sompz/{grp}/bhat'
-            print(f"Loading {ds}", flush=True)
-            if ds not in f:
-                f.update({ds: index[ds][:]})
-
-        # Selection
-        subgroups = ['select' + ix for ix in ['', '_1p', '_2p', '_1m', '_2m']]
-        for subgrp in subgroups:
-            ds = f'index/metacal/{subgrp}'
-            print(f"Loading {ds}", flush=True)
-            if ds not in f:
-                f.update({ds: index[ds][:]})
-
-def save_index_short_per_bin(path):
-    def append_column(zbin, ds, col):
-        fname = f'_zbin{zbin}'.join(os.path.splitext(path))
-        print(f"Creating {fname}")
-        with h5py.File(fname, mode='a') as f:
-            if ds not in f:
-                f.update({ds: col})
-
-
-    index = h5py.File(path, mode='r')
-
-    # Unsheared
-    columns = ['ra', 'dec', 'weight', 'e_1', 'e_2', 'psf_e1', 'psf_e2',
-               'R11', 'R12', 'R21', 'R22']
-    select = index[f'index/metacal/select'][:]
-    bhat = index[f'catalog/sompz/unsheared/bhat'][:][select]
-
-    for col in columns:
-        ds = f"catalog/metacal/unsheared/{col}"
-        print(f"Loading {ds}", flush=True)
-        col = index[ds][:]
-        for zbin in range(4):
-            append_column(zbin, ds, col[select[bhat == zbin]])
-
-    for zbin in range(4):
-        nrows = np.sum(bhat == zbin)
-        # zbins
-        ds = f'catalog/sompz/unsheared/bhat'
-        print(f"Loading {ds}", flush=True)
-        append_column(zbin, ds, np.ones(nrows) * zbin)
-
-        # Selection
-        ds = f'index/metacal/select'
-        print(f"Loading {ds}", flush=True)
-        append_column(zbin, ds, np.arange(nrows))
-
-    # Sheared
-    for grp in ['sheared_1p', 'sheared_1m', 'sheared_2p', 'sheared_2m']:
-        suffix = grp.split("_")[-1]
-        select = index[f'index/metacal/select_{suffix}']
-        bhat = index[f'catalog/sompz/{grp}/bhat'][:][select]
-
-        for col in ['weight', 'e_1', 'e_2']:
-            ds = f"catalog/metacal/{grp}/{col}"
-            print(f"Loading {ds}", flush=True)
-            col = index[ds][:]
-            for zbin in range(4):
-                append_column(zbin, ds, col[select[bhat == zbin]])
-
-        for zbin in range(4):
-            nrows = np.sum(bhat == zbin)
-            # zbins
-            ds = f'catalog/sompz/{grp}/bhat'
-            print(f"Loading {ds}", flush=True)
-            append_column(zbin, ds, np.ones(nrows) * zbin)
-
-            # Selection
-            ds = f'index/metacal/select_{suffix}'
-            print(f"Loading {ds}", flush=True)
-            append_column(zbin, ds, np.arange(np.sum(bhat == zbin)))
+                col = index[ds][:][select]
+                append_column(f, ds, col)
+        f.close()
