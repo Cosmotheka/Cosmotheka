@@ -197,6 +197,8 @@ class MapperDESY3wl(MapperBase):
         # See https://arxiv.org/pdf/1702.02601.pdf
 
         if self.Rs is None:
+            # It is computed with the unsheared ellepticities but with cuts
+            # obtained from the sheared ones.
             index = self._get_cat_index()
             data = np.array((index[f'catalog/metacal/unsheared']['e_1'][:],
                              index[f'catalog/metacal/unsheared']['e_2'][:]))
@@ -212,10 +214,18 @@ class MapperDESY3wl(MapperBase):
             data_2p = data[:, sel_2p]
             data_2m = data[:, sel_2m]
 
-            w_1p = w[sel_1p]
-            w_1m = w[sel_1m]
-            w_2p = w[sel_2p]
-            w_2m = w[sel_2m]
+            # w_1p = w[sel_1p]
+            # w_1m = w[sel_1m]
+            # w_2p = w[sel_2p]
+            # w_2m = w[sel_2m]
+
+            # In order to agree with the values in Table 1 of
+            # https://arxiv.org/pdf/2105.13543.pdf one needs to apply the
+            # weights in the sheared catalog
+            w_1p = self.get_weights("sheared_1p")
+            w_1m = self.get_weights("sheared_1m")
+            w_2p = self.get_weights("sheared_2p")
+            w_2m = self.get_weights("sheared_2m")
 
             mean_e1_1p, mean_e2_1p = np.average(data_1p, weights=w_1p, axis=1)
             mean_e1_1m, mean_e2_1m = np.average(data_1m, weights=w_1m, axis=1)
