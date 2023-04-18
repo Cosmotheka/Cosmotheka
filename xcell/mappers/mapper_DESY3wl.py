@@ -29,6 +29,7 @@ class MapperDESY3wl(MapperBase):
     # Relevant papers:
     # - Weak lensing catalog: https://arxiv.org/pdf/2011.03408.pdf
     # - Harmonic space weak lensing analysis: https://arxiv.org/pdf/2203.07128.pdf
+    # - Table 1 in https://arxiv.org/pdf/2105.13543.pdf for reference
     # We follow some aspects of https://github.com/des-science/DESY3Cats
     # - Info about catalog columns and files:
     # https://des.ncsa.illinois.edu/releases/y3a2/Y3key-catalogs
@@ -196,15 +197,25 @@ class MapperDESY3wl(MapperBase):
         # See https://arxiv.org/pdf/1702.02601.pdf
 
         if self.Rs is None:
-            data_1p = self._get_ellips("sheared_1p")
-            data_1m = self._get_ellips("sheared_1m")
-            data_2p = self._get_ellips("sheared_2p")
-            data_2m = self._get_ellips("sheared_2m")
+            index = self._get_cat_index()
+            data = np.array((index[f'catalog/metacal/unsheared']['e_1'][:],
+                             index[f'catalog/metacal/unsheared']['e_2'][:]))
+            w = index[f'catalog/metacal/unsheared']['weight'][:]
 
-            w_1p = self.get_weights("sheared_1p")
-            w_1m = self.get_weights("sheared_1m")
-            w_2p = self.get_weights("sheared_2p")
-            w_2m = self.get_weights("sheared_2m")
+            sel_1p = self._get_select("sheared_1p")
+            sel_1m = self._get_select("sheared_1m")
+            sel_2p = self._get_select("sheared_2p")
+            sel_2m = self._get_select("sheared_2m")
+
+            data_1p = data[:, sel_1p]
+            data_1m = data[:, sel_1m]
+            data_2p = data[:, sel_2p]
+            data_2m = data[:, sel_2m]
+
+            w_1p = w[sel_1p]
+            w_1m = w[sel_1m]
+            w_2p = w[sel_2p]
+            w_2m = w[sel_2m]
 
             mean_e1_1p, mean_e2_1p = np.average(data_1p, weights=w_1p, axis=1)
             mean_e1_1m, mean_e2_1m = np.average(data_1m, weights=w_1m, axis=1)
@@ -230,16 +241,16 @@ class MapperDESY3wl(MapperBase):
         Rmat = Rg + Rs
         print("Rg:", Rg, "Rs:", Rs)
 
-        # Following DESY1:
-        # one_plus_m = np.sum(np.diag(Rmat))*0.5
+        # Following DESY1 & https://arxiv.org/pdf/2105.13543.pdf:
+        one_plus_m = np.sum(np.diag(Rmat))*0.5
         # print("Multiplicative bias:", one_plus_m - 1, "Rg:", Rg, "Rs:", Rs)
-        # return ellips / one_plus_m
+        return ellips / one_plus_m
 
         # Following 2011.03408:
         # "As noted in Sheldon & Huff (2017), the total ensemble response
         # matrix h𝑹i is, to good approximation, diagonal: as a consequence, the
         # response correction reduces to element-wise division"
-        return ellips / np.diag(Rmat)[:, None]
+        # return ellips / np.diag(Rmat)[:, None]
 
     def _get_ellipticity_maps(self, mode=None):
         # Returns the ellipticity maps of the chosen catalog ('shear' or 'PSF').
@@ -356,13 +367,34 @@ def save_index_short_per_bin(path):
         print(f"Creating {fname}")
         f = h5py.File(fname, mode='w')
 
-        # Unsheared
         # Selection
+        # We need to save also the galaxies selected in the sheared cases for
+        # the computation of Rs
         ds = f'index/select_bin{zbin+1}'
-        select = index[ds][:]
-        nrows = select.size
         print(f"Loading {ds}", flush=True)
-        append_column(f, ds, np.arange(nrows))
+        select = index[ds][:]
+        select_unsheared = select.copy()
+        for suffix in ["1p", "1m", "2p", "2m"]:
+            ds = f'index/select_{suffix}_bin{zbin+1}'
+            print(f"Loading {ds}", flush=True)
+            select = np.concatenate([select, index[ds][:]])
+        select = np.unique(select)
+        numbers = np.arange(select.size)
+
+        # Added indices for unsheared galaxies
+        ds = f'index/select_bin{zbin+1}'
+        print(f"Loading {ds}", flush=True)
+        append_column(f, ds, numbers[np.isin(select, select_unsheared)])
+
+        # Add indices for sheared galaxies
+        for suffix in ["1p", "1m", "2p", "2m"]:
+            ds = f'index/select_{suffix}_bin{zbin+1}'
+            print(f"Loading {ds}", flush=True)
+            select_sheared = index[ds][:]
+            append_column(f, ds, numbers[np.isin(select, select_sheared)])
+
+        # Columns
+        # Add unsheared columns
         for col in columns:
             ds = f"catalog/metacal/unsheared/{col}"
             print(f"Loading {ds}", flush=True)
@@ -370,16 +402,8 @@ def save_index_short_per_bin(path):
             append_column(f, ds, col)
 
 
-        # Sheared
+        # Add sheared galaxies columns
         for grp in ['sheared_1p', 'sheared_1m', 'sheared_2p', 'sheared_2m']:
-            # Selection
-            suffix = grp.split("_")[-1]
-            ds = f'index/select_{suffix}_bin{zbin+1}'
-            print(f"Loading {ds}", flush=True)
-            select = index[ds][:]
-            nrows = select.size
-            append_column(f, ds, np.arange(nrows))
-
             # Columns
             for col in ['weight', 'e_1', 'e_2']:
                 ds = f"catalog/metacal/{grp}/{col}"
