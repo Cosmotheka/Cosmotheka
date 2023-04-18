@@ -26,8 +26,12 @@ class MapperDESY3wl(MapperBase):
         - mapper_class: `'MapperDESY1wl'`
     """
     map_name = 'DESY3wl'
-    # See https://arxiv.org/pdf/2011.03408.pdf
+    # Relevant papers:
+    # - Weak lensing catalog: https://arxiv.org/pdf/2011.03408.pdf
+    # - Harmonic space weak lensing analysis: https://arxiv.org/pdf/2203.07128.pdf
     # We follow some aspects of https://github.com/des-science/DESY3Cats
+    # - Info about catalog columns and files:
+    # https://des.ncsa.illinois.edu/releases/y3a2/Y3key-catalogs
 
     # TODO:
     #  - If we are going to combine it with KiDS, we have to remove the
@@ -120,6 +124,14 @@ class MapperDESY3wl(MapperBase):
             ellips = self._get_ellips(mode=mode).copy()
             # TODO: Only for shear??
             if mode == 'shear':
+                # Following 2203.07128
+                # Note that, prior to eq. (1), observed ellipticities were
+                # corrected for additive and multiplicative biases by
+                # subtracting the (weighted) mean ellipticity (as done in
+                # Gatti, Shel- don et al. 2021c) and dividing by the
+                # Metacalibration response, both of which were computed for
+                # each bin
+
                 # Remove additive bias
                 #ellips -= np.mean(ellips, axis=1)[:, None]
                 w = self.get_weights()
@@ -216,10 +228,18 @@ class MapperDESY3wl(MapperBase):
                         np.average(cat['R22'][:][sel], weights=w)]])
         Rs = self._get_Rs()
         Rmat = Rg + Rs
-        one_plus_m = np.sum(np.diag(Rmat))*0.5
-        print("Multiplicative bias:", one_plus_m - 1, "Rg:", Rg, "Rs:", Rs)
+        print("Rg:", Rg, "Rs:", Rs)
 
-        return ellips / one_plus_m
+        # Following DESY1:
+        # one_plus_m = np.sum(np.diag(Rmat))*0.5
+        # print("Multiplicative bias:", one_plus_m - 1, "Rg:", Rg, "Rs:", Rs)
+        # return ellips / one_plus_m
+
+        # Following 2011.03408:
+        # "As noted in Sheldon & Huff (2017), the total ensemble response
+        # matrix h𝑹i is, to good approximation, diagonal: as a consequence, the
+        # response correction reduces to element-wise division"
+        return ellips / np.diag(Rmat)[:, None]
 
     def _get_ellipticity_maps(self, mode=None):
         # Returns the ellipticity maps of the chosen catalog ('shear' or 'PSF').
