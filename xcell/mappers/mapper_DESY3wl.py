@@ -53,7 +53,7 @@ class MapperDESY3wl(MapperBase):
         if self.remove_overlap is not None:
             self.map_name += '_removed_overlap_'
             for k in self.remove_overlap.keys():
-                self.map_name += '_k'
+                self.map_name += f'_{k}'
         # dn/dz
         # load cat
         self.cat_index = None
