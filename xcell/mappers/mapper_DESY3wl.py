@@ -1,4 +1,4 @@
-from .utils import get_map_from_points
+from .utils import get_map_from_points, rotate_mask
 from .mapper_base import MapperBase
 import h5py
 import numpy as np
@@ -47,6 +47,13 @@ class MapperDESY3wl(MapperBase):
         self.zbin = config['zbin']
         self.map_name += f"_bin{self.zbin}"
         self.npix = hp.nside2npix(self.nside)
+        # TODO: Consider moving this to MapperBase
+        # Remove overlap? You should pass a dictionary with name & mask
+        self.remove_overlap = config.get("remove_overlap")
+        if self.remove_overlap is not None:
+            self.map_name += '_removed_overlap_'
+            for k in self.remove_overlap.keys():
+                self.map_name += '_k'
         # dn/dz
         # load cat
         self.cat_index = None
@@ -325,6 +332,16 @@ class MapperDESY3wl(MapperBase):
         msk = get_map_from_points(pos, self.nside, w=self.get_weights(),
                                   ra_name='ra', dec_name='dec',
                                   rot=self.rot)
+        # Removing the overlapping area at the mask level. Note that this is an
+        # approximation and weights, biases, etc should be recomputed.
+        if self.remove_overlap is not None:
+            for v in self.remove_overlap.values():
+                m = hp.read_map(v)
+                m[m == hp.UNSEEN] = 0
+                m = rotate_mask(m, self.rot)
+                m = hp.ud_grade(m, nside_out=self.nside)
+                # Set filled pixels to 0
+                msk[m != 0] = 0
         return msk
 
     def get_nl_coupled(self, mode=None):
@@ -342,6 +359,8 @@ class MapperDESY3wl(MapperBase):
             mp = get_map_from_points(pos, self.nside, w=w,
                                      ra_name='ra', dec_name='dec',
                                      rot=self.rot)
+            msk = self.get_mask()
+            mp[msk == 0] = 0
             return mp
 
         fn = '_'.join([f'{self.map_name}_{mod}_w2s2',
