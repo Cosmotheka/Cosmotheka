@@ -5,5 +5,7 @@ mode: "shear"
 zbin: "0"
 mask_name: "mask_KiDS1000__0"
 path_rerun: '/mnt/extraspace/damonge/Datasets/KiDS1000/xcell_runs'
+beam_info: 
+  - type: 'PixWin'
 m: 0
 sigma_m: 0.019
