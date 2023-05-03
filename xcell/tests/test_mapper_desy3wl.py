@@ -10,7 +10,7 @@ import fitsio
 
 
 OUTDIR = 'xcell/tests/data/tmp/'
-INDEX_PATH = OUTDIR  + 'desy3wl_index.h5'
+INDEX_PATH = OUTDIR + 'desy3wl_index.h5'
 NZ_PATH = OUTDIR + "nz.fits"
 KINDS = ['unsheared', 'sheared_1p', 'sheared_1m', 'sheared_2p', 'sheared_2m']
 COLUMNS = ['ra', 'dec', 'weight', 'e_1', 'e_2', 'psf_e1', 'psf_e2', 'R11',
@@ -75,10 +75,12 @@ def gen_index():
             append_column(f, ds, col)
     f.close()
 
+
 def gen_nz():
     fits = fitsio.read('xcell/tests/data/cat_zbin.fits')
     with fitsio.FITS(NZ_PATH, "rw") as f:
         f.write(fits, extname="nz_source")
+
 
 def remove_rerun(prerun):
     frerun = glob.glob(prerun + 'DESY3wl*.fits*')
@@ -145,7 +147,6 @@ def test_get_select(kind, mapper):
 @pytest.mark.parametrize("kind", KINDS)
 def test_get_ellips(mapper, kind):
     ellips = mapper._get_ellips(kind)
-    numbers = np.arange(NPIX)
     c = COLUMNS.index('e_1')
     if kind == "unsheared":
         assert ellips.shape == (2, NPIX)
@@ -211,7 +212,7 @@ def test_get_Rs(mapper):
 def test_remove_multiplicative_bias(mapper):
     e = mapper._get_ellips()
     e_unb = mapper._remove_multiplicative_bias(e)
-    Rg = 0.5 * (COLUMNS.index('R11') +  COLUMNS.index('R22'))
+    Rg = 0.5 * (COLUMNS.index('R11') + COLUMNS.index('R22'))
     # Rs = 0
     assert np.all(e_unb == e/Rg)
 
@@ -295,7 +296,6 @@ def test_rerun(config):
     # Check rerun files have been created
     zbin = config['zbin']
     nside = config['nside']
-
 
     for fname in [f'signal_map_shear_coordC_ns{nside}.fits.gz',
                   f'signal_map_PSF_coordC_ns{nside}.fits.gz',

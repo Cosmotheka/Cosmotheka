@@ -20,7 +20,8 @@ class MapperDESY3wl(MapperBase):
         - zbin: `0` / `1` / `2` /`3`
         - mode: `shear` / `PSF`
         - indexcat: `'DESY3_indexcat.h5'`
-        - file_nz: `'2pt_NG_final_2ptunblind_02_24_21_wnz_redmagic_covupdate.fits'`
+        - file_nz:
+            `'2pt_NG_final_2ptunblind_02_24_21_wnz_redmagic_covupdate.fits'`
         - path_rerun: `'/mnt/extraspace/damonge/Datasets/DES_Y3/xcell_reruns/'`
         - mask_name: `'mask_DESY3wli'`
         - mapper_class: `'MapperDESY1wl'`
@@ -28,7 +29,7 @@ class MapperDESY3wl(MapperBase):
     map_name = 'DESY3wl'
     # Relevant papers:
     # - Weak lensing catalog: https://arxiv.org/pdf/2011.03408.pdf
-    # - Harmonic space weak lensing analysis: https://arxiv.org/pdf/2203.07128.pdf
+    # - Harmonic space weak lensing: https://arxiv.org/pdf/2203.07128.pdf
     # - Table 1 in https://arxiv.org/pdf/2105.13543.pdf for reference
     # We follow some aspects of https://github.com/des-science/DESY3Cats
     # - Info about catalog columns and files:
@@ -141,7 +142,7 @@ class MapperDESY3wl(MapperBase):
                 # each bin
 
                 # Remove additive bias
-                #ellips -= np.mean(ellips, axis=1)[:, None]
+                # ellips -= np.mean(ellips, axis=1)[:, None]
                 w = self.get_weights()
                 c = np.average(ellips, weights=w, axis=1)[:, None]
                 print(f"Additive bias: {c}")
@@ -157,8 +158,8 @@ class MapperDESY3wl(MapperBase):
             sel = self._get_select()
             index = self._get_cat_index()
             # For some reason [:][sel] is faster than [sel]
-            ra = index[f'catalog/metacal/unsheared']['ra'][:][sel]
-            dec = index[f'catalog/metacal/unsheared']['dec'][:][sel]
+            ra = index['catalog/metacal/unsheared']['ra'][:][sel]
+            dec = index['catalog/metacal/unsheared']['dec'][:][sel]
             self.position = {'ra': ra, 'dec': dec}
 
         return self.position
@@ -207,9 +208,8 @@ class MapperDESY3wl(MapperBase):
             # It is computed with the unsheared ellepticities but with cuts
             # obtained from the sheared ones.
             index = self._get_cat_index()
-            data = np.array((index[f'catalog/metacal/unsheared']['e_1'][:],
-                             index[f'catalog/metacal/unsheared']['e_2'][:]))
-            w = index[f'catalog/metacal/unsheared']['weight'][:]
+            data = np.array((index['catalog/metacal/unsheared']['e_1'][:],
+                             index['catalog/metacal/unsheared']['e_2'][:]))
 
             sel_1p = self._get_select("sheared_1p")
             sel_1m = self._get_select("sheared_1m")
@@ -221,6 +221,7 @@ class MapperDESY3wl(MapperBase):
             data_2p = data[:, sel_2p]
             data_2m = data[:, sel_2m]
 
+            # w = index['catalog/metacal/unsheared']['weight'][:]
             # w_1p = w[sel_1p]
             # w_1m = w[sel_1m]
             # w_2p = w[sel_2p]
@@ -270,7 +271,7 @@ class MapperDESY3wl(MapperBase):
         # return ellips / np.diag(Rmat)[:, None]
 
     def _get_ellipticity_maps(self, mode=None):
-        # Returns the ellipticity maps of the chosen catalog ('shear' or 'PSF').
+        # Returns the ellipticity maps of the chosen catalog ('shear' or 'PSF')
         print('Computing bin{} signal map'.format(self.zbin))
         weights = self.get_weights()
         ellips = self.get_ellips_unbiased(mode)
@@ -381,6 +382,7 @@ class MapperDESY3wl(MapperBase):
     def get_spin(self):
         return 2
 
+
 def save_index_short_per_bin(path):
     def append_column(f, ds, col):
         if ds not in f:
@@ -429,7 +431,6 @@ def save_index_short_per_bin(path):
             print(f"Loading {ds}", flush=True)
             col = index[ds][:][select]
             append_column(f, ds, col)
-
 
         # Add sheared galaxies columns
         for grp in ['sheared_1p', 'sheared_1m', 'sheared_2p', 'sheared_2m']:
