@@ -298,6 +298,7 @@ def test_remove_overlap(config, mapper):
     assert m.map_name == 'DESY3wl_bin0_removed_overlap_mask'
     assert np.all(m.get_mask() == 0)
 
+
 def test_rerun(config):
     config['path_rerun'] = OUTDIR
     remove_rerun(OUTDIR)
