@@ -144,6 +144,13 @@ def test_get_select(kind, mapper):
         assert np.all(sel == numbers[NPIX+i*1000: NPIX+(i+1)*1000])
 
 
+def test_debug(config):
+    config['debug'] = True
+    m = xc.mappers.MapperDESY3wl(config)
+    sel = m._get_select()
+    assert sel.size == 10000
+
+
 @pytest.mark.parametrize("kind", KINDS)
 def test_get_ellips(mapper, kind):
     ellips = mapper._get_ellips(kind)
@@ -280,6 +287,16 @@ def test_get_dtype(mapper):
 def test_get_spin(mapper):
     assert mapper.get_spin() == 2
 
+
+def test_remove_overlap(config, mapper):
+    mask = mapper.get_mask()
+    fname = OUTDIR + "mask.fits"
+    hp.write_map(fname, mask)
+
+    config['remove_overlap'] = {'mask': fname}
+    m = xc.mappers.MapperDESY3wl(config)
+    assert m.map_name == 'DESY3wl_bin0_removed_overlap_mask'
+    assert np.all(m.get_mask() == 0)
 
 def test_rerun(config):
     config['path_rerun'] = OUTDIR

@@ -52,7 +52,7 @@ class MapperDESY3wl(MapperBase):
         # Remove overlap? You should pass a dictionary with name & mask
         self.remove_overlap = config.get("remove_overlap")
         if self.remove_overlap is not None:
-            self.map_name += '_removed_overlap_'
+            self.map_name += '_removed_overlap'
             for k in self.remove_overlap.keys():
                 self.map_name += f'_{k}'
         # dn/dz
