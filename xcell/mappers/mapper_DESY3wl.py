@@ -384,8 +384,9 @@ class MapperDESY3wl(MapperBase):
 
 
 # This function was used to shorten the official catalog. It is not used to
-# produce the Cells. It was tested apart and writing a test for it complicates
-# the test data generartion a bit. I'm going to skip it from coverage for now.
+# produce the Cells. It was tested separately and writing a test for it
+# complicates the test data generartion a bit. I'm going to skip it from
+# coverage for now.
 def save_index_short_per_bin(path):  # pragma: no cover
     def append_column(f, ds, col):
         if ds not in f:
