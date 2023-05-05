@@ -1,0 +1,13 @@
+zbin: 0
+mode: shear
+indexcat:  '/mnt/extraspace/damonge/Datasets/DES_Y3/catalogs/DESY3_indexcat_zbin0.h5'
+file_nz: '/mnt/extraspace/damonge/Datasets/DES_Y3/data_products/2pt_NG_final_2ptunblind_02_26_21_wnz_maglim_covupdate.fits'
+path_rerun: '/mnt/extraspace/damonge/Datasets/DES_Y3/xcell_reruns/'
+remove_overlap:
+  KiDS1000: '/mnt/extraspace/damonge/Datasets/KiDS1000/xcell_reruns/KiDS1000_mask_galaxies_bin0123_ns2048_binary_nowholes.fits.gz'
+mask_name: 'mask_DESY3wl0_noK1000'
+mapper_class: 'MapperDESY3wl'
+beam_info: 
+  - type: 'PixWin'
+m: -0.006
+sigma_m: 0.009

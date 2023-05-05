@@ -18,5 +18,7 @@ zlim_nz: [0.0, 4.0]
 mask_name: 'mask_HSC_wl2'
 mapper_class: 'MapperHSCDR1wl'
 path_rerun: '/mnt/extraspace/damonge/Datasets/HSC_DR1/lite/'
+beam_info: 
+  - type: 'PixWin'
 m: 0
 sigma_m: 0.01
