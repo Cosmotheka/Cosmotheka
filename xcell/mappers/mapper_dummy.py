@@ -8,6 +8,7 @@ import pymaster as nmt
 
 class MapperDummy(MapperBase):
     """Dummy mapper used to test MapperBase."""
+    map_name = 'dummy'
 
     def __init__(self, config):
         """Init the MapperDummy class with a dictionary.
@@ -127,33 +128,32 @@ class MapperDummy(MapperBase):
                 self.signal_map = np.array([mq, mu])
         return self.signal_map
 
-    def get_mask(self):
-        if self.mask is None:
-            if self.fsky >= 1:
-                self.mask = np.ones(hp.nside2npix(self.nside))
-            else:
-                # This generates a correctly-apodized mask
-                v0 = np.array([np.sin(np.radians(90-self.dec0)) *
-                               np.cos(np.radians(self.ra0)),
-                               np.sin(np.radians(90-self.dec0)) *
-                               np.sin(np.radians(self.ra0)),
-                               np.cos(np.radians(90-self.dec0))])
-                vv = np.array(hp.pix2vec(self.nside,
-                                         np.arange(hp.nside2npix(self.nside))))
-                cth = np.sum(v0[:, None]*vv, axis=0)
-                th = np.arccos(cth)
-                th0 = np.arccos(1-2*self.fsky)
-                th_apo = np.radians(self.aposize)
-                id0 = np.where(th >= th0)[0]
-                id1 = np.where(th <= th0-th_apo)[0]
-                idb = np.where((th > th0-th_apo) & (th < th0))[0]
-                x = np.sqrt((1 - np.cos(th[idb] - th0)) / (1 - np.cos(th_apo)))
-                mask_apo = np.zeros(hp.nside2npix(self.nside))
-                mask_apo[id0] = 0.
-                mask_apo[id1] = 1.
-                mask_apo[idb] = x-np.sin(2 * np.pi * x) / (2 * np.pi)
-                self.mask = mask_apo
-        return self.mask
+    def _get_mask(self):
+        if self.fsky >= 1:
+            mask = np.ones(hp.nside2npix(self.nside))
+        else:
+            # This generates a correctly-apodized mask
+            v0 = np.array([np.sin(np.radians(90-self.dec0)) *
+                           np.cos(np.radians(self.ra0)),
+                           np.sin(np.radians(90-self.dec0)) *
+                           np.sin(np.radians(self.ra0)),
+                           np.cos(np.radians(90-self.dec0))])
+            vv = np.array(hp.pix2vec(self.nside,
+                                     np.arange(hp.nside2npix(self.nside))))
+            cth = np.sum(v0[:, None]*vv, axis=0)
+            th = np.arccos(cth)
+            th0 = np.arccos(1-2*self.fsky)
+            th_apo = np.radians(self.aposize)
+            id0 = np.where(th >= th0)[0]
+            id1 = np.where(th <= th0-th_apo)[0]
+            idb = np.where((th > th0-th_apo) & (th < th0))[0]
+            x = np.sqrt((1 - np.cos(th[idb] - th0)) / (1 - np.cos(th_apo)))
+            mask_apo = np.zeros(hp.nside2npix(self.nside))
+            mask_apo[id0] = 0.
+            mask_apo[id1] = 1.
+            mask_apo[idb] = x-np.sin(2 * np.pi * x) / (2 * np.pi)
+            mask = mask_apo
+        return mask
 
     def get_ell(self):
         # Needed to mimic MapperP18CMBK
