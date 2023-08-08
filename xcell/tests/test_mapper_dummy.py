@@ -8,7 +8,8 @@ import os
 
 
 OUTDIR = 'xcell/tests/data/tmp/'
-os.makedirs(OUTDIR, exist_ok=True)
+def setup_module():
+    os.makedirs(OUTDIR, exist_ok=True)
 
 
 def teardown_module():
