@@ -8,6 +8,8 @@ import os
 
 
 OUTDIR = 'xcell/tests/data/tmp/'
+
+
 def setup_module():
     os.makedirs(OUTDIR, exist_ok=True)
 
@@ -228,4 +230,3 @@ def test_remove_overlap():
     assert np.all(m.get_mask() == 0)
 
     os.remove(fname)
-
