@@ -2,7 +2,7 @@ import numpy as np
 import healpy as hp
 import pymaster as nmt
 from scipy.interpolate import interp1d
-from .utils import get_rerun_data, save_rerun_data
+from .utils import get_rerun_data, save_rerun_data, rotate_mask
 
 
 class MapperBase(object):
@@ -35,6 +35,13 @@ class MapperBase(object):
         # dndz needs to be defined for _get_shifted_nz. We should consider
         # creating a subclass for Nz tracers, as in CCL.
         self.dndz = None
+        # Remove overlap? You should pass a dictionary with name & mask
+        self.remove_overlap = config.get("remove_overlap")
+        if self.remove_overlap is not None:
+            self.map_name += '_removed_overlap'
+            for k in self.remove_overlap.keys():
+                self.map_name += f'_{k}'
+        self.rot = None  # Defined in the child classes
 
     def _get_rotator(self, coord_default):
         if self.coords != coord_default:
@@ -84,7 +91,26 @@ class MapperBase(object):
             fn = '_'.join([f'mask_{self.mask_name}',
                            f'coord{self.coords}',
                            f'ns{self.nside}.fits.gz'])
-            self.mask = self._rerun_read_cycle(fn, 'FITSMap', self._get_mask)
+
+            def get_final_mask():
+                # Removing the overlapping area at the mask level. Note that
+                # this is an approximation and weights, biases, etc might need
+                # to be recomputed.
+                if self.remove_overlap is not None:
+                    msk = self._get_mask()
+                    for v in self.remove_overlap.values():
+                        m = hp.read_map(v)
+                        m[m == hp.UNSEEN] = 0
+                        m = rotate_mask(m, self.rot)
+                        m = hp.ud_grade(m, nside_out=self.nside)
+                        # Set filled pixels to 0
+                        msk[m != 0] = 0
+                else:
+                    msk = self._get_mask()
+
+                return msk
+
+            self.mask = self._rerun_read_cycle(fn, 'FITSMap', get_final_mask)
         return self.mask
 
     def _get_mask(self):
