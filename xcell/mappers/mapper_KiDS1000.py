@@ -232,6 +232,8 @@ class MapperKiDS1000(MapperBase):
                                        ra_name='ALPHA_J2000',
                                        dec_name='DELTA_J2000',
                                        rot=self.rot)
+            msk = self.get_mask()
+            w2s2[msk == 0] = 0
             return w2s2
 
         fn = '_'.join([f'{self.map_name}_w2s2_{kind}',
