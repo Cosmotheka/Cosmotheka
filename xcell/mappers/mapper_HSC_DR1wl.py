@@ -227,6 +227,8 @@ class MapperHSCDR1wl(MapperBase):
                                       cat[self.w_name]**2),
                                    ra_name='ra', dec_name='dec',
                                    rot=self.rot)
+        msk = self.get_mask()
+        w2s2[msk == 0] = 0
         return w2s2
 
     def get_nl_coupled(self):
