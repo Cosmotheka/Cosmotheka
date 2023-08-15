@@ -105,8 +105,8 @@ class MapperROSATXray(MapperBase):
         return signal_map
 
     def _get_mask(self):
-        mask = np.ones(self.npix)
         xpmap = self.get_expmap()
+        mask = xpmap.copy()
         mask[xpmap <= self.explimit] = 0
         if self.mask_external is not None:
             msk = hp.read_map(self.mask_external)

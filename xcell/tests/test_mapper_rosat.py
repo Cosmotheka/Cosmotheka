@@ -99,6 +99,6 @@ def test_nl_coupled():
     m = xc.mappers.MapperROSATXray(c)
     nl = m.get_nl_coupled()
     apix = hp.nside2pixarea(c['nside'])
-    nl_guess = 1/(200.**2*apix)
+    nl_guess = 1/apix
     assert np.all(np.fabs(nl/nl_guess-1) < 1E-10)
     clean_rosat_data()
