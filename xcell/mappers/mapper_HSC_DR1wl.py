@@ -118,7 +118,9 @@ class MapperHSCDR1wl(MapperBase):
             cat (Array)
         """
         if self.cat is None:
-            fn = f'{self.map_name}.fits'
+            # This will handle the situation when removing the overlap
+            map_name = self.map_name.split("_")[0] + f"_{self.bn}"
+            fn = f'{map_name}.fits'
             self.cat = self._rerun_read_cycle(fn, 'FITSTable',
                                               self._get_catalog_from_raw)
         return self.cat

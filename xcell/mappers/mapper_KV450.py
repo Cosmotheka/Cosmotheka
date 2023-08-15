@@ -70,7 +70,9 @@ class MapperKV450(MapperBase):
             array: catalog data
         """
         if self.cat_data is None:
-            fn = f'{self.map_name}_cat.fits'
+            # This will handle the situation when removing the overlap
+            map_name = self.map_name.split("_")[0] + f"_bin{self.zbin}"
+            fn = f'{map_name}_cat.fits'
             self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
                                                    self._load_catalog,
                                                    saved_by_func=True)
