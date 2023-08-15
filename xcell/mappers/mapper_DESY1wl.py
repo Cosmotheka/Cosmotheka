@@ -263,6 +263,8 @@ class MapperDESY1wl(MapperBase):
                                             cat_data[e2f]**2),
                                      ra_name='ra', dec_name='dec',
                                      rot=self.rot)
+            msk = self.get_mask()
+            mp[msk == 0] = 0
             return mp
 
         fn = '_'.join([f'{self.map_name}_{mod}_w2s2',
