@@ -209,7 +209,7 @@ class MapperDELS(MapperBase):
         df = np.poly1d(params)
         # Create correction map
         d_corr = np.zeros_like(delta)
-        d_corr[bmask > 0] = df(np.log10(stars[bmask > 0]))
+        d_corr[bmask > 0] = df(np.log10(stars[bmask > 0]).astype(float))
         return {'stars': stmid,
                 'delta_mean': d_mean,
                 'delta_std': d_std,
