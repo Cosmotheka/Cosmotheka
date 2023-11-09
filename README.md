@@ -28,7 +28,7 @@
 | ```P18CMB```      | CMB anisotropies                       | [Planck Collaboration, 2018](https://arxiv.org/abs/1807.06208)   | [catalogue](https://irsa.ipac.caltech.edu/data/Planck/release_2/all-sky-maps/foregrounds.html)    |
 | ```ROSAT```       | X-ray count rate                       | [Vogue et al, 1999](https://arxiv.org/abs/astro-ph/9909315)      | [catalogue](https://heasarc.gsfc.nasa.gov/FTP/rosat/data/)                                        |
 | ```SPT```         | ymap from Planck HFI DR2 and SPT-SZ    | [Bleem et al, 2021](https://arxiv.org/abs/2102.05033)            | [catalogue](https://lambda.gsfc.nasa.gov/product/spt/spt_prod_table.html)                         |  
-| ```WIxSC```       |                                        |                                                                  |                                                                                                   |
+| ```WIxSC```       | Galaxy clustering                      | [Bilicki et al, 2016](https://arxiv.org/abs/1607.01182)          | [catalogue](http://ssa.roe.ac.uk/WISExSCOS.html)                                                                                                   |
 
 
 
