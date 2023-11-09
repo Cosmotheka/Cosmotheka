@@ -1,6 +1,9 @@
 # Cosmoteka
 ![](https://raw.githubusercontent.com/JaimeRZP/Cosmoteka_tutorials/master/docs/src/assets/cosmoteka_logo.png)
 [![Coverage Status](https://coveralls.io/repos/github/xC-ell/xCell/badge.svg?branch=master)](https://coveralls.io/github/xC-ell/xCell?branch=master)
+
+Welcome to the Cosmoteka, the largest repository of consistently combined angular power spectra in Cosmology! 
+
 ## Supported Mappers
 
 | Mapper            | Description                       | Science                                                               |  Cataloge                                                                                         |  Contributor           |
@@ -30,9 +33,11 @@
 | ```SPT```         | Compton-y map                     | [Bleem et al, 2021](https://arxiv.org/abs/2102.05033)                 | [catalogue](https://lambda.gsfc.nasa.gov/product/spt/spt_prod_table.html)                         | J. Ruiz-Zapatero       |
 | ```WIxSC```       | Galaxy clustering                 | [Bilicki et al, 2016](https://arxiv.org/abs/1607.01182)               | [catalogue](http://ssa.roe.ac.uk/WISExSCOS.html)                                                  | D. Alonso              |
 
-Pipeline to compute Nx2pt angular power spectra and their covariances.
+## Tutorials
 
-# Usage
+Tutorials on how to configure and use all the different mappers can be found [here](https://github.com/xC-ell/Cosmoteka_tutorials)
+
+## Usage
 In order to run the code use `python3 run_cls.py input/kv450_1024.yml cls`.
 You can see the different options with `python3 run_cls.py -h`.
 
