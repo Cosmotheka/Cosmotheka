@@ -34,19 +34,25 @@ Welcome to the Cosmoteka, the largest repository of consistently combined angula
 | ```SPT```         | Compton-y map                     | [Bleem et al, 2021](https://arxiv.org/abs/2102.05033)                 | [catalogue](https://lambda.gsfc.nasa.gov/product/spt/spt_prod_table.html)                         | J. Ruiz-Zapatero       |
 | ```WIxSC```       | Galaxy clustering                 | [Bilicki et al, 2016](https://arxiv.org/abs/1607.01182)               | [catalogue](http://ssa.roe.ac.uk/WISExSCOS.html)                                                  | D. Alonso              |
 
+# Design Philosophy
+![](https://raw.githubusercontent.com/JaimeRZP/Cosmoteka_tutorials/master/docs/src/assets/Cosmoteka_schematic_v2.png)
+
+Cosmoteka is a large collection of pipelines to process map-level data from a wide variaty of surveys into angular power spectra combined in a statistically consistent manner. Cosmoteka accomplishes this by computing all the cross- and auto-covariances of the different maps.
+
+Cosmoteka is designed to allow for the largest amount of modularity possible to encourage open-source community development. Inside of each module, Cosmoteka follows an object-oriented approach. Thus, given some configureation file, each module defines a series of objects which host the methods used to process the data at each step of the pipeline. 
+
+Cosmoteka is fundamentally divided in two modules, `cls` and `mappers`, which can be thought as the brain and muscles respecively of the same organism. `cls` processes the demands the user can make through a configuration file and reaches out for the relevant `mapper` modules to compute the  corresponding `NaMaster` fields. In order to understand, how the `mapper` modules compute the `NaMaster` fields we can look the `mapper_base.py`, the mapper module which defines the parent class for all other mappers inside Cosmoteka. As the parent class, `mapper_base` defines a series of default methods which are then overwritten by the child mappers to perform the data processing specific to each data set. Moreover, it also defines common methods to each mapper. The most important of these methods is `get_nmt_field` which returns the `NaMaster` field from each mapper. Inside `get_nmt_field`, the signal map and mask of each mapper are computed according to the specifc methods of the children mappers. Then, the signal map and mask as well as other mapper specific quantities (data beam, contaminants,... etc) are passed on to `NaMaster` to compute the final field. Once the `NaMaster` fields are computed, `cls` orchestrates the computation of the angular power spectra and their covariance requested by the user. A brief description of the role of each module inside `cls` can be found in the table below. For a more detailed description of the role of the  `cls` modules as well as the individual mappers please visit the documentation of Cosmoteka.
+
+| Module            | function                                                                                                               |
+| -----------       | :-----------                                                                                                           |
+| ```cl.py```       | Computes the Cl's requested by the user in the configuration file from the `NaMaster` fields provided by the mappers.  |
+| ```cov.py```      | Uses the theoretical predictions of ```theory.py``` to compute the covariance of the angular power spectra.            |
+| ```data.py```     | Reads the user configuration file and reaches out to the relevant mappers.                                             |
+| ```theory.py```   | Computes the a theory prediction for the Cl's computed in  `cl.py` using  `pyccl`.                                     |
+| ```to_sacc.py```  | Saves all the angular power spectra as well as their covariance matrix to a `SACC` file.                               |
+
 # Tutorials
-Tutorials on how to configure and use all the different mappers can be found [here](https://github.com/xC-ell/Cosmoteka_tutorials).
-
-# Usage
-![](https://raw.githubusercontent.com/JaimeRZP/Cosmoteka_tutorials/master/docs/src/assets/Cosmoteka_schematic.png)
-
-In order to run the code use `python3 run_cls.py input/kv450_1024.yml cls`.
-You can see the different options with `python3 run_cls.py -h`.
-
-You can run directly `xcell/cls/cl.py`, `cov.py`, `to_sacc.py` with `python3 -m` as `python3 -m xcell.cls.cl input/kv450_1024.yml KV450__0 KV450__0`.
-
---- 
-More info about the sacc files in https://github.com/LSSTDESC/sacc
+Tutorials on how to configure and use all the different mappers  to compute angular power spectra and their covariance matrix can be found [here](https://github.com/xC-ell/Cosmoteka_tutorials).
 
 # Publications
 - J. Ruiz-Zapatero et al, "LimberJack.jl: auto-differentiable methods for angular power spectra analyses", Arxiv:2310.08306, 2023.
@@ -70,3 +76,28 @@ Looking forward to seeing your name below!
 |<img src=https://github.com/carlosggarcia.png  width="200" height="200" /> |<img src=https://github.com/jaimerzp.png  width="200" height="200" /> |<img src=https://github.com/damonge.png  width="200" height="200" />|<img src=https://github.com/oliveirafrancofelipe.png  width="200" height="200" /> |
 | Carlos Garcia-Garcia | Jaime Ruiz-Zapatero | David Alonso| Felipe Oliveira-Franco |
 | Lead angular power spectra <br /> and covariance code designer. <br /> Mappers| Mapper Design & Mappers | Mapper Design & Mappers | Mappers |
+
+# Citing Cosmoteka
+
+We are currently working on a Cosmoteka paper presenting the library in detail to the astronomy comunity. 
+In the mean time please cite:
+```
+@ARTICLE{2021JCAP...10..030G,
+       author = {{Garc{\'\i}a-Garc{\'\i}a}, Carlos and {Ruiz-Zapatero}, Jaime and {Alonso}, David and {Bellini}, Emilio and {Ferreira}, Pedro G. and {Mueller}, Eva-Maria and {Nicola}, Andrina and {Ruiz-Lapuente}, Pilar},
+        title = "{The growth of density perturbations in the last  10 billion years from tomographic large-scale structure data}",
+      journal = {\jcap},
+     keywords = {cosmological parameters from LSS, galaxy clustering, redshift surveys, weak gravitational lensing, Astrophysics - Cosmology and Nongalactic Astrophysics},
+         year = 2021,
+        month = oct,
+       volume = {2021},
+       number = {10},
+          eid = {030},
+        pages = {030},
+          doi = {10.1088/1475-7516/2021/10/030},
+archivePrefix = {arXiv},
+       eprint = {2105.12108},
+ primaryClass = {astro-ph.CO},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2021JCAP...10..030G},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}}
+```
+and as many papers as feel relevant from the publication list above.
