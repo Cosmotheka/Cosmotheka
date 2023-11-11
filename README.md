@@ -48,12 +48,18 @@ You can run directly `xcell/cls/cl.py`, `cov.py`, `to_sacc.py` with `python3 -m`
 --- 
 More info about the sacc files in https://github.com/LSSTDESC/sacc
 
-# Publications 
-- J. Ruiz-Zapatero et al, "LimberJack.jl: auto-differentiable methods for angular power spectra analyses", Arxiv:2310.08306, 2023
-- T. Ferreira et al, "X-ray - cosmic shear cross-correlations: first detection and constraints on baryonic effects", Arxiv:2309.11129, 2023
+# Publications
+- J. Ruiz-Zapatero et al, "LimberJack.jl: auto-differentiable methods for angular power spectra analyses", Arxiv:2310.08306, 2023.
+-  David Alonso et al, "Constraining cosmology with the Gaia-unWISE Quasar Catalog and CMB lensing: structure growth", Arxiv:2306.17748, 2023.
+- T. Ferreira et al, "X-ray - cosmic shear cross-correlations: first detection and constraints on baryonic effects", Arxiv:2309.11129, 2023.
+- B. Hadzhiyska et al, "Cosmology with 6 parameters in the Stage-IV era: efficient marginalisation over nuisance parameters", Arxiv:2301.11895, 2023.
+- J. Ruiz-Zapatero et al, "Analytical marginalisation over photometric redshift uncertainties in cosmic shear analyses", Arxiv:2301.11978, 2023.
 - B. Jego et al, "Constraining the physics of star formation from CIB-cosmic shear cross-correlations", Arxiv:2209.05472, 2022.
 - B. Jego et al, "The star formation history in the last 10 billion years from CIB cross-correlations", Arxiv:2206.15394, 2022.
+- C. Garcia-Garcia et al, "Combining cosmic shear data with correlated photo-z uncertainties: constraints from DESY1 and HSC-DR1", Arxiv:2210.13434, 2022.
+- B. Hadzhiyska et al, "Hefty enhancement of cosmological constraints from the DES Y1 data using a Hybrid Effective Field Theory approach to galaxy bias", Arxiv:2103.09820, 2021.
 - C. Garcia-Garcia et al, "The growth of density perturbations in the last ∼10 billion years from tomographic large-scale structure data", Arxiv:2105.12108, 2021.
+- A. Nicola et al, "Cosmic shear power spectra in practice", Arxiv:https:2010.09717, 2020.
 
 # Contributors
 
