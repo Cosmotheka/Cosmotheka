@@ -59,7 +59,7 @@ More info about the sacc files in https://github.com/LSSTDESC/sacc
 - C. Garcia-Garcia et al, "Combining cosmic shear data with correlated photo-z uncertainties: constraints from DESY1 and HSC-DR1", Arxiv:2210.13434, 2022.
 - B. Hadzhiyska et al, "Hefty enhancement of cosmological constraints from the DES Y1 data using a Hybrid Effective Field Theory approach to galaxy bias", Arxiv:2103.09820, 2021.
 - C. Garcia-Garcia et al, "The growth of density perturbations in the last ∼10 billion years from tomographic large-scale structure data", Arxiv:2105.12108, 2021.
-- A. Nicola et al, "Cosmic shear power spectra in practice", Arxiv:https:2010.09717, 2020.
+- A. Nicola et al, "Cosmic shear power spectra in practice", Arxiv:2010.09717, 2020.
 
 # Contributors
 
