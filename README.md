@@ -51,6 +51,14 @@ Cosmoteka is fundamentally divided in two modules, `cls` and `mappers`, which ca
 | ```theory.py```   | Computes the a theory prediction for the Cl's computed in  `cl.py` using  `pyccl`.                                     |
 | ```to_sacc.py```  | Saves all the angular power spectra as well as their covariance matrix to a `SACC` file.                               |
 
+# Usage
+In order to run the code use `python3 run_cls.py input/kv450_1024.yml cls`.
+You can see the different options with `python3 run_cls.py -h`.
+
+You can run directly `xcell/cls/cl.py`, `cov.py`, `to_sacc.py` with `python3 -m` as `python3 -m xcell.cls.cl input/kv450_1024.yml KV450__0 KV450__0`.
+
+More info about the sacc files in https://github.com/LSSTDESC/sacc
+
 # Tutorials
 Tutorials on how to configure and use all the different mappers  to compute angular power spectra and their covariance matrix can be found [here](https://github.com/xC-ell/Cosmoteka_tutorials).
 
