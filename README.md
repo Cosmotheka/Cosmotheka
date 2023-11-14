@@ -43,13 +43,13 @@ Cosmoteka is designed to allow for the largest amount of modularity possible to 
 
 Cosmoteka is fundamentally divided in two modules, `cls` and `mappers`, which can be thought as the brain and muscles respecively of the same organism. `cls` processes the demands the user can make through a configuration file and reaches out for the relevant `mapper` modules to compute the  corresponding `NaMaster` fields. In order to understand, how the `mapper` modules compute the `NaMaster` fields we can look the `mapper_base.py`, the mapper module which defines the parent class for all other mappers inside Cosmoteka. As the parent class, `mapper_base` defines a series of default methods which are then overwritten by the child mappers to perform the data processing specific to each data set. Moreover, it also defines common methods to each mapper. The most important of these methods is `get_nmt_field` which returns the `NaMaster` field from each mapper. Inside `get_nmt_field`, the signal map and mask of each mapper are computed according to the specifc methods of the children mappers. Then, the signal map and mask as well as other mapper specific quantities (data beam, contaminants,... etc) are passed on to `NaMaster` to compute the final field. Once the `NaMaster` fields are computed, `cls` orchestrates the computation of the angular power spectra and their covariance requested by the user. A brief description of the role of each module inside `cls` can be found in the table below. For a more detailed description of the role of the  `cls` modules as well as the individual mappers please visit the documentation of Cosmoteka.
 
-| Module            | function                                                                                                               |
-| -----------       | :-----------                                                                                                           |
-| ```cl.py```       | Computes the Cl's requested by the user in the configuration file from the `NaMaster` fields provided by the mappers.  |
-| ```cov.py```      | Uses the theoretical predictions of ```theory.py``` to compute the covariance of the angular power spectra.            |
-| ```data.py```     | Reads the user configuration file and reaches out to the relevant mappers.                                             |
-| ```theory.py```   | Computes the a theory prediction for the Cl's computed in  `cl.py` using  `pyccl`.                                     |
-| ```to_sacc.py```  | Saves all the angular power spectra as well as their covariance matrix to a `SACC` file.                               |
+| Module            | function                                                                                                                             |
+| -----------       | :-----------                                                                                                                         |
+| ```cl.py```       | Computes the Cl's requested by the user in the configuration file from the `NaMaster` fields provided by the mappers.                |
+| ```cov.py```      | Computes the covariance matrix of the Cl's either from the maps themselves or using the theoretical predictions of ```theory.py```.  |
+| ```data.py```     | Reads the user configuration file and reaches out to the relevant mappers.                                                           |
+| ```theory.py```   | Computes the a theory prediction for the Cl's computed in  `cl.py` using  `pyccl` (only available for certain observables).          |
+| ```to_sacc.py```  | Saves all the angular power spectra as well as their covariance matrix to a `SACC` file.                                             |
 
 # Usage
 In order to run the code use `python3 run_cls.py input/kv450_1024.yml cls`.
