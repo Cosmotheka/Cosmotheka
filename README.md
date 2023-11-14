@@ -1,5 +1,5 @@
-![](https://raw.githubusercontent.com/JaimeRZP/Cosmoteka_tutorials/master/docs/src/assets/cosmoteka_logo.png)
 [![Coverage Status](https://coveralls.io/repos/github/xC-ell/xCell/badge.svg?branch=master)](https://coveralls.io/github/xC-ell/xCell?branch=master)
+![](https://raw.githubusercontent.com/JaimeRZP/Cosmoteka_tutorials/master/docs/src/assets/cosmoteka_logo.png)
 
 Welcome to the Cosmoteka, the largest repository of consistently combined angular power spectra in Cosmology! 
 
@@ -28,7 +28,7 @@ Welcome to the Cosmoteka, the largest repository of consistently combined angula
 | ```KiDS1000```    | Weak lensing                      | [Heymans et al, 2020](https://arxiv.org/abs/2007.15632)               | [catalogue](https://kids.strw.leidenuniv.nl/DR4/data_files/)                                      | D. Alonso              |
 | ```NVSS```        | Galaxy clustering                 | [Condon et al, 1998](https://iopscience.iop.org/article/10.1086/300337/pdf) | [catalogue](https://www.cv.nrao.edu/nvss/)                                                  | F. Oliveira-Franco     |
 | ```P15tSZ```      | Compton-y map                     | [Planck Collaboration, 2015](https://arxiv.org/abs/1502.05956)        | [catalogue](https://irsa.ipac.caltech.edu/data/Planck/release_2/all-sky-maps/ysz_index.html)      | J. Ruiz-Zapatero       |
-| ```P18CMBk```     | CMB convergence                   | [Planck collaboration, 2018](https://arxiv.org/abs/1807.06210)        |                                                                                                   | J. Ruiz-Zapatero       |
+| ```P18CMBk```     | CMB convergence                   | [Planck collaboration, 2018](https://arxiv.org/abs/1807.06210)        | [catalogue]( http://pla.esac.esa.int/pla/aio/product-action?COSMOLOGY.FILE_ID=COM_Lensing_4096_R3.00.tgz)                                                                                                  | J. Ruiz-Zapatero       |
 | ```P18CMB```      | CMB anisotropies                  | [Planck Collaboration, 2018](https://arxiv.org/abs/1807.06208)        | [catalogue](https://irsa.ipac.caltech.edu/data/Planck/release_2/all-sky-maps/foregrounds.html)    | J. Ruiz-Zapatero       |
 | ```ROSAT```       | X-ray count rate                  | [Vogue et al, 1999](https://arxiv.org/abs/astro-ph/9909315)           | [catalogue](https://heasarc.gsfc.nasa.gov/FTP/rosat/data/)                                        | D. Alonso              |
 | ```SPT```         | Compton-y map                     | [Bleem et al, 2021](https://arxiv.org/abs/2102.05033)                 | [catalogue](https://lambda.gsfc.nasa.gov/product/spt/spt_prod_table.html)                         | J. Ruiz-Zapatero       |
