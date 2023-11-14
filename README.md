@@ -37,7 +37,7 @@ Welcome to the Cosmoteka, the largest repository of consistently combined angula
 # Design Philosophy
 ![](https://raw.githubusercontent.com/JaimeRZP/Cosmoteka_tutorials/master/docs/src/assets/Cosmoteka_schematic_v2.png)
 
-Cosmoteka is a large collection of pipelines to process map-level data from a wide variaty of surveys into angular power spectra combined in a statistically consistent manner. Cosmoteka accomplishes this by computing all the cross- and auto-covariances of the different maps.
+Cosmoteka is a single pipeline that processes catalog level data from a wide variety of surveys and measures their angular power spectra and covariances in a consistent manner. Cosmoteka heavily relies on `NaMaster`.
 
 Cosmoteka is designed to allow for the largest amount of modularity possible to encourage open-source community development. Inside of each module, Cosmoteka follows an object-oriented approach. Thus, given some configureation file, each module defines a series of objects which host the methods used to process the data at each step of the pipeline. 
 
@@ -45,11 +45,12 @@ Cosmoteka is fundamentally divided in two modules, `cls` and `mappers`, which ca
 
 | Module            | function                                                                                                                             |
 | -----------       | :-----------                                                                                                                         |
-| ```cl.py```       | Computes the Cl's requested by the user in the configuration file from the `NaMaster` fields provided by the mappers.                |
-| ```cov.py```      | Computes the covariance matrix of the Cl's either from the maps themselves or using the theoretical predictions of ```theory.py```.  |
-| ```data.py```     | Reads the user configuration file and reaches out to the relevant mappers.                                                           |
-| ```theory.py```   | Computes the a theory prediction for the Cl's computed in  `cl.py` using  `pyccl` (only available for certain observables).          |
-| ```to_sacc.py```  | Saves all the angular power spectra as well as their covariance matrix to a `SACC` file.                                             |
+| ```cls/cl.py```       | Computes the Cl's requested by the user in the configuration file from the `NaMaster` fields provided by the mappers.                |
+| ```cls/cov.py```      | Computes the covariance matrix of the Cl's either from the maps themselves or using the theoretical predictions of ```theory.py```.  |
+| ```cls/data.py```     | Reads the user configuration file and reaches out to the relevant mappers.                                                           |
+| ```cls/theory.py```   | Computes the a theory prediction for the Cl's computed in  `cl.py` using  `pyccl` (only available for certain observables).          |
+| ```cls/to_sacc.py```  | Saves all the angular power spectra as well as their covariance matrix to a `SACC` file.                                             |
+| ```Mappers```  | Saves all the angular power spectra as well as their covariance matrix to a `SACC` file.                                             |
 
 # Usage
 In order to run the code use `python3 run_cls.py input/kv450_1024.yml cls`.
