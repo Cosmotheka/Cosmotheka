@@ -35,7 +35,7 @@ Welcome to the Cosmoteka, the largest repository of consistently combined angula
 | ```WIxSC```       | Galaxy clustering                 | [Bilicki et al, 2016](https://arxiv.org/abs/1607.01182)               | [catalogue](http://ssa.roe.ac.uk/WISExSCOS.html)                                                  | D. Alonso              |
 
 # Design Philosophy
-![](https://raw.githubusercontent.com/JaimeRZP/Cosmoteka_tutorials/master/docs/src/assets/Cosmoteka_schematic_v2.png)
+![](https://raw.githubusercontent.com/JaimeRZP/Cosmoteka_tutorials/master/docs/src/assets/Cosmoteka_schematic_v3.png)
 
 Cosmoteka is a single pipeline that processes catalogue level data from a wide variety of surveys and measures their angular power spectra and covariances in a consistent manner. Cosmoteka heavily relies on `NaMaster`.
 
@@ -47,7 +47,7 @@ Cosmoteka is fundamentally divided in two modules, `cls` and `mappers`, which ca
 | -----------           | :-----------                                                                                                                         |
 | ```cls/cl.py```       | Computes the Cl's requested by the user in the configuration file from the `NaMaster` fields provided by the mappers.                |
 | ```cls/cov.py```      | Computes the covariance matrix of the Cl's either from the maps themselves or using the theoretical predictions of ```theory.py```.  |
-| ```cls/data.py```     | Reads the user configuration file and reaches out to the relevant mappers.                                                           |
+| ```cls/data.py```     | Reads the user configuration file and returns an instance of the relevant mappers.                                                           |
 | ```cls/theory.py```   | Computes the a theory prediction for the Cl's computed in  `cl.py` using  `pyccl` (only available for certain observables).          |
 | ```cls/to_sacc.py```  | Saves all the angular power spectra as well as their covariance matrix to a `SACC` file.                                             |
 | ```mappers```         | Project the catalogs into `NaMaster` fields.                                             |
