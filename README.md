@@ -1,7 +1,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/xC-ell/xCell/badge.svg?branch=master)](https://coveralls.io/github/xC-ell/xCell?branch=master)
 ![](https://raw.githubusercontent.com/JaimeRZP/Cosmoteka_tutorials/master/docs/src/assets/cosmoteka_logo.png)
 
-Welcome to the Cosmoteka, the largest repository of consistently combined angular power spectra in Cosmology! 
+Welcome to the Cosmoteka, the largest repository of consistently combined angular power spectra! 
 
 # Mappers
 | | | 
@@ -37,11 +37,11 @@ Welcome to the Cosmoteka, the largest repository of consistently combined angula
 # Design Philosophy
 ![](https://raw.githubusercontent.com/JaimeRZP/Cosmoteka_tutorials/master/docs/src/assets/Cosmoteka_schematic_v2.png)
 
-Cosmoteka is a single pipeline that processes catalog level data from a wide variety of surveys and measures their angular power spectra and covariances in a consistent manner. Cosmoteka heavily relies on `NaMaster`.
+Cosmoteka is a single pipeline that processes catalogue level data from a wide variety of surveys and measures their angular power spectra and covariances in a consistent manner. Cosmoteka heavily relies on `NaMaster`.
 
-Cosmoteka is designed to allow for the largest amount of modularity possible to encourage open-source community development. Inside of each module, Cosmoteka follows an object-oriented approach. Thus, given a configuration file or dictionary, the user can instantiate a class that constains all the methods needed to create a sky map (mappers), to estimate the angular power spectrum of two fields (cl) or the covariance (cov).
+Cosmoteka is designed to allow for the largest amount of modularity possible to encourage open-source community development. Inside of each module, Cosmoteka follows an object-oriented approach. Thus, given a configuration file or dictionary, the user can instantiate a class that constains all the methods needed to create a sky map (mappers), to estimate the angular power spectrum of two fields (cl) or their covariance (cov).
 
-Cosmoteka is fundamentally divided in two modules, `cls` and `mappers`, which can be thought as the brain and muscles respecively of the same organism. `cls` processes the demands the user can make through a configuration file and returns an instance of the relevant `mappers` to compute the  corresponding `NaMaster` fields. In order to understand, how the `mapper` modules compute the `NaMaster` fields we can look the `mapper_base.py`, the mapper module which defines the parent class for all other mappers inside Cosmoteka. As the parent class, `mapper_base` defines a series of default methods which are then overwritten by the child mappers to perform the data processing specific to each data set. Moreover, it also defines common methods to each mapper. The most important of these methods is `get_nmt_field` which projects the catalogs into `NaMaster` fields. Inside `get_nmt_field`, the signal map and mask of each mapper are computed according to the specifc methods of the children mappers. Then, the signal map and mask as well as other mapper specific quantities (data beam, contaminants,... etc) are passed on to `NaMaster` to compute the final field. Once the `NaMaster` fields are computed, `cls` orchestrates the computation of the angular power spectra and their covariance requested by the user. A brief description of the role of each module inside `cls` can be found in the table below. For a more detailed description of the role of the  `cls` modules as well as the individual mappers please visit the documentation of Cosmoteka.
+Cosmoteka is fundamentally divided in two modules, `cls` and `mappers`, which can be thought as the brain and muscles of the same organism respecively. `cls` processes the demands in the configuration file and instantiates the relevant `mappers`. Each  mapper then projects their corresponding catalogue into a `NaMaster` field taking into account the beams, contaminants and masks. Once the `NaMaster` fields are computed, `cls` orchestrates the computation of the angular power spectra and their covariance. A brief description of the role of each module inside `cls` can be found in the table below. For a more detailed description of the role of the  `cls` modules as well as the individual mappers please visit the documentation of Cosmoteka.
 
 | Module                | function                                                                                                                             |
 | -----------           | :-----------                                                                                                                         |
@@ -65,7 +65,7 @@ Tutorials on how to configure and use all the different mappers  to compute angu
 
 # Publications
 - J. Ruiz-Zapatero et al, "LimberJack.jl: auto-differentiable methods for angular power spectra analyses", Arxiv:2310.08306, 2023.
--  David Alonso et al, "Constraining cosmology with the Gaia-unWISE Quasar Catalog and CMB lensing: structure growth", Arxiv:2306.17748, 2023.
+-  David Alonso et al, "Constraining cosmology with the Gaia-unWISE Quasar catalogue and CMB lensing: structure growth", Arxiv:2306.17748, 2023.
 - T. Ferreira et al, "X-ray - cosmic shear cross-correlations: first detection and constraints on baryonic effects", Arxiv:2309.11129, 2023.
 - B. Hadzhiyska et al, "Cosmology with 6 parameters in the Stage-IV era: efficient marginalisation over nuisance parameters", Arxiv:2301.11895, 2023.
 - J. Ruiz-Zapatero et al, "Analytical marginalisation over photometric redshift uncertainties in cosmic shear analyses", Arxiv:2301.11978, 2023.
