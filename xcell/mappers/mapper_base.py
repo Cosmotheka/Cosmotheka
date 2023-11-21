@@ -136,6 +136,9 @@ class MapperBase(object):
             nl_coupled (Array): coupled noise power spectrum
         """
         raise NotImplementedError("Do not use base class")
+    
+    def get_nl_covariance(self):
+        raise NotImplementedError("Do not use base class")
 
     def _rerun_read_cycle(self, fname, ftype, func,
                           section=None, saved_by_func=False):
