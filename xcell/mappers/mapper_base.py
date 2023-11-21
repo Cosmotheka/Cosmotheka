@@ -17,6 +17,12 @@ class MapperBase(object):
         self._get_defaults(config)
 
     def _get_defaults(self, config):
+        """
+        Reads the configuration file to obtain \
+        the desired resolution and coordinates.
+        Initialises the NaMaster field, signal \
+        map, mask and beam as None.
+        """
         self.config = config
         self.mask_name = config.get('mask_name', None)
         self.beam_info = config.get('beam_info', [])
@@ -54,6 +60,14 @@ class MapperBase(object):
         raise NotImplementedError("Do not use base class")
 
     def get_signal_map(self, **kwargs):
+        """
+        If the mapper.signal_map is not None, returns it.
+        Otherwise, asks _get_signal_map() to compute \
+        it and assings it to mapper.signal_map.
+
+        Returns:
+            signal map (Array or None): mapper's signal map
+        """
         if self.signal_map is None:
             fn = '_'.join([f'{self.map_name}_signal_map',
                            *[f'{k}{v}' for k, v in kwargs.items()],
