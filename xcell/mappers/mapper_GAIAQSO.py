@@ -18,6 +18,7 @@ class MapperGAIAQSO(MapperBase):
         self.num_z_bins = config.get('num_z_bins', 500)
         self.z_edges = config.get('z_edges', [0, 4.5])
         self.zbin_name = 'z%.3lf_%.3lf' % (self.z_edges[0], self.z_edges[1])
+        self.z_name = config.get("z_name", "redshift_quaia")
 
         self.cat_data = None
         self.npix = hp.nside2npix(self.nside)
@@ -32,7 +33,7 @@ class MapperGAIAQSO(MapperBase):
         # after binning it in redshift.
 
         cat = Table.read(self.config['data_catalog'])
-        z_d = cat['redshift_spz']
+        z_d = cat[self.z_name]
         mask_bin = (z_d < self.z_edges[1]) & (z_d >= self.z_edges[0])
         cat = cat[mask_bin]
         return cat
@@ -57,7 +58,14 @@ class MapperGAIAQSO(MapperBase):
         msk = hp.ud_grade(hp.read_map(self.config['selection']),
                           nside_out=self.nside)
         msk_thr = self.config.get('mask_threshold', 0.5)
+        msk = msk / np.amax(msk)
         msk[msk < msk_thr] = 0
+        fname_extra = self.config.get('mask_extra')
+        if fname_extra:
+            m = hp.ud_grade(hp.read_map(fname_extra),
+                            nside_out=self.nside)
+            m = (m > 0).astype(float)
+            msk *= m
         return msk
 
     def _get_ipix(self):
@@ -82,7 +90,7 @@ class MapperGAIAQSO(MapperBase):
         cat = self.get_catalog()
         mskflag = self._get_angmask()
         c = cat[mskflag]
-        zm = c['redshift_spz']
+        zm = c[self.z_name]
 
         if self.config.get('nz_spec', False):
             nz, b = np.histogram(zm, range=[0., 4.5],
@@ -90,7 +98,7 @@ class MapperGAIAQSO(MapperBase):
             zs = 0.5 * (b[:-1] + b[1:])
         else:
             zs = np.linspace(0., 4.5, self.num_z_bins)
-            sz = c['redshift_spz_err']
+            sz = c[self.z_name+'_err']
             nz = np.array([np.sum(np.exp(-0.5*((z-zm)/sz)**2)/sz)
                            for z in zs])
 
