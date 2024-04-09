@@ -23,7 +23,7 @@ currentDateTime = datetime.datetime.now()
 date = currentDateTime.date()
 year = date.strftime("%Y")
 
-project = "COSMOTECA"
+project = "COSMOTHECA"
 copyright = f"2023-{year}"
 author = ""
 
@@ -46,7 +46,7 @@ extensions = [
 ]
 
 autoapi_type = "python"
-autoapi_dirs = ["../../xcell"]
+autoapi_dirs = ["../../cosmotheka"]
 autoapi_ignore = ["*test*"]
 # We are using both the class and the __init__ docstring to document their
 # initialization

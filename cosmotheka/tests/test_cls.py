@@ -11,8 +11,8 @@ import pyccl as ccl
 
 
 # Remove previous test results
-tmpdir1 = './xcell/tests/cls/dummy1'
-tmpdir2 = './xcell/tests/cls/dummy2'
+tmpdir1 = './cosmotheka/tests/cls/dummy1'
+tmpdir2 = './cosmotheka/tests/cls/dummy2'
 
 
 # Cleaning the tmp dir before running and after running the tests
