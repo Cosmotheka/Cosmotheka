@@ -72,9 +72,9 @@ class ClBase():
 
         Return
         ------
-        mapper1: xcell.mappers.XXX
+        mapper1: cosmotheka.mappers.XXX
             Mapper of the first tracer
-        mapper2: xcell.mappers.XXX
+        mapper2: cosmotheka.mappers.XXX
             Mapper of the second tracer
         """
         if self._mapper1 is None:
