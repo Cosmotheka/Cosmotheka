@@ -23,7 +23,7 @@ currentDateTime = datetime.datetime.now()
 date = currentDateTime.date()
 year = date.strftime("%Y")
 
-project = "COSMOTECA"
+project = "COSMOTHEKA"
 copyright = f"2023-{year}"
 author = ""
 
