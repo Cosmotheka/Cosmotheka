@@ -9,13 +9,13 @@ with open("requirements.txt", 'r') as f:
     requirements = [i.strip() for i in f.readlines()]
 
 setup(
-    name="xCell",
+    name="Cosmotheka",
     version="0.1.0",
     description=("Pipeline to compute Nx2pt angular power spectra and their covariances."),
     license="GPLv2",
     keywords="angular power spectra covariances Nx2pt",
-    url="https://github.com/xC-ell/xCell",
-    packages=['xcell'],
+    url="https://github.com/Cosmotheka/Cosmotheka",
+    packages=['cosmotheka'],
     long_description=long_description,
     long_description_content_type="text/markdown",
     classifiers=[
