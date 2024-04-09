@@ -9,7 +9,7 @@ def _build_rerun_fname(mpr, fname):
     """Return path to the cached version of the given file.
 
     Args:
-        mpr (:class:`~xcell.mapper_base.MapperBase`): A mapper object.
+        mpr (:class:`~cosmotheka.mapper_base.MapperBase`): A mapper object.
         fname (str): name of the cached files.
 
     Returns:
@@ -33,7 +33,7 @@ def get_rerun_data(mpr, fname, ftype, section=None, read=True):
     """Return files from previous runs of a given mapper.
 
     Args:
-        mpr (:class:`~xcell.mapper_base.MapperBase`): A mapper object.
+        mpr (:class:`~cosmotheka.mapper_base.MapperBase`): A mapper object.
         fname (str): path to rerun files.
         ftype (str): type of rerun files FITSTable, FITSMap, ASCII or NPZ
         section (int): if `ftype == FITSTable` or `ftype == FITSMap` selects
@@ -83,7 +83,7 @@ def save_rerun_data(mpr, fname, ftype, data):
     """Save files from previous runs of a given mapper.
 
     Args:
-        mpr (:class:`~xcell.mapper_base.MapperBase`): A mapper object.
+        mpr (:class:`~cosmotheka.mapper_base.MapperBase`): A mapper object.
         fname (str): path to rerun files.
         ftype (str): type of rerun files FITSTable, FITSMap, ASCII or NPZ
         data: the data that will be saved to a file
