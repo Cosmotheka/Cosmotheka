@@ -2,7 +2,7 @@ import glob
 import pytest
 import os
 import yaml
-from xcell.cls.data import Data
+from cosmotheka.cls.data import Data
 from ..mappers import mapper_from_name
 import numpy as np
 import shutil

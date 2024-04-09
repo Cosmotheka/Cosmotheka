@@ -1,11 +1,11 @@
 import shutil
 import os
 import numpy as np
-from xcell.cls.theory import ConcentrationDuffy08M500c
-from xcell.cls.cl import Cl, ClFid
-from xcell.cls.cov import Cov
+from cosmotheka.cls.theory import ConcentrationDuffy08M500c
+from cosmotheka.cls.cl import Cl, ClFid
+from cosmotheka.cls.cov import Cov
 import pymaster as nmt
-from xcell.mappers import MapperDummy
+from cosmotheka.mappers import MapperDummy
 import pytest
 import pyccl as ccl
 

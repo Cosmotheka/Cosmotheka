@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from xcell.cls.data import Data
+from cosmotheka.cls.data import Data
 import os
 import time
 import subprocess

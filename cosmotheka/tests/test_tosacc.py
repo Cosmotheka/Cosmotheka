@@ -3,10 +3,10 @@ import pytest
 import numpy as np
 import sacc
 import shutil
-from xcell.cls.to_sacc import ClSack
-from xcell.cls.data import Data
-from xcell.cls.cl import Cl, ClFid
-from xcell.cls.cov import Cov
+from cosmotheka.cls.to_sacc import ClSack
+from cosmotheka.cls.data import Data
+from cosmotheka.cls.cl import Cl, ClFid
+from cosmotheka.cls.cov import Cov
 
 # Remove previous test results
 tmpdir = './xcell/tests/cls/dummy1'

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from xcell.cls import tools
+from cosmotheka.cls import tools
 import pymaster as nmt
 import healpy as hp
 import numpy as np

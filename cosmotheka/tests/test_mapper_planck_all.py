@@ -1,4 +1,4 @@
-import xcell as xc
+import cosmotheka as xc
 import numpy as np
 import pytest
 import healpy as hp

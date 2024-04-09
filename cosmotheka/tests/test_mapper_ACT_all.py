@@ -1,4 +1,4 @@
-import xcell as xc
+import cosmotheka as xc
 from pixell import enmap, reproject
 import healpy as hp
 import numpy as np

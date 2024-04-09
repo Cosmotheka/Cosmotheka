@@ -1,6 +1,6 @@
 #!/usr/bin/python
-from xcell.cls.data import Data
-from xcell.cls.cov import Cov
+from cosmotheka.cls.data import Data
+from cosmotheka.cls.cov import Cov
 import os
 
 

@@ -1,5 +1,5 @@
 import pytest
-from xcell.cls.data import CustomLoader
+from cosmotheka.cls.data import CustomLoader
 from ..mappers import mapper_from_name
 import os
 import shutil

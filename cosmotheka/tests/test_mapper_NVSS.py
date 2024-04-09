@@ -1,5 +1,5 @@
 import numpy as np
-import xcell as xc
+import cosmotheka as xc
 import healpy as hp
 import os
 from astropy.table import Table
