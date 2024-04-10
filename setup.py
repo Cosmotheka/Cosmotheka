@@ -10,7 +10,7 @@ with open("requirements.txt", 'r') as f:
 
 setup(
     name="xCell",
-    version="dev",
+    version="0.1.0",
     description=("Pipeline to compute Nx2pt angular power spectra and their covariances."),
     license="GPLv2",
     keywords="angular power spectra covariances Nx2pt",

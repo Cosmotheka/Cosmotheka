@@ -49,7 +49,7 @@ def get_pyexec(comment, nc, queue, mem, onlogin, outdir, batches=False, logfname
     if batches:
         pyexec = ""
     else:
-        pyexec = "/usr/bin/python3.8"
+        pyexec = "/usr/local/shared/python3.9.7/bin/python3"
 
     if not onlogin:
         logdir = os.path.join(outdir, 'log')

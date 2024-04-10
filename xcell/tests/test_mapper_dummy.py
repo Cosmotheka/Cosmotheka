@@ -3,6 +3,19 @@ import xcell as xc
 import healpy as hp
 import pyccl as ccl
 import pytest
+import shutil
+import os
+
+
+OUTDIR = 'xcell/tests/data/tmp/'
+
+
+def setup_module():
+    os.makedirs(OUTDIR, exist_ok=True)
+
+
+def teardown_module():
+    shutil.rmtree(OUTDIR, ignore_errors=True)
 
 
 def get_config(dtype='galaxy_density', fsky=0.2):
@@ -201,3 +214,19 @@ def test_get_beam():
         beamm = beam_outputs[mode]
         beam = m.get_beam()
         assert ((beam - beamm) < 1e-30).all
+
+
+def test_remove_overlap():
+    config = get_config()
+    mapper = get_mapper()
+    mask = mapper.get_mask()
+    fname = OUTDIR + "mask.fits"
+    hp.write_map(fname, mask)
+
+    config['remove_overlap'] = {'mask': fname}
+    m = xc.mappers.MapperDummy(config)
+    assert m.map_name == 'dummy_removed_overlap_mask'
+    print(np.sum(m.get_mask()))
+    assert np.all(m.get_mask() == 0)
+
+    os.remove(fname)

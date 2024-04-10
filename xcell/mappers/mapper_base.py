@@ -2,7 +2,7 @@ import numpy as np
 import healpy as hp
 import pymaster as nmt
 from scipy.interpolate import interp1d
-from .utils import get_rerun_data, save_rerun_data
+from .utils import get_rerun_data, save_rerun_data, rotate_mask
 
 
 class MapperBase(object):
@@ -17,6 +17,12 @@ class MapperBase(object):
         self._get_defaults(config)
 
     def _get_defaults(self, config):
+        """
+        Reads the configuration file to obtain \
+        the desired resolution and coordinates.
+        Initialises the NaMaster field, signal \
+        map, mask and beam as None.
+        """
         self.config = config
         self.mask_name = config.get('mask_name', None)
         self.beam_info = config.get('beam_info', [])
@@ -35,6 +41,13 @@ class MapperBase(object):
         # dndz needs to be defined for _get_shifted_nz. We should consider
         # creating a subclass for Nz tracers, as in CCL.
         self.dndz = None
+        # Remove overlap? You should pass a dictionary with name & mask
+        self.remove_overlap = config.get("remove_overlap")
+        if self.remove_overlap is not None:
+            self.map_name += '_removed_overlap'
+            for k in self.remove_overlap.keys():
+                self.map_name += f'_{k}'
+        self.rot = None  # Defined in the child classes
 
     def _get_rotator(self, coord_default):
         if self.coords != coord_default:
@@ -47,6 +60,14 @@ class MapperBase(object):
         raise NotImplementedError("Do not use base class")
 
     def get_signal_map(self, **kwargs):
+        """
+        If the mapper.signal_map is not None, returns it.
+        Otherwise, asks _get_signal_map() to compute \
+        it and assings it to mapper.signal_map.
+
+        Returns:
+            signal map (Array or None): mapper's signal map
+        """
         if self.signal_map is None:
             fn = '_'.join([f'{self.map_name}_signal_map',
                            *[f'{k}{v}' for k, v in kwargs.items()],
@@ -84,7 +105,26 @@ class MapperBase(object):
             fn = '_'.join([f'mask_{self.mask_name}',
                            f'coord{self.coords}',
                            f'ns{self.nside}.fits.gz'])
-            self.mask = self._rerun_read_cycle(fn, 'FITSMap', self._get_mask)
+
+            def get_final_mask():
+                # Removing the overlapping area at the mask level. Note that
+                # this is an approximation and weights, biases, etc might need
+                # to be recomputed.
+                if self.remove_overlap is not None:
+                    msk = self._get_mask()
+                    for v in self.remove_overlap.values():
+                        m = hp.read_map(v)
+                        m[m == hp.UNSEEN] = 0
+                        m = rotate_mask(m, self.rot)
+                        m = hp.ud_grade(m, nside_out=self.nside)
+                        # Set filled pixels to 0
+                        msk[m != 0] = 0
+                else:
+                    msk = self._get_mask()
+
+                return msk
+
+            self.mask = self._rerun_read_cycle(fn, 'FITSMap', get_final_mask)
         return self.mask
 
     def _get_mask(self):

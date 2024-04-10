@@ -1,0 +1,11 @@
+zbin: 2
+mode: shear
+indexcat:  '/mnt/extraspace/damonge/Datasets/DES_Y3/catalogs/DESY3_indexcat_zbin2.h5'
+file_nz: '/mnt/extraspace/damonge/Datasets/DES_Y3/data_products/2pt_NG_final_2ptunblind_02_26_21_wnz_maglim_covupdate.fits'
+path_rerun: '/mnt/extraspace/damonge/Datasets/DES_Y3/xcell_reruns/'
+mask_name: 'mask_DESY3wl2'
+mapper_class: 'MapperDESY3wl'
+beam_info: 
+  - type: 'PixWin'
+m: -0.024
+sigma_m: 0.008

@@ -85,7 +85,9 @@ class MapperDELS(MapperBase):
             catalog (Array)
         """
         if self.cat_data is None:
-            fn = f'{self.map_name}_cat.fits'
+            # This will handle the situation when removing the overlap
+            map_name = self.map_name.split("_")[0] + f"_bin{self.zbin}"
+            fn = f'{map_name}_cat.fits'
             self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
                                                    self._get_catalog)
         return self.cat_data
@@ -207,7 +209,7 @@ class MapperDELS(MapperBase):
         df = np.poly1d(params)
         # Create correction map
         d_corr = np.zeros_like(delta)
-        d_corr[bmask > 0] = df(np.log10(stars[bmask > 0]))
+        d_corr[bmask > 0] = df(np.log10(stars[bmask > 0]).astype(float))
         return {'stars': stmid,
                 'delta_mean': d_mean,
                 'delta_std': d_std,
