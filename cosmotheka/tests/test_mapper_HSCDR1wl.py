@@ -7,7 +7,7 @@ from astropy.table import Table
 
 
 def make_hsc_nz_data():
-    data_path = 'cosmoteka/tests/data/'
+    data_path = 'cosmotheka/tests/data/'
     ng = 1000
     onearr = np.ones(ng)
     ids = np.arange(ng, dtype=int)

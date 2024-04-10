@@ -6,7 +6,7 @@ from astropy.table import Table
 
 
 def get_config():
-    data_path = 'cosmoteka/tests/data/'
+    data_path = 'cosmotheka/tests/data/'
     return {'data_catalog': data_path+'catalog_CatWISE.fits',
             'mask_sources': data_path+'MASKS_exclude_master_final.fits',
             'nside': 32, 'mask_name': 'mask', 'coords': 'C',
@@ -14,7 +14,7 @@ def get_config():
 
 
 def make_fake_data():
-    data_path = 'cosmoteka/tests/data/'
+    data_path = 'cosmotheka/tests/data/'
     nside = 32
     npix = hp.nside2npix(nside)
     ra, dec = hp.pix2ang(nside, np.arange(npix), lonlat=True)

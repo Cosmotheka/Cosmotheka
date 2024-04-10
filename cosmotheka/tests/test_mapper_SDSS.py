@@ -60,7 +60,7 @@ def test_get_nl_coupled_data(m):
 
 
 def test_rerun():
-    data_path = 'cosmoteka/tests/data/'
+    data_path = 'cosmotheka/tests/data/'
     fname_msk = data_path+'mask_mask_coordC_ns32.fits.gz'
     fname_map = data_path+'SDSS_dummy_signal_map_coordC_ns32.fits.gz'
     fname_nls = data_path+'SDSS_dummy_Nell_coordC_ns32.npz'

@@ -6,7 +6,7 @@ from astropy.table import Table
 
 
 def get_config():
-    data_path = 'cosmoteka/tests/data/'
+    data_path = 'cosmotheka/tests/data/'
     return {'data_catalog': data_path+'catalog_nvss.fits',
             'mask_sources': data_path+'source_masks_nvss.txt',
             'nside': 32, 'mask_name': 'mask', 'coords': 'C',
