@@ -13,7 +13,7 @@ if os.uname()[1] != 'glamdring':
 with open('input/master.yml') as f:
     master_data = yaml.load(f, CustomLoader)
 
-path_rerun = 'xcell/tests/cls/input_master_path_rerun_tmp'
+path_rerun = 'cosmotheka/tests/cls/input_master_path_rerun_tmp'
 nside = 32
 coords = 'G'
 

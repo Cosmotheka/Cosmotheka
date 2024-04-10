@@ -12,7 +12,7 @@ tracers:
     threshold: 0.5
 
 
-  DESgc__1: !include xcell/tests/data/des_b1.yml
+  DESgc__1: !include cosmotheka/tests/data/des_b1.yml
 
 cls:
   # Options: all, cross, None
@@ -56,4 +56,4 @@ recompute:
   mcm: False
   cmcm: False
 
-output:  './xcell/tests/cls/'
+output:  './cosmotheka/tests/cls/'
