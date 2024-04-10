@@ -5,10 +5,10 @@ import numpy as np
 import healpy as hp
 
 
-class MapperGAIAQSO(MapperBase):
+class MapperQuaia(MapperBase):
     """
     """
-    map_name = 'GAIAQSO'
+    map_name = 'Quaia'
 
     def __init__(self, config):
         self._get_defaults(config)
