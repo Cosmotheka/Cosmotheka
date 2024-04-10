@@ -1,4 +1,4 @@
-from .mapper_P18CMK import MapperP18CMBK
+from .mapper_P18CMBK import MapperP18CMBK
 import numpy as np
 
 
