@@ -2,7 +2,6 @@ import numpy as np
 import cosmotheka as xc
 import healpy as hp
 import os
-import pytest
 
 
 def get_config():
