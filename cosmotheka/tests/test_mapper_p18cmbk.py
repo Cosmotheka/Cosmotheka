@@ -6,9 +6,9 @@ import os
 
 
 def get_config():
-    return {'file_klm': 'xcell/tests/data/alm.fits',
-            'file_mask': 'xcell/tests/data/map.fits',
-            'file_noise': 'xcell/tests/data/nl.txt',
+    return {'file_klm': 'cosmotheka/tests/data/alm.fits',
+            'file_mask': 'cosmotheka/tests/data/map.fits',
+            'file_noise': 'cosmotheka/tests/data/nl.txt',
             'mask_name': 'mask_CMBK',
             'mask_aposize': 3,  # Must be large than pixel size
             'mask_apotype': 'C1',
@@ -50,14 +50,14 @@ def test_spin():
 
 def test_get_signal_map():
     config = get_config()
-    config['path_rerun'] = 'xcell/tests/data/'
+    config['path_rerun'] = 'cosmotheka/tests/data/'
     m = xc.mappers.MapperP18CMBK(config)
     d = m.get_signal_map()
     assert len(d) == 1
     d = d[0]
     assert np.all(np.fabs(d-1) < 0.02)
 
-    fn = 'xcell/tests/data/P18CMBK_signal_map_coordC_ns32.fits.gz'
+    fn = 'cosmotheka/tests/data/P18CMBK_signal_map_coordC_ns32.fits.gz'
     assert np.all(d == hp.read_map(fn))
     os.remove(fn)
 
