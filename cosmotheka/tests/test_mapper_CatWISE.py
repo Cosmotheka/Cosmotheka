@@ -6,13 +6,15 @@ from astropy.table import Table
 
 
 def get_config():
-    return {'data_catalog': 'cosmotheka/tests/data/catalog_CatWISE.fits',
-            'mask_sources': 'cosmotheka/tests/data/MASKS_exclude_master_final.fits',
+    data_path = 'cosmoteka/tests/data/'
+    return {'data_catalog': data_path+'catalog_CatWISE.fits',
+            'mask_sources': data_path+'MASKS_exclude_master_final.fits',
             'nside': 32, 'mask_name': 'mask', 'coords': 'C',
             'apply_ecliptic_correction': True}
 
 
 def make_fake_data():
+    data_path = 'cosmoteka/tests/data/'
     nside = 32
     npix = hp.nside2npix(nside)
     ra, dec = hp.pix2ang(nside, np.arange(npix), lonlat=True)
@@ -20,7 +22,7 @@ def make_fake_data():
     c = Table({'ra': ra,
                'dec': dec,
                'w1': flux})
-    c.write('cosmotheka/tests/data/catalog_CatWISE.fits', overwrite=True)
+    c.write(data_path+'catalog_CatWISE.fits', overwrite=True)
 
 
 def clean_fake_data():

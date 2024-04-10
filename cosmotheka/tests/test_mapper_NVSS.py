@@ -6,10 +6,11 @@ from astropy.table import Table
 
 
 def get_config():
-    return {'data_catalog': 'cosmotheka/tests/data/catalog_nvss.fits',
-            'mask_sources': 'cosmotheka/tests/data/source_masks_nvss.txt',
+    data_path = 'cosmoteka/tests/data/'
+    return {'data_catalog': data_path+'catalog_nvss.fits',
+            'mask_sources': data_path+'source_masks_nvss.txt',
             'nside': 32, 'mask_name': 'mask', 'coords': 'C',
-            'redshift_catalog': 'cosmotheka/tests/data/redshift_catalog_nvss.fits'}
+            'redshift_catalog': data_path+'redshift_catalog_nvss.fits'}
 
 
 def make_fake_data():

@@ -380,8 +380,8 @@ def test_get_tracers_used():
     config = data.data
     tracers_for_cl = data.get_tracers_used()
 
-    # In the cosmotheka/tests/data/desy1_ebossqso_p18cmbk.yml file no eBOSS tracer
-    # is used.
+    # In the cosmotheka/tests/data/desy1_ebossqso_p18cmbk.yml
+    # file no eBOSS tracer is used.
     trs = ['DESgc', 'DESwl', 'PLAcv']
     tracers_for_cl_test = []
     for tr in config['tracers']:

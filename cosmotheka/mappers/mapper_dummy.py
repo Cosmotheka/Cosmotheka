@@ -75,11 +75,12 @@ class MapperDummy(MapperBase):
 
     def get_nz(self, dz=0):
         if self.dndz is None:
+            data_path = 'cosmoteka/tests/data/'
             if self.dtype == 'galaxy_density':
-                z, nz = np.loadtxt('cosmotheka/tests/data/DESY1gc_dndz_bin0.txt',
+                z, nz = np.loadtxt(data_path+'DESY1gc_dndz_bin0.txt',
                                    usecols=(1, 3), unpack=True)
             elif self.dtype == 'galaxy_shear':
-                z, nz = np.loadtxt('cosmotheka/tests/data/Nz_DIR_z0.1t0.3.asc',
+                z, nz = np.loadtxt(data_path+'Nz_DIR_z0.1t0.3.asc',
                                    usecols=(0, 1), unpack=True)
             else:
                 return None

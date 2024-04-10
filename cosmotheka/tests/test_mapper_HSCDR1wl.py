@@ -7,6 +7,7 @@ from astropy.table import Table
 
 
 def make_hsc_nz_data():
+    data_path = 'cosmoteka/tests/data/'
     ng = 1000
     onearr = np.ones(ng)
     ids = np.arange(ng, dtype=int)
@@ -16,12 +17,12 @@ def make_hsc_nz_data():
     c_s['SOM_weight'] = onearr
     c_s['weight_source'] = onearr
     c_s['COSMOS_photoz'] = zs
-    c_s.write("cosmotheka/tests/data/hsc_cosmos_catalog.fits",
+    c_s.write(data_path+"hsc_cosmos_catalog.fits",
               overwrite=True)
     c_p = Table()
     c_p['ID'] = ids
     c_p['PHOTOZ_BEST'] = onearr*0.5
-    c_p.write("cosmotheka/tests/data/hsc_photoz_catalog.fits",
+    c_p.write(data_path+"hsc_photoz_catalog.fits",
               overwrite=True)
 
 
@@ -77,14 +78,15 @@ def clean_hsc_data():
 
 
 def get_config():
-    return {'data_catalogs': [['cosmotheka/tests/data/hsc_catalog.fits']],
-            'path_rerun': 'cosmotheka/tests/data/',
+    data_path = 'cosmoteka/tests/data/'
+    return {'data_catalogs': [[data_path+'hsc_catalog.fits']],
+            'path_rerun': data_path,
             'depth_cut': 24.5,
             'z_edges': [0., 0.5],
             'shear_mod_thr': 10,
             'bin_name': 'bin_test',
-            'fname_cosmos': 'cosmotheka/tests/data/hsc_cosmos_catalog.fits',
-            'fnames_cosmos_ph': ['cosmotheka/tests/data/hsc_photoz_catalog.fits'],
+            'fname_cosmos': data_path+'hsc_cosmos_catalog.fits',
+            'fnames_cosmos_ph': [data_path+'hsc_photoz_catalog.fits'],
             'nside': 32, 'mask_name': 'mask', 'coords': 'C'}
 
 

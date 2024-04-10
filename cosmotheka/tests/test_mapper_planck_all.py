@@ -192,16 +192,17 @@ def test_get_fwhm(cls, mode, fwhm):
 
 
 def test_custom_beam():
+    data_path = 'cosmotheka/tests/data/'
     c = get_config('CIBLenz')
     c['beam_info'] = [{'type': 'Custom',
-                       'file': 'cosmotheka/tests/data/windowfunctions_test.csv',
+                       'file': data_path+'windowfunctions_test.csv',
                        'field': 'Wl_eff'}]
 
     m = xc.mappers.MapperCIBLenz(c)
     assert m.beam_info[0]['type'] == 'Custom'
     wf = m.get_beam()
     ell = np.arange(3*m.nside)
-    windowfuncs = pd.read_csv('cosmotheka/tests/data/windowfunctions_test.csv',
+    windowfuncs = pd.read_csv(data_path+'windowfunctions_test.csv',
                               comment='#')
     pixwin = interp1d(np.array(windowfuncs['ell']),
                       np.log(np.array(windowfuncs['Wl_eff'])),

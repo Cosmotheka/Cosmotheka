@@ -60,9 +60,10 @@ def test_get_nl_coupled_data(m):
 
 
 def test_rerun():
-    fname_msk = 'cosmotheka/tests/data/mask_mask_coordC_ns32.fits.gz'
-    fname_map = 'cosmotheka/tests/data/SDSS_dummy_signal_map_coordC_ns32.fits.gz'
-    fname_nls = 'cosmotheka/tests/data/SDSS_dummy_Nell_coordC_ns32.npz'
+    data_path = 'cosmoteka/tests/data/'
+    fname_msk = data_path+'mask_mask_coordC_ns32.fits.gz'
+    fname_map = data_path+'SDSS_dummy_signal_map_coordC_ns32.fits.gz'
+    fname_nls = data_path+'SDSS_dummy_Nell_coordC_ns32.npz'
 
     # Cleanup just in case
     if os.path.isfile(fname_msk):
@@ -71,7 +72,7 @@ def test_rerun():
         os.remove(fname_map)
 
     c = get_config()
-    c['path_rerun'] = 'cosmotheka/tests/data/'
+    c['path_rerun'] = data_path
     m1 = xc.mappers.MapperBOSS(c)
     msk1 = m1.get_mask()
     map1 = m1.get_signal_map()[0]
