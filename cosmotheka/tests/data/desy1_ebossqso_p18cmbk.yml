@@ -206,4 +206,4 @@ recompute:
   mcm: False
   cmcm: False
 
-output:  './xcell/tests/cls/'
+output:  './cosmotheka/tests/cls/'

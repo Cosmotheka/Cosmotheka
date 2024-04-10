@@ -8,38 +8,38 @@ from scipy.interpolate import interp1d
 
 def get_config(mode, wbeam=True):
     if mode == 'SMICA':
-        c = {'file_map': 'xcell/tests/data/map.fits',
-             'file_hm1': 'xcell/tests/data/hm1_map.fits',
-             'file_hm2': 'xcell/tests/data/hm2_map.fits',
-             'file_gp_mask': 'xcell/tests/data/mask1.fits',
+        c = {'file_map': 'cosmotheka/tests/data/map.fits',
+             'file_hm1': 'cosmotheka/tests/data/hm1_map.fits',
+             'file_hm2': 'cosmotheka/tests/data/hm2_map.fits',
+             'file_gp_mask': 'cosmotheka/tests/data/mask1.fits',
              'gp_mask_mode': '0.2',
              'nside': 32}
     elif mode == 'tSZ':
-        c = {'file_map': 'xcell/tests/data/map.fits',
-             'file_hm1': 'xcell/tests/data/map.fits',
-             'file_hm2': 'xcell/tests/data/map.fits',
-             'file_mask': 'xcell/tests/data/map.fits',
-             'file_gp_mask': 'xcell/tests/data/mask1.fits',
+        c = {'file_map': 'cosmotheka/tests/data/map.fits',
+             'file_hm1': 'cosmotheka/tests/data/map.fits',
+             'file_hm2': 'cosmotheka/tests/data/map.fits',
+             'file_mask': 'cosmotheka/tests/data/map.fits',
+             'file_gp_mask': 'cosmotheka/tests/data/mask1.fits',
              'gp_mask_mode': '0.4',
              'nside': 32}
     elif mode == 'CIBLenz':
-        c = {'file_map': 'xcell/tests/data/map.fits',
-             'file_hm1': 'xcell/tests/data/hm1_map.fits',
-             'file_hm2': 'xcell/tests/data/hm2_map.fits',
-             'file_mask': 'xcell/tests/data/map.fits',
+        c = {'file_map': 'cosmotheka/tests/data/map.fits',
+             'file_hm1': 'cosmotheka/tests/data/hm1_map.fits',
+             'file_hm2': 'cosmotheka/tests/data/hm2_map.fits',
+             'file_mask': 'cosmotheka/tests/data/map.fits',
              'nside': 32}
     elif mode == 'SPT':
-        c = {'file_map': 'xcell/tests/data/map.fits',
-             'file_hm1': 'xcell/tests/data/hm1_map.fits',
-             'file_hm2': 'xcell/tests/data/hm2_map.fits',
-             'file_gp_mask': 'xcell/tests/data/mask1.fits',
-             'file_ps_mask': 'xcell/tests/data/mask2.fits',
+        c = {'file_map': 'cosmotheka/tests/data/map.fits',
+             'file_hm1': 'cosmotheka/tests/data/hm1_map.fits',
+             'file_hm2': 'cosmotheka/tests/data/hm2_map.fits',
+             'file_gp_mask': 'cosmotheka/tests/data/mask1.fits',
+             'file_ps_mask': 'cosmotheka/tests/data/mask2.fits',
              'nside': 32, 'coords': 'C'}
     elif mode == 'base':
-        c = {'file_map': 'xcell/tests/data/map.fits',
-             'file_hm1': 'xcell/tests/data/hm1_map.fits',
-             'file_hm2': 'xcell/tests/data/hm2_map.fits',
-             'file_ps_mask': 'xcell/tests/data/mask2.fits',
+        c = {'file_map': 'cosmotheka/tests/data/map.fits',
+             'file_hm1': 'cosmotheka/tests/data/hm1_map.fits',
+             'file_hm2': 'cosmotheka/tests/data/hm2_map.fits',
+             'file_ps_mask': 'cosmotheka/tests/data/mask2.fits',
              'nside': 32}
     else:
         print('Mode not recognized')
@@ -80,7 +80,7 @@ def test_get_nl_coupled(m):
 def test_get_cl_coupled(cls, mode):
     conf = get_config(mode)
     conf_ref = get_config('base')
-    conf['file_map'] = 'xcell/tests/data/map_auto_test.fits'
+    conf['file_map'] = 'cosmotheka/tests/data/map_auto_test.fits'
     m = cls(conf)
     mask = m.get_mask()
     cl_cross = m.get_cl_coupled()[0]
@@ -108,7 +108,7 @@ def test_get_cl_coupled(cls, mode):
 def test_get_cls_covar_coupled(cls, mode):
     conf = get_config(mode)
     conf_ref = get_config('base')
-    conf['file_map'] = 'xcell/tests/data/map_auto_test.fits'
+    conf['file_map'] = 'cosmotheka/tests/data/map_auto_test.fits'
     m = cls(conf)
     mask = m.get_mask()
     cls_cov = m.get_cls_covar_coupled()
@@ -194,14 +194,14 @@ def test_get_fwhm(cls, mode, fwhm):
 def test_custom_beam():
     c = get_config('CIBLenz')
     c['beam_info'] = [{'type': 'Custom',
-                       'file': 'xcell/tests/data/windowfunctions_test.csv',
+                       'file': 'cosmotheka/tests/data/windowfunctions_test.csv',
                        'field': 'Wl_eff'}]
 
     m = xc.mappers.MapperCIBLenz(c)
     assert m.beam_info[0]['type'] == 'Custom'
     wf = m.get_beam()
     ell = np.arange(3*m.nside)
-    windowfuncs = pd.read_csv('xcell/tests/data/windowfunctions_test.csv',
+    windowfuncs = pd.read_csv('cosmotheka/tests/data/windowfunctions_test.csv',
                               comment='#')
     pixwin = interp1d(np.array(windowfuncs['ell']),
                       np.log(np.array(windowfuncs['Wl_eff'])),
