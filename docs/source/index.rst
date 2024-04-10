@@ -1,5 +1,5 @@
 Welcome to COSMOTHEKA's documentation!
-=====================================
+======================================
 
 COSMOTHEKA is a public repository and pipeline that computes large scale
 structure angular power spectra and their covariances from input catalogs. At
