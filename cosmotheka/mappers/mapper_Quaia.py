@@ -30,11 +30,12 @@ class MapperQuaia(MapperBase):
         # Returns the mapper's catalog \
         # after binning it in redshift.
 
-        cat = Table.read(self.config['data_catalog'])
+        cat = Table.read(self.config['data_catalog'], format='fits')
+        cat.keep_columns(['ra', 'dec', self.z_name, self.z_name+'_err'])
         z_d = cat[self.z_name]
         mask_bin = (z_d < self.z_edges[1]) & (z_d >= self.z_edges[0])
         cat = cat[mask_bin]
-        return cat
+        return cat.as_array()
 
     def get_catalog(self):
         """
@@ -53,7 +54,7 @@ class MapperQuaia(MapperBase):
         return self.cat_data
 
     def _get_mask(self):
-        fname_sel = f'selection_{self.zbin_name}_{self.coords}'
+        fname_sel = f'selection_{self.coords}'
         msk = hp.ud_grade(hp.read_map(self.config[fname_sel]),
                           nside_out=self.nside)
         msk_thr = self.config.get('mask_threshold', 0.5)

@@ -12,6 +12,7 @@ def get_config():
             'binary_mask': 'cosmotheka/tests/data/map.fits',
             'num_z_bins': 500, 'coords': 'C',
             'star_map': 'cosmotheka/tests/data/map.fits',
+            'path_rerun': '.',
             'zbin': 0, 'nside': 32, 'mask_name': 'mask'}
 
 
