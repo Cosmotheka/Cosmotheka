@@ -1,7 +1,7 @@
-Welcome to COSMOTECA's documentation!
+Welcome to COSMOTHEKA's documentation!
 =====================================
 
-COSMOTHECA is a public repository and pipeline that computes large scale
+COSMOTHEKA is a public repository and pipeline that computes large scale
 structure angular power spectra and their covariances from input catalogs. At
 the moment, it includes very well known public datasets such as DES, KiDS, etc. 
 
