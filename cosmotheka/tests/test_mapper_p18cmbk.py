@@ -28,6 +28,7 @@ def test_alm_cut():
     klm = m._get_klm()
     alm_all, lmax = hp.read_alm(config['file_klm'], return_mmax=True)
     alm_all = m.rot.rotate_alm(alm_all)
+    alm_all[0] = 0+0j
     fl = np.ones(lmax+1)
     fl[3*16:] = 0
     alm_cut = hp.almxfl(alm_all, fl, inplace=True)
@@ -55,7 +56,7 @@ def test_get_signal_map():
     d = m.get_signal_map()
     assert len(d) == 1
     d = d[0]
-    assert np.all(np.fabs(d-1) < 0.02)
+    assert np.all(np.fabs(d) < 0.02)
 
     fn = 'cosmotheka/tests/data/P18CMBK_signal_map_coordC_ns32.fits.gz'
     assert np.all(d == hp.read_map(fn))
@@ -92,5 +93,4 @@ def test_get_nmt_field():
     m = get_mapper()
     f = m.get_nmt_field()
     cl = nmt.compute_coupled_cell(f, f)[0]
-    assert np.fabs(cl[0]-4*np.pi) < 1E-3
-    assert np.all(np.fabs(cl[1:]) < 1E-5)
+    assert np.all(np.fabs(cl) < 1E-5)
