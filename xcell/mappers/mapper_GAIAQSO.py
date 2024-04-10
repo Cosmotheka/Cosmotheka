@@ -47,18 +47,19 @@ class MapperGAIAQSO(MapperBase):
             catalog (Array)
         """
         if self.cat_data is None:
-            fn = f'{self.map_name}_cat_{self.zbin_name}.fits'
+            fn = f'{self.map_name}_{self.zbin_name}_cat.fits'
             self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
                                                    self._get_catalog)
         return self.cat_data
 
     def _get_mask(self):
-        msk = hp.ud_grade(hp.read_map(self.config[f'selection_{self.coords}']),
+        fname_sel = f'selection_{self.zbin_name}_{self.coords}'
+        msk = hp.ud_grade(hp.read_map(self.config[fname_sel]),
                           nside_out=self.nside)
         msk_thr = self.config.get('mask_threshold', 0.5)
         msk = msk / np.amax(msk)
         msk[msk < msk_thr] = 0
-        fname_extra = self.config.get('mask_extra')
+        fname_extra = self.config.get('mask_extra_{self.coords}')
         if fname_extra:
             m = hp.ud_grade(hp.read_map(fname_extra),
                             nside_out=self.nside)
@@ -115,7 +116,7 @@ class MapperGAIAQSO(MapperBase):
             [z, nz] (Array)
         """
         if self.dndz is None:
-            fn = f'{self.map_name}_dndz.npz'
+            fn = f'{self.map_name}_{self.zbin_name}_dndz.npz'
             self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz)
 
