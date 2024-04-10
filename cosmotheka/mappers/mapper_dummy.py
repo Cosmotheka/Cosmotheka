@@ -75,7 +75,7 @@ class MapperDummy(MapperBase):
 
     def get_nz(self, dz=0):
         if self.dndz is None:
-            data_path = 'cosmoteka/tests/data/'
+            data_path = 'cosmotheka/tests/data/'
             if self.dtype == 'galaxy_density':
                 z, nz = np.loadtxt(data_path+'DESY1gc_dndz_bin0.txt',
                                    usecols=(1, 3), unpack=True)
