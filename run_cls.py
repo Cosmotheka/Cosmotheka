@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from xcell.cls.data import Data
+from cosmotheka.cls.data import Data
 import os
 import time
 import subprocess
@@ -315,7 +315,7 @@ def launch_cov(data, queue, njobs, nc, mem, onlogin=False, skip=[]):
         if os.path.isfile(fname) and (not recompute):
             continue
         pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir)
-        pyrun = '-m xcell.cls.cov {} {} {} {} {}'.format(args.INPUT, *trs)
+        pyrun = '-m cosmotheka.cls.cov {} {} {} {} {}'.format(args.INPUT, *trs)
         print(pyexec + " " + pyrun)
         os.system(pyexec + " " + pyrun)
         c += 1
@@ -330,7 +330,7 @@ def launch_to_sacc(data, name, use, queue, nc, mem, onlogin=False):
 
     comment = 'to_sacc'
     pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir)
-    pyrun = '-m xcell.cls.to_sacc {} {}'.format(args.INPUT, name)
+    pyrun = '-m comotheka.cls.to_sacc {} {}'.format(args.INPUT, name)
     if use == 'nl':
         pyrun += ' --use_nl'
     elif use == 'fiducial':

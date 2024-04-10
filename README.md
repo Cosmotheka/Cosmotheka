@@ -1,7 +1,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/xC-ell/xCell/badge.svg?branch=master)](https://coveralls.io/github/xC-ell/xCell?branch=master)
-![](https://raw.githubusercontent.com/JaimeRZP/Cosmoteka_tutorials/master/docs/src/assets/cosmoteka_logo.png)
+![](https://raw.githubusercontent.com/Cosmotheka/Cosmotheka_tutorials/master/docs/src/assets/cosmoteka_logo.png)
 
-Welcome to the Cosmoteka, the largest repository of consistently combined angular power spectra! 
+Welcome to the Cosmotheka, the largest repository of consistently combined angular power spectra! 
 
 # Mappers
 | | | 
@@ -37,13 +37,12 @@ Welcome to the Cosmoteka, the largest repository of consistently combined angula
 | ```WIxSC```       | Galaxy clustering                 | [Bilicki et al, 2016](https://arxiv.org/abs/1607.01182)               | [catalogue](http://ssa.roe.ac.uk/WISExSCOS.html)                                                  | D. Alonso              |
 
 # Design Philosophy
-![](https://raw.githubusercontent.com/JaimeRZP/Cosmoteka_tutorials/master/docs/src/assets/Cosmoteka_schematic_v3.png)
+![](https://raw.githubusercontent.com/Cosmotheka/Cosmotheka_tutorials/master/docs/src/assets/Cosmoteka_schematic_v3.png)
 
-Cosmoteka is a single pipeline that processes catalogue level data from a wide variety of surveys and measures their angular power spectra and covariances in a consistent manner. Cosmoteka heavily relies on `NaMaster`.
+Cosmotheka is a single pipeline that processes catalogue level data from a wide variety of surveys and measures their angular power spectra and covariances in a consistent manner. Cosmotheka heavily relies on `NaMaster`.
 
-Cosmoteka is designed to allow for the largest amount of modularity possible to encourage open-source community development. Inside of each module, Cosmoteka follows an object-oriented approach. Thus, given a configuration file or dictionary, the user can instantiate a class that constains all the methods needed to create a sky map (mappers), to estimate the angular power spectrum of two fields (cl) or their covariance (cov).
+Cosmotheka is designed to allow for the largest amount of modularity possible to encourage open-source community development. Inside of each module, Cosmotheka follows an object-oriented approach. Thus, given a configuration file or dictionary, the user can instantiate a class that constains all the methods needed to create a sky map (mappers), to estimate the angular power spectrum of two fields (cl) or their covariance (cov).
 
-Cosmoteka is fundamentally divided in two modules, `cls` and `mappers`, which can be thought as the brain and muscles of the same organism respecively. `cls` processes the demands in the configuration file and instantiates the relevant `mappers`. Each  mapper then projects their corresponding catalogue into a `NaMaster` field taking into account the beams, contaminants and masks. Once the `NaMaster` fields are computed, `cls` orchestrates the computation of the angular power spectra and their covariance. A brief description of the role of each module inside `cls` can be found in the table below. For a more detailed description of the role of the  `cls` modules as well as the individual mappers please visit the documentation of Cosmoteka.
 
 | Module                | function                                                                                                                             |
 | -----------           | :-----------                                                                                                                         |
@@ -88,9 +87,9 @@ Looking forward to seeing your name below!
 | Carlos Garcia-Garcia | Jaime Ruiz-Zapatero | David Alonso| Felipe Oliveira-Franco |
 | Lead angular power spectra <br /> and covariance code designer. <br /> Mappers| Mapper Design & Mappers | Mapper Design & Mappers | Mappers |
 
-# Citing Cosmoteka
+# Citing Cosmotheka
 
-We are currently working on a Cosmoteka paper presenting the library in detail to the astronomy comunity. 
+We are currently working on a Cosmotheka paper presenting the library in detail to the astronomy comunity. 
 In the mean time please cite:
 ```
 @ARTICLE{2021JCAP...10..030G,
