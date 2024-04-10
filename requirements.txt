@@ -1,6 +1,7 @@
 cython
 numpy
 scipy
+cython
 scikit-learn
 flake8
 astropy
