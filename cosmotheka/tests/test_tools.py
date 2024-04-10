@@ -6,14 +6,14 @@ import numpy as np
 import os
 import pytest
 
-tmpdir = 'xcell/tests/cls/'
+tmpdir = 'cosmotheka/tests/cls/'
 dummyfile = tmpdir + 'dummyfile.fits'
 
 
 def get_wsp(cwsp=False):
     b = nmt.NmtBin(nside=32, nlb=10)
 
-    mask = hp.read_map('xcell/tests/data/mask1.fits')
+    mask = hp.read_map('cosmotheka/tests/data/mask1.fits')
     f = nmt.NmtField(mask, [mask], spin=0, n_iter=0)
 
     w = nmt.NmtWorkspace()

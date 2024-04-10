@@ -6,8 +6,8 @@ from astropy.table import Table
 
 
 def get_config():
-    return {'data_catalog': 'xcell/tests/data/catalog_CatWISE.fits',
-            'mask_sources': 'xcell/tests/data/MASKS_exclude_master_final.fits',
+    return {'data_catalog': 'cosmotheka/tests/data/catalog_CatWISE.fits',
+            'mask_sources': 'cosmotheka/tests/data/MASKS_exclude_master_final.fits',
             'nside': 32, 'mask_name': 'mask', 'coords': 'C',
             'apply_ecliptic_correction': True}
 
@@ -20,13 +20,13 @@ def make_fake_data():
     c = Table({'ra': ra,
                'dec': dec,
                'w1': flux})
-    c.write('xcell/tests/data/catalog_CatWISE.fits', overwrite=True)
+    c.write('cosmotheka/tests/data/catalog_CatWISE.fits', overwrite=True)
 
 
 def clean_fake_data():
     for fn in ['catalog_CatWISE.fits',
                'mask_mask_coordC_ns32.fits.gz']:
-        fname = f'xcell/tests/data/{fn}'
+        fname = f'cosmotheka/tests/data/{fn}'
         if os.path.isfile(fname):
             os.remove(fname)
 
@@ -105,11 +105,11 @@ def test_get_spin():
 
 def test_rerun():
     config = get_config()
-    config['path_rerun'] = 'xcell/tests/data/'
+    config['path_rerun'] = 'cosmotheka/tests/data/'
     config.pop('mask_sources')
     m = xc.mappers.MapperCatWISE(config)
     msk = m.get_mask()
-    fn = 'xcell/tests/data/mask_mask_coordC_ns32.fits.gz'
+    fn = 'cosmotheka/tests/data/mask_mask_coordC_ns32.fits.gz'
     mskb = hp.read_map(fn)
     assert (msk == mskb).all()
     os.remove(fn)

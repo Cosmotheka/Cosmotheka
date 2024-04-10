@@ -5,9 +5,9 @@ import os
 
 
 def get_config():
-    return {'data_catalog': 'xcell/tests/data/catalog.fits',
-            'file_mask': 'xcell/tests/data/map.fits',
-            'file_nz': 'xcell/tests/data/2pt_NG_mcal_1110.fits',
+    return {'data_catalog': 'cosmotheka/tests/data/catalog.fits',
+            'file_mask': 'cosmotheka/tests/data/map.fits',
+            'file_nz': 'cosmotheka/tests/data/2pt_NG_mcal_1110.fits',
             'coords': 'C', 'zbin': 2, 'nside': 32,
             'mask_name': 'mask'}
 
@@ -51,7 +51,7 @@ def test_get_mask():
 
 def test_get_signal_map():
     config = get_config()
-    config['path_rerun'] = 'xcell/tests/data/'
+    config['path_rerun'] = 'cosmotheka/tests/data/'
     m = xc.mappers.MapperDESY1gc(config)
     d = m.get_signal_map()
     assert len(d) == 1
@@ -59,7 +59,7 @@ def test_get_signal_map():
     assert np.all(np.fabs(d) < 1E-5)
 
     # Test rerun
-    fn = 'xcell/tests/data/DESY1gc_bin2_signal_map_coordC_ns32.fits.gz'
+    fn = 'cosmotheka/tests/data/DESY1gc_bin2_signal_map_coordC_ns32.fits.gz'
     assert np.all(d == hp.read_map(fn))
     os.remove(fn)
 

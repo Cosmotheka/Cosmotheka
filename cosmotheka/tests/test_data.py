@@ -15,7 +15,7 @@ def read_yaml_file(file):
 
 
 def get_input_file():
-    return './xcell/tests/data/desy1_ebossqso_p18cmbk.yml'
+    return './cosmotheka/tests/data/desy1_ebossqso_p18cmbk.yml'
 
 
 def get_config_dict():
@@ -43,7 +43,7 @@ def remove_yml_file(config):
 
 def remove_outdir(config):
     outdir = config['output']
-    if outdir != './xcell/tests/cls/':
+    if outdir != './cosmotheka/tests/cls/':
         raise ValueError('Outdir looks odd. Not removing it as precaution')
     elif os.path.isdir(outdir):
         shutil.rmtree(outdir)
@@ -59,7 +59,7 @@ def get_tracer_pair_iterator(data):
 def test_input_from_another_file():
     # This tests whether we can load yaml files that
     # include other yaml files within them.
-    d = Data('xcell/tests/data/conftest.yml')
+    d = Data('cosmotheka/tests/data/conftest.yml')
     assert d.data['tracers']['DESgc__1']['bias'] == 1.76
     remove_yml_file(d.data)
 
@@ -68,7 +68,7 @@ def test_input_cls_section():
     d = get_data()
     data = d.data.copy()
     tmat = d.get_tracer_matrix()
-    fname = './xcell/tests/cls/mat.npz'
+    fname = './cosmotheka/tests/cls/mat.npz'
 
     # Normal use: pass a matrix with everything
     surveys = ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
@@ -195,7 +195,7 @@ def test_get_clcov_from_data_matrix():
 def test_get_requested_survey_cls_matrix():
     d = get_data()
     data = d.data
-    fname = './xcell/tests/cls/mat.npz'
+    fname = './cosmotheka/tests/cls/mat.npz'
 
     surveys = ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
     cls_matrix = [[1, 2, 0, 2], [2, 2, 0, 2], [0, 0, 0, 0], [2, 2, 0, 0]]
@@ -235,7 +235,7 @@ def test_get_requested_survey_cls_matrix():
 
 def test_load_survey_cls_matrix():
     d = get_data()
-    fname = './xcell/tests/cls/mat.npz'
+    fname = './cosmotheka/tests/cls/mat.npz'
 
     # Normal use: pass a matrix with everything
     surveys = ['DESgc', 'DESwl', 'eBOSS', 'PLAcv']
@@ -341,7 +341,7 @@ def test_initizalization():
 
     config['bpw_edges'] = [0, 10]
     data2 = Data(data=config, override=True)
-    assert os.path.isfile('xcell/tests/cls/data.yml')
+    assert os.path.isfile('cosmotheka/tests/cls/data.yml')
     assert data2.data['bpw_edges'] == [0, 10]
     remove_yml_file(config)
 
@@ -380,7 +380,7 @@ def test_get_tracers_used():
     config = data.data
     tracers_for_cl = data.get_tracers_used()
 
-    # In the xcell/tests/data/desy1_ebossqso_p18cmbk.yml file no eBOSS tracer
+    # In the cosmotheka/tests/data/desy1_ebossqso_p18cmbk.yml file no eBOSS tracer
     # is used.
     trs = ['DESgc', 'DESwl', 'PLAcv']
     tracers_for_cl_test = []

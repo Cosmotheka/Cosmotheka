@@ -7,7 +7,7 @@ import pytest
 
 
 def get_config(wbeam=True):
-    path = 'xcell/tests/data/'
+    path = 'cosmotheka/tests/data/'
     c = {'file_map': path+'act_zeros.fits.gz',
          'file_mask': path+'act_zeros.fits.gz',
          'file_noise': path+'act_zeros.fits.gz',
@@ -45,7 +45,7 @@ def test_get_dtype(cls, typ):
                                  (xc.mappers.MapperACTk)])
 def test_get_signal_map(cls):
     conf = get_config()
-    conf['path_rerun'] = 'xcell/tests/data/'
+    conf['path_rerun'] = 'cosmotheka/tests/data/'
     m = cls(conf)
     mb_pxll = enmap.read_map(conf['file_map'])
     mb = [reproject.healpix_from_enmap(mb_pxll,
@@ -54,7 +54,7 @@ def test_get_signal_map(cls):
     mm = m.get_signal_map()[0]
     assert (len(mm)/12)**(1/2) == 32
     assert (mb == mm).all()
-    fn = 'xcell/tests/data/ACT_test_signal_map_coordC_ns32.fits.gz'
+    fn = 'cosmotheka/tests/data/ACT_test_signal_map_coordC_ns32.fits.gz'
     mrerun = hp.read_map(fn)
     assert (mrerun == mb).all()
     os.remove(fn)
@@ -65,7 +65,7 @@ def test_get_signal_map(cls):
                                  (xc.mappers.MapperACTk)])
 def test_get_mask(cls):
     conf = get_config()
-    conf['path_rerun'] = 'xcell/tests/data/'
+    conf['path_rerun'] = 'cosmotheka/tests/data/'
     m = cls(conf)
     mb_pxll = enmap.read_map(conf['file_mask'])
     mb = [reproject.healpix_from_enmap(mb_pxll,
@@ -74,7 +74,7 @@ def test_get_mask(cls):
     mm = m.get_mask()
     assert (len(mm)/12)**(1/2) == 32
     assert (mb == mm).all()
-    fn = 'xcell/tests/data/mask_mask_coordC_ns32.fits.gz'
+    fn = 'cosmotheka/tests/data/mask_mask_coordC_ns32.fits.gz'
     mrerun = hp.read_map(fn)
     assert (mrerun == mb).all()
     os.remove(fn)
@@ -86,11 +86,11 @@ def test_get_beam(cls):
     from scipy.interpolate import interp1d
     conf = get_config()
     conf['beam_info'] = [{'type': 'Custom',
-                          'file': 'xcell/tests/data/custom_beam_act.txt'}]
-    conf['path_rerun'] = 'xcell/tests/data/'
+                          'file': 'cosmotheka/tests/data/custom_beam_act.txt'}]
+    conf['path_rerun'] = 'cosmotheka/tests/data/'
     m = cls(conf)
     beam = m.get_beam()
-    beamm_file = np.loadtxt('xcell/tests/data/custom_beam_act.txt')
+    beamm_file = np.loadtxt('cosmotheka/tests/data/custom_beam_act.txt')
     beamm = np.transpose(beamm_file)[1]
     ells = np.transpose(beamm_file)[0]
     beamm_itp = interp1d(ells, np.log(beamm),

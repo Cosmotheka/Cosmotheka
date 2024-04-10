@@ -171,7 +171,7 @@ def test_cov_ng_1h():
     pr = ccl.halos.HaloProfileHOD(cm, lMmin_0=12.1,
                                   lM1_p=0.1, bg_0=1.2)
     prof2pt = ccl.halos.Profile2ptHOD()
-    z, nz = np.loadtxt('xcell/tests/data/DESY1gc_dndz_bin0.txt',
+    z, nz = np.loadtxt('cosmotheka/tests/data/DESY1gc_dndz_bin0.txt',
                        usecols=(1, 3), unpack=True)
     tr = ccl.NumberCountsTracer(cosmo, False, dndz=(z, nz),
                                 bias=(z, np.ones_like(z)))
@@ -630,7 +630,7 @@ def test_cov_mmarg():
     # Marginalized covariance term
     covmargb = 4*sm**2*cl[:, None]*cl[None, :]
 
-    # Do with xCell (it is ordered as in NaMaster)
+    # Do with cosmotheka (it is ordered as in NaMaster)
     covc = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
     covmarg = covc.get_covariance_m_marg()
 
@@ -771,13 +771,13 @@ def test_clfid_against_ccl(tr1, tr2):
 
     def get_ccl_tracer(tr):
         if tr == 'galaxy_density':
-            z, nz = np.loadtxt('xcell/tests/data/DESY1gc_dndz_bin0.txt',
+            z, nz = np.loadtxt('cosmotheka/tests/data/DESY1gc_dndz_bin0.txt',
                                usecols=(1, 3), unpack=True)
             t = ccl.NumberCountsTracer(cosmo, False, dndz=(z, nz),
                                        bias=(z, np.ones_like(z)),
                                        mag_bias=(z, np.ones_like(z)))
         elif tr == 'galaxy_shear':
-            z, nz = np.loadtxt('xcell/tests/data/Nz_DIR_z0.1t0.3.asc',
+            z, nz = np.loadtxt('cosmotheka/tests/data/Nz_DIR_z0.1t0.3.asc',
                                usecols=(0, 1), unpack=True)
             t = ccl.WeakLensingTracer(cosmo, dndz=(z, nz))
         elif tr == 'cmb_convergence':
@@ -816,7 +816,7 @@ def test_clfid_halomod(tr1, tr2):
                                                   'bg_0': 1.2}
             profs[tr] = ccl.halos.HaloProfileHOD(cm, lMmin_0=12.1,
                                                  lM1_p=0.1, bg_0=1.2)
-            z, nz = np.loadtxt('xcell/tests/data/DESY1gc_dndz_bin0.txt',
+            z, nz = np.loadtxt('cosmotheka/tests/data/DESY1gc_dndz_bin0.txt',
                                usecols=(1, 3), unpack=True)
             ccltr[tr] = ccl.NumberCountsTracer(cosmo, False, dndz=(z, nz),
                                                bias=(z, np.ones_like(z)))
@@ -828,7 +828,7 @@ def test_clfid_halomod(tr1, tr2):
             normed[tr] = False
         elif tr == 'galaxy_shear':
             profs[tr] = pNFW
-            z, nz = np.loadtxt('xcell/tests/data/Nz_DIR_z0.1t0.3.asc',
+            z, nz = np.loadtxt('cosmotheka/tests/data/Nz_DIR_z0.1t0.3.asc',
                                usecols=(0, 1), unpack=True)
             ccltr[tr] = ccl.WeakLensingTracer(cosmo, dndz=(z, nz))
             normed[tr] = True

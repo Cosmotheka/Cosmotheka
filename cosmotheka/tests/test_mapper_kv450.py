@@ -5,9 +5,9 @@ import os
 
 
 def get_config(mode='shear'):
-    return {'data_catalogs': ['xcell/tests/data/catalog.fits',
-                              'xcell/tests/data/catalog_stars.fits'],
-            'file_nz': 'xcell/tests/data/Nz_DIR_z0.1t0.3.asc',
+    return {'data_catalogs': ['cosmotheka/tests/data/catalog.fits',
+                              'cosmotheka/tests/data/catalog_stars.fits'],
+            'file_nz': 'cosmotheka/tests/data/Nz_DIR_z0.1t0.3.asc',
             'zbin': 0, 'nside': 32, 'mode': mode,
             'mask_name': 'mask', 'coords': 'C'}
 
@@ -28,18 +28,18 @@ def get_es():
 
 def test_rerun():
     config = get_config()
-    config['path_rerun'] = 'xcell/tests/data/'
+    config['path_rerun'] = 'cosmotheka/tests/data/'
     ifile = 0
-    while os.path.isfile(f'xcell/tests/data/KV450_bin{ifile}_cat.fits'):
-        os.remove(f'xcell/tests/data/KV450_bin{ifile}_cat.fits')
+    while os.path.isfile(f'cosmotheka/tests/data/KV450_bin{ifile}_cat.fits'):
+        os.remove(f'cosmotheka/tests/data/KV450_bin{ifile}_cat.fits')
         ifile += 1
     m = xc.mappers.MapperKV450(config)
     m.get_catalog()
-    assert os.path.isfile('xcell/tests/data/KV450_bin0_cat.fits')
+    assert os.path.isfile('cosmotheka/tests/data/KV450_bin0_cat.fits')
     ifile = 0
     # Cleanup
-    while os.path.isfile(f'xcell/tests/data/KV450_bin{ifile}_cat.fits'):
-        os.remove(f'xcell/tests/data/KV450_bin{ifile}_cat.fits')
+    while os.path.isfile(f'cosmotheka/tests/data/KV450_bin{ifile}_cat.fits'):
+        os.remove(f'cosmotheka/tests/data/KV450_bin{ifile}_cat.fits')
         ifile += 1
 
     # Non-exsisting fits files - read from rerun

@@ -7,11 +7,11 @@ import glob
 
 def get_config(mode='shear', w_stars=False):
     if w_stars:
-        fname = 'xcell/tests/data/catalog_stars.fits'
+        fname = 'cosmotheka/tests/data/catalog_stars.fits'
     else:
-        fname = 'xcell/tests/data/catalog.fits'
+        fname = 'cosmotheka/tests/data/catalog.fits'
     return {'data_catalog': fname,
-            'file_nz': 'xcell/tests/data/Nz_DIR_z0.1t0.3.asc',
+            'file_nz': 'cosmotheka/tests/data/Nz_DIR_z0.1t0.3.asc',
             'zbin': 0, 'nside': 32, 'mask_name': 'mask',
             'coords': 'C', 'mode': mode,
             'e1_flag': 'bias_corrected_e1',
@@ -44,7 +44,7 @@ def remove_rerun(predir):
 
 
 def test_rerun():
-    predir = 'xcell/tests/data/'
+    predir = 'cosmotheka/tests/data/'
     config = get_config()
     config['path_rerun'] = predir
     prefix = f'{predir}KiDS1000_bin0'
@@ -133,7 +133,7 @@ def test_get_nl_coupled():
 def test_get_nz():
     m = get_mapper()
     z, nz = m.get_nz()
-    zb, nzb = np.loadtxt("xcell/tests/data/Nz_DIR_z0.1t0.3.asc",
+    zb, nzb = np.loadtxt("cosmotheka/tests/data/Nz_DIR_z0.1t0.3.asc",
                          unpack=True)[:2]
     assert np.all(z == zb)
     assert np.all(nz == nzb)

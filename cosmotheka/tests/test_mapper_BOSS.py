@@ -4,10 +4,10 @@ import healpy as hp
 
 
 def get_config():
-    return {'data_catalogs': ['xcell/tests/data/catalog.fits',
-                              'xcell/tests/data/catalog.fits'],
-            'random_catalogs': ['xcell/tests/data/catalog.fits',
-                                'xcell/tests/data/catalog.fits'],
+    return {'data_catalogs': ['cosmotheka/tests/data/catalog.fits',
+                              'cosmotheka/tests/data/catalog.fits'],
+            'random_catalogs': ['cosmotheka/tests/data/catalog.fits',
+                                'cosmotheka/tests/data/catalog.fits'],
             'z_edges': [0, 1.5], 'nside': 32, 'mask_name': 'mask',
             'coords': 'C', 'SDSS_name': 'dummy'}
 

@@ -6,12 +6,12 @@ import os
 
 
 def get_config():
-    return {'data_catalogs': ['xcell/tests/data/catalog.fits',
-                              'xcell/tests/data/catalog.fits'],
-            'completeness_map': 'xcell/tests/data/map.fits',
-            'binary_mask': 'xcell/tests/data/map.fits',
+    return {'data_catalogs': ['cosmotheka/tests/data/catalog.fits',
+                              'cosmotheka/tests/data/catalog.fits'],
+            'completeness_map': 'cosmotheka/tests/data/map.fits',
+            'binary_mask': 'cosmotheka/tests/data/map.fits',
             'num_z_bins': 500, 'coords': 'C',
-            'star_map': 'xcell/tests/data/map.fits',
+            'star_map': 'cosmotheka/tests/data/map.fits',
             'zbin': 0, 'nside': 32, 'mask_name': 'mask'}
 
 
@@ -27,23 +27,23 @@ def test_smoke():
 
 def test_rerun():
     conf = get_config()
-    conf['path_rerun'] = 'xcell/tests/data/'
+    conf['path_rerun'] = 'cosmotheka/tests/data/'
     m = xc.mappers.MapperDELS(conf)
     cat = m.get_catalog()
-    fn = 'xcell/tests/data/DELS_bin0_cat.fits'
+    fn = 'cosmotheka/tests/data/DELS_bin0_cat.fits'
     catb = Table.read(fn)
     assert len(catb) == len(cat)
     os.remove(fn)
 
     dndz = m.get_nz()
-    fn = 'xcell/tests/data/DELS_bin0_dndz.npz'
+    fn = 'cosmotheka/tests/data/DELS_bin0_dndz.npz'
     d = np.load(fn)
     assert (dndz[0] == d['z_mid'][d['z_mid'] >= 0]).all()
     assert (dndz[1] == d['nz'][d['z_mid'] >= 0]).all()
     os.remove(fn)
 
     d = m.get_signal_map(apply_galactic_correction=False)
-    fn = 'xcell/tests/data/DELS_bin0_signal_map_' + \
+    fn = 'cosmotheka/tests/data/DELS_bin0_signal_map_' + \
          'apply_galactic_correctionFalse_coordC_ns32.fits.gz'
     assert np.all(d == hp.read_map(fn))
     os.remove(fn)

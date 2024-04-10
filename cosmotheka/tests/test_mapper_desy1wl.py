@@ -7,9 +7,9 @@ from astropy.table import Table, hstack
 
 
 def get_config():
-    return {'data_cat': 'xcell/tests/data/catalog.fits',
-            'zbin_cat': 'xcell/tests/data/cat_zbin.fits',
-            'file_nz': 'xcell/tests/data/cat_zbin.fits',
+    return {'data_cat': 'cosmotheka/tests/data/catalog.fits',
+            'zbin_cat': 'cosmotheka/tests/data/cat_zbin.fits',
+            'file_nz': 'cosmotheka/tests/data/cat_zbin.fits',
             'zbin': 1, 'nside': 32, 'mask_name': 'mask',
             'coords': 'C'}
 
@@ -69,7 +69,7 @@ def test_load_catalog():
 
 def test_rerun():
     config = get_config()
-    prerun = 'xcell/tests/data/'
+    prerun = 'cosmotheka/tests/data/'
     config['path_rerun'] = prerun
     remove_rerun(prerun)
     # Initialize mapper

@@ -188,9 +188,9 @@ class Cov():
 
         Parameters
         ----------
-        clab: xcell.cls.Cl
+        clab: cosmotheka.cls.Cl
             Instance of the Cl class for fields `a1 and `b`.
-        clab_fid: xcell.cls.ClFid or xcell.cls.Cl
+        clab_fid: cosmotheka.cls.ClFid or cosmotheka.cls.Cl
             Instance of the ClFid class for fields `a1 and `b`. If it is not an
             instance of ClFid, the data Cell will be used for the covariance.
 

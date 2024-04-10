@@ -6,10 +6,10 @@ from astropy.table import Table
 
 
 def get_config():
-    return {'data_catalog': 'xcell/tests/data/catalog_nvss.fits',
-            'mask_sources': 'xcell/tests/data/source_masks_nvss.txt',
+    return {'data_catalog': 'cosmotheka/tests/data/catalog_nvss.fits',
+            'mask_sources': 'cosmotheka/tests/data/source_masks_nvss.txt',
             'nside': 32, 'mask_name': 'mask', 'coords': 'C',
-            'redshift_catalog': 'xcell/tests/data/redshift_catalog_nvss.fits'}
+            'redshift_catalog': 'cosmotheka/tests/data/redshift_catalog_nvss.fits'}
 
 
 def make_fake_data():
@@ -20,7 +20,7 @@ def make_fake_data():
     c = Table({'RAJ2000': ra,
                'DEJ2000': dec,
                'S1_4': flux})
-    c.write('xcell/tests/data/catalog_nvss.fits', overwrite=True)
+    c.write('cosmotheka/tests/data/catalog_nvss.fits', overwrite=True)
 
     sources = 1500
     max_redshift = 5
@@ -30,12 +30,12 @@ def make_fake_data():
     flux_redshift = -2+2*np.random.rand(sources)
     b = Table({'redshift': redshift,
               'itot_1400': flux_redshift})
-    b.write('xcell/tests/data/redshift_catalog_nvss.fits', overwrite=True)
+    b.write('cosmotheka/tests/data/redshift_catalog_nvss.fits', overwrite=True)
 
 
 def clean_fake_data():
-    os.remove('xcell/tests/data/catalog_nvss.fits')
-    os.remove('xcell/tests/data/redshift_catalog_nvss.fits')
+    os.remove('cosmotheka/tests/data/catalog_nvss.fits')
+    os.remove('cosmotheka/tests/data/redshift_catalog_nvss.fits')
 
 
 def test_basic():
@@ -62,7 +62,7 @@ def test_get_mask():
 
     # Again, nothing should get masked
     config = get_config()
-    config['mask_file'] = 'xcell/tests/data/map.fits'
+    config['mask_file'] = 'cosmotheka/tests/data/map.fits'
     m = xc.mappers.MapperNVSS(config)
     d = m.get_mask()
     assert np.all(np.fabs(d-1) == 0)
@@ -71,7 +71,7 @@ def test_get_mask():
     config = get_config()
     m = xc.mappers.MapperNVSS(config)
     d = m.get_mask()
-    ra, dec, _ = np.loadtxt('xcell/tests/data/source_masks_nvss.txt',
+    ra, dec, _ = np.loadtxt('cosmotheka/tests/data/source_masks_nvss.txt',
                             unpack=True)
     ipix = hp.ang2pix(32, ra, dec, lonlat=True)
     assert np.all(d[ipix] == 0)
@@ -83,7 +83,7 @@ def test_get_signal_map():
     config['DEC_min_deg'] = -90.
     config['GLAT_max_deg'] = 0.
     config.pop('mask_sources')
-    config['path_rerun'] = 'xcell/tests/data/'
+    config['path_rerun'] = 'cosmotheka/tests/data/'
 
     m = xc.mappers.MapperNVSS(config)
     d = m.get_signal_map()
@@ -91,7 +91,7 @@ def test_get_signal_map():
     assert d.shape == (1, hp.nside2npix(m.nside))
     assert np.all(np.fabs(d) < 1E-15)
 
-    fn = 'xcell/tests/data/NVSS_signal_map_coordC_ns32.fits.gz'
+    fn = 'cosmotheka/tests/data/NVSS_signal_map_coordC_ns32.fits.gz'
     assert np.all(d == hp.read_map(fn))
     os.remove(fn)
 

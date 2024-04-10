@@ -9,7 +9,7 @@ import pytest
 import fitsio
 
 
-OUTDIR = 'xcell/tests/data/tmp/'
+OUTDIR = 'cosmotheka/tests/data/tmp/'
 INDEX_PATH = OUTDIR + 'desy3wl_index.h5'
 NZ_PATH = OUTDIR + "nz.fits"
 KINDS = ['unsheared', 'sheared_1p', 'sheared_1m', 'sheared_2p', 'sheared_2m']
@@ -77,7 +77,7 @@ def gen_index():
 
 
 def gen_nz():
-    fits = fitsio.read('xcell/tests/data/cat_zbin.fits')
+    fits = fitsio.read('cosmotheka/tests/data/cat_zbin.fits')
     with fitsio.FITS(NZ_PATH, "rw") as f:
         f.write(fits, extname="nz_source")
 

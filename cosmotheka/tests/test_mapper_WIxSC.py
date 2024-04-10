@@ -8,12 +8,12 @@ import pytest
 
 
 def get_config():
-    return {'data_catalog': 'xcell/tests/data/catalog_2mpz.fits',
-            'mask_G': 'xcell/tests/data/map.fits',
-            'star_map_G': 'xcell/tests/data/map.fits',
-            'mask_C': 'xcell/tests/data/map.fits',
-            'star_map_C': 'xcell/tests/data/map.fits',
-            'spec_sample': 'xcell/tests/data/catalog_spec_2mpz.csv',
+    return {'data_catalog': 'cosmotheka/tests/data/catalog_2mpz.fits',
+            'mask_G': 'cosmotheka/tests/data/map.fits',
+            'star_map_G': 'cosmotheka/tests/data/map.fits',
+            'mask_C': 'cosmotheka/tests/data/map.fits',
+            'star_map_C': 'cosmotheka/tests/data/map.fits',
+            'spec_sample': 'cosmotheka/tests/data/catalog_spec_2mpz.csv',
             'z_edges': [-1E-10, 0.5],
             'bin_name': '0',
             'path_rerun': '.',
@@ -54,7 +54,7 @@ def test_get_nz():
     m = get_mapper()
     m.get_catalog()
     z, nz = m.get_nz()
-    with fits.open('xcell/tests/data/catalog_2mpz.fits') as f:
+    with fits.open('cosmotheka/tests/data/catalog_2mpz.fits') as f:
         cat = Table.read(f, format='fits', memmap=True)
     h, b = np.histogram(cat['ZPHOTO_CORR'],
                         range=[0.0, 0.6], bins=150,

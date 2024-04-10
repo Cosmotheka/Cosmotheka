@@ -9,7 +9,7 @@ from cosmotheka.cls.cl import Cl, ClFid
 from cosmotheka.cls.cov import Cov
 
 # Remove previous test results
-tmpdir = './xcell/tests/cls/dummy1'
+tmpdir = './cosmotheka/tests/cls/dummy1'
 
 
 def remove_tmpdir():

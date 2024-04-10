@@ -187,7 +187,7 @@ class Theory():
             Name of the tracer
         tracer: dict
             Tracer section of the configuration
-        mapper: `:class:~xcell.mappers.MapperBase`
+        mapper: `:class:~cosmotheka.mappers.MapperBase`
             Mapper instance
 
         Return

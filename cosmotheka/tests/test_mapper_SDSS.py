@@ -6,10 +6,10 @@ import os
 
 
 def get_config():
-    c = {'data_catalogs': ['xcell/tests/data/catalog.fits',
-                           'xcell/tests/data/catalog.fits'],
-         'random_catalogs': ['xcell/tests/data/catalog.fits',
-                             'xcell/tests/data/catalog.fits'],
+    c = {'data_catalogs': ['cosmotheka/tests/data/catalog.fits',
+                           'cosmotheka/tests/data/catalog.fits'],
+         'random_catalogs': ['cosmotheka/tests/data/catalog.fits',
+                             'cosmotheka/tests/data/catalog.fits'],
          'z_edges': [0, 1.5], 'nside': 32, 'mask_name': 'mask'}
     c['nside_nl_threshold'] = 1
     c['lmin_nl_from_data'] = 10
@@ -60,9 +60,9 @@ def test_get_nl_coupled_data(m):
 
 
 def test_rerun():
-    fname_msk = 'xcell/tests/data/mask_mask_coordC_ns32.fits.gz'
-    fname_map = 'xcell/tests/data/SDSS_dummy_signal_map_coordC_ns32.fits.gz'
-    fname_nls = 'xcell/tests/data/SDSS_dummy_Nell_coordC_ns32.npz'
+    fname_msk = 'cosmotheka/tests/data/mask_mask_coordC_ns32.fits.gz'
+    fname_map = 'cosmotheka/tests/data/SDSS_dummy_signal_map_coordC_ns32.fits.gz'
+    fname_nls = 'cosmotheka/tests/data/SDSS_dummy_Nell_coordC_ns32.npz'
 
     # Cleanup just in case
     if os.path.isfile(fname_msk):
@@ -71,7 +71,7 @@ def test_rerun():
         os.remove(fname_map)
 
     c = get_config()
-    c['path_rerun'] = 'xcell/tests/data/'
+    c['path_rerun'] = 'cosmotheka/tests/data/'
     m1 = xc.mappers.MapperBOSS(c)
     msk1 = m1.get_mask()
     map1 = m1.get_signal_map()[0]

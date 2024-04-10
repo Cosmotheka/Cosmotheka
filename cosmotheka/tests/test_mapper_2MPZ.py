@@ -6,9 +6,9 @@ import pytest
 
 
 def get_config():
-    return {'data_catalog': 'xcell/tests/data/catalog_2mpz.fits',
-            'mask_C': 'xcell/tests/data/map.fits',
-            'mask_G': 'xcell/tests/data/map.fits',
+    return {'data_catalog': 'cosmotheka/tests/data/catalog_2mpz.fits',
+            'mask_C': 'cosmotheka/tests/data/map.fits',
+            'mask_G': 'cosmotheka/tests/data/map.fits',
             'z_edges': [-1E-10, 0.5],
             'path_rerun': '.',
             'coords': 'C',

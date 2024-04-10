@@ -16,24 +16,24 @@ def make_hsc_nz_data():
     c_s['SOM_weight'] = onearr
     c_s['weight_source'] = onearr
     c_s['COSMOS_photoz'] = zs
-    c_s.write("xcell/tests/data/hsc_cosmos_catalog.fits",
+    c_s.write("cosmotheka/tests/data/hsc_cosmos_catalog.fits",
               overwrite=True)
     c_p = Table()
     c_p['ID'] = ids
     c_p['PHOTOZ_BEST'] = onearr*0.5
-    c_p.write("xcell/tests/data/hsc_photoz_catalog.fits",
+    c_p.write("cosmotheka/tests/data/hsc_photoz_catalog.fits",
               overwrite=True)
 
 
 def clean_hsc_nz_data():
-    for fn in ["xcell/tests/data/hsc_cosmos_catalog.fits",
-               "xcell/tests/data/hsc_photoz_catalog.fits"]:
+    for fn in ["cosmotheka/tests/data/hsc_cosmos_catalog.fits",
+               "cosmotheka/tests/data/hsc_photoz_catalog.fits"]:
         if os.path.isfile(fn):
             os.remove(fn)
 
 
 def make_hsc_data():
-    d = Table.read('xcell/tests/data/catalog.fits')
+    d = Table.read('cosmotheka/tests/data/catalog.fits')
     ng = len(d)
     # Add new columns
     falsarr = np.zeros(ng, dtype=bool)
@@ -66,25 +66,25 @@ def make_hsc_data():
         d[f'{m}cmodel_flux'] = 11*onearr
         d[f'{m}cmodel_flux_err'] = onearr
     d['iclassification_extendedness'] = onearr
-    d.write("xcell/tests/data/hsc_catalog.fits",
+    d.write("cosmotheka/tests/data/hsc_catalog.fits",
             overwrite=True)
 
 
 def clean_hsc_data():
-    fn = "xcell/tests/data/hsc_catalog.fits"
+    fn = "cosmotheka/tests/data/hsc_catalog.fits"
     if os.path.isfile(fn):
         os.remove(fn)
 
 
 def get_config():
-    return {'data_catalogs': [['xcell/tests/data/hsc_catalog.fits']],
-            'path_rerun': 'xcell/tests/data/',
+    return {'data_catalogs': [['cosmotheka/tests/data/hsc_catalog.fits']],
+            'path_rerun': 'cosmotheka/tests/data/',
             'depth_cut': 24.5,
             'z_edges': [0., 0.5],
             'shear_mod_thr': 10,
             'bin_name': 'bin_test',
-            'fname_cosmos': 'xcell/tests/data/hsc_cosmos_catalog.fits',
-            'fnames_cosmos_ph': ['xcell/tests/data/hsc_photoz_catalog.fits'],
+            'fname_cosmos': 'cosmotheka/tests/data/hsc_cosmos_catalog.fits',
+            'fnames_cosmos_ph': ['cosmotheka/tests/data/hsc_photoz_catalog.fits'],
             'nside': 32, 'mask_name': 'mask', 'coords': 'C'}
 
 

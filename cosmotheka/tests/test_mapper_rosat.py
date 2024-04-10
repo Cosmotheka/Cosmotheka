@@ -6,9 +6,9 @@ import os
 
 
 def get_config():
-    c = {'exposure_map': 'xcell/tests/data/exp_rosat.fits',
-         'photon_list': 'xcell/tests/data/cat_rosat.fits',
-         'external_mask': 'xcell/tests/data/msk_rosat.fits',
+    c = {'exposure_map': 'cosmotheka/tests/data/exp_rosat.fits',
+         'photon_list': 'cosmotheka/tests/data/cat_rosat.fits',
+         'external_mask': 'cosmotheka/tests/data/msk_rosat.fits',
          'energy_range': [0.5, 3.0],
          'exposure_min': 100.,
          'mask_name': 'mask_ROSAT',
@@ -27,14 +27,14 @@ def make_rosat_data(e0=0., ef=4., expval=200.):
                  'dej2000': dec,
                  'energy_cor': ener,
                  'exposure_time': exp})
-    cat.write('xcell/tests/data/cat_rosat.fits', overwrite=True)
-    hp.write_map('xcell/tests/data/exp_rosat.fits', exp, overwrite=True)
-    hp.write_map('xcell/tests/data/msk_rosat.fits', msk, overwrite=True)
+    cat.write('cosmotheka/tests/data/cat_rosat.fits', overwrite=True)
+    hp.write_map('cosmotheka/tests/data/exp_rosat.fits', exp, overwrite=True)
+    hp.write_map('cosmotheka/tests/data/msk_rosat.fits', msk, overwrite=True)
 
 
 def clean_rosat_data():
     for fn in ['cat_rosat.fits', 'msk_rosat.fits', 'exp_rosat.fits']:
-        fname = f'xcell/tests/data/{fn}'
+        fname = f'cosmotheka/tests/data/{fn}'
         if os.path.isfile(fname):
             os.remove(fname)
 
@@ -62,14 +62,14 @@ def test_mask_sanity():
 
 def test_map_sanity():
     c = get_config()
-    c['path_rerun'] = 'xcell/tests/data/'
+    c['path_rerun'] = 'cosmotheka/tests/data/'
     make_rosat_data(e0=1., ef=1.5)
     m = xc.mappers.MapperROSATXray(c)
     mp = m.get_signal_map()[0]
     apix = hp.nside2pixarea(m.nside)
     assert np.all(np.fabs(mp - 1./200./apix) < 1E-5)
 
-    fn = 'xcell/tests/data/ROSATXray_signal_map_coordC_ns32.fits.gz'
+    fn = 'cosmotheka/tests/data/ROSATXray_signal_map_coordC_ns32.fits.gz'
     assert np.all(mp == hp.read_map(fn))
     os.remove(fn)
     clean_rosat_data()

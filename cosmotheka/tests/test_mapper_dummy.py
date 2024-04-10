@@ -7,7 +7,7 @@ import shutil
 import os
 
 
-OUTDIR = 'xcell/tests/data/tmp/'
+OUTDIR = 'cosmotheka/tests/data/tmp/'
 
 
 def setup_module():
@@ -46,13 +46,13 @@ def get_cl(dtype):
         return np.ones(3*config['nside'])
 
     if config['dtype'] == 'galaxy_density':
-        z, nz = np.loadtxt('xcell/tests/data/DESY1gc_dndz_bin0.txt',
+        z, nz = np.loadtxt('cosmotheka/tests/data/DESY1gc_dndz_bin0.txt',
                            usecols=(1, 3), unpack=True)
         b = np.ones_like(z)
         tracer = ccl.NumberCountsTracer(cosmo, dndz=(z, nz), bias=(z, b),
                                         has_rsd=None)
     elif config['dtype'] == 'galaxy_shear':
-        z, nz = np.loadtxt('xcell/tests/data/Nz_DIR_z0.1t0.3.asc',
+        z, nz = np.loadtxt('cosmotheka/tests/data/Nz_DIR_z0.1t0.3.asc',
                            usecols=(0, 1), unpack=True)
         tracer = ccl.WeakLensingTracer(cosmo, dndz=(z, nz))
     elif config['dtype'] == 'cmb_convergence':
@@ -111,7 +111,7 @@ def test_get_nz(dtyp):
 def test_get_signal_map():
     m = get_mapper()
     d = m.get_signal_map()
-    d0 = [hp.read_map('xcell/tests/data/dummy_signal_s0.fits')]
+    d0 = [hp.read_map('cosmotheka/tests/data/dummy_signal_s0.fits')]
 
     # galaxy_density
     assert len(d) == 1
@@ -121,8 +121,8 @@ def test_get_signal_map():
     m = get_mapper('galaxy_shear')
     d = m.get_signal_map()
     assert len(d) == 2
-    d0 = [hp.read_map('xcell/tests/data/dummy_signal_s2_0.fits'),
-          hp.read_map('xcell/tests/data/dummy_signal_s2_1.fits')]
+    d0 = [hp.read_map('cosmotheka/tests/data/dummy_signal_s2_0.fits'),
+          hp.read_map('cosmotheka/tests/data/dummy_signal_s2_1.fits')]
     assert np.std(d[0] - d0[0]) / np.std(d[0]) < 1e-2
     assert np.std(d[1] - d0[1]) / np.std(d[1]) < 1e-2
 
