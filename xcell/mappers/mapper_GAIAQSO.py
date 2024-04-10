@@ -1,10 +1,8 @@
-from .utils import get_map_from_points, rotate_mask
+from .utils import get_map_from_points
 from .mapper_base import MapperBase
-from astropy.table import Table, vstack
-from scipy.integrate import simps
+from astropy.table import Table
 import numpy as np
 import healpy as hp
-import os
 
 
 class MapperGAIAQSO(MapperBase):
@@ -55,7 +53,7 @@ class MapperGAIAQSO(MapperBase):
         return self.cat_data
 
     def _get_mask(self):
-        msk = hp.ud_grade(hp.read_map(self.config['selection']),
+        msk = hp.ud_grade(hp.read_map(self.config[f'selection_{self.coords}']),
                           nside_out=self.nside)
         msk_thr = self.config.get('mask_threshold', 0.5)
         msk = msk / np.amax(msk)
@@ -77,7 +75,7 @@ class MapperGAIAQSO(MapperBase):
 
     def _get_angmask(self):
         if self.mskflag is None:
-            cat = self.get_catalog()
+            self.get_catalog()
             mask = self.get_mask()
             ipix = self._get_ipix()
             self.mskflag = mask[ipix] > 0
@@ -94,7 +92,7 @@ class MapperGAIAQSO(MapperBase):
 
         if self.config.get('nz_spec', False):
             nz, b = np.histogram(zm, range=[0., 4.5],
-                                bins=self.num_z_bins)
+                                 bins=self.num_z_bins)
             zs = 0.5 * (b[:-1] + b[1:])
         else:
             zs = np.linspace(0., 4.5, self.num_z_bins)
