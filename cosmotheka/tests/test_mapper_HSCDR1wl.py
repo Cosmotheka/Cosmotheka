@@ -78,7 +78,7 @@ def clean_hsc_data():
 
 
 def get_config():
-    data_path = 'cosmoteka/tests/data/'
+    data_path = 'cosmotheka/tests/data/'
     return {'data_catalogs': [[data_path+'hsc_catalog.fits']],
             'path_rerun': data_path,
             'depth_cut': 24.5,
