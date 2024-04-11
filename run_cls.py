@@ -277,10 +277,10 @@ def launch_cls(data, queue, njobs, nc, mem, fiducial=False, onlogin=False, skip=
 
         if not fiducial:
             pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir)
-            pyrun = '-m xcell.cls.cl {} {} {}'.format(args.INPUT, tr1, tr2)
+            pyrun = '-m cosmotheka.cls.cl {} {} {}'.format(args.INPUT, tr1, tr2)
         else:
             pyexec = get_pyexec(comment, nc, queue, 2, onlogin, outdir)
-            pyrun = '-m xcell.cls.cl {} {} {} --fiducial'.format(args.INPUT, tr1, tr2)
+            pyrun = '-m cosmotheka.cls.cl {} {} {} --fiducial'.format(args.INPUT, tr1, tr2)
 
         print(pyexec + " " + pyrun)
         os.system(pyexec + " " + pyrun)
