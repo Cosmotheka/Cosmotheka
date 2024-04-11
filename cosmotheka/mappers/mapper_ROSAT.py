@@ -47,17 +47,39 @@ class MapperROSATXray(MapperBase):
         self.rot = self._get_rotator('C')
         self.fname_expmap = config['exposure_map']
         self.fname_pholist = config['photon_list']
+        self.fname_pscat = config['point_source_catalog']
         self.erange = config.get('energy_range', [0.5, 3.0])
         self.explimit = config.get('exposure_min', 100.0)
         self.mask_external = config.get('external_mask', None)
-        self.npix = hp.nside2npix(self.nside)
+        self.mask_ps = config.get('mask_point_sources', False)
 
+        # Nside for point source masking. This is fixed because the
+        # corresponding pixel size is similar to the ROSAT PSF.
+        self.nside_ps = 2048
+        self.count_map = None
         self.expmap = None
         self.pholist = None
         # signal_map is a map of the countrate
         self.nl_coupled = None
+        self.ps_mask = None
 
-    def get_pholist(self):
+    def _get_ps_mask(self):
+        """ Returns point-source mask at nside=2048
+        """
+        if self.ps_mask is None:
+            f = fitsio.FITS(self.fname_pscat)
+            cat = f[1].read()
+            # Flux cut
+            cat = cat[cat['RATE'] >
+                      self.config['point_source_flux_cut_ctps']]
+            nmap = get_map_from_points(cat, self.nside_ps,
+                                       ra_name='RA_DEG',
+                                       dec_name='DEC_DEG',
+                                       rot=self.rot)
+            self.ps_mask = (nmap == 0).astype(float)
+        return self.ps_mask
+
+    def _get_pholist(self):
         """
         Returns the mapper's catalog \
         after applying energy boundaries. \
@@ -88,14 +110,36 @@ class MapperROSATXray(MapperBase):
             self.expmap = hp.ud_grade(mp, nside_out=self.nside)
         return self.expmap
 
+    def _get_count_map(self):
+        if self.count_map is None:
+            cat = self._get_pholist()
+            if self.mask_ps:
+                count_map = get_map_from_points(cat, self.nside_ps,
+                                                ra_name='raj2000',
+                                                dec_name='dej2000',
+                                                rot=self.rot)
+                # Mask point sources
+                ps_mask = self._get_ps_mask()
+                count_map = count_map * ps_mask
+                # Down/up grade to desired resolution
+                count_map = hp.ud_grade(count_map, nside_out=self.nside,
+                                        power=-2)
+                # Correct for loss of area
+                ps_mask = hp.ud_grade(ps_mask, nside_out=self.nside)
+                good = ps_mask > 0
+                count_map[good] /= ps_mask[good]
+            else:
+                count_map = get_map_from_points(cat, self.nside,
+                                                ra_name='raj2000',
+                                                dec_name='dej2000',
+                                                rot=self.rot)
+            self.count_map = count_map
+        return self.count_map
+
     def _get_signal_map(self):
-        cat = self.get_pholist()
         xpmap = self.get_expmap()
         mask = self.get_mask()
-        count_map = get_map_from_points(cat, self.nside,
-                                        ra_name='raj2000',
-                                        dec_name='dej2000',
-                                        rot=self.rot)
+        count_map = self._get_count_map()
         signal_map = np.zeros(self.npix)
         goodpix = mask > 0.0
         signal_map[goodpix] = count_map[goodpix] / xpmap[goodpix]
@@ -113,17 +157,18 @@ class MapperROSATXray(MapperBase):
             msk = rotate_mask(msk, self.rot, binarize=True)
             msk = hp.ud_grade(msk, nside_out=self.nside)
             mask *= msk
+        if self.mask_ps:
+            # Mask point sources
+            ps_mask = hp.ud_grade(self._get_ps_mask(),
+                                  nside_out=self.nside)
+            mask *= ps_mask
         return mask
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
-            cat = self.get_pholist()
             xpmap = self.get_expmap()
             mask = self.get_mask()
-            count_map = get_map_from_points(cat, self.nside,
-                                            ra_name='raj2000',
-                                            dec_name='dej2000',
-                                            rot=self.rot)
+            count_map = self._get_count_map()
             goodpix = mask > 0.0
             # Mean count rate
             # CR_mean = \sum n_p / \sum exp_p
