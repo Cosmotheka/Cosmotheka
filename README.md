@@ -57,7 +57,7 @@ Cosmotheka is designed to allow for the largest amount of modularity possible to
 In order to run the code use `python3 run_cls.py input/kv450_1024.yml cls`.
 You can see the different options with `python3 run_cls.py -h`.
 
-You can run directly `xcell/cls/cl.py`, `cov.py`, `to_sacc.py` with `python3 -m` as `python3 -m xcell.cls.cl input/kv450_1024.yml KV450__0 KV450__0`.
+You can run directly `cosmotheka/cls/cl.py`, `cov.py`, `to_sacc.py` with `python3 -m` as `python3 -m cosmotheka.cls.cl input/kv450_1024.yml KV450__0 KV450__0`.
 
 More info about the sacc files in https://github.com/LSSTDESC/sacc
 
@@ -65,8 +65,10 @@ More info about the sacc files in https://github.com/LSSTDESC/sacc
 Tutorials on how to configure and use all the different mappers  to compute angular power spectra and their covariance matrix can be found [here](https://github.com/xC-ell/Cosmoteka_tutorials).
 
 # Publications
+- C. Garcia-Garcia et al., "Cosmic shear with small scales: DES-Y3, KiDS-1000 and HSC-DR1", arXiv: 2403.13794
+- G. Piccirilli et al., "Growth history and quasar bias evolution at z<3 from Quaia", arXiv: 2402.05761
 - J. Ruiz-Zapatero et al, "LimberJack.jl: auto-differentiable methods for angular power spectra analyses", arXiv:2310.08306, 2023.
--  David Alonso et al, "Constraining cosmology with the Gaia-unWISE Quasar catalogue and CMB lensing: structure growth", arXiv:2306.17748, 2023.
+- D. Alonso et al, "Constraining cosmology with the Gaia-unWISE Quasar catalogue and CMB lensing: structure growth", arXiv:2306.17748, 2023.
 - T. Ferreira et al, "X-ray - cosmic shear cross-correlations: first detection and constraints on baryonic effects", arXiv:2309.11129, 2023.
 - B. Hadzhiyska et al, "Cosmology with 6 parameters in the Stage-IV era: efficient marginalisation over nuisance parameters", arXiv:2301.11895, 2023.
 - J. Ruiz-Zapatero et al, "Analytical marginalisation over photometric redshift uncertainties in cosmic shear analyses", arXiv:2301.11978, 2023.
