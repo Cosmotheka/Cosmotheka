@@ -17,7 +17,7 @@ def get_wsp(cwsp=False):
     f = nmt.NmtField(mask, [mask], spin=0, n_iter=0)
 
     w = nmt.NmtWorkspace()
-    w.compute_coupling_matrix(f, f, bins=b, n_iter=0)
+    w.compute_coupling_matrix(f, f, bins=b)
 
     if not cwsp:
         return w

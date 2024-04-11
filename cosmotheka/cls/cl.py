@@ -339,7 +339,7 @@ class Cl(ClBase):
             f2 = nmt.NmtField(msk2, None, spin=0)
         else:
             f1, f2 = self.get_nmt_fields()
-        w.compute_coupling_matrix(f1, f2, self.b, n_iter=n_iter,
+        w.compute_coupling_matrix(f1, f2, self.b,
                                   l_toeplitz=l_toeplitz, l_exact=l_exact,
                                   dl_band=dl_band)
         tools.save_wsp(w, fname)
