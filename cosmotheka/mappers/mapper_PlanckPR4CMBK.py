@@ -2,7 +2,7 @@ from .mapper_P18CMBK import MapperP18CMBK
 import numpy as np
 
 
-class MapperPR4CMBK(MapperP18CMBK):
+class MapperPlanckPR4CMBK(MapperP18CMBK):
     """
     Note that this mapper is a child of `MapperBase`, /
     not of `MapperPlanckBase`.
@@ -18,7 +18,7 @@ class MapperPR4CMBK(MapperP18CMBK):
         - path_rerun: `".../Datasets/Planck_lensing/Lensing2018/xcell_runs"`
 
     """
-    map_name = 'PR4CMBK'
+    map_name = 'PlanckPR4CMBK'
 
     def get_cl_fiducial(self):
         raise NotImplementedError("Fiducial signal C_ell not provided for "

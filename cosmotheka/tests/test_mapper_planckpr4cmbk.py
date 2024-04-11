@@ -15,7 +15,7 @@ def get_config():
 
 def get_mapper():
     config = get_config()
-    return xc.mappers.MapperPR4CMBK(config)
+    return xc.mappers.MapperPlanckPR4CMBK(config)
 
 
 def test_get_nl_coupled():
