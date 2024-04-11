@@ -33,7 +33,7 @@ class MapperPlanckPR4CMBK(MapperP18CMBK):
         #      Nl (Array): noise power spectrum] (Array)
 
         if self.noise is None:
-            # Read noise file. Column order is: ['l', 'Nl'], 'Nl+Cl']
+            # Read noise file. Single column with Nl at integer ells
             nl = np.loadtxt(self.config['file_noise'])
             # Zero nan
             nl[0] = 0
