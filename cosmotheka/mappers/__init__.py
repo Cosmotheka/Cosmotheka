@@ -27,6 +27,8 @@ from .mapper_NVSS import MapperNVSS
 from .mapper_CatWISE import MapperCatWISE
 from .mapper_ROSAT import MapperROSATXray
 from .mapper_dummy import MapperDummy
+from .mapper_Quaia import MapperQuaia
+from .mapper_PlanckPR4CMBK import MapperPlanckPR4CMBK
 from .utils import (get_map_from_points, get_DIR_Nz,
                     get_rerun_data, save_rerun_data,
                     rotate_mask, rotate_map)

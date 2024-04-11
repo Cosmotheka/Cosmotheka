@@ -43,6 +43,8 @@ class MapperP18CMBK(MapperBase):
         if self.klm is None:
             # Read alms and rotate if needed
             klm, lmax = hp.read_alm(self.config['file_klm'], return_mmax=True)
+            # First element may be nan. Fix that.
+            klm[0] = 0+0j
             if self.rot is not None:
                 klm = self.rot.rotate_alm(klm)
             # Filter if lmax is too large

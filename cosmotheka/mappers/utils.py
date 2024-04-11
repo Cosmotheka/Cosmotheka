@@ -198,7 +198,7 @@ def get_map_from_points(cat, nside, w=None, rot=None,
 
 def get_DIR_Nz(cat_spec, cat_photo, bands, zflag,
                zrange, nz, nearest_neighbors=10, njk=100,
-               bands_photo=None):
+               bands_photo=None, get_weights=False):
     """Return the redshift distribution calibrated with DIR.
 
     Implementation of the DIR algorithm that calibrates a photometric galaxy
@@ -209,7 +209,7 @@ def get_DIR_Nz(cat_spec, cat_photo, bands, zflag,
         cat_spec (array): catalog of spectroscopic samples.
         cat_photo (array): catalog of photometric samples.
         bands (array): bands for spectroscopic and photometric samples.
-        zflag (str): name of the redshift field in the samples catalog.
+        zflag (str): name of the redshift field in the spec catalog.
         zrange (array): redshift range for the calibrated galaxy redshift
             distribution.
         nz (int): number of bins for calibrated galaxy redshift distribution.
@@ -217,12 +217,14 @@ def get_DIR_Nz(cat_spec, cat_photo, bands, zflag,
             the algorithm.
         njk (float) = 100: Loop over JK region.
         bands_photo (list): bands of phometric catalog.
+        get_weights (bool): if `True`, return also the spec catalog weights.
 
     Returns:
         tuple:
             - zz (array): position of bins in redshift
             - dndz (array): elements per bin
             - dndz_jk (array):
+            - weights (if requested):
     """
     from sklearn.neighbors import NearestNeighbors
     from scipy.spatial import cKDTree
@@ -262,4 +264,7 @@ def get_DIR_Nz(cat_spec, cat_photo, bands, zflag,
                             bins=nz, weights=weights[msk], density=True)
         dndz_jk.append(n)
     dndz_jk = np.array(dndz_jk)
+
+    if get_weights:
+        return zz, dndz, dndz_jk, weights
     return zz, dndz, dndz_jk
