@@ -100,7 +100,7 @@ class MapperHSCDR1wl(MapperBase):
                   cat[f'{isn}_derived_shear_bias_c1']) / (1 + mhat)
             e2 = (cat[f'{isn}_e2']/(2.*resp) -
                   cat[f'{isn}_derived_shear_bias_c2']) / (1 + mhat)
-            cat['e1'] = e1
+            cat['e1'] = -e1
             cat['e2'] = e2
 
             # Remove unnecessary columns
