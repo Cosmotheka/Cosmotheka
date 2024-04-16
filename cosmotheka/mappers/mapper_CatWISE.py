@@ -25,6 +25,8 @@ class MapperCatWISE(MapperBase):
         self.apply_ecliptic_correction = \
             config.get('apply_ecliptic_correction', True)
         self.cat_data = None
+        self.nmap_data = None
+        self.ecliptic_corr = None
 
         self.npix = hp.nside2npix(self.nside)
         # Angular mask
@@ -51,39 +53,49 @@ class MapperCatWISE(MapperBase):
 
     def _get_ecliptic_correction(self):
         # Correction to Density
+        if self.ecliptic_corr is None:
+            pixarea_deg2 = (hp.nside2resol(self.nside, arcmin=True)/60)**2
+            # Transforms equatorial to ecliptic coordinates
+            r = hp.Rotator(coord=[self.coords, 'E'])
+            # Get coordinates in system of choice
+            theta_EQ, phi_EQ = hp.pix2ang(self.nside, np.arange(self.npix))
+            # Rotate to ecliptic
+            theta_EC, phi_EC = r(theta_EQ, phi_EQ)
+            # Make a map of ecliptic latitude
+            ec_lat_map = 90-np.degrees(theta_EC)
+            # this hard-coded number stems from the fit in 2009.14826
+            self.ecliptic_corr = 0.0513 * np.abs(ec_lat_map) * pixarea_deg2
 
-        pixarea_deg2 = (hp.nside2resol(self.nside, arcmin=True)/60)**2
-        # Transforms equatorial to ecliptic coordinates
-        r = hp.Rotator(coord=[self.coords, 'E'])
-        # Get coordinates in system of choice
-        theta_EQ, phi_EQ = hp.pix2ang(self.nside, np.arange(self.npix))
-        # Rotate to ecliptic
-        theta_EC, phi_EC = r(theta_EQ, phi_EQ)
-        # Make a map of ecliptic latitude
-        ec_lat_map = 90-np.degrees(theta_EC)
-        # this hard-coded number stems from the fit in 2009.14826
-        correction = 0.0513 * np.abs(ec_lat_map) * pixarea_deg2
-        return correction
+        return self.ecliptic_corr
+
+    def _get_nmap_data(self):
+        if self.nmap_data is None:
+            cat_data = self.get_catalog()
+            nmap_data = get_map_from_points(cat_data, self.nside,
+                                            rot=self.rot, ra_name='ra',
+                                            dec_name='dec')
+            # ecliptic latitude correction -- SvH 5/3/22
+            if self.apply_ecliptic_correction:
+                print('Applying the ecliptic correction')
+                correction = self._get_ecliptic_correction()
+            else:
+                correction = np.zeros_like(nmap_data)
+            # Following Cell 19, this correction is done by subtracting:
+            # https://github.com/rameez3333/CatWISEdipole/blob/main/CatWISE_Dipole_Results.ipynb
+            nmap_data = nmap_data - correction
+            nmap_data[nmap_data < 0] = 0
+            self.nmap_data = nmap_data
+        return self.nmap_data
 
     # Density Map
     def _get_signal_map(self):
-        d = np.zeros(self.npix)
-        cat_data = self.get_catalog()
+        delta_map = np.zeros(self.npix)
         mask = self.get_mask()
-        nmap_data = get_map_from_points(cat_data, self.nside,
-                                        rot=self.rot, ra_name='ra',
-                                        dec_name='dec')
-        # ecliptic latitude correction -- SvH 5/3/22
-        if self.apply_ecliptic_correction:
-            correction = self._get_ecliptic_correction()
-        else:
-            correction = np.zeros_like(d)
-        nmap_data = nmap_data + correction
+        nmap_data = self._get_nmap_data()
         goodpix = self.mask > 0
         mean_n = np.average(nmap_data, weights=mask)
         # Division by mask not really necessary, since it's binary.
-        d[goodpix] = nmap_data[goodpix]/(mean_n*mask[goodpix])-1
-        delta_map = np.array([d])
+        delta_map[goodpix] = nmap_data[goodpix]/(mean_n*mask[goodpix])-1
         return delta_map
 
     def _cut_mask(self):
@@ -121,6 +133,8 @@ class MapperCatWISE(MapperBase):
         # Otherwise, it calculates using "_cut_mask()". \
         # It also rotates the mask to the chose coordinates.
 
+        # TODO: What's this mask_file? What's file_mask in the config file?
+        # The file_mask config file is not understood by healpy.
         if self.config.get('mask_file', None) is not None:
             mask = hp.ud_grade(hp.read_map(self.config['mask_file']),
                                nside_out=self.nside)
@@ -131,13 +145,9 @@ class MapperCatWISE(MapperBase):
 
     def get_nl_coupled(self):
         # Shot noise
-
         if self.nl_coupled is None:
-            self.cat_data = self.get_catalog()
-            self.mask = self.get_mask()
-            nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            rot=self.rot, ra_name='ra',
-                                            dec_name='dec')
+            mask = self.get_mask()
+            nmap_data = self._get_nmap_data()
             N_mean = np.average(nmap_data, weights=self.mask)
             N_mean_srad = N_mean * self.npix / (4 * np.pi)
             N_ell = np.mean(self.mask) / N_mean_srad
