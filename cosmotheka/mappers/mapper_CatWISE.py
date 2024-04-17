@@ -148,9 +148,9 @@ class MapperCatWISE(MapperBase):
         if self.nl_coupled is None:
             mask = self.get_mask()
             nmap_data = self._get_nmap_data()
-            N_mean = np.average(nmap_data, weights=self.mask)
+            N_mean = np.average(nmap_data, weights=mask)
             N_mean_srad = N_mean * self.npix / (4 * np.pi)
-            N_ell = np.mean(self.mask) / N_mean_srad
+            N_ell = np.mean(mask) / N_mean_srad
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
 
