@@ -12,7 +12,7 @@ class MapperKV450(MapperBase):
 
     The analysis of the KV450 catalogs is done following \
     the methodology described in Hildebrandt et al, 2018:\
-    
+
     Note that last letter of the the mask name stands for the \
     chosen redshdift bin (`i = [1,2,3,4]`).
     **Config**

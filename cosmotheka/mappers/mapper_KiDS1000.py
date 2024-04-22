@@ -8,7 +8,7 @@ import healpy as hp
 class MapperKiDS1000(MapperBase):
     """
     Mapper class for the KiDS1000 data sets mappers. \
-    
+
     The analysis of the KiDS1000 catalogs is done following \
     the methodology described in 2007.01845. \
     Note that last letter of the the mask name stands for the \

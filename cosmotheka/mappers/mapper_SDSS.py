@@ -10,14 +10,14 @@ from .mapper_base import MapperBase
 class MapperSDSS(MapperBase):
     """
     Base mapper class for all SDSS mappers. \
-    
+
     All SDSS mappers compute their signal map \
     by computing the overdensity of galaxies \
     with respect to a random catalog. \
-    
+
     delta = (n_data - alpha * n_random) / mask \
     mask = Area_diff * n_random * alpha \
-    
+
     where n_data and n_random are the number \
     counts of galaxies per pixel \
     in the data and random catalogs. \
@@ -64,7 +64,7 @@ class MapperSDSS(MapperBase):
         cols = ['RA', 'DEC', 'Z', \
         'WEIGHT_SYSTOT',  'WEIGHT_CP ', \
         'WEIGHT_NOZ'] \
-        
+
         Kwargs:
             mode='data'
 
