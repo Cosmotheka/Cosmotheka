@@ -329,7 +329,6 @@ class Cl(ClBase):
             if w.wsp is not None:
                 return w
 
-        n_iter = self.data.data['sphere']['n_iter_mcm']
         l_toeplitz, l_exact, dl_band = self.data.check_toeplitz('cls')
         if spin0:
             m1, m2 = self.get_mappers()

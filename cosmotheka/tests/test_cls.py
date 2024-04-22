@@ -486,8 +486,6 @@ def test_cls_vs_namaster():
     mask = m.get_mask()
     signal_map = m.get_signal_map()
     n_iter_sht = config['sphere']['n_iter_sht']
-    n_iter_mcm = config['sphere']['n_iter_mcm']
-    n_iter_cmcm = config['sphere']['n_iter_cmcm']
     # Compute Cl from map
     f = nmt.NmtField(mask, signal_map, spin=spin, n_iter=n_iter_sht)
     wsp = nmt.NmtWorkspace()
