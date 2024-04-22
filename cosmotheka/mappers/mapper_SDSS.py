@@ -32,8 +32,8 @@ class MapperSDSS(MapperBase):
     a 4096, otherwise, the high multipole tail of \
     the signal power spectrum is used to estimate \
     the noise power spectrum.
-
     """
+
     # The SDSS_name passed in the configuration file will be added to map_name
     map_name = 'SDSS'
 
@@ -58,12 +58,12 @@ class MapperSDSS(MapperBase):
 
     def get_catalog(self, mod='data'):
         """
-        Returns the mapper's data or \
-        random catalog.
+        Cuts and returns the mapper's data or \
+        random catalog. \
         We only make use of the columns \
         cols = ['RA', 'DEC', 'Z', \
         'WEIGHT_SYSTOT',  'WEIGHT_CP ', \
-        'WEIGHT_NOZ'] \
+        'WEIGHT_NOZ']
 
         Kwargs:
             mode='data'
