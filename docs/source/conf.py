@@ -78,6 +78,9 @@ source_suffix = {
 }
 # source_suffix = ".rst"
 
+# exclude private members from the documentation
+autodoc_default_options = {"private-members": False}
+
 # The master toctree document.
 master_doc = "index"
 
