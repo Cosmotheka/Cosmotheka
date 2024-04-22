@@ -7,25 +7,32 @@ import healpy as hp
 
 
 class MapperKV450(MapperBase):
-    """Mapper for the KV450 weak lensing data set."""
+    """
+    Mapper class for the KV450 weak lensing data set.
+
+    The analysis of the KV450 catalogs is done following \
+    the methodology described in Hildebrandt et al, 2018:\
+    
+    Note that last letter of the the mask name stands for the \
+    chosen redshdift bin (`i = [1,2,3,4]`).
+    **Config**
+
+        - data_catalogs: [
+            KV450_G12_reweight_3x4x4_v2_good.cat,
+            KV450_G23_reweight_3x4x4_v2_good.cat,
+            KV450_GS_reweight_3x4x4_v2_good.cat,
+            KV450_G15_reweight_3x4x4_v2_good.cat,
+            KV450_G9_reweight_3x4x4_v2_good.cat]
+        - file_nz: Nz_DIR_z0.1t0.3.asc
+        - zbin: `"1"` / `"1"` / `"2"` / `"3"` / `"4"`
+        - nside: HEALPix map nside
+        - mask_name: e.g. mask_KV450_i
+    """
 
     map_name = 'KV450'
 
     def __init__(self, config):
-        """
-        Args:
-            config (dict): configuration dictionary with keys:
 
-                - data_catalogs: [KV450_G12_reweight_3x4x4_v2_good.cat,
-                  KV450_G23_reweight_3x4x4_v2_good.cat,
-                  KV450_GS_reweight_3x4x4_v2_good.cat,
-                  KV450_G15_reweight_3x4x4_v2_good.cat,
-                  KV450_G9_reweight_3x4x4_v2_good.cat]
-                - file_nz: Nz_DIR_z0.1t0.3.asc
-                - zbin: 0
-                - nside: HEALPix map nside
-                - mask_name: e.g. mask_KV450_0
-        """
         self._get_defaults(config)
         self.rot = self._get_rotator('C')
 
@@ -268,7 +275,17 @@ class MapperKV450(MapperBase):
         return self._get_shifted_nz(dz)
 
     def get_dtype(self):
+        """
+        Returns the data type of the field.
+        Returns:
+                dtype (str): data type of the field
+        """
         return 'galaxy_shear'
 
     def get_spin(self):
+        """
+        Returns the spin of the field.
+        Returns:
+                spin (int): spin of the field
+        """
         return 2
