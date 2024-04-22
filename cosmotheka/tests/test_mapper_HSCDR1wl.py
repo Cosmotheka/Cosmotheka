@@ -171,8 +171,8 @@ def test_get_signal_map():
     mask = m.get_mask()
     assert sh.shape == (2, hp.nside2npix(32))
     assert np.all(mask == 1.0)
-    assert np.all((sh[0]-1.0) < 1E-5)
-    assert np.all((sh[1]+1.0) < 1E-5)
+    assert np.all((sh[0]+1.0) < 1E-5)
+    assert np.all((sh[1]-1.0) < 1E-5)
     clean_hsc_data()
     remove_rerun(prerun)
 
