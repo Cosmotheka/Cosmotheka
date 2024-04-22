@@ -80,6 +80,7 @@ class MapperCatWISE(MapperBase):
                                             rot=self.rot, ra_name='ra',
                                             dec_name='dec')
             self.nmap_data['uncorr'] = nmap_data
+            self.nmap_data['corr'] = nmap_data
             # ecliptic latitude correction -- SvH 5/3/22
             if self.apply_ecliptic_correction:
                 print('Applying the ecliptic correction')

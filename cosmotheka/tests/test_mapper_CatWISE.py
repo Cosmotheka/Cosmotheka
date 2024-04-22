@@ -67,8 +67,7 @@ def test_get_nmap_data(corr):
         assert np.all(nmap == 1)
     else:
         # It's 0 because the ecliptic_correction is -11.28, and nmap > 0.
-        nmap_ref = 1 - m._get_ecliptic_correction()
-        nmap_ref[nmap_ref < 0] = 0
+        nmap_ref = 1 + m._get_ecliptic_correction()
         assert np.all(nmap == nmap_ref)
     clean_fake_data()
 
@@ -86,8 +85,7 @@ def test_get_signal_map(corr):
     if corr is False:
         assert np.all(np.fabs(d) < 1E-5)
     else:
-        nmap_ref = 1 - m._get_ecliptic_correction()
-        nmap_ref[nmap_ref < 0] = 0
+        nmap_ref = 1 + m._get_ecliptic_correction()
         dref = nmap_ref / np.mean(nmap_ref) - 1
         assert np.all(np.fabs(d/dref - 1) < 1E-5)
     clean_fake_data()
@@ -103,15 +101,17 @@ def test_get_nl_coupled(corr):
     nl = m.get_nl_coupled()
     nl = np.array(nl)
     pix_area = 4*np.pi/hp.nside2npix(m.nside)
-    nl_pred = hp.nside2npix(32)
-    nl_pred *= pix_area**2/(4*np.pi)
     assert nl.shape == (1, 3*m.nside)
     if corr is False:
+        nl_pred = pix_area
         assert np.all(np.fabs(nl/nl_pred-1) < 1E-10)
     else:
-        nmap_ref = 1 - m._get_ecliptic_correction()
-        nmap_ref[nmap_ref < 0] = 0
-        nl_pred /= np.mean(nmap_ref)
+        nmap_ref = 1 + m._get_ecliptic_correction()
+
+        nmean_srad = np.mean(nmap_ref) / pix_area
+        nmean_srad_uncorr = 1 / pix_area
+
+        nl_pred = nmean_srad_uncorr / nmean_srad**2
         assert np.all(np.fabs(nl/nl_pred-1) < 1E-10)
     clean_fake_data()
 
