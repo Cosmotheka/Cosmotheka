@@ -4,6 +4,17 @@ import numpy as np
 
 class MappereBOSS(MapperSDSS):
     """
+
+    The analysis of the eBOSS DR16 catalogs is done following \
+    the methodology described in Raichoor et al, 2020:\
+    https://arxiv.org/pdf/2007.09007.pdf \
+    The weight of each source is calculated by combining \
+    the angular systematics weight with the fibre collision \
+    and redshift failure nearest neighbour weights. \
+    (See eqn. 10 of the paper for the formula.) \
+    We do not include the Feldman, Kaiser & Peacock (FKP) \
+    weights.
+
     Note that X in file names stands for either `'ELG'` or `'LRG'`.
 
     **Config**
@@ -20,7 +31,7 @@ class MappereBOSS(MapperSDSS):
           '.../Datasets/eBOSS/eBOSS_X_clustering_random-SGC-vDR16.fits']`
         - z_edges: `[0.6, 1.1]` / `[0.6, 1.0]`
         - path_rerun: `'.../Datasets/eBOSS/xcell_runs'`
-        - mask_name: `'mask_X'`
+        - mask_name: `'mask_ELG' / 'mask_LRG`
         - mapper_class: `'MappereBOSS'`
         - bias:  `1.45` / `2.3`
     """

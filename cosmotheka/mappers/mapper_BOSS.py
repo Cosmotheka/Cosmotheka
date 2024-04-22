@@ -10,8 +10,11 @@ class MapperBOSS(MapperSDSS):
     The weight of each source is calculated by combining \
     the angular systematics weight with the fibre collision \
     and redshift failure nearest neighbour weights. \
+    (See eqn. 50 of the paper for the formula.) \
     We do not include the Feldman, Kaiser & Peacock (FKP) \
     weights.
+
+    Note that X in file names stands for either `'CMASS'` or `'LOWZ'`.
 
     **Config**
 
@@ -28,7 +31,7 @@ class MapperBOSS(MapperSDSS):
 
         - z_edges: `[0.4, 0.8]` / `[0.1, 0.43]`
         - path_rerun: `'.../Datasets/BOSS/xcell_runs'`
-        - mask_name: `'mask_CMASS'` / `'mask_LOWZ'`
+        - mask_name: `'mask_X'`
         - mapper_class: `'MapperBOSS'`
         - bias: `1.93` / `1.93`
     """
