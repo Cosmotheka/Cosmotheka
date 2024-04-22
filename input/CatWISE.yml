@@ -1,6 +1,6 @@
 mapper_class: MapperCatWISE
 data_catalog: /mnt/extraspace/damonge/Datasets/CatWISE/catwise_agns_masked_final_w1lt16p5_alpha.fits
-file_mask: /mnt/extraspace/damonge/Datasets/CatWISE/MASKS_exclude_master_final.fits
+mask_sources: /mnt/extraspace/damonge/Datasets/CatWISE/MASKS_exclude_master_final.fits
 apply_ecliptic_correction: True
 mask_name: mask_CatWISE
 path_rerun: '/mnt/extraspace/damonge/Datasets/CatWISE/xcell_runs'

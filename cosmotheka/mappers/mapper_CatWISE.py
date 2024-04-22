@@ -25,7 +25,7 @@ class MapperCatWISE(MapperBase):
         self.apply_ecliptic_correction = \
             config.get('apply_ecliptic_correction', True)
         self.cat_data = None
-        self.nmap_data = None
+        self.nmap_data = {'corr': None, 'uncorr': None}
         self.ecliptic_corr = None
 
         self.npix = hp.nside2npix(self.nside)
@@ -54,7 +54,7 @@ class MapperCatWISE(MapperBase):
     def _get_ecliptic_correction(self):
         # Correction to Density
         if self.ecliptic_corr is None:
-            pixarea_deg2 = (hp.nside2resol(self.nside, arcmin=True)/60)**2
+            pixarea_deg2 = hp.nside2pixarea(self.nside, degrees=True)
             # Transforms equatorial to ecliptic coordinates
             r = hp.Rotator(coord=[self.coords, 'E'])
             # Get coordinates in system of choice
@@ -68,24 +68,25 @@ class MapperCatWISE(MapperBase):
 
         return self.ecliptic_corr
 
-    def _get_nmap_data(self):
-        if self.nmap_data is None:
+    def _get_nmap_data(self, corr=True):
+        if corr:
+            key = 'corr'
+        else:
+            key = 'uncorr'
+
+        if self.nmap_data[key] is None:
             cat_data = self.get_catalog()
             nmap_data = get_map_from_points(cat_data, self.nside,
                                             rot=self.rot, ra_name='ra',
                                             dec_name='dec')
+            self.nmap_data['uncorr'] = nmap_data
             # ecliptic latitude correction -- SvH 5/3/22
             if self.apply_ecliptic_correction:
                 print('Applying the ecliptic correction')
                 correction = self._get_ecliptic_correction()
-            else:
-                correction = np.zeros_like(nmap_data)
-            # Following Cell 19, this correction is done by subtracting:
-            # https://github.com/rameez3333/CatWISEdipole/blob/main/CatWISE_Dipole_Results.ipynb
-            nmap_data = nmap_data - correction
-            nmap_data[nmap_data < 0] = 0
-            self.nmap_data = nmap_data
-        return self.nmap_data
+                self.nmap_data['corr'] = nmap_data + correction
+
+        return self.nmap_data[key]
 
     # Density Map
     def _get_signal_map(self):
@@ -114,8 +115,8 @@ class MapperCatWISE(MapperBase):
                                               30))] = 0
         if self.file_sourcemask is not None:
             # holes catalog
-            mask_holes = Table.read(self.file_sourcemask,
-                                    format='ascii.commented_header')
+            mask_holes = Table.read(self.file_sourcemask)
+                                    # format='ascii.commented_header')
             vecmask = hp.ang2vec(mask_holes['ra'],
                                  mask_holes['dec'],
                                  lonlat=True)
@@ -133,10 +134,8 @@ class MapperCatWISE(MapperBase):
         # Otherwise, it calculates using "_cut_mask()". \
         # It also rotates the mask to the chose coordinates.
 
-        # TODO: What's this mask_file? What's file_mask in the config file?
-        # The file_mask config file is not understood by healpy.
-        if self.config.get('mask_file', None) is not None:
-            mask = hp.ud_grade(hp.read_map(self.config['mask_file']),
+        if self.config.get('file_mask', None) is not None:
+            mask = hp.ud_grade(hp.read_map(self.config['file_mask']),
                                nside_out=self.nside)
         else:
             mask = self._cut_mask()
@@ -148,9 +147,14 @@ class MapperCatWISE(MapperBase):
         if self.nl_coupled is None:
             mask = self.get_mask()
             nmap_data = self._get_nmap_data()
+            # Only the observed galaxies contribute to the variance (and,
+            # therefore, the shot noise)
+            nmap_data_uncorr = self._get_nmap_data(corr=False)
             N_mean = np.average(nmap_data, weights=mask)
+            N_mean_uncorr = np.average(nmap_data_uncorr, weights=mask)
             N_mean_srad = N_mean * self.npix / (4 * np.pi)
-            N_ell = np.mean(mask) / N_mean_srad
+            N_mean_srad_uncorr = N_mean_uncorr * self.npix / (4 * np.pi)
+            N_ell = np.mean(mask) * N_mean_srad_uncorr / N_mean_srad**2
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
 
