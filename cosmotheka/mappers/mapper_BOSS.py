@@ -4,7 +4,14 @@ import numpy as np
 
 class MapperBOSS(MapperSDSS):
     """
-    Note that X in file names stands for either `'CMASS'` or `'LOWZ'`.
+    The analysis of the BOSS DR12 catalogs is done following \
+    the methodology described in Reid et al, 2015:\
+    https://arxiv.org/pdf/1509.06529.pdf \
+    The weight of each source is calculated by combining \
+    the angular systematics weight with the fibre collision \
+    and redshift failure nearest neighbour weights. \
+    We do not include the Feldman, Kaiser & Peacock (FKP) \
+    weights.
 
     **Config**
 
@@ -21,7 +28,7 @@ class MapperBOSS(MapperSDSS):
 
         - z_edges: `[0.4, 0.8]` / `[0.1, 0.43]`
         - path_rerun: `'.../Datasets/BOSS/xcell_runs'`
-        - mask_name: `'mask_X'`
+        - mask_name: `'mask_CMASS'` / `'mask_LOWZ'`
         - mapper_class: `'MapperBOSS'`
         - bias: `1.93` / `1.93`
     """
