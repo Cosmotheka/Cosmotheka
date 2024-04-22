@@ -5,6 +5,8 @@ import numpy as np
 class MappereBOSS(MapperSDSS):
     """
 
+    Mapper class for the eBOSS DR16 data sets mappers. \
+
     The analysis of the eBOSS DR16 catalogs is done following \
     the methodology described in Raichoor et al, 2020:\
     https://arxiv.org/pdf/2007.09007.pdf \

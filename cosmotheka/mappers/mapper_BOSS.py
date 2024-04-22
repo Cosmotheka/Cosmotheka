@@ -4,6 +4,8 @@ import numpy as np
 
 class MapperBOSS(MapperSDSS):
     """
+    Mapper class for the BOSS DR12 data sets mappers. \
+    
     The analysis of the BOSS DR12 catalogs is done following \
     the methodology described in Reid et al, 2015:\
     https://arxiv.org/pdf/1509.06529.pdf \
