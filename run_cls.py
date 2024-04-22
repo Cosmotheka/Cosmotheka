@@ -7,6 +7,7 @@ import numpy as np
 import re
 from datetime import datetime
 from glob import glob
+import sys
 
 
 ##############################################################################
@@ -49,7 +50,8 @@ def get_pyexec(comment, nc, queue, mem, onlogin, outdir, batches=False, logfname
     if batches:
         pyexec = ""
     else:
-        pyexec = "/usr/local/shared/python3.9.7/bin/python3"
+        # Use the same python that launched run_cls.py
+        pyexec = sys.executable
 
     if not onlogin:
         logdir = os.path.join(outdir, 'log')
