@@ -8,7 +8,16 @@ import healpy as hp
 
 class MapperDESY1gc(MapperBase):
     """
-    path = `'.../Datasets/DES_Y1/redmagic_catalog/'`
+    Mapper class for the DES Y1 redMaGiC catalog.\
+
+    The analysis of the catalog is done following \
+    the methodology described in Elvin-Poole et al, 2017:\
+    https://arxiv.org/abs/1708.01536
+
+    The catalog is divided into 5 redshift bins. \
+    The noise power spectrum is estimated from the \
+    mean value of the mask over the mean value of \
+    the weights of each observed galaxy per stereo radian. \
 
     **Config**
 
@@ -116,6 +125,15 @@ class MapperDESY1gc(MapperBase):
         return np.array([signal_map])
 
     def get_nl_coupled(self):
+        """
+        Computes the noise power spectrum of the field \
+        from the mean value of the mask over  \
+        the mean value of the weights of each \
+        observed galaxy per stereo radian.
+
+        Returns:
+            nl_coupled (Array): coupled noise power spectrum
+        """
         if self.nl_coupled is None:
             cat_data = self.get_catalog()
             w = self._get_w()
@@ -127,13 +145,24 @@ class MapperDESY1gc(MapperBase):
             goodpix = mask > 0  # Already capped at mask_threshold
             N_mean = np.sum(nmap_w[goodpix])/np.sum(mask[goodpix])
             N_mean_srad = N_mean / (4 * np.pi) * self.npix
+            # Clarifify: what does this correct for?
             correction = nmap_w2[goodpix].sum()/nmap_w[goodpix].sum()
             N_ell = correction * np.mean(mask) / N_mean_srad
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
 
     def get_dtype(self):
+        """
+        Returns the data type of the field.
+        Returns:
+                dtype (str): data type of the field
+        """
         return 'galaxy_density'
 
     def get_spin(self):
+        """
+        Returns the spin of the field.
+        Returns:
+                spin (int): spin of the field
+        """
         return 0

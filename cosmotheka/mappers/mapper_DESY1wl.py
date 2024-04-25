@@ -280,7 +280,17 @@ class MapperDESY1wl(MapperBase):
         return self.nl_coupled
 
     def get_dtype(self):
+        """
+        Returns the data type of the field.
+        Returns:
+                dtype (str): data type of the field
+        """
         return 'galaxy_shear'
 
     def get_spin(self):
+        """
+        Returns the spin of the field.
+        Returns:
+                spin (int): spin of the field
+        """
         return 2
