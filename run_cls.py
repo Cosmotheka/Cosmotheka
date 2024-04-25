@@ -332,7 +332,7 @@ def launch_to_sacc(data, name, use, queue, nc, mem, onlogin=False):
 
     comment = 'to_sacc'
     pyexec = get_pyexec(comment, nc, queue, mem, onlogin, outdir)
-    pyrun = '-m comotheka.cls.to_sacc {} {}'.format(args.INPUT, name)
+    pyrun = '-m cosmotheka.cls.to_sacc {} {}'.format(args.INPUT, name)
     if use == 'nl':
         pyrun += ' --use_nl'
     elif use == 'fiducial':

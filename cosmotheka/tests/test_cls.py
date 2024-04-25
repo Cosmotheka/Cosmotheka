@@ -486,12 +486,10 @@ def test_cls_vs_namaster():
     mask = m.get_mask()
     signal_map = m.get_signal_map()
     n_iter_sht = config['sphere']['n_iter_sht']
-    n_iter_mcm = config['sphere']['n_iter_mcm']
-    n_iter_cmcm = config['sphere']['n_iter_cmcm']
     # Compute Cl from map
     f = nmt.NmtField(mask, signal_map, spin=spin, n_iter=n_iter_sht)
     wsp = nmt.NmtWorkspace()
-    wsp.compute_coupling_matrix(f, f, bins=b, n_iter=n_iter_mcm)
+    wsp.compute_coupling_matrix(f, f, bins=b)
     cl_data_nmt_cp = nmt.compute_coupled_cell(f, f)
     cl_data_nmt = wsp.decouple_cell(cl_data_nmt_cp)
 
@@ -501,7 +499,7 @@ def test_cls_vs_namaster():
 
     # Compute cov with NaMaster
     cwsp = nmt.NmtCovarianceWorkspace()
-    cwsp.compute_coupling_coefficients(f, f, n_iter=n_iter_cmcm)
+    cwsp.compute_coupling_coefficients(f, f)
     cl_cov = cl_m_cp / np.mean(mask * mask)
     cov_nmt = nmt.gaussian_covariance(cwsp, spin, spin, spin, spin, cl_cov,
                                       cl_cov, cl_cov, cl_cov, wsp)

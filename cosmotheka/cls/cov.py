@@ -165,12 +165,10 @@ class Cov():
             if cw.wsp is not None:
                 return cw
 
-        n_iter = self.data.data['sphere']['n_iter_cmcm']
         l_toeplitz, l_exact, dl_band = self.data.check_toeplitz('cov')
         fA1, fB1 = self.clA1B1.get_nmt_fields()
         fA2, fB2 = self.clA2B2.get_nmt_fields()
         cw.compute_coupling_coefficients(fA1, fA2, fB1, fB2,
-                                         n_iter=n_iter,
                                          l_toeplitz=l_toeplitz,
                                          l_exact=l_exact,
                                          dl_band=dl_band)
