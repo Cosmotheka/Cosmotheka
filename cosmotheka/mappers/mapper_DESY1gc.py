@@ -17,7 +17,7 @@ class MapperDESY1gc(MapperBase):
     The catalog is divided into 5 redshift bins. \
     The noise power spectrum is estimated from the \
     mean value of the mask over the mean value of \
-    the weights of each observed galaxy per stereo radian. \
+    the weights of each observed galaxy per stereo radian.
 
     **Config**
 

@@ -14,7 +14,7 @@ class MapperKV450(MapperBase):
     https://arxiv.org/pdf/1812.06076.pdf
 
     The catalog contains measurements of the cosmic \
-    shear (shear),  the point spread function (PSF) \
+    shear (shear), the point spread function (PSF) \
     and the stellar ellipticities (stars).
 
     Multiplicative and additive biases are accounted for. \
@@ -261,6 +261,14 @@ class MapperKV450(MapperBase):
         return self.w2s2
 
     def get_nl_coupled(self):
+        """
+        Calculates the noise power spectrum \
+        from the mean of squared-weights \
+        map times the pixel area.
+
+        Returns:
+            nl_coupled (Array): coupled noise power spectrum
+        """
         kind, e1f, e2f, mod = self._set_mode()
         if self.nls[mod] is None:
             self.w2s2 = self._get_w2s2()

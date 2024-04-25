@@ -7,12 +7,28 @@ import healpy as hp
 
 class MapperDESY1wl(MapperBase):
     """
+    Mapper class for the DES Y1 metacalibration shear catalog.
+
+    The analysis of the catalog is done following \
+    the methodology described in Jarvis et al, 2016:\
+    https://arxiv.org/pdf/1507.05603.pdf
+
+    The catalog contains measurements of the cosmic \
+    shear (shear) and the point spread function (PSF). \
+    Moreover, the catalog is divided into 4 redshift bins.
+
+    Additive and multiplicative biases are accounted for. \
+    Multiplicative bias is calculated using the R factors \
+    described in Bergé et al. 2013 and Bruderer et al. 2015 \
+    The noise power spectrum is estimated from the \
+    per-pixel noise variance map from the galaxy \
+    ellipticities following Nicola et al, 2020:\
+    https://arxiv.org/pdf/2010.09717.pdf
+
     Note that last letter of the the mask name stands for the \
     chosen redshdift bin (`i = [1,2,3,4]`).
 
-    path = `'.../Datasets/DES_Y1/shear_catalog/'`
-
-    ***Config***
+    **Config**
 
         - zbin: `0` / `1` / `2` /`3`
         - mode: `shear` / `PSF`
@@ -139,6 +155,7 @@ class MapperDESY1wl(MapperBase):
         return e1_flag, e2_flag, mode
 
     def _get_Rs(self):
+        # Clarify: What is this R?
         # Computes the R factor used to calculate \
         # the multiplicative bias of the maps.
 
@@ -249,6 +266,14 @@ class MapperDESY1wl(MapperBase):
         return msk
 
     def get_nl_coupled(self, mode=None):
+        """
+        Calculates the noise power spectrum \
+        from the mean of squared-weights \
+        map times the pixel area.
+
+        Returns:
+            nl_coupled (Array): coupled noise power spectrum
+        """
         e1f, e2f, mod = self._set_mode(mode)
         if self.nls[mod] is not None:
             self.nl_coupled = self.nls[mod]

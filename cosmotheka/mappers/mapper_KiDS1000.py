@@ -263,9 +263,8 @@ class MapperKiDS1000(MapperBase):
     def get_nl_coupled(self):
         """
         Calculates the noise power spectrum \
-        for KiDS1000 mappers from the mean of \
-        squared-weights map times the pixel \
-        area.
+        from the mean of squared-weights \
+        map times the pixel area.
 
         Returns:
             nl_coupled (Array): coupled noise power spectrum
