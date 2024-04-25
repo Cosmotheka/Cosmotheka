@@ -10,6 +10,7 @@ class MappereBOSS(MapperSDSS):
     The analysis of the eBOSS DR16 catalogs is done following \
     the methodology described in Raichoor et al, 2020:\
     https://arxiv.org/pdf/2007.09007.pdf \
+    The catalog is divided into 2 redshift bins.\
     The weight of each source is calculated by combining \
     the angular systematics weight with the fibre collision \
     and redshift failure nearest neighbour weights. \

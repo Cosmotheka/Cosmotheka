@@ -9,6 +9,7 @@ class MapperBOSS(MapperSDSS):
     The analysis of the BOSS DR12 catalogs is done following \
     the methodology described in Reid et al, 2015:\
     https://arxiv.org/pdf/1509.06529.pdf \
+    The catalog is divided into 2 redshift bins.\
     The weight of each source is calculated by combining \
     the angular systematics weight with the fibre collision \
     and redshift failure nearest neighbour weights. \

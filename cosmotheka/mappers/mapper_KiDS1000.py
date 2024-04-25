@@ -10,7 +10,20 @@ class MapperKiDS1000(MapperBase):
     Mapper class for the KiDS1000 data sets mappers. \
 
     The analysis of the KiDS1000 catalogs is done following \
-    the methodology described in 2007.01845. \
+    the methodology described in Giblin et al 2020: \
+    https://arxiv.org/pdf/2007.01845.pdf
+
+    The catalog contains measurements of the cosmic \
+    shear (shear),  the point spread function (PSF) \
+    and the stellar ellipticities (stars). \
+    Moreover, the catalog is divided five redshift bins. \
+
+    Multiplicative and additive biases are accounted for. \
+    The noise power spectrum is estimated from the \
+    per-pixel noise variance map from the galaxy \
+    ellipticities following Nicola et al, 2020:\
+    https://arxiv.org/pdf/2010.09717.pdf
+
     Note that last letter of the the mask name stands for the \
     chosen redshdift bin (`i = [1,2,3,4]`).
 

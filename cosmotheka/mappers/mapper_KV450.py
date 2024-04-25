@@ -1,4 +1,3 @@
-"""Mapper class for the KV450 weak lensing data set."""
 from .mapper_base import MapperBase
 from .utils import get_map_from_points, save_rerun_data
 from astropy.table import Table, vstack
@@ -12,9 +11,21 @@ class MapperKV450(MapperBase):
 
     The analysis of the KV450 catalogs is done following \
     the methodology described in Hildebrandt et al, 2018:\
+    https://arxiv.org/pdf/1812.06076.pdf
+
+    The catalog contains measurements of the cosmic \
+    shear (shear),  the point spread function (PSF) \
+    and the stellar ellipticities (stars).
+
+    Multiplicative and additive biases are accounted for. \
+    The noise power spectrum is estimated from the \
+    per-pixel noise variance map from the galaxy \
+    ellipticities following Nicola et al, 2020:\
+    https://arxiv.org/pdf/2010.09717.pdf
 
     Note that last letter of the the mask name stands for the \
     chosen redshdift bin (`i = [1,2,3,4]`).
+
     **Config**
 
         - data_catalogs: [
