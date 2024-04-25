@@ -25,6 +25,8 @@ class MapperCatWISE(MapperBase):
         self.apply_ecliptic_correction = \
             config.get('apply_ecliptic_correction', True)
         self.cat_data = None
+        self.nmap_data = {'corr': None, 'uncorr': None}
+        self.ecliptic_corr = None
 
         self.npix = hp.nside2npix(self.nside)
         # Angular mask
@@ -51,39 +53,51 @@ class MapperCatWISE(MapperBase):
 
     def _get_ecliptic_correction(self):
         # Correction to Density
+        if self.ecliptic_corr is None:
+            pixarea_deg2 = hp.nside2pixarea(self.nside, degrees=True)
+            # Transforms equatorial to ecliptic coordinates
+            r = hp.Rotator(coord=[self.coords, 'E'])
+            # Get coordinates in system of choice
+            theta_EQ, phi_EQ = hp.pix2ang(self.nside, np.arange(self.npix))
+            # Rotate to ecliptic
+            theta_EC, phi_EC = r(theta_EQ, phi_EQ)
+            # Make a map of ecliptic latitude
+            ec_lat_map = 90-np.degrees(theta_EC)
+            # this hard-coded number stems from the fit in 2009.14826
+            self.ecliptic_corr = 0.0513 * np.abs(ec_lat_map) * pixarea_deg2
 
-        pixarea_deg2 = (hp.nside2resol(self.nside, arcmin=True)/60)**2
-        # Transforms equatorial to ecliptic coordinates
-        r = hp.Rotator(coord=[self.coords, 'E'])
-        # Get coordinates in system of choice
-        theta_EQ, phi_EQ = hp.pix2ang(self.nside, np.arange(self.npix))
-        # Rotate to ecliptic
-        theta_EC, phi_EC = r(theta_EQ, phi_EQ)
-        # Make a map of ecliptic latitude
-        ec_lat_map = 90-np.degrees(theta_EC)
-        # this hard-coded number stems from the fit in 2009.14826
-        correction = 0.0513 * np.abs(ec_lat_map) * pixarea_deg2
-        return correction
+        return self.ecliptic_corr
+
+    def _get_nmap_data(self, corr=True):
+        if corr:
+            key = 'corr'
+        else:
+            key = 'uncorr'
+
+        if self.nmap_data[key] is None:
+            cat_data = self.get_catalog()
+            nmap_data = get_map_from_points(cat_data, self.nside,
+                                            rot=self.rot, ra_name='ra',
+                                            dec_name='dec')
+            self.nmap_data['uncorr'] = nmap_data
+            self.nmap_data['corr'] = nmap_data
+            # ecliptic latitude correction -- SvH 5/3/22
+            if self.apply_ecliptic_correction:
+                print('Applying the ecliptic correction')
+                correction = self._get_ecliptic_correction()
+                self.nmap_data['corr'] = nmap_data + correction
+
+        return self.nmap_data[key]
 
     # Density Map
     def _get_signal_map(self):
-        d = np.zeros(self.npix)
-        cat_data = self.get_catalog()
+        delta_map = np.zeros(self.npix)
         mask = self.get_mask()
-        nmap_data = get_map_from_points(cat_data, self.nside,
-                                        rot=self.rot, ra_name='ra',
-                                        dec_name='dec')
-        # ecliptic latitude correction -- SvH 5/3/22
-        if self.apply_ecliptic_correction:
-            correction = self._get_ecliptic_correction()
-        else:
-            correction = np.zeros_like(d)
-        nmap_data = nmap_data + correction
+        nmap_data = self._get_nmap_data()
         goodpix = self.mask > 0
         mean_n = np.average(nmap_data, weights=mask)
         # Division by mask not really necessary, since it's binary.
-        d[goodpix] = nmap_data[goodpix]/(mean_n*mask[goodpix])-1
-        delta_map = np.array([d])
+        delta_map[goodpix] = nmap_data[goodpix]/(mean_n*mask[goodpix])-1
         return delta_map
 
     def _cut_mask(self):
@@ -102,8 +116,7 @@ class MapperCatWISE(MapperBase):
                                               30))] = 0
         if self.file_sourcemask is not None:
             # holes catalog
-            mask_holes = Table.read(self.file_sourcemask,
-                                    format='ascii.commented_header')
+            mask_holes = Table.read(self.file_sourcemask)
             vecmask = hp.ang2vec(mask_holes['ra'],
                                  mask_holes['dec'],
                                  lonlat=True)
@@ -121,8 +134,8 @@ class MapperCatWISE(MapperBase):
         # Otherwise, it calculates using "_cut_mask()". \
         # It also rotates the mask to the chose coordinates.
 
-        if self.config.get('mask_file', None) is not None:
-            mask = hp.ud_grade(hp.read_map(self.config['mask_file']),
+        if self.config.get('file_mask', None) is not None:
+            mask = hp.ud_grade(hp.read_map(self.config['file_mask']),
                                nside_out=self.nside)
         else:
             mask = self._cut_mask()
@@ -131,16 +144,17 @@ class MapperCatWISE(MapperBase):
 
     def get_nl_coupled(self):
         # Shot noise
-
         if self.nl_coupled is None:
-            self.cat_data = self.get_catalog()
-            self.mask = self.get_mask()
-            nmap_data = get_map_from_points(self.cat_data, self.nside,
-                                            rot=self.rot, ra_name='ra',
-                                            dec_name='dec')
-            N_mean = np.average(nmap_data, weights=self.mask)
+            mask = self.get_mask()
+            nmap_data = self._get_nmap_data()
+            # Only the observed galaxies contribute to the variance (and,
+            # therefore, the shot noise)
+            nmap_data_uncorr = self._get_nmap_data(corr=False)
+            N_mean = np.average(nmap_data, weights=mask)
+            N_mean_uncorr = np.average(nmap_data_uncorr, weights=mask)
             N_mean_srad = N_mean * self.npix / (4 * np.pi)
-            N_ell = np.mean(self.mask) / N_mean_srad
+            N_mean_srad_uncorr = N_mean_uncorr * self.npix / (4 * np.pi)
+            N_ell = np.mean(mask) * N_mean_srad_uncorr / N_mean_srad**2
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
 

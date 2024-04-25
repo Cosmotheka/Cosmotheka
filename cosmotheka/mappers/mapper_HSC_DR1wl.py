@@ -196,7 +196,7 @@ class MapperHSCDR1wl(MapperBase):
         cat = self.get_catalog()
         we1, we2 = get_map_from_points(cat, self.nside,
                                        w=cat[self.w_name],
-                                       qu=[cat['e1'], cat['e2']],
+                                       qu=[-cat['e1'], -cat['e2']],
                                        ra_name='ra',
                                        dec_name='dec',
                                        rot=self.rot)

@@ -2,15 +2,16 @@ import numpy as np
 import cosmotheka as xc
 import healpy as hp
 import os
+import pytest
 from astropy.table import Table
 
 
-def get_config():
+def get_config(corr=True):
     data_path = 'cosmotheka/tests/data/'
     return {'data_catalog': data_path+'catalog_CatWISE.fits',
             'mask_sources': data_path+'MASKS_exclude_master_final.fits',
             'nside': 32, 'mask_name': 'mask', 'coords': 'C',
-            'apply_ecliptic_correction': True}
+            'apply_ecliptic_correction': corr}
 
 
 def make_fake_data():
@@ -52,34 +53,66 @@ def test_get_mask():
     assert np.all(np.fabs(d-1) == 0)
 
 
-def test_get_signal_map():
+@pytest.mark.parametrize('corr', [True, False])
+def test_get_nmap_data(corr):
     make_fake_data()
-    config = get_config()
+    config = get_config(corr)
     config['GLAT_max_deg'] = 0.
     config.pop('mask_sources')
     m = xc.mappers.MapperCatWISE(config)
-    m.apply_ecliptic_correction = False
-    d = m.get_signal_map()
-    d = np.array(d)
-    print(d)
-    assert d.shape == (1, hp.nside2npix(m.nside))
-    assert np.all(np.fabs(d) < 1E-5)
+    nmap = m._get_nmap_data()
+
+    assert nmap.size == hp.nside2npix(m.nside)
+    if corr is False:
+        assert np.all(nmap == 1)
+    else:
+        # It's 0 because the ecliptic_correction is -11.28, and nmap > 0.
+        nmap_ref = 1 + m._get_ecliptic_correction()
+        assert np.all(nmap == nmap_ref)
     clean_fake_data()
 
 
-def test_get_nl_coupled():
+@pytest.mark.parametrize('corr', [True, False])
+def test_get_signal_map(corr):
     make_fake_data()
-    config = get_config()
+    config = get_config(corr)
+    config['GLAT_max_deg'] = 0.
+    config.pop('mask_sources')
+    m = xc.mappers.MapperCatWISE(config)
+    d = m.get_signal_map()
+    d = np.array(d)
+    assert d.shape == (1, hp.nside2npix(m.nside))
+    if corr is False:
+        assert np.all(np.fabs(d) < 1E-5)
+    else:
+        nmap_ref = 1 + m._get_ecliptic_correction()
+        dref = nmap_ref / np.mean(nmap_ref) - 1
+        assert np.all(np.fabs(d/dref - 1) < 1E-5)
+    clean_fake_data()
+
+
+@pytest.mark.parametrize('corr', [True, False])
+def test_get_nl_coupled(corr):
+    make_fake_data()
+    config = get_config(corr)
     config['GLAT_max_deg'] = 0.
     config.pop('mask_sources')
     m = xc.mappers.MapperCatWISE(config)
     nl = m.get_nl_coupled()
     nl = np.array(nl)
     pix_area = 4*np.pi/hp.nside2npix(m.nside)
-    nl_pred = hp.nside2npix(32)
-    nl_pred *= pix_area**2/(4*np.pi)
     assert nl.shape == (1, 3*m.nside)
-    assert np.all(np.fabs(nl/nl_pred-1) < 1E-10)
+    if corr is False:
+        nl_pred = pix_area
+        assert np.all(np.fabs(nl/nl_pred-1) < 1E-10)
+    else:
+        nmap_ref = 1 + m._get_ecliptic_correction()
+
+        nmean_srad = np.mean(nmap_ref) / pix_area
+        nmean_srad_uncorr = 1 / pix_area
+
+        nl_pred = nmean_srad_uncorr / nmean_srad**2
+        assert np.all(np.fabs(nl/nl_pred-1) < 1E-10)
     clean_fake_data()
 
 
