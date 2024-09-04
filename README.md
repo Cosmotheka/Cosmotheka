@@ -65,21 +65,22 @@ More info about the sacc files in https://github.com/LSSTDESC/sacc
 Tutorials on how to configure and use all the different mappers  to compute angular power spectra and their covariance matrix can be found [here](https://github.com/xC-ell/Cosmoteka_tutorials).
 
 # Publications
-- A. Mootoovaloo et al., "emuflow: Normalising Flows for Joint Cosmological Analysis", arXiv: 2409.01407
-- A. Mootoovaloo et al., "Assessment of Gradient-Based Samplers in Standard Cosmological Likelihoods", arXiv: 2406.04725
-- C. Garcia-Garcia et al., "Cosmic shear with small scales: DES-Y3, KiDS-1000 and HSC-DR1", arXiv: 2403.13794
-- G. Piccirilli et al., "Growth history and quasar bias evolution at z<3 from Quaia", arXiv: 2402.05761
-- J. Ruiz-Zapatero et al, "LimberJack.jl: auto-differentiable methods for angular power spectra analyses", arXiv:2310.08306, 2023.
-- D. Alonso et al, "Constraining cosmology with the Gaia-unWISE Quasar catalogue and CMB lensing: structure growth", arXiv:2306.17748, 2023.
-- T. Ferreira et al, "X-ray - cosmic shear cross-correlations: first detection and constraints on baryonic effects", arXiv:2309.11129, 2023.
-- B. Hadzhiyska et al, "Cosmology with 6 parameters in the Stage-IV era: efficient marginalisation over nuisance parameters", arXiv:2301.11895, 2023.
-- J. Ruiz-Zapatero et al, "Analytical marginalisation over photometric redshift uncertainties in cosmic shear analyses", arXiv:2301.11978, 2023.
-- B. Jego et al, "Constraining the physics of star formation from CIB-cosmic shear cross-correlations", arXiv:2209.05472, 2022.
-- B. Jego et al, "The star formation history in the last 10 billion years from CIB cross-correlations", arXiv:2206.15394, 2022.
-- C. Garcia-Garcia et al, "Combining cosmic shear data with correlated photo-z uncertainties: constraints from DESY1 and HSC-DR1", arXiv:2210.13434, 2022.
-- B. Hadzhiyska et al, "Hefty enhancement of cosmological constraints from the DES Y1 data using a Hybrid Effective Field Theory approach to galaxy bias", arXiv:2103.09820, 2021.
-- C. Garcia-Garcia et al, "The growth of density perturbations in the last ∼10 billion years from tomographic large-scale structure data", arXiv:2105.12108, 2021.
-- A. Nicola et al, "Cosmic shear power spectra in practice", arXiv:2010.09717, 2020.
+16. A. Mootoovaloo et al., "emuflow: Normalising Flows for Joint Cosmological Analysis", arXiv: 2409.01407, 2024
+15. A. Mootoovaloo et al., "Assessment of Gradient-Based Samplers in Standard Cosmological Likelihoods", arXiv: 2406.04725, 2024
+14. C. Garcia-Garcia et al., "Cosmic shear with small scales: DES-Y3, KiDS-1000 and HSC-DR1", arXiv: 2403.13794, 2024
+13. G. Piccirilli et al., "Growth history and quasar bias evolution at z<3 from Quaia", arXiv: 2402.05761, 2024
+12. J. Ruiz-Zapatero et al, "LimberJack.jl: auto-differentiable methods for angular power spectra analyses", arXiv:2310.08306, 2023.
+11. D. Alonso et al, "Constraining cosmology with the Gaia-unWISE Quasar catalogue and CMB lensing: structure growth", arXiv:2306.17748, 2023.
+10. T. Ferreira et al, "X-ray - cosmic shear cross-correlations: first detection and constraints on baryonic effects", arXiv:2309.11129, 2023.
+9. B. Hadzhiyska et al, "Cosmology with 6 parameters in the Stage-IV era: efficient marginalisation over nuisance parameters", arXiv:2301.11895, 2023.
+8. J. Ruiz-Zapatero et al, "Analytical marginalisation over photometric redshift uncertainties in cosmic shear analyses", arXiv:2301.11978, 2023.
+7. B. Jego et al, "Constraining the physics of star formation from CIB-cosmic shear cross-correlations", arXiv:2209.05472, 2022.
+6. B. Jego et al, "The star formation history in the last 10 billion years from CIB cross-correlations", arXiv:2206.15394, 2022.
+5. C. Garcia-Garcia et al, "Combining cosmic shear data with correlated photo-z uncertainties: constraints from DESY1 and HSC-DR1", arXiv:2210.13434, 2022.
+4. B. Hadzhiyska et al, "Hefty enhancement of cosmological constraints from the DES Y1 data using a Hybrid Effective Field Theory approach to galaxy bias", arXiv:2103.09820, 2021.
+3. C. Garcia-Garcia et al, "The growth of density perturbations in the last ∼10 billion years from tomographic large-scale structure data", arXiv:2105.12108, 2021.
+2. A. Nicola et al, "Hefty enhancement of cosmological constraints from the DES Y1 data using a hybrid effective field theory approach to galaxy bias", arXiv:2103.09820, 2021
+1. A. Nicola et al, "Cosmic shear power spectra in practice", arXiv:2010.09717, 2020.
 
 # Contributors
 
