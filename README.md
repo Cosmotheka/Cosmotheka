@@ -65,6 +65,7 @@ More info about the sacc files in https://github.com/LSSTDESC/sacc
 Tutorials on how to configure and use all the different mappers  to compute angular power spectra and their covariance matrix can be found [here](https://github.com/xC-ell/Cosmoteka_tutorials).
 
 # Publications
+- [17] - A. La Posta et al., "X+y: insights on gas thermodynamics from the combination of X-ray and thermal Sunyaev-Zel'dovich data cross-correlated with cosmic shear", arXiv: 2412.12081, 2024
 - [16] - A. Mootoovaloo et al., "emuflow: Normalising Flows for Joint Cosmological Analysis", arXiv: 2409.01407, 2024
 - [15] - A. Mootoovaloo et al., "Assessment of Gradient-Based Samplers in Standard Cosmological Likelihoods", arXiv: 2406.04725, 2024
 - [14] - C. Garcia-Garcia et al., "Cosmic shear with small scales: DES-Y3, KiDS-1000 and HSC-DR1", arXiv: 2403.13794, 2024
