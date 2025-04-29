@@ -8,11 +8,7 @@ on:
       - master
 
 jobs:
-  defaults:
-    run:
-      # IMPORTANT: this is needed to make sure that the conda environment is auto activated
-      shell: bash -el {0} 
-      
+
   build:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -20,6 +16,11 @@ jobs:
         os: [ ubuntu-latest ]
         py: [ 3.10 ]
         CC: [ gcc ]
+
+    defaults:
+    run:
+      # IMPORTANT: this is needed to make sure that the conda environment is auto activated
+      shell: bash -el {0} 
 
     steps:
         - uses: actions/checkout@v2
