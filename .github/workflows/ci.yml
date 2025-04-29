@@ -34,7 +34,7 @@ jobs:
           if: steps.cache.outputs.cache-hit != 'true'
           run: |
             export MAMBA_NO_BANNER=1
-            mamba env update --file ${{ env.CONDA_ENV }}
+            mamba env update --file environment.yml
 
         - name: Install TJPCov
           run: | 
