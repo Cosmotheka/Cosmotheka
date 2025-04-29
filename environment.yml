@@ -6,6 +6,7 @@ dependencies:
   # Development
   - wheel
   - pytest
+  - pytest-cov
   - coveralls
   - flake8
   # User
