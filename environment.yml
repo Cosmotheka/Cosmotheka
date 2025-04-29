@@ -1,0 +1,27 @@
+name: cosmotheka
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.10
+  # Development
+  - wheel
+  - pytest
+  - coveralls
+  - flake8
+  # User
+  - cython
+  - numpy
+  - scipy
+  - scikit-learn
+  - flake8
+  - astropy
+  - healpy
+  - pandas
+  - namaster
+  - pyccl
+  - camb
+  - sacc
+  - fitsio
+  - pip
+  - pip:
+      - pixell
