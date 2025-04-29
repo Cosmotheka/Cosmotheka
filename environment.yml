@@ -22,6 +22,7 @@ dependencies:
   - camb
   - sacc
   - fitsio
+  - healpy
   - pip
   - pip:
       - pixell
