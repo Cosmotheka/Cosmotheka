@@ -38,7 +38,7 @@ jobs:
 
         - name: Install TJPCov
           run: | 
-            pip install . 
+            pip install . --no-deps
 
         - name: Python unit tests
           run: pytest -vv cosmotheka --cov=cosmotheka
