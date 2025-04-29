@@ -176,7 +176,7 @@ cov:
       w0: -1
       wa: 0
       transfer_function: 'boltzmann_class'
-      baryons_power_spectrum: 'nobaryons'
+      baryonic_effects: null
 
 
     #### Biases to apply to the tracers ####

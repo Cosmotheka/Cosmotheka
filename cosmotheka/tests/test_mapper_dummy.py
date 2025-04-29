@@ -28,7 +28,7 @@ def get_config(dtype='galaxy_density', fsky=0.2):
       'w0': -1,
       'wa': 0,
       'transfer_function': 'boltzmann_camb',
-      'baryons_power_spectrum': 'nobaryons'}
+      'baryonic_effects': None}
     return {'seed': 0, 'nside': 32, 'fsky': fsky, 'cosmo': cosmo,
             'dtype': dtype, 'coords': 'C'}
 

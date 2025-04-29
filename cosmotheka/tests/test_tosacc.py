@@ -33,7 +33,7 @@ def get_config(fsky0=0.2, fsky1=0.3, dtype0='galaxy_density',
             'w0': -1,
             'wa': 0,
             'transfer_function': 'eisenstein_hu',
-            'baryons_power_spectrum': 'nobaryons',
+            'baryonic_effects': None,
         }
     dummy0 = {'mask_name': 'mask_dummy0', 'mapper_class': 'MapperDummy',
               'cosmo': cosmo, 'fsky': fsky0, 'seed': 0,
