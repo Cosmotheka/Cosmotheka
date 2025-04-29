@@ -124,8 +124,6 @@ class Theory():
         if self._hm_par is not None:
             return self._hm_par
 
-        cosmo = self.get_cosmo_ccl()
-
         if 'halo_model' not in self.config:
             self.config['halo_model'] = {}
         hmp = self.config['halo_model']
@@ -144,13 +142,12 @@ class Theory():
             md = ccl.halos.MassDef(Delta, rho_type)
 
         mfc = ccl.halos.MassFunc.from_name(hmp.get('mass_function',
-                                                        'Tinker10'))
+                                                   'Tinker10'))
         mfc = ccl.halos.MassFunc.from_name(hmp.get('mass_function',
-                                                        'Tinker10'))
+                                                   'Tinker10'))
         mf = mfc(mass_def=md)
 
-        hbc = ccl.halos.HaloBias.from_name(hmp.get('halo_bias',
-                                                    'Tinker10'))
+        hbc = ccl.halos.HaloBias.from_name(hmp.get('halo_bias', 'Tinker10'))
         hb = hbc(mass_def=md)
 
         # We also need an NFW profile to handle certain cases

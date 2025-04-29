@@ -168,8 +168,8 @@ def test_cov_ng_1h():
     hb = ccl.halos.HaloBiasTinker10(mass_def=md)
     cm = ccl.halos.ConcentrationDuffy08(mass_def=md)
     hmc = ccl.halos.HMCalculator(mass_function=mf, halo_bias=hb, mass_def=md)
-    pr = ccl.halos.HaloProfileHOD(mass_def=md, concentration=cm, log10Mmin_0=12.1,
-                                  log10M1_p=0.1, bg_0=1.2)
+    pr = ccl.halos.HaloProfileHOD(mass_def=md, concentration=cm,
+                                  log10Mmin_0=12.1, log10M1_p=0.1, bg_0=1.2)
     prof2pt = ccl.halos.Profile2ptHOD()
     z, nz = np.loadtxt('cosmotheka/tests/data/DESY1gc_dndz_bin0.txt',
                        usecols=(1, 3), unpack=True)
