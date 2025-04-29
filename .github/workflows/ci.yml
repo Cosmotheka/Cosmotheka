@@ -18,9 +18,9 @@ jobs:
         CC: [ gcc ]
 
     defaults:
-    run:
-      # IMPORTANT: this is needed to make sure that the conda environment is auto activated
-      shell: bash -el {0} 
+      run:
+        # IMPORTANT: this is needed to make sure that the conda environment is auto activated
+        shell: bash -el {0} 
 
     steps:
         - uses: actions/checkout@v2
