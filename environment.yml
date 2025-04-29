@@ -18,10 +18,11 @@ dependencies:
   - healpy
   - pandas
   - namaster
-  - pyccl
+  - pyccl>=3.2.0
   - camb
   - sacc
   - fitsio
+  - healpy
   - pip
   - pip:
       - pixell

@@ -8,6 +8,7 @@ on:
       - master
 
 jobs:
+
   build:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -15,6 +16,11 @@ jobs:
         os: [ ubuntu-latest ]
         py: [ 3.10 ]
         CC: [ gcc ]
+
+    defaults:
+      run:
+        # IMPORTANT: this is needed to make sure that the conda environment is auto activated
+        shell: bash -el {0} 
 
     steps:
         - uses: actions/checkout@v2
@@ -34,11 +40,11 @@ jobs:
           if: steps.cache.outputs.cache-hit != 'true'
           run: |
             export MAMBA_NO_BANNER=1
-            mamba env update --file ${{ env.CONDA_ENV }}
+            mamba env update --file environment.yml
 
         - name: Install TJPCov
           run: | 
-            pip install . 
+            pip install . --no-deps
 
         - name: Python unit tests
           run: pytest -vv cosmotheka --cov=cosmotheka
