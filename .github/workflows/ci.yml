@@ -74,7 +74,7 @@ jobs:
 
     steps:
     - name: Collect all coverage reports and publish to coveralls.io
-      uses: coverallsapp/github-action@master
+      uses: coverallsapp/github-action@v2
       with:
         carryforward: "run-3.10-ubuntu-latest,run-3.13-ubuntu-latest"
         github-token: ${{ secrets.GITHUB_TOKEN }}
