@@ -10,7 +10,7 @@ on:
 jobs:
 
   lint: 
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - name: Run flake8
         uses: py-actions/flake8@v2
