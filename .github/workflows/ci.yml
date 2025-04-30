@@ -9,12 +9,22 @@ on:
 
 jobs:
 
-  build:
+  lint: 
     runs-on: ${{ matrix.os }}
+    steps:
+      - name: Run flake8
+        uses: py-actions/flake8@v2
+        with:
+          path: "cosmotheka"
+
+  tests:
+    needs: lint
+    runs-on: ${{ matrix.os }}
+
     strategy:
       matrix:
         os: [ ubuntu-latest ]
-        python-version: [ "3.10" ]
+        python-version: [ "3.10", "3.13" ]
         CC: [ gcc ]
 
     defaults:
@@ -23,7 +33,7 @@ jobs:
         shell: bash -el {0} 
 
     steps:
-        - uses: actions/checkout@v2
+        - uses: actions/checkout@v3
 
         - name: Set up mamba
           uses: conda-incubator/setup-miniconda@v2
@@ -42,19 +52,30 @@ jobs:
             export MAMBA_NO_BANNER=1
             mamba env update --file environment.yml
 
-        - name: Install TJPCov
+        - name: Install Cosmotheka
           run: | 
             pip install . --no-deps
 
         - name: Python unit tests
-          run: pytest -vv cosmotheka --cov=cosmotheka
+          run: coverage run --source=cosmotheka -m pytest -vv tests && coverage lcov
 
-        - name: Flake
-          run: |
-            flake8 cosmotheka/
+        - name: Collect coverage report
+          uses: coverallsapp/github-action@v2
+          with:
+            github-token: ${{ secrets.GITHUB_TOKEN }}
+            flag-name: run-${{ join(matrix.*, '-') }}
+            parallel: true
+            path-to-lcov: coverage.lcov
 
-        - name: coveralls
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          run:
-            coveralls --service=github
+  finish:
+    needs: tests
+    name: Collect all coverage reports and publish to coveralls.io
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Collect all coverage reports and publish to coveralls.io
+      uses: coverallsapp/github-action@master
+      with:
+        carryforward: "run-3.10-ubuntu-latest,run-3.13-ubuntu-latest"
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        parallel-finished: true
