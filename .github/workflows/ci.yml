@@ -61,7 +61,7 @@ jobs:
             pip install . --no-deps
 
         - name: Python unit tests
-          run: coverage run --source=cosmotheka -m pytest -vv tests && coverage lcov
+          run: coverage run --source=cosmotheka -m pytest -vv cosmotheka/tests && coverage lcov
 
         - name: Collect coverage report
           uses: coverallsapp/github-action@v2
