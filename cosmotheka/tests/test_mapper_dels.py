@@ -53,7 +53,8 @@ def test_rerun():
 def test_get_nz():
     m = get_mapper()
     z, nz = m.get_nz()
-    h, b = np.histogram(m.cat_data[m.pz][m.mskflag],
+    cat_data = m.get_catalog()
+    h, b = np.histogram(cat_data[m.pz][m.mskflag],
                         range=[-0.3, 1], bins=m.num_z_bins)
     z_arr = 0.5 * (b[:-1] + b[1:])
     sel = z_arr > 0

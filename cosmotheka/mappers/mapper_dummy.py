@@ -37,7 +37,7 @@ class MapperDummy(MapperBase):
             'w0': -1,
             'wa': 0,
             'transfer_function': 'boltzmann_camb',
-            'baryons_power_spectrum': 'nobaryons',
+            'baryonic_effects': None,
         }
         self.cosmo_pars = self.config.get('cosmo', cosmo)
         self.noise_level = self.config.get('noise_level', 0)

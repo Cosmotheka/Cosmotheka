@@ -8,59 +8,78 @@ on:
       - master
 
 jobs:
-  build:
+
+  lint: 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Run flake8
+        uses: py-actions/flake8@v2
+        with:
+          path: "cosmotheka"
+
+  tests:
+    needs: lint
     runs-on: ${{ matrix.os }}
+
     strategy:
       matrix:
         os: [ ubuntu-latest ]
-        py: [ 3.7 ]
+        python-version: [ "3.10", "3.13" ]
         CC: [ gcc ]
 
+    defaults:
+      run:
+        # IMPORTANT: this is needed to make sure that the conda environment is auto activated
+        shell: bash -el {0} 
+
     steps:
-        - uses: actions/checkout@v2
+        - uses: actions/checkout@v3
 
-        - name: Set up Python ${{ matrix.py }}
-          uses: actions/setup-python@v2
+        - name: Set up mamba
+          uses: conda-incubator/setup-miniconda@v2
           with:
-            python-version: ${{ matrix.py }}
+            channels: conda-forge
+            python-version: ${{ matrix.python-version }}
+            show-channel-urls: true
+            auto-update-conda: true
+            use-mamba: true
+            activate-environment: cosmotheka
+            miniforge-version: latest
 
-        #- name: Cache pip
-        #  uses: actions/cache@v2
-        #  with:
-        #    # Based on: https://medium.com/ai2-blog/python-caching-in-github-actions-e9452698e98d
-        #    path: ${{ env.pythonLocation }}
-        #    # Use hashFiles to regenerate cache when adding new dependencies
-        #    key: ${{ runner.os }}-cache-${{ hashFiles('requirements.txt') }}
-
-        - name: Install GSL, FFTW (linux)
+        - name: Install environment packages
+          if: steps.cache.outputs.cache-hit != 'true'
           run: |
-            sudo -H apt-get install libgsl-dev libfftw3-dev libcfitsio-dev
+            export MAMBA_NO_BANNER=1
+            mamba env update --file environment.yml
 
-        - name: Install python dependencies
-          run: |
-            python -m pip install -U pip
-            # Install wheel to avoid recompiling pymaster, pyccl, camb, etc.
-            pip install -U wheel
-            # Install other CI dependencies
-            pip install -U pytest pytest-cov coveralls
-            # pip install -U -r requirements.txt
-            # Use a for loop to avoid NaMaster to be compiled
-            # before installing its dependencies
-            # (https://github.com/LSSTDESC/NaMaster/issues/138)
-            set -e
-            for i in `cat requirements.txt`; do
-               pip install -U $i;
-            done
+        - name: Install Cosmotheka
+          run: | 
+            pip install . --no-deps
 
         - name: Python unit tests
-          run: pytest -vv cosmotheka --cov=cosmotheka
+          run: coverage run --source=cosmotheka -m pytest -vv cosmotheka/tests && coverage lcov
 
-        - name: Flake
-          run: |
-            flake8 cosmotheka/
+        - name: Collect coverage report
+          uses: coverallsapp/github-action@v2
+          with:
+            github-token: ${{ secrets.GITHUB_TOKEN }}
+            flag-name: run-${{ join(matrix.*, '-') }}
+            parallel: true
+            path-to-lcov: coverage.lcov
 
-        - name: coveralls
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          run:
-            coveralls --service=github
+  finish:
+    needs: tests
+    name: Collect all coverage reports and publish to coveralls.io
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Collect all coverage reports and publish to coveralls.io
+      uses: coverallsapp/github-action@v2
+      with:
+        carryforward: "run-3.10-ubuntu-latest,run-3.13-ubuntu-latest"
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        parallel-finished: true

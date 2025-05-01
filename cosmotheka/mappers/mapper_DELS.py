@@ -1,7 +1,7 @@
 from .utils import get_map_from_points, rotate_mask
 from .mapper_base import MapperBase
 from astropy.table import Table, vstack
-from scipy.integrate import simps
+from scipy.integrate import simpson
 import numpy as np
 import healpy as hp
 import os
@@ -136,8 +136,8 @@ class MapperDELS(MapperBase):
         z_arr = 0.5 * (b[:-1] + b[1:])
         kernel = self._get_lorentzian(z_arr)
         nz_photo = h.astype(float)
-        nz_spec = simps(kernel*nz_photo[None, :], x=z_arr, axis=1)
-        nz_spec /= simps(nz_spec, x=z_arr)
+        nz_spec = simpson(kernel*nz_photo[None, :], x=z_arr, axis=1)
+        nz_spec /= simpson(nz_spec, x=z_arr)
         return {'z_mid': z_arr, 'nz': nz_spec}
 
     def get_nz(self, dz=0):

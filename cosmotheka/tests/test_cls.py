@@ -41,7 +41,7 @@ def get_config(fsky=0.2, fsky2=0.3,
         'w0': -1,
         'wa': 0,
         'transfer_function': 'eisenstein_hu',
-        'baryons_power_spectrum': 'nobaryons',
+        'baryonic_effects': None,
     }
     dummy0 = {'mask_name': 'mask_dummy0', 'mapper_class': 'MapperDummy',
               'cosmo': cosmo, 'fsky': fsky, 'seed': 0,
@@ -163,35 +163,33 @@ def test_cov_ng_1h():
     ells = clc.b.get_effective_ells()
     shutil.rmtree(tmpdir1)
     cosmo = ccl.Cosmology(**data['cov']['fiducial']['cosmo'])
-    md = ccl.halos.MassDef200m()
-    mf = ccl.halos.MassFuncTinker10(cosmo, mass_def=md)
-    hb = ccl.halos.HaloBiasTinker10(cosmo, mass_def=md)
-    cm = ccl.halos.ConcentrationDuffy08(mdef=md)
-    hmc = ccl.halos.HMCalculator(cosmo, mf, hb, md)
-    pr = ccl.halos.HaloProfileHOD(cm, lMmin_0=12.1,
-                                  lM1_p=0.1, bg_0=1.2)
+    md = ccl.halos.MassDef200m
+    mf = ccl.halos.MassFuncTinker10(mass_def=md)
+    hb = ccl.halos.HaloBiasTinker10(mass_def=md)
+    cm = ccl.halos.ConcentrationDuffy08(mass_def=md)
+    hmc = ccl.halos.HMCalculator(mass_function=mf, halo_bias=hb, mass_def=md)
+    pr = ccl.halos.HaloProfileHOD(mass_def=md, concentration=cm,
+                                  log10Mmin_0=12.1, log10M1_p=0.1, bg_0=1.2)
     prof2pt = ccl.halos.Profile2ptHOD()
     z, nz = np.loadtxt('cosmotheka/tests/data/DESY1gc_dndz_bin0.txt',
                        usecols=(1, 3), unpack=True)
-    tr = ccl.NumberCountsTracer(cosmo, False, dndz=(z, nz),
+    tr = ccl.NumberCountsTracer(cosmo, has_rsd=False, dndz=(z, nz),
                                 bias=(z, np.ones_like(z)))
     k_arr = np.geomspace(1E-4, 1E2, 256)
     a_arr = 1./(1+np.linspace(0, 3, 15)[::-1])
     tkk = ccl.halos.halomod_Tk3D_1h(cosmo, hmc,
-                                    prof1=pr, prof2=pr, prof12_2pt=prof2pt,
+                                    prof=pr, prof2=pr, prof12_2pt=prof2pt,
                                     prof3=pr, prof4=pr, prof34_2pt=prof2pt,
-                                    normprof1=True, normprof2=True,
-                                    normprof3=True, normprof4=True,
                                     a_arr=a_arr, lk_arr=np.log(k_arr))
     covNG0 = ccl.angular_cl_cov_cNG(cosmo,
-                                    cltracer1=tr, cltracer2=tr,
-                                    ell=ells, tkka=tkk, fsky=1.,
-                                    cltracer3=tr, cltracer4=tr, ell2=ells)
+                                    tracer1=tr, tracer2=tr,
+                                    ell=ells, t_of_kk_a=tkk, fsky=1.,
+                                    tracer3=tr, tracer4=tr, ell2=ells)
 
     # Gaussian only
     data = get_config(fsky=0.2, inc_hm=True)
-    data['tracers']['Dummy__0']['hod_params'] = {'lMmin_0': 12.1,
-                                                 'lM1_p': 0.1,
+    data['tracers']['Dummy__0']['hod_params'] = {'log10Mmin_0': 12.1,
+                                                 'log10M1_p': 0.1,
                                                  'bg_0': 1.2}
     covcG = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
     covG = covcG.get_covariance()
@@ -201,8 +199,8 @@ def test_cov_ng_1h():
     data = get_config(fsky=0.2, inc_hm=True)
     data['cov']['non_Gaussian'] = True
     data['cov']['NG_terms'] = ['1h']
-    data['tracers']['Dummy__0']['hod_params'] = {'lMmin_0': 12.1,
-                                                 'lM1_p': 0.1,
+    data['tracers']['Dummy__0']['hod_params'] = {'log10Mmin_0': 12.1,
+                                                 'log10M1_p': 0.1,
                                                  'bg_0': 1.2}
     covc1 = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
     mapper = MapperDummy(data['tracers']['Dummy__0'])
@@ -216,8 +214,8 @@ def test_cov_ng_1h():
     data['cov']['non_Gaussian'] = True
     data['cov']['NG_terms'] = ['1h']
     data['cov']['fsky_NG'] = 0.1
-    data['tracers']['Dummy__0']['hod_params'] = {'lMmin_0': 12.1,
-                                                 'lM1_p': 0.1,
+    data['tracers']['Dummy__0']['hod_params'] = {'log10Mmin_0': 12.1,
+                                                 'log10M1_p': 0.1,
                                                  'bg_0': 1.2}
     covc2 = Cov(data, 'Dummy__0', 'Dummy__0', 'Dummy__0', 'Dummy__0')
     covNG2 = covc2.get_covariance()-covG
@@ -771,7 +769,7 @@ def test_clfid_against_ccl(tr1, tr2):
         if tr == 'galaxy_density':
             z, nz = np.loadtxt('cosmotheka/tests/data/DESY1gc_dndz_bin0.txt',
                                usecols=(1, 3), unpack=True)
-            t = ccl.NumberCountsTracer(cosmo, False, dndz=(z, nz),
+            t = ccl.NumberCountsTracer(cosmo, has_rsd=False, dndz=(z, nz),
                                        bias=(z, np.ones_like(z)),
                                        mag_bias=(z, np.ones_like(z)))
         elif tr == 'galaxy_shear':
@@ -798,30 +796,34 @@ def test_clfid_halomod(tr1, tr2):
     data = get_config(dtype0=tr1, dtype1=tr2, inc_hm=True)
 
     cosmo = ccl.Cosmology(**data['cov']['fiducial']['cosmo'])
-    md = ccl.halos.MassDef200m()
-    mf = ccl.halos.MassFuncTinker10(cosmo, mass_def=md)
-    hb = ccl.halos.HaloBiasTinker10(cosmo, mass_def=md)
-    cm = ccl.halos.ConcentrationDuffy08(mdef=md)
-    hmc = ccl.halos.HMCalculator(cosmo, mf, hb, md)
-    pNFW = ccl.halos.HaloProfileNFW(cm)
+    md = ccl.halos.MassDef200m
+    mf = ccl.halos.MassFuncTinker10(mass_def=md)
+    hb = ccl.halos.HaloBiasTinker10(mass_def=md)
+    cm = ccl.halos.ConcentrationDuffy08(mass_def=md)
+    hmc = ccl.halos.HMCalculator(mass_function=mf, halo_bias=hb, mass_def=md)
+    pNFW = ccl.halos.HaloProfileNFW(mass_def=md, concentration=cm)
     profs = {}
     ccltr = {}
     normed = {}
     for tr, lab in [(tr1, 'Dummy__0'), (tr2, 'Dummy__1')]:
         if tr == 'galaxy_density':
-            data['tracers'][lab]['hod_params'] = {'lMmin_0': 12.1,
-                                                  'lM1_p': 0.1,
+            data['tracers'][lab]['hod_params'] = {'log10Mmin_0': 12.1,
+                                                  'log10M1_p': 0.1,
                                                   'bg_0': 1.2}
-            profs[tr] = ccl.halos.HaloProfileHOD(cm, lMmin_0=12.1,
-                                                 lM1_p=0.1, bg_0=1.2)
+            profs[tr] = ccl.halos.HaloProfileHOD(mass_def=md, concentration=cm,
+                                                 log10Mmin_0=12.1,
+                                                 log10M1_p=0.1, bg_0=1.2)
             z, nz = np.loadtxt('cosmotheka/tests/data/DESY1gc_dndz_bin0.txt',
                                usecols=(1, 3), unpack=True)
-            ccltr[tr] = ccl.NumberCountsTracer(cosmo, False, dndz=(z, nz),
+            ccltr[tr] = ccl.NumberCountsTracer(cosmo, has_rsd=False,
+                                               dndz=(z, nz),
                                                bias=(z, np.ones_like(z)))
             normed[tr] = True
         elif tr == 'cmb_tSZ':
-            data['tracers'][lab]['gnfw_params'] = {'mass_bias': 0.9}
-            profs[tr] = ccl.halos.HaloProfilePressureGNFW(mass_bias=0.9)
+            data['tracers'][lab]['gnfw_params'] = {'mass_def': '200m',
+                                                   'mass_bias': 0.9}
+            profs[tr] = ccl.halos.HaloProfilePressureGNFW(mass_def=md,
+                                                          mass_bias=0.9)
             ccltr[tr] = ccl.tSZTracer(cosmo, z_max=3.)
             normed[tr] = False
         elif tr == 'galaxy_shear':
@@ -843,8 +845,6 @@ def test_clfid_halomod(tr1, tr2):
     a_arr = 1./(1+np.linspace(0, 3, 15)[::-1])
     pk = ccl.halos.halomod_Pk2D(cosmo, hmc, profs[tr1],
                                 prof2=profs[tr2],
-                                normprof1=normed[tr1],
-                                normprof2=normed[tr2],
                                 lk_arr=np.log(k_arr),
                                 a_arr=a_arr)
     # Commented out until these features are pushed to the pip release of CCL
@@ -861,17 +861,18 @@ def test_clfid_halomod_M500c():
     data = get_config(dtype0=tr1, dtype1=tr2, inc_hm=True)
     data['cov']['fiducial']['halo_model'] = {'mass_def': '500c',
                                              'concentration': 'Duffy08M500c'}
-    data['tracers']['Dummy__0']['gnfw_params'] = {'mass_bias': 0.9}
+    data['tracers']['Dummy__0']['gnfw_params'] = {'mass_def': '500c',
+                                                  'mass_bias': 0.9}
 
     cosmo = ccl.Cosmology(**data['cov']['fiducial']['cosmo'])
     md = ccl.halos.MassDef(500, 'critical')
-    mf = ccl.halos.MassFuncTinker10(cosmo, mass_def=md)
-    hb = ccl.halos.HaloBiasTinker10(cosmo, mass_def=md)
-    cm = ConcentrationDuffy08M500c(mdef=md)
-    hmc = ccl.halos.HMCalculator(cosmo, mf, hb, md)
-    prof1 = ccl.halos.HaloProfilePressureGNFW(mass_bias=0.9)
+    mf = ccl.halos.MassFuncTinker10(mass_def=md)
+    hb = ccl.halos.HaloBiasTinker10(mass_def=md)
+    cm = ConcentrationDuffy08M500c(mass_def=md)
+    hmc = ccl.halos.HMCalculator(mass_function=mf, halo_bias=hb, mass_def=md)
+    prof1 = ccl.halos.HaloProfilePressureGNFW(mass_def=md, mass_bias=0.9)
     ccltr1 = ccl.tSZTracer(cosmo, z_max=3.)
-    prof2 = ccl.halos.HaloProfileNFW(cm)
+    prof2 = ccl.halos.HaloProfileNFW(mass_def=md, concentration=cm)
     ccltr2 = ccl.CMBLensingTracer(cosmo, z_source=1100.)
 
     clf = ClFid(data, 'Dummy__0', 'Dummy__1')
@@ -882,8 +883,8 @@ def test_clfid_halomod_M500c():
     a_arr = 1./(1+np.linspace(0, 6., 30)[::-1])
     pk = ccl.halos.halomod_Pk2D(cosmo, hmc, prof1,
                                 prof2=prof2,
-                                normprof1=False,
-                                normprof2=True,
+                                # normprof1=False,
+                                # normprof2=True,
                                 lk_arr=np.log(k_arr),
                                 a_arr=a_arr)
     # Commented out until these features are pushed to the pip release of CCL

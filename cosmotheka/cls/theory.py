@@ -8,40 +8,40 @@ class ConcentrationDuffy08M500c(ccl.halos.Concentration):
     """
     name = 'Duffy08M500c'
 
-    def __init__(self, mdef=None):
+    def __init__(self, *, mass_def=None):
         """
         Parameters
         ----------
-            mdef: :class:`~pyccl.halos.massdef.MassDef`)
+            mass_def: :class:`~pyccl.halos.massdef.MassDef`)
                 a mass definition object that fixes the mass definition used by
                 this c(M) parametrization.
         """
-        super(ConcentrationDuffy08M500c, self).__init__(mdef)
+        super(ConcentrationDuffy08M500c, self).__init__(mass_def=mass_def)
 
-    def _default_mdef(self):
+    def _default_mass_def(self):
         """
-        Set the mass definition mdef parameter to the default
+        Set the mass definition mass_def parameter to the default
         ccl.halos.MassDef(500, 'critical')
         """
-        self.mdef = ccl.halos.MassDef(500, 'critical')
+        self.mass_def = ccl.halos.MassDef(500, 'critical')
 
-    def _check_mdef(self, mdef):
+    def _check_mass_def_strict(self, mass_def):
         """
         Check the mass definition has been set to tomething different to
         ccl.halos.MassDef(500, 'critical')
 
         Parameters
         ----------
-        mdef: :obj:`~ccl.halos.MassDef`
+        mass_def: :obj:`~ccl.halos.MassDef`
             Mass definition instance
 
         Return
         ------
         bool
-            True if mdef is different to the default. False, elsewise.
+            True if mass_def is different to the default. False, elsewise.
 
         """
-        if (mdef.Delta != 500) or (mdef.rho_type != 'critical'):
+        if (mass_def.Delta != 500) or (mass_def.rho_type != 'critical'):
             return True
         return False
 
@@ -124,17 +124,15 @@ class Theory():
         if self._hm_par is not None:
             return self._hm_par
 
-        cosmo = self.get_cosmo_ccl()
-
         if 'halo_model' not in self.config:
             self.config['halo_model'] = {}
         hmp = self.config['halo_model']
 
         if 'mass_def' not in hmp:
-            md = ccl.halos.MassDef200m()
+            md = ccl.halos.MassDef.from_name('200m')
         else:
             mds = hmp['mass_def']
-            Delta = float(mds[:-1])
+            Delta = int(mds[:-1])
             if mds[-1] == 'm':
                 rho_type = 'matter'
             elif mds[-1] == 'c':
@@ -143,23 +141,25 @@ class Theory():
                 raise ValueError("Unknown density type %s" % (mds[-1]))
             md = ccl.halos.MassDef(Delta, rho_type)
 
-        mfc = ccl.halos.mass_function_from_name(hmp.get('mass_function',
-                                                        'Tinker10'))
-        mf = mfc(cosmo, mass_def=md)
+        mfc = ccl.halos.MassFunc.from_name(hmp.get('mass_function',
+                                                   'Tinker10'))
+        mfc = ccl.halos.MassFunc.from_name(hmp.get('mass_function',
+                                                   'Tinker10'))
+        mf = mfc(mass_def=md)
 
-        hbc = ccl.halos.halo_bias_from_name(hmp.get('halo_bias',
-                                                    'Tinker10'))
-        hb = hbc(cosmo, mass_def=md)
+        hbc = ccl.halos.HaloBias.from_name(hmp.get('halo_bias', 'Tinker10'))
+        hb = hbc(mass_def=md)
 
         # We also need an NFW profile to handle certain cases
-        cmc = ccl.halos.concentration_from_name(hmp.get('concentration',
+        cmc = ccl.halos.Concentration.from_name(hmp.get('concentration',
                                                         'Duffy08'))
-        cm = cmc(mdef=md)
-        pNFW = ccl.halos.HaloProfileNFW(cm)
+        cm = cmc(mass_def=md)
+        pNFW = ccl.halos.HaloProfileNFW(mass_def=md, concentration=cm)
         p2pt = ccl.halos.Profile2pt()
 
         # Halo model calculator
-        hmc = ccl.halos.HMCalculator(cosmo, mf, hb, md)
+        hmc = ccl.halos.HMCalculator(mass_function=mf, halo_bias=hb,
+                                     mass_def=md)
 
         # Transition smoothing
         alpha = hmp.get('alpha_HMCODE', 0.7)
@@ -200,7 +200,6 @@ class Theory():
              - 'ccl_pr_2pt': Instance of ccl.halos.profiles_2pt
              - 'with_hm': True if halo model is used (i.e. if 'use_halo_model'
                in tracer config
-             - 'normed': True if the profiles are normalized
         """
         cosmo = self.get_cosmo_ccl()
         hm_par = self.get_halomodel_params()
@@ -209,7 +208,6 @@ class Theory():
         ccl_pr = hm_par['prof_NFW']
         ccl_pr_2pt = hm_par['prof_2pt']
         with_hm = tracer.get('use_halo_model', False)
-        normed_profile = True
         # Get Tracers
         if dtype == 'galaxy_density':
             # Import z, pz
@@ -225,7 +223,8 @@ class Theory():
                                             mag_bias=mag_bias)
             if with_hm:
                 hod_pars = tracer.get('hod_params', {})
-                ccl_pr = ccl.halos.HaloProfileHOD(hm_par['cM'],
+                ccl_pr = ccl.halos.HaloProfileHOD(mass_def=hm_par['mass_def'],
+                                                  concentration=hm_par['cM'],
                                                   **hod_pars)
                 ccl_pr_2pt = ccl.halos.Profile2ptHOD()
         elif dtype == 'galaxy_shear':
@@ -247,7 +246,6 @@ class Theory():
             # TODO: correct z_source
             ccl_tr = ccl.CMBLensingTracer(cosmo, z_source=1100)
         elif dtype == 'cmb_tSZ':
-            normed_profile = False
             ccl_tr = ccl.tSZTracer(cosmo, z_max=3.)
             if with_hm:
                 pars = tracer.get('gnfw_params', {})
@@ -261,7 +259,7 @@ class Theory():
                 'ccl_pr': ccl_pr,
                 'ccl_pr_2pt': ccl_pr_2pt,
                 'with_hm': with_hm,
-                'normed': normed_profile}
+                }
 
     def get_ccl_tkka(self, ccl_trA1, ccl_trA2, ccl_trB1, ccl_trB2,
                      kind='1h'):
@@ -318,14 +316,10 @@ class Theory():
         lk_s = np.log(k_s)
         a_s = 1./(1+np.linspace(0., 6., 30)[::-1])
         tkk = ccl.halos.halomod_Tk3D_1h(cosmo, hm_par['calculator'],
-                                        prof1=pA1, prof2=pA2,
+                                        prof=pA1, prof2=pA2,
                                         prof12_2pt=pr2ptA,
                                         prof3=pB1, prof4=pB2,
                                         prof34_2pt=pr2ptB,
-                                        normprof1=ccl_trA1['normed'],
-                                        normprof2=ccl_trA2['normed'],
-                                        normprof3=ccl_trB1['normed'],
-                                        normprof4=ccl_trB2['normed'],
                                         a_arr=a_s, lk_arr=lk_s)
         return tkk
 
@@ -366,15 +360,15 @@ class Theory():
             pk = ccl.halos.halomod_Pk2D(cosmo,
                                         hm_par['calculator'],
                                         p1, prof_2pt=pr2pt, prof2=p2,
-                                        normprof1=ccl_tr1['normed'],
-                                        normprof2=ccl_tr2['normed'],
                                         lk_arr=lk_s, a_arr=a_s)
             # We comment this out for now because these features are
             # not present in the pip release of CCL
             # smooth_transition=hm_par['alpha'],
             # supress_1h=hm_par['k_suppress'])
         else:
-            pk = None
+            # Use DEFAULT_POWER_SPECTRUM instead of None. CCLv3 is failing to
+            # accept None
+            pk = ccl.DEFAULT_POWER_SPECTRUM
         return pk
 
     def get_ccl_cl(self, ccl_tr1, ccl_tr2, ell):
@@ -445,10 +439,10 @@ class Theory():
                                 ccl_trB1, ccl_trB2,
                                 kind=kind)
         return ccl.angular_cl_cov_cNG(cosmo,
-                                      cltracer1=ccl_trA1['ccl_tr'],
-                                      cltracer2=ccl_trA2['ccl_tr'],
+                                      tracer1=ccl_trA1['ccl_tr'],
+                                      tracer2=ccl_trA2['ccl_tr'],
                                       ell=ellA,
-                                      tkka=tkk, fsky=fsky,
-                                      cltracer3=ccl_trB1['ccl_tr'],
-                                      cltracer4=ccl_trB2['ccl_tr'],
+                                      t_of_kk_a=tkk, fsky=fsky,
+                                      tracer3=ccl_trB1['ccl_tr'],
+                                      tracer4=ccl_trB2['ccl_tr'],
                                       ell2=ellB, integration_method='spline')

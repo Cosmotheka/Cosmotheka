@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cosmotheka"
+version = "0.1.0"
+description = "Pipeline to compute Nx2pt angular power spectra and their covariances."
+readme = "README.md"
+license = { text = "GPLv2" }
+requires-python = ">=3.10"
+authors = [{ name = "Cosmotheka" }]
+keywords = ["angular power spectra", "covariances", "Nx2pt"]
+urls = { Homepage = "https://github.com/Cosmotheka/Cosmotheka" }
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Topic :: Scientific/Engineering :: Physics",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
+]
+
+dependencies = [
+    "cython",
+    "numpy",
+    "scipy",
+    "scikit-learn",
+    "flake8",
+    "astropy",
+    "healpy",
+    "pandas",
+    "pymaster",
+    "pyccl>=3.2.0",
+    "camb",
+    "sacc",
+    "fitsio",
+    "pixell"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cosmotheka"]
