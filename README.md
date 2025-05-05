@@ -62,7 +62,7 @@ You can run directly `cosmotheka/cls/cl.py`, `cov.py`, `to_sacc.py` with `python
 More info about the sacc files in https://github.com/LSSTDESC/sacc
 
 # Tutorials
-Tutorials on how to configure and use all the different mappers  to compute angular power spectra and their covariance matrix can be found [here](https://github.com/xC-ell/Cosmoteka_tutorials).
+Tutorials on how to configure and use all the different mappers  to compute angular power spectra and their covariance matrix can be found [here](https://github.com/cosotheka/Cosmoteka_tutorials).
 
 # Publications
 - [16] - A. La Posta et al., "X+y: insights on gas thermodynamics from the combination of X-ray and thermal Sunyaev-Zel'dovich data cross-correlated with cosmic shear", arXiv: 2412.12081, 2024

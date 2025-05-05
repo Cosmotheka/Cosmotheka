@@ -7,21 +7,36 @@ import healpy as hp
 
 class MapperKiDS1000(MapperBase):
     """
+    Mapper class for the KiDS1000 data sets mappers. \
+
+    The analysis of the KiDS1000 catalogs is done following \
+    the methodology described in Giblin et al 2020: \
+    https://arxiv.org/pdf/2007.01845.pdf
+
+    The catalog contains measurements of the cosmic \
+    shear (shear),  the point spread function (PSF) \
+    and the stellar ellipticities (stars). \
+    Moreover, the catalog is divided five redshift bins. \
+
+    Multiplicative and additive biases are accounted for. \
+    The noise power spectrum is estimated from the \
+    per-pixel noise variance map from the galaxy \
+    ellipticities following Nicola et al, 2020:\
+    https://arxiv.org/pdf/2010.09717.pdf
+
     Note that last letter of the the mask name stands for the \
     chosen redshdift bin (`i = [1,2,3,4]`).
-
-    path = `".../Datasets/KiDS1000/"`
 
     **Config**
 
         - data_catalog: \
-        `path+"KiDS_DR4.1_ugriZYJHKs_SOM_gold_WL_cat.fits"`
+        `"KiDS_DR4.1_ugriZYJHKs_SOM_gold_WL_cat.fits"`
         - file_nz: \
-        `path+"SOM_N_of_Z/K1000_NS_V1.0.0A_ugriZYJHKs_photoz_SG_mask_LF_svn_309c_2Dbins_v2_SOMcols_Fid_blindC_TOMO2_Nz.asc"`
+        `"SOM_N_of_Z/K1000_NS_V1.0.0A_ugriZYJHKs_photoz_SG_mask_LF_svn_309c_2Dbins_v2_SOMcols_Fid_blindC_TOMO2_Nz.asc"`
         - mode: `"shear"` / `"PSF"` / `"stars"`
         - zbin: `"1"` / `"1"` / `"2"` / `"3"` / `"4"`
         - mask_name: `"mask_KiDS1000__i"`
-        - path_rerun: `path+'xcell_runs'`
+        - path_rerun: `'xcell_runs'`
     """
     map_name = 'KiDS1000'
 
@@ -246,6 +261,15 @@ class MapperKiDS1000(MapperBase):
         return self.w2s2
 
     def get_nl_coupled(self):
+        """
+        Calculates the noise power spectrum \
+        from the mean of squared-weights \
+        map times the pixel area.
+
+        Returns:
+            nl_coupled (Array): coupled noise power spectrum
+        """
+
         kind, e1f, e2f, mod = self._set_mode()
         if self.nls[mod] is None:
             self.w2s2 = self._get_w2s2()
@@ -275,7 +299,17 @@ class MapperKiDS1000(MapperBase):
         return self._get_shifted_nz(dz)
 
     def get_dtype(self):
+        """
+        Returns the data type of the mapper.
+        Returns:
+            dtype (str): data type of the field
+        """
         return 'galaxy_shear'
 
     def get_spin(self):
+        """
+        Returns the spin of the mapper.
+        Returns:
+            spin (int): spin of the field
+        """
         return 2
