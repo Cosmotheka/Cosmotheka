@@ -23,6 +23,7 @@ def get_config(wbeam=True):
 
 @pytest.mark.parametrize('cls,spin', [(xc.mappers.MapperACTk, '0'),
                                       (xc.mappers.MapperACTtSZ, '0'),
+                                      (xc.mappers.MapperACTDR6tSZ, '0'),
                                       (xc.mappers.MapperACTCMB, '0')])
 def test_get_spin(cls, spin):
     m = cls(get_config())
@@ -33,6 +34,8 @@ def test_get_spin(cls, spin):
                                       'cmb_convergence'),
                                      (xc.mappers.MapperACTtSZ,
                                       'cmb_tSZ'),
+                                     (xc.mappers.MapperACTDR6tSZ,
+                                      'cmb_tSZ'),
                                      (xc.mappers.MapperACTCMB,
                                       'cmb_kSZ')])
 def test_get_dtype(cls, typ):
@@ -41,6 +44,7 @@ def test_get_dtype(cls, typ):
 
 
 @pytest.mark.parametrize('cls', [(xc.mappers.MapperACTtSZ),
+                                 (xc.mappers.MapperACTDR6tSZ),
                                  (xc.mappers.MapperACTCMB),
                                  (xc.mappers.MapperACTk)])
 def test_get_signal_map(cls):
@@ -61,6 +65,7 @@ def test_get_signal_map(cls):
 
 
 @pytest.mark.parametrize('cls', [(xc.mappers.MapperACTtSZ),
+                                 (xc.mappers.MapperACTDR6tSZ),
                                  (xc.mappers.MapperACTCMB),
                                  (xc.mappers.MapperACTk)])
 def test_get_mask(cls):
@@ -81,6 +86,7 @@ def test_get_mask(cls):
 
 
 @pytest.mark.parametrize('cls', [(xc.mappers.MapperACTtSZ),
+                                 (xc.mappers.MapperACTDR6tSZ),
                                  (xc.mappers.MapperACTCMB)])
 def test_get_beam(cls):
     from scipy.interpolate import interp1d

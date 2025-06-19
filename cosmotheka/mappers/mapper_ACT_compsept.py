@@ -12,14 +12,22 @@ class MapperACTCompSept(MapperACTBase):
     """
     def __init__(self, config):
         self._get_ACT_defaults(config)
+        if self.lmax > 3 * self.nside:
+            # WARNING
+            print("WARNING:              you selected lmax > 3*nside, "
+                  "setting lmax to 3 * nside.")
+            self.lmax = 3 * self.nside
 
     def _get_signal_map(self):
         # The 'Weights' FITS file contains the 2D Fourier space
         # weight for each pixel corresponding to the detector array.
         signal_map = enmap.read_map(self.file_map)
-        signal_map = reproject.healpix_from_enmap(signal_map,
-                                                  lmax=self.lmax,
-                                                  nside=self.nside)
+        signal_map = reproject.map2healpix(
+            signal_map,
+            nside=self.nside,
+            lmax=self.lmax,
+            niter=3
+        )
         signal_map = rotate_map(signal_map, self.rot)
         return signal_map
 
@@ -31,9 +39,13 @@ class MapperACTCompSept(MapperACTBase):
         # should be attenuated by the value in the mask.
 
         self.pixell_mask = self._get_pixell_mask()
-        msk = reproject.healpix_from_enmap(self.pixell_mask,
-                                           lmax=self.lmax,
-                                           nside=self.nside)
+        msk = reproject.map2healpix(
+            self.pixell_mask,
+            nside=self.nside,
+            lmax=self.lmax,
+            method="spline",
+            order=1
+        )
         msk[msk < 0.99] = 0
         msk = rotate_mask(msk, self.rot)
         return msk
