@@ -3,6 +3,7 @@ from .utils import rotate_mask, rotate_map
 from pixell import enmap, reproject
 import numpy as np
 from scipy.interpolate import interp1d
+import warnings
 
 
 class MapperACTCompSept(MapperACTBase):
@@ -13,9 +14,8 @@ class MapperACTCompSept(MapperACTBase):
     def __init__(self, config):
         self._get_ACT_defaults(config)
         if self.lmax > 3 * self.nside:
-            # WARNING
-            print("WARNING:              you selected lmax > 3*nside, "
-                  "setting lmax to 3 * nside.")
+            warnings.warn("you selected lmax > 3*nside, "
+                          "setting lmax to 3 * nside.")
             self.lmax = 3 * self.nside
 
     def _get_signal_map(self):
