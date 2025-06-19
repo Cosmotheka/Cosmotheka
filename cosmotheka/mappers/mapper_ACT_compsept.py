@@ -26,7 +26,6 @@ class MapperACTCompSept(MapperACTBase):
             signal_map,
             nside=self.nside,
             lmax=self.lmax,
-            niter=3
         )
         signal_map = rotate_map(signal_map, self.rot)
         return signal_map
