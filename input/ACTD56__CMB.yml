@@ -8,5 +8,4 @@ beam_info:
   - type: 'Custom'
     file: '/mnt/extraspace/damonge/Datasets/ACT_DR4/compsep_maps/tilec_single_tile_D56_cmb_map_v1.2.0_joint_beam.txt'
 lmax: 6000
-sphere:
-  niter_sht: 0
+niter_sht: 0

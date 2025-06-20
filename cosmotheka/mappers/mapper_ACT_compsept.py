@@ -17,7 +17,7 @@ class MapperACTCompSept(MapperACTBase):
             warnings.warn("you selected lmax > 3*nside, "
                           "setting lmax to 3 * nside.")
             self.lmax = 3 * self.nside
-        self.niter_sht = self.config["sphere"].get("niter_sht", 0)
+        self.niter_sht = self.config.get("niter_sht", 0)
 
     def _get_signal_map(self):
         # The 'Weights' FITS file contains the 2D Fourier space
