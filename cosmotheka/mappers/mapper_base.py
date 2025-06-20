@@ -1,3 +1,4 @@
+# fmt: off
 import numpy as np
 import healpy as hp
 import pymaster as nmt
@@ -12,6 +13,8 @@ class MapperBase(object):
     """
     # map_name is the name that will be used for rerun signal map files.
     map_name = None
+
+    masked_on_input = False  # If True, the mapper's signal map is masked 
 
     def __init__(self, config):
         self._get_defaults(config)
@@ -236,7 +239,8 @@ class MapperBase(object):
 
         n_iter = kwargs.get('n_iter', 0)
         return nmt.NmtField(mask, signal, beam=beam_eff,
-                            templates=cont, n_iter=n_iter)
+                            templates=cont, n_iter=n_iter,
+                            masked_on_input=self.masked_on_input)
 
     def get_nmt_field(self, **kwargs):
         """
