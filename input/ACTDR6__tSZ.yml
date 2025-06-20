@@ -13,3 +13,5 @@ ps_mask_file: /mnt/extraspace/alaposta/ACT_DR6_tSZ/ilc_subtracted_mask.fits
 inpaint_mask_file: /mnt/extraspace/alaposta/ACT_DR6_tSZ/ilc_inpaint_mask.fits
 ps_aposize: 5
 footprint_aposize: 60
+sphere:
+  niter_sht: 0
