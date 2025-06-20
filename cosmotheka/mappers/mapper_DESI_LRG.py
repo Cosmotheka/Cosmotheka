@@ -26,13 +26,13 @@ class MapperDESILRG(MapperBase):
         - sample: `'main'` / `'extended'` (default `'main'`)
         - nside: `4096`
         - imaging_weights_coeffs: `catalogs/imaging_weights/main_lrg_linear_coeffs_pz.yaml`
+        - overdensity_definition: 'cosmotheka' / 'Zhou2023' (default 'cosmotheka')
 
     """
 
     map_name = "DESI_LRG"
     dtype = "galaxy_density"
     spin = 0
-    masked_on_input = True  # The signal map is masked (i.e. mask * delta)
 
     def __init__(self, config):
         self._get_defaults(config)
@@ -57,6 +57,22 @@ class MapperDESILRG(MapperBase):
         self._randoms_selection = config.get("randoms_selection", None)
         # To avoid loading the same randoms multiple times
         self._loaded_randoms = {}
+
+        # Overdensity definition
+        self.overdensity_definition = config.get(
+            "overdensity_definition", "cosmotheka"
+        )
+        if self.overdensity_definition == "Zhou2023":
+            self.masked_on_input = False
+            self.map_name += "_defZhou2023"
+        elif self.overdensity_definition == "cosmotheka":
+            self.masked_on_input = True
+        else:
+            raise ValueError(
+                f"Invalid overdensity definition: {self.overdensity_definition}. "
+                "It should be 'cosmotheka' or 'Zhou2023'."
+            )
+
         # Cuts
         self._stardens_good_hp_idx = None
         self._stardens_nside = None
@@ -71,6 +87,7 @@ class MapperDESILRG(MapperBase):
                 k = k.replace("_", "")
                 suffix_parts.append(f"{k}{v}")
         self.suffix = "_".join(suffix_parts)
+        self.map_name += f"_{self.suffix}" if self.suffix else ""
 
     def _get_default_cuts(self):
         cuts = {
@@ -205,7 +222,12 @@ class MapperDESILRG(MapperBase):
         if self.alpha is None:
             w_data = self.get_data_maps()["w"]
             w_random = self.get_randoms_maps()["w"]
-            self.alpha = np.sum(w_data) / np.sum(w_random)
+            if self.overdensity_definition == "Zhou2023":
+                mask = self._get_mask_Zhou2023()
+                msk = mask.astype(bool)
+                self.alpha = np.mean(w_data[msk] / w_random[msk])
+            else:
+                self.alpha = np.sum(w_data) / np.sum(w_random)
         return self.alpha
 
     def get_data_maps(self):
@@ -214,43 +236,92 @@ class MapperDESILRG(MapperBase):
             cat_data = self.get_catalog()
             nmap_data = get_map_from_points(cat_data, self.nside, rot=self.rot)
             self.data_maps["n"] = nmap_data
-            self.data_maps["w"] = np.ones_like(nmap_data)
-            self.data_maps["w2"] = np.ones_like(nmap_data)
+            self.data_maps["w"] = nmap_data.copy()  # \sum w = n with w=1
+            self.data_maps["w2"] = nmap_data.copy()  # \sum w2 = n with w=1
 
         return self.data_maps
 
+    def _get_mask_Zhou2023(self):
+        # Copied from https://github.com/NoahSailer/MaPar/blob/main/maps/make_lrg_maps.py
+        rmap = self.get_randoms_maps()["w"].copy()
+
+        mask = np.zeros_like(rmap)
+        msk = np.nonzero(rmap > 0)[0]
+        avg = np.mean(rmap[msk])
+        msk = np.nonzero(rmap > 0.20 * avg)[0]
+        mask[msk] = 1.0
+
+        return mask
+
+    def _get_signal_map_Zhou2023(self):
+        # Based on https://github.com/NoahSailer/MaPar/blob/main/maps/make_lrg_maps.py
+
+        dmap = self.get_data_maps()["n"].copy()
+        rmap = self.get_randoms_maps()["w"].copy()
+
+        mask = self._get_mask_Zhou2023()
+        msk = mask.astype(bool)
+
+        alpha = self._get_alpha()
+        omap = np.zeros_like(rmap)  # Use rmap for the right dtype
+        omap[msk] = dmap[msk] / (alpha * rmap[msk]) - 1
+
+        return omap
+
     def _get_signal_map(self):
-        # Instead of providing the overdensity map, we provide the difference map;
-        # i.e. delta * mask, for better NmtField stability.
-        nmap_data = self.get_data_maps()["n"]
-        mask = self.get_mask()  # Recall mask = alpha * w_random
-        diff_map = nmap_data - mask
-        return diff_map
+        if self.overdensity_definition == "Zhou2023":
+            signal_map = self._get_signal_map_Zhou2023()
+        else:
+            # Instead of providing the overdensity map, we provide the
+            # difference map; i.e. delta * mask, for better NmtField stability.
+            nmap_data = self.get_data_maps()["n"]
+            mask = self.get_mask()  # Recall mask = alpha * w_random
+            signal_map = nmap_data - mask
+
+        return signal_map
 
     def _get_mask(self):
-        # Calculates the mask based on the randoms (m = alpha * w_random).
-        alpha = self._get_alpha()
-        w_map = self.get_randoms_maps()["w"]
+        if self.overdensity_definition == "Zhou2023":
+            mask = self._get_mask_Zhou2023()
+        else:
+            # Calculates the mask based on the randoms (m = alpha * w_random).
+            alpha = self._get_alpha()
+            w_map = self.get_randoms_maps()["w"]
 
-        mask = alpha * w_map
+            mask = alpha * w_map
         return mask
 
     def _get_nl_coupled(self):
         """
         Computes the noise power spectrum for the mapper.
         """
-        print("Calculing N_l from weights")
-        alpha = self._get_alpha()
-        pixel_A = hp.nside2pixarea(self.nside)
+        if self.overdensity_definition == "Zhou2023":
+            # Copied from https://github.com/NoahSailer/MaPar/blob/main/maps/make_lrg_maps.py
+            dmap = self.get_data_maps()["n"].copy()
+            rmap = self.get_randoms_maps()["w"].copy()
+            wmap = rmap / (self.get_randoms_maps()["n"] + 1e-30)
 
-        mask = self.get_mask()
-        w2_data = self._get_data_maps()["w2"]
-        w2_random = self.get_randoms_maps()["w2"]
+            shot_Noah = np.sum(dmap[msk] / wmap[msk]) ** 2 / np.sum(
+                dmap[msk] / wmap[msk] ** 2
+            )
+            shot_Noah = (
+                np.sum(mask_Noah) * hp.nside2pixarea(nside, False) / shot_Noah
+            )
+        else:
+            print("Calculing N_l from weights")
+            alpha = self._get_alpha()
+            pixel_A = hp.nside2pixarea(self.nside)
 
-        goodpix = mask > 0
-        N_ell = w2_data[goodpix].sum() + alpha**2 * w2_random[goodpix].sum()
-        N_ell *= pixel_A**2 / (4 * np.pi)
-        nl_coupled = N_ell * np.ones((1, 3 * self.nside))
+            mask = self.get_mask()
+            w2_data = self.get_data_maps()["w2"]
+            w2_random = self.get_randoms_maps()["w2"]
+
+            goodpix = mask > 0
+            N_ell = (
+                w2_data[goodpix].sum() + alpha**2 * w2_random[goodpix].sum()
+            )
+            N_ell *= pixel_A**2 / (4 * np.pi)
+            nl_coupled = N_ell * np.ones((1, 3 * self.nside))
 
         return {"nls": nl_coupled}
 
@@ -273,35 +344,42 @@ class MapperDESILRG(MapperBase):
     def get_spin(self):
         return self.spin
 
-    def _get_clean_randoms_with_weights(self, base_name):
+    def __get_clean_randoms_with_weights(self, base_name):
+        print("Loading randoms for", base_name, flush=True)
+        randoms = self._load_full_randoms(base_name)
+
+        # Apply cuts
+        print(f"[{base_name}] Applying quality cuts...", flush=True)
+        mask_good = self._get_quality_cuts(randoms, randoms=True)
+        randoms = randoms[mask_good]
+        print(f"[{base_name}] Final: {len(randoms)}", flush=True)
+
+        # Compute weights
+        print(f"[{base_name}] Computing weights...", flush=True)
+        weights = self.compute_weights(randoms)
+
+        # Clean the randoms file
+        print(
+            f"Removing unnecessary columns...",
+            flush=True,
+        )
+        cols_to_keep = ["RA", "DEC"]
+        randoms = hstack([randoms[cols_to_keep], Table(weights)])
+        return randoms
+
+    def get_clean_randoms_with_weights(self, base_name):
         if base_name in self._loaded_randoms:
             return self._loaded_randoms[base_name]
 
-        def f():
-            print("Loading randoms for", base_name, flush=True)
-            randoms = self._load_full_randoms(base_name)
-
-            # Apply cuts
-            print(f"[{base_name}] Applying quality cuts...", flush=True)
-            mask_good = self._get_quality_cuts(randoms, randoms=True)
-            randoms = randoms[mask_good]
-            print(f"[{base_name}] Final: {len(randoms)}", flush=True)
-
-            # Compute weights
-            print(f"[{base_name}] Computing weights...", flush=True)
-            weights = self.compute_weights(randoms)
-
-            # Clean the randoms file
-            print(
-                f"Removing unnecessary columns and saving to cleaned file...",
-                flush=True,
-            )
-            cols_to_keep = ["RA", "DEC"]
-            randoms = hstack([randoms[cols_to_keep], weights])
-            return randoms
-
         fn = "_".join([f"{base_name}-clean-weights", f"{self.suffix}.fits.gz"])
-        randoms = Table(self._rerun_read_cycle(fn, "FITSTable", f))
+        randoms = Table(
+            self._rerun_read_cycle(
+                fn,
+                "FITSTable",
+                self.__get_clean_randoms_with_weights,
+                base_name=base_name,
+            )
+        )
 
         # Only keep one randoms file in memory at a time
         self._loaded_randoms = {base_name: randoms}
@@ -328,7 +406,7 @@ class MapperDESILRG(MapperBase):
             for power in [0, 1, 2]:
 
                 def f():
-                    randoms = self._get_clean_randoms_with_weights(base_name)
+                    randoms = self.get_clean_randoms_with_weights(base_name)
                     w = np.array(randoms[weight_col])
                     w = w**power if power > 0 else None
                     map_ngal = get_map_from_points(
@@ -457,6 +535,7 @@ class MapperDESILRG(MapperBase):
 
         # Compute the weights for all z-bins at once
         for bin_index in range(1, 5):  # 4 bins
+            print(f"Computing weights for bin {bin_index}...", flush=True)
             key = f"{key_weight}_pzbin{bin_index}"
 
             weights[key] = self._compute_weights_Noah(

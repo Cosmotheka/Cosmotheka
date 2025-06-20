@@ -146,11 +146,11 @@ class MapperBase(object):
         raise NotImplementedError("Do not use base class")
 
     def _rerun_read_cycle(self, fname, ftype, func,
-                          section=None, saved_by_func=False):
+                          section=None, saved_by_func=False, **func_kwargs):
         d = get_rerun_data(self, fname, ftype,
                            section=section)
         if d is None:
-            d = func()
+            d = func(**func_kwargs)
             if not saved_by_func:
                 save_rerun_data(self, fname, ftype, d)
         return d
