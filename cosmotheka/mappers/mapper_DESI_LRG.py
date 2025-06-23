@@ -33,6 +33,7 @@ class MapperDESILRG(MapperBase):
     map_name = "DESI_LRG"
     dtype = "galaxy_density"
     spin = 0
+    masked_on_input = True
 
     def __init__(self, config):
         self._get_defaults(config)
@@ -52,7 +53,7 @@ class MapperDESILRG(MapperBase):
         )
         # Since we don't have enough RAM to load all randoms, we do it at the
         # level of maps
-        self.random_maps = {"n": None, "w": None, "w2": None}
+        self.randoms_maps = {"n": None, "w": None, "w2": None}
         self._randoms_path = config.get("randoms_path", None)
         self._randoms_selection = config.get("randoms_selection", None)
         # To avoid loading the same randoms multiple times
@@ -63,10 +64,9 @@ class MapperDESILRG(MapperBase):
             "overdensity_definition", "cosmotheka"
         )
         if self.overdensity_definition == "Zhou2023":
-            self.masked_on_input = False
-            self.map_name += "_defZhou2023"
+            self.map_name += "_densdefZhou2023"
         elif self.overdensity_definition == "cosmotheka":
-            self.masked_on_input = True
+            pass
         else:
             raise ValueError(
                 f"Invalid overdensity definition: {self.overdensity_definition}. "
@@ -88,6 +88,11 @@ class MapperDESILRG(MapperBase):
                 suffix_parts.append(f"{k}{v}")
         self.suffix = "_".join(suffix_parts)
         self.map_name += f"_{self.suffix}" if self.suffix else ""
+
+        # Mask name
+        # If not given, we use the same name as the map name since the mask is
+        # basically given by the randoms
+        self.mask_name = config.get("mask_name", self.map_name)
 
     def _get_default_cuts(self):
         cuts = {
@@ -141,6 +146,7 @@ class MapperDESILRG(MapperBase):
 
             print("MASBITS. Keeping ", mask.sum())
 
+        # TODO: Update the cuts with the self.XXX!
         # 2+ exposures
         key = "PIXEL_NOBS" if not randoms else "NOBS"
         mask *= cat[f"{key}_G"][:] >= 2
@@ -188,8 +194,16 @@ class MapperDESILRG(MapperBase):
             cat = cat[mask]
 
             print(
-                "Number of LRGs after cuts ", len(cat)
+                "Number of LRGs after quality cuts ", len(cat)
             )  # vs 9996023 that outputs quality_cuts.py
+
+            # Select the z-bin
+            cat = cat[cat["pz_bin"] == self.zbin + 1]
+
+            print(
+                f"Number of LRGs in z-bin {self.zbin}", len(cat)
+            )  # vs 9996023 that outputs quality_cuts.py
+
             self.cat = cat
 
         return self.cat
@@ -265,6 +279,7 @@ class MapperDESILRG(MapperBase):
         alpha = self._get_alpha()
         omap = np.zeros_like(rmap)  # Use rmap for the right dtype
         omap[msk] = dmap[msk] / (alpha * rmap[msk]) - 1
+        # masked on input since mask is binary
 
         return omap
 
@@ -300,13 +315,15 @@ class MapperDESILRG(MapperBase):
             dmap = self.get_data_maps()["n"].copy()
             rmap = self.get_randoms_maps()["w"].copy()
             wmap = rmap / (self.get_randoms_maps()["n"] + 1e-30)
+            msk = self.get_mask().astype(bool)
 
-            shot_Noah = np.sum(dmap[msk] / wmap[msk]) ** 2 / np.sum(
+            shot = np.sum(dmap[msk] / wmap[msk]) ** 2 / np.sum(
                 dmap[msk] / wmap[msk] ** 2
             )
-            shot_Noah = (
-                np.sum(mask_Noah) * hp.nside2pixarea(nside, False) / shot_Noah
-            )
+            shot = np.sum(msk) * hp.nside2pixarea(self.nside, False) / shot
+
+            fsky = np.mean(msk)
+            nl_coupled = shot * fsky * np.ones((1, 3 * self.nside))
         else:
             print("Calculing N_l from weights")
             alpha = self._get_alpha()
@@ -371,7 +388,8 @@ class MapperDESILRG(MapperBase):
         if base_name in self._loaded_randoms:
             return self._loaded_randoms[base_name]
 
-        fn = "_".join([f"{base_name}-clean-weights", f"{self.suffix}.fits.gz"])
+        fn = "".join([f"{base_name}_clean_weights", f"{self.suffix}.fits.gz"])
+        print(f"{fn}", flush=True)
         randoms = Table(
             self._rerun_read_cycle(
                 fn,
@@ -387,12 +405,12 @@ class MapperDESILRG(MapperBase):
         return randoms
 
     def get_randoms_maps(self):
-        if self.random_maps["n"] is not None:
-            return self.random_maps
+        if self.randoms_maps["n"] is not None:
+            return self.randoms_maps
 
         list_randoms = self._get_list_randoms()
 
-        random_maps = {
+        randoms_maps = {
             "n": np.zeros(hp.nside2npix(self.nside), dtype=int),
             "w": np.zeros(hp.nside2npix(self.nside), dtype=float),
             "w2": np.zeros(hp.nside2npix(self.nside), dtype=float),
@@ -419,14 +437,14 @@ class MapperDESILRG(MapperBase):
 
                 fname = "_".join(
                     [
-                        f"map_{base_name}",
+                        f"map_DESI_LRG_{base_name}",
                         f"nrand" if power == 0 else weight_col,
                         f"coord{self.coords}",
                         f"ns{self.nside}",
-                        f"{self.suffix}",
                     ]
                 )
-                fname += "w2.fits.gz" if power == 2 else ".fits.gz"
+                fname += f"_{self.suffix}" if self.suffix else ""
+                fname += "-w2.fits.gz" if power == 2 else ".fits.gz"
                 map_nrand = self._rerun_read_cycle(fname, "FITSMap", f)
 
                 if power == 0:
@@ -435,10 +453,10 @@ class MapperDESILRG(MapperBase):
                     k = "w"
                 elif power == 2:
                     k = "w2"
-                random_maps[k] += map_nrand
+                randoms_maps[k] += map_nrand
 
-        self.random_maps = random_maps
-        return self.random_maps
+        self.randoms_maps = randoms_maps
+        return self.randoms_maps
 
     def _get_list_randoms(self):
         """
@@ -480,7 +498,9 @@ class MapperDESILRG(MapperBase):
                         or f.startswith(".")
                     ):
                         continue
-                    list_randoms.append(f.split(".")[0])
+                    fname = f.split(".")[0]
+                    fname = fname.replace("_clean_weights", "")
+                    list_randoms.append(fname)
             elif os.path.isfile(path):
                 list_randoms.append(path.split(".")[0])
             else:
