@@ -21,7 +21,7 @@ class MapperACTDR6k(MapperACTBase):
         self.file_mask = config.get("file_mask", None)
         if self.file_mask is None:
             raise ValueError("file_mask must be provided in the config")
-        
+
         self.klm_file = self.klm_file.replace("baseline", self.variant)
         self.file_mask = self.file_mask.replace("baseline", self.variant)
 
