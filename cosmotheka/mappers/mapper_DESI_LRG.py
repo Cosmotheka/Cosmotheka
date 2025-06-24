@@ -336,11 +336,12 @@ class MapperDESILRG(MapperBase):
             return self.randoms_maps
 
         list_randoms = self._get_list_randoms()
+        npix = hp.nside2npix(self.nside)
 
         randoms_maps = {
-            "n": np.zeros(hp.nside2npix(self.nside), dtype=int),
-            "w": np.zeros(hp.nside2npix(self.nside), dtype=float),
-            "w2": np.zeros(hp.nside2npix(self.nside), dtype=float),
+            "n": np.zeros(npix),
+            "w": np.zeros(npix),
+            "w2": np.zeros(npix),
         }
 
         # TODO: consider if I want to save the sum of all maps. Problem, it
@@ -398,7 +399,7 @@ class MapperDESILRG(MapperBase):
         if self._randoms_selection is not None:
             if os.path.isfile(self._randoms_selection):
                 # If the path is a file, we assume it contains a list of randoms
-                with open(path, "r") as f:
+                with open(self._randoms_selection, "r") as f:
                     lines = f.readlines()
                     for line in lines:
                         line = line.strip()
