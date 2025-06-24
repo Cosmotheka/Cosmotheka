@@ -26,7 +26,6 @@ class MapperDESILRG(MapperBase):
         - sample: `'main'` / `'extended'` (default `'main'`)
         - nside: `4096`
         - imaging_weights_coeffs: `catalogs/imaging_weights/main_lrg_linear_coeffs_pz.yaml`
-        - overdensity_definition: 'cosmotheka' / 'Zhou2023' (default 'cosmotheka')
 
     """
 
@@ -58,20 +57,6 @@ class MapperDESILRG(MapperBase):
         self._randoms_selection = config.get("randoms_selection", None)
         # To avoid loading the same randoms multiple times
         self._loaded_randoms = {}
-
-        # Overdensity definition
-        self.overdensity_definition = config.get(
-            "overdensity_definition", "cosmotheka"
-        )
-        if self.overdensity_definition == "Zhou2023":
-            self.map_name += "_densdefZhou2023"
-        elif self.overdensity_definition == "cosmotheka":
-            pass
-        else:
-            raise ValueError(
-                f"Invalid overdensity definition: {self.overdensity_definition}. "
-                "It should be 'cosmotheka' or 'Zhou2023'."
-            )
 
         # Cuts
         self._stardens_good_hp_idx = None
@@ -236,12 +221,7 @@ class MapperDESILRG(MapperBase):
         if self.alpha is None:
             w_data = self.get_data_maps()["w"]
             w_random = self.get_randoms_maps()["w"]
-            if self.overdensity_definition == "Zhou2023":
-                mask = self._get_mask_Zhou2023()
-                msk = mask.astype(bool)
-                self.alpha = np.mean(w_data[msk] / w_random[msk])
-            else:
-                self.alpha = np.sum(w_data) / np.sum(w_random)
+            self.alpha = np.sum(w_data) / np.sum(w_random)
         return self.alpha
 
     def get_data_maps(self):
@@ -255,90 +235,39 @@ class MapperDESILRG(MapperBase):
 
         return self.data_maps
 
-    def _get_mask_Zhou2023(self):
-        # Copied from https://github.com/NoahSailer/MaPar/blob/main/maps/make_lrg_maps.py
-        rmap = self.get_randoms_maps()["w"].copy()
-
-        mask = np.zeros_like(rmap)
-        msk = np.nonzero(rmap > 0)[0]
-        avg = np.mean(rmap[msk])
-        msk = np.nonzero(rmap > 0.20 * avg)[0]
-        mask[msk] = 1.0
-
-        return mask
-
-    def _get_signal_map_Zhou2023(self):
-        # Based on https://github.com/NoahSailer/MaPar/blob/main/maps/make_lrg_maps.py
-
-        dmap = self.get_data_maps()["n"].copy()
-        rmap = self.get_randoms_maps()["w"].copy()
-
-        mask = self._get_mask_Zhou2023()
-        msk = mask.astype(bool)
-
-        alpha = self._get_alpha()
-        omap = np.zeros_like(rmap)  # Use rmap for the right dtype
-        omap[msk] = dmap[msk] / (alpha * rmap[msk]) - 1
-        # masked on input since mask is binary
-
-        return omap
-
     def _get_signal_map(self):
-        if self.overdensity_definition == "Zhou2023":
-            signal_map = self._get_signal_map_Zhou2023()
-        else:
-            # Instead of providing the overdensity map, we provide the
-            # difference map; i.e. delta * mask, for better NmtField stability.
-            nmap_data = self.get_data_maps()["n"]
-            mask = self.get_mask()  # Recall mask = alpha * w_random
-            signal_map = nmap_data - mask
+        # Instead of providing the overdensity map, we provide the
+        # difference map; i.e. delta * mask, for better NmtField stability.
+        nmap_data = self.get_data_maps()["n"]
+        mask = self.get_mask()  # Recall mask = alpha * w_random
+        signal_map = nmap_data - mask
 
         return signal_map
 
     def _get_mask(self):
-        if self.overdensity_definition == "Zhou2023":
-            mask = self._get_mask_Zhou2023()
-        else:
-            # Calculates the mask based on the randoms (m = alpha * w_random).
-            alpha = self._get_alpha()
-            w_map = self.get_randoms_maps()["w"]
+        # Calculates the mask based on the randoms (m = alpha * w_random).
+        alpha = self._get_alpha()
+        w_map = self.get_randoms_maps()["w"]
 
-            mask = alpha * w_map
+        mask = alpha * w_map
         return mask
 
     def _get_nl_coupled(self):
         """
         Computes the noise power spectrum for the mapper.
         """
-        if self.overdensity_definition == "Zhou2023":
-            # Copied from https://github.com/NoahSailer/MaPar/blob/main/maps/make_lrg_maps.py
-            dmap = self.get_data_maps()["n"].copy()
-            rmap = self.get_randoms_maps()["w"].copy()
-            wmap = rmap / (self.get_randoms_maps()["n"] + 1e-30)
-            msk = self.get_mask().astype(bool)
+        print("Calculing N_l from weights")
+        alpha = self._get_alpha()
+        pixel_A = hp.nside2pixarea(self.nside)
 
-            shot = np.sum(dmap[msk] / wmap[msk]) ** 2 / np.sum(
-                dmap[msk] / wmap[msk] ** 2
-            )
-            shot = np.sum(msk) * hp.nside2pixarea(self.nside, False) / shot
+        mask = self.get_mask()
+        w2_data = self.get_data_maps()["w2"]
+        w2_random = self.get_randoms_maps()["w2"]
 
-            fsky = np.mean(msk)
-            nl_coupled = shot * fsky * np.ones((1, 3 * self.nside))
-        else:
-            print("Calculing N_l from weights")
-            alpha = self._get_alpha()
-            pixel_A = hp.nside2pixarea(self.nside)
-
-            mask = self.get_mask()
-            w2_data = self.get_data_maps()["w2"]
-            w2_random = self.get_randoms_maps()["w2"]
-
-            goodpix = mask > 0
-            N_ell = (
-                w2_data[goodpix].sum() + alpha**2 * w2_random[goodpix].sum()
-            )
-            N_ell *= pixel_A**2 / (4 * np.pi)
-            nl_coupled = N_ell * np.ones((1, 3 * self.nside))
+        goodpix = mask > 0
+        N_ell = w2_data[goodpix].sum() + alpha**2 * w2_random[goodpix].sum()
+        N_ell *= pixel_A**2 / (4 * np.pi)
+        nl_coupled = N_ell * np.ones((1, 3 * self.nside))
 
         return {"nls": nl_coupled}
 
@@ -672,3 +601,71 @@ class MapperDESILRG(MapperBase):
             data1 = np.insert(data, 0, 1.0, axis=1)
             weights[mask] = np.dot(coeffs, data1.T)
         return weights
+
+
+class MapperDESILRGZhou2023(MapperDESILRG):
+    """
+    Mapper class for the DESI LRGs data set from (Zhou et al. 2023, 2309.06443).
+
+    It uses the overdensity definition from Zhou2023, which is uses
+    alpha = <w_data / w_random>, so that <delta> = 0.
+    """
+
+    map_name = "DESI_LRG_densdefZhou2023"
+
+    def _get_alpha(self):
+        """
+        Computes alpha parameter that makes <w_data> = alpha * <w_random>.
+        """
+        if self.alpha is None:
+            w_data = self.get_data_maps()["w"]
+            w_random = self.get_randoms_maps()["w"]
+            mask = self.get_mask()
+            msk = mask.astype(bool)
+            self.alpha = np.mean(w_data[msk] / w_random[msk])
+        return self.alpha
+
+    def _get_mask(self):
+        # Copied from https://github.com/NoahSailer/MaPar/blob/main/maps/make_lrg_maps.py
+        rmap = self.get_randoms_maps()["w"].copy()
+
+        mask = np.zeros_like(rmap)
+        msk = np.nonzero(rmap > 0)[0]
+        avg = np.mean(rmap[msk])
+        msk = np.nonzero(rmap > 0.20 * avg)[0]
+        mask[msk] = 1.0
+
+        return mask
+
+    def _get_signal_map(self):
+        # Based on https://github.com/NoahSailer/MaPar/blob/main/maps/make_lrg_maps.py
+
+        dmap = self.get_data_maps()["n"].copy()
+        rmap = self.get_randoms_maps()["w"].copy()
+
+        mask = self.get_mask()
+        msk = mask.astype(bool)
+
+        alpha = self._get_alpha()
+        omap = np.zeros_like(rmap)  # Use rmap for the right dtype
+        omap[msk] = dmap[msk] / (alpha * rmap[msk]) - 1
+        # masked on input since mask is binary
+
+        return omap
+
+    def _get_nl_coupled(self):
+        # Copied from https://github.com/NoahSailer/MaPar/blob/main/maps/make_lrg_maps.py
+        dmap = self.get_data_maps()["n"].copy()
+        rmap = self.get_randoms_maps()["w"].copy()
+        wmap = rmap / (self.get_randoms_maps()["n"] + 1e-30)
+        msk = self.get_mask().astype(bool)
+
+        shot = np.sum(dmap[msk] / wmap[msk]) ** 2 / np.sum(
+            dmap[msk] / wmap[msk] ** 2
+        )
+        shot = np.sum(msk) * hp.nside2pixarea(self.nside, False) / shot
+
+        fsky = np.mean(msk)
+        nl_coupled = shot * fsky * np.ones((1, 3 * self.nside))
+
+        return {"nls": nl_coupled}
