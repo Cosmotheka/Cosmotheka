@@ -81,12 +81,10 @@ class MapperDESILRG(MapperBase):
 
     def _get_default_cuts(self):
         cuts = {
-            "target_min_nobs": 1,
             "target_maskbits": [1, 12, 13],
             "min_nobs": 2,
             "max_ebv": 0.15,
             "max_stardens": 2500,
-            "stardens_nside": 64,
         }
         return cuts
 
@@ -99,7 +97,7 @@ class MapperDESILRG(MapperBase):
             stardens = fitsio.read(fname)  # Stellar density map
             self._stardens_nside = hp.npix2nside(stardens.size)
             self._stardens_good_hp_idx = stardens["HPXPIXEL"][
-                stardens["STARDENS"] < 2500
+                stardens["STARDENS"] < self.cuts["max_stardens"]
             ]
 
         lrg_hp_idx = hp.ang2pix(
@@ -125,7 +123,7 @@ class MapperDESILRG(MapperBase):
         if randoms:
             # MASKBITS cut. The veto mask for randoms seem to miss some MASKBITS
             # that's why I put it after, to show it.
-            target_maskbits = [1, 12, 13]  # TODO: read it from config
+            target_maskbits = self.cuts["target_maskbits"]
             for bit in target_maskbits:
                 mask &= (cat["MASKBITS"] & 2**bit) == 0
 
@@ -134,13 +132,13 @@ class MapperDESILRG(MapperBase):
         # TODO: Update the cuts with the self.XXX!
         # 2+ exposures
         key = "PIXEL_NOBS" if not randoms else "NOBS"
-        mask *= cat[f"{key}_G"][:] >= 2
-        mask *= cat[f"{key}_R"][:] >= 2
-        mask *= cat[f"{key}_Z"][:] >= 2
+        mask *= cat[f"{key}_G"][:] >= self.cuts["min_nobs"]
+        mask *= cat[f"{key}_R"][:] >= self.cuts["min_nobs"]
+        mask *= cat[f"{key}_Z"][:] >= self.cuts["min_nobs"]
         print("Pixel exposures. Keeping ", mask.sum())
 
         # E(B-V) < 0.15
-        mask *= cat["EBV"][:] < 0.15
+        mask *= cat["EBV"][:] < self.cuts["max_ebv"]
         print("EBV. Keeping ", mask.sum())
 
         # Apply cut on stellar density
