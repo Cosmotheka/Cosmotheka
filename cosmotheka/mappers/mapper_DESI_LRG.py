@@ -338,52 +338,41 @@ class MapperDESILRG(MapperBase):
         list_randoms = self._get_list_randoms()
         npix = hp.nside2npix(self.nside)
 
-        randoms_maps = {
-            "n": np.zeros(npix),
-            "w": np.zeros(npix),
-            "w2": np.zeros(npix),
-        }
+        randoms_maps = np.zeros((3, npix))
 
         # TODO: consider if I want to save the sum of all maps. Problem, it
         # makes the code a bit more complex and it's difficult to know which
         # randoms when into the map.
         for base_name in list_randoms:
             weight_col = f"weight_pzbin{self.zbin + 1}"
-            for power in [0, 1, 2]:
 
-                def f():
-                    randoms = self.get_clean_randoms_with_weights(base_name)
-                    w = np.array(randoms[weight_col])
-                    w = w**power if power > 0 else None
-                    map_ngal = get_map_from_points(
+            def f():
+                randoms = self.get_clean_randoms_with_weights(base_name)
+                w = np.array(randoms[weight_col])
+                map_ngal = np.zeros((3, npix))
+                for power in [0, 1, 2]:
+                    map_ngal[power] = get_map_from_points(
                         randoms,
                         self.nside,
                         rot=self.rot,
-                        w=w,
+                        w=w**power if power > 0 else None,
                     )
-                    return map_ngal
+                return map_ngal
 
-                fname = "_".join(
-                    [
-                        f"map_DESI_LRG_{base_name}",
-                        f"nrand" if power == 0 else weight_col,
-                        f"coord{self.coords}",
-                        f"ns{self.nside}",
-                    ]
-                )
-                fname += f"_{self.suffix}" if self.suffix else ""
-                fname += "-w2.fits.gz" if power == 2 else ".fits.gz"
-                map_nrand = self._rerun_read_cycle(fname, "FITSMap", f)
+            fname = "_".join(
+                [
+                    f"map_{self.map_name}_{base_name}",
+                    f"n-w-w2",
+                    f"coord{self.coords}",
+                    f"ns{self.nside}.fits.gz",
+                ]
+            )
+            map_nrand = self._rerun_read_cycle(fname, "FITSMap", f)
 
-                if power == 0:
-                    k = "n"
-                elif power == 1:
-                    k = "w"
-                elif power == 2:
-                    k = "w2"
-                randoms_maps[k] += map_nrand
+            randoms_maps += map_nrand
 
-        self.randoms_maps = randoms_maps
+        for i, key in enumerate(["n", "w", "w2"]):
+            self.randoms_maps[key] = randoms_maps[i]
         return self.randoms_maps
 
     def _get_list_randoms(self):
