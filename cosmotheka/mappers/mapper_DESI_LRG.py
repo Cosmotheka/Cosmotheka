@@ -17,16 +17,24 @@ class MapperDESILRG(MapperBase):
     Config:
         - zbin: `0` / `1` / `2` / `3`  [Note that the official files use the range [1, 4]]
         - data_catalog: \
-          `'./DESI/DESI_LRGs_Zhou2023/lrg_xcorr_2023_v1/catalogs/dr9_lrg_pzbins.fits'`
+          `'./lrg_xcorr_2023_v1/catalogs/dr9_lrg_pzbins.fits'`
         - file_dndz: \
-          `'./DESI/DESI_LRGs_Zhou2023/lrg_xcorr_2023_v1/catalogs/dndz_lrg_pzbins.fits'`
+          `'./lrg_xcorr_2023_v1/catalogs/dndz_lrg_pzbins.fits'`
         - randoms_path: \
         - randoms_selection: 
         - randoms_lrgmask_path:
         - sample: `'main'` / `'extended'` (default `'main'`)
         - nside: `4096`
-        - imaging_weights_coeffs: `catalogs/imaging_weights/main_lrg_linear_coeffs_pz.yaml`
-
+        - imaging_weights_coeffs: `./lrg_xcorr_2023_v1/catalogs/imaging_weights/main_lrg_linear_coeffs_pz.yaml`
+        - stardens_path: ./lrg_xcorr_2023_v1/misc/pixweight-dr7.1-0.22.0_stardens_64_ring.fits
+        - download_missing_random: `True` (default `True`)
+        - remove_random_after_clean: `True` (default `True`)
+        - mask_name: `None` (default `None`, which means the same as map_name)
+        - target_maskbits: `[1, 12, 13]` (default)
+        - min_nobs: `2` (default)
+        - max_ebv: `0.15` (default). Use None to apply no EBV cut.
+        - max_stardens: `2500` (default)
+        - remove_island: `True` (default). If True, it removes the "island" in the NGC
     """
 
     map_name = "DESI_LRG"
@@ -36,12 +44,23 @@ class MapperDESILRG(MapperBase):
 
     def __init__(self, config):
         self._get_defaults(config)
+
+        # General arguments
         self.cat = None
         self.data_maps = {"n": None, "w": None, "w2": None}
         self.alpha = None
         self.nl_coupled = None
         self.rot = self._get_rotator("C")
         self.zbin = config["zbin"]
+
+        # Sample
+        self._sample = config.get("sample", "main")
+        if self._sample not in ["main", "extended"]:
+            raise ValueError(
+                f"Invalid sample: {self._sample}. "
+                "It should be 'main' or 'extended'."
+            )
+
         # Randoms
         self._list_randoms = None
         self._download_missing_random = config.get(
@@ -50,8 +69,7 @@ class MapperDESILRG(MapperBase):
         self._remove_random_after_clean = config.get(
             "remove_random_after_clean", True
         )
-        # Since we don't have enough RAM to load all randoms, we do it at the
-        # level of maps
+        # We use maps since the randoms are too large to fit in memory
         self.randoms_maps = {"n": None, "w": None, "w2": None}
         self._randoms_path = config.get("randoms_path", None)
         self._randoms_selection = config.get("randoms_selection", None)
@@ -72,6 +90,11 @@ class MapperDESILRG(MapperBase):
                 k = k.replace("_", "")
                 suffix_parts.append(f"{k}{v}")
         self.suffix = "_".join(suffix_parts)
+
+        # Modify the map name
+        self.map_name += (
+            f"_{self._sample}" if self._sample == "extended" else ""
+        )
         self.map_name += f"_{self.suffix}" if self.suffix else ""
 
         # Mask name
@@ -85,6 +108,7 @@ class MapperDESILRG(MapperBase):
             "min_nobs": 2,
             "max_ebv": 0.15,
             "max_stardens": 2500,
+            "remove_island": True,
         }
         return cuts
 
@@ -129,7 +153,6 @@ class MapperDESILRG(MapperBase):
 
             print("MASBITS. Keeping ", mask.sum())
 
-        # TODO: Update the cuts with the self.XXX!
         # 2+ exposures
         key = "PIXEL_NOBS" if not randoms else "NOBS"
         mask *= cat[f"{key}_G"][:] >= self.cuts["min_nobs"]
@@ -138,8 +161,9 @@ class MapperDESILRG(MapperBase):
         print("Pixel exposures. Keeping ", mask.sum())
 
         # E(B-V) < 0.15
-        mask *= cat["EBV"][:] < self.cuts["max_ebv"]
-        print("EBV. Keeping ", mask.sum())
+        if self.cuts["max_ebv"] is not None:
+            mask *= cat["EBV"][:] < self.cuts["max_ebv"]
+            print("EBV. Keeping ", mask.sum())
 
         # Apply cut on stellar density
         mask *= self._get_stardens_mask(cat)
@@ -147,12 +171,13 @@ class MapperDESILRG(MapperBase):
 
         # Remove "islands" in the NGC
         # Extra cut in quality_cuts.py (used in MWhite+2021)
-        mask *= ~(
-            (cat["DEC"][:] < -10.5)
-            & (cat["RA"][:] > 120)
-            & (cat["RA"][:] < 260)
-        )
-        print("Island. Keeping ", mask.sum())
+        if self.cuts["remove_island"]:
+            mask *= ~(
+                (cat["DEC"][:] < -10.5)
+                & (cat["RA"][:] > 120)
+                & (cat["RA"][:] < 260)
+            )
+            print("Island. Keeping ", mask.sum())
 
         return mask
 
@@ -464,8 +489,7 @@ class MapperDESILRG(MapperBase):
             linear_coeffs = yaml.safe_load(f)
 
         key_weight = "weight"
-        # TODO: This might not be the best way to handle this.
-        if "no_ebv" in weights_path:
+        if ("no_ebv" in weights_path) or (self.cuts["max_ebv"] is None):
             key_weight = "weight_noebv"
 
         weights = {}
