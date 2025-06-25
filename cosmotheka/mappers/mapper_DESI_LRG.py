@@ -499,7 +499,7 @@ class MapperDESILRG(MapperBase):
             print(f"Computing weights for bin {bin_index}...", flush=True)
             key = f"{key_weight}_pzbin{bin_index}"
 
-            weights[key] = self._compute_weights_Noah(
+            weights[key] = self._compute_weights_for_zbin(
                 randoms, linear_coeffs, bin_index
             )
 
@@ -576,7 +576,7 @@ class MapperDESILRG(MapperBase):
 
         return randoms
 
-    def _compute_weights_Noah(self, randoms, linear_coeffs, bin_index):
+    def _compute_weights_for_zbin(self, randoms, linear_coeffs, bin_index):
         # Copied from https://github.com/NoahSailer/MaPar/blob/main/maps/assign_randoms_weights.py
 
         # Assign zero weights to randoms with invalid imaging properties
