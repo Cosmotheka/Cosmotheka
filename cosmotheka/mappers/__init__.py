@@ -3,6 +3,7 @@ from .mapper_base import MapperBase
 from .mapper_ACT_base import MapperACTBase
 from .mapper_ACT_compsept import MapperACTCompSept
 from .mapper_ACTk import MapperACTk
+from .mapper_ACTDR6k import MapperACTDR6k
 from .mapper_ACTtSZ import MapperACTtSZ
 from .mapper_ACTDR6tSZ import MapperACTDR6tSZ
 from .mapper_ACTCMB import MapperACTCMB
