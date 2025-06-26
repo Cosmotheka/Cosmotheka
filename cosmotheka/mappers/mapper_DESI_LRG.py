@@ -83,7 +83,9 @@ class MapperDESILRG(MapperBase):
 
         suffix_parts = []
         self.cuts = {}
-        for k, v in cuts.items():
+        keys_cuts = sorted(cuts.keys())
+        for k in keys_cuts:
+            v = cuts[k]
             self.cuts[k] = config.get(k, v)
 
             if self.cuts[k] != v:

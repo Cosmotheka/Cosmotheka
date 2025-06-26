@@ -12,7 +12,7 @@ from cosmotheka.mappers.mapper_DESI_LRG import (
 import yaml
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def config(
     catalog,
     weights,
@@ -282,8 +282,7 @@ def test_rerun(rerun_config):
     assert np.all(read_maps[2] == random_maps["w2"])
 
 
-def test_get_default_cuts():
-    m = get_mapper()
+def test_get_default_cuts(mapper):
     cuts = m._get_default_cuts()
     assert isinstance(cuts, dict)
     assert cuts == {
@@ -295,12 +294,47 @@ def test_get_default_cuts():
     }
 
 
-# TODO:
-def test_suffix_generation():
-    config = get_config()
-    config["min_nobs"] = 3  # change from default
+@pytest.mark.parametrize(
+    ("key", "val"),
+    [
+        ("target_maskbits", [1, 12, 14]),
+        ("min_nobs", 3),
+        ("max_ebv", 0.2),
+        ("max_stardens", 3000),
+        ("remove_island", False),
+    ],
+)
+def test_suffix_generation(config, key, val):
+    config[key] = val  # change from default
     mapper = MapperDESILRG(config)
-    assert "minnobs3" in mapper.suffix or mapper.suffix == ""
+    assert key.replace("_", "") in mapper.suffix
+
+
+def test_suffix_generation_all_keys(config):
+    # Set all keys to non-default values
+    config["target_maskbits"] = [1, 12, 14]
+    config["min_nobs"] = 3
+    config["max_ebv"] = 0.2
+    config["max_stardens"] = 3000
+    config["remove_island"] = False
+
+    mapper = MapperDESILRG(config)
+    suffix = mapper.suffix
+
+    # Check that all keys are reflected in the suffix
+    s = []
+    for key in sorted(
+        [
+            "target_maskbits",
+            "min_nobs",
+            "max_ebv",
+            "max_stardens",
+            "remove_island",
+        ]
+    ):
+        s.append(key.replace("_", "") + str(config[key]))
+
+    assert suffix == "_".join(s)
 
 
 # TODO:
