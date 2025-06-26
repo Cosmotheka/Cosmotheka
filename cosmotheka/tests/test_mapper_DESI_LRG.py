@@ -259,13 +259,27 @@ def test_rerun(rerun_config):
     assert d["nls"].size == 32 * 3
     assert np.all(nl == d["nls"])
 
-    # TODO: Clean randoms
-    # cat = m.get_catalog()
-    # fn = "cosmotheka/tests/data/DELS_bin0_cat.fits"
-    # catb = Table.read(fn)
-    # assert len(catb) == len(cat)
+    # Clean randoms
+    clean_randoms = m.get_clean_randoms_with_weights("randoms-1-0")
+    fn = os.path.join(path_rerun, "randoms-1-0_clean_weights.fits.gz")
+    read_randoms = Table.read(fn)
+    assert len(clean_randoms) == len(read_randoms)
 
-    # TODO: Randoms maps
+    # Randoms maps
+    random_maps = m.get_randoms_maps()
+    fn = os.path.join(
+        path_rerun, "map_DESI_LRG_randoms-1-0_n-w-w2_coordC_ns32.fits.gz"
+    )
+    read_maps = hp.read_map(fn, verbose=False, field=None)
+
+    fn = os.path.join(
+        path_rerun, "map_DESI_LRG_randoms-1-1_n-w-w2_coordC_ns32.fits.gz"
+    )
+    read_maps += hp.read_map(fn, verbose=False, field=None)
+
+    assert np.all(read_maps[0] == random_maps["n"])
+    assert np.all(read_maps[1] == random_maps["w"])
+    assert np.all(read_maps[2] == random_maps["w2"])
 
 
 def test_get_default_cuts():
