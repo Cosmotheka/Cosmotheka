@@ -9,6 +9,7 @@ def get_config():
     path = 'cosmotheka/tests/data/'
     c = {'klm_file': path+'alm.fits',
          'file_mask': path+'map.fits',
+         'file_noise': path+'nl.txt',
          'map_name': 'DR6_kappa_test',
          'mask_name': 'DR6_kappa_test',
          'coords': 'C',

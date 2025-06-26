@@ -1,5 +1,6 @@
 from .mapper_base import MapperBase
 from .utils import rotate_mask, rotate_map
+from scipy.interpolate import interp1d
 import numpy as np
 import healpy as hp
 import warnings
@@ -9,11 +10,11 @@ class MapperACTDR6k(MapperBase):
     """
     ACT DR6 kappa mapper class.
     """
+    map_name = "ACT"
+
     def __init__(self, config):
         self._get_defaults(config)
         self.rot = self._get_rotator('C')
-
-        self.map_name = "ACT"
 
         self.mask_threshold = config.get("mask_threshold", 0.1)
         self.variant = config.get("variant", "baseline")
@@ -27,6 +28,12 @@ class MapperACTDR6k(MapperBase):
 
         self.klm_file = self.klm_file.replace("baseline", self.variant)
         self.file_mask = self.file_mask.replace("baseline", self.variant)
+
+        self.file_noise = config.get("file_noise", None)
+        if self.file_noise is None:
+            raise ValueError("file_noise must be provided in the config")
+        self.file_noise = self.file_noise.replace("baseline", self.variant)
+        self.nl_coupled = None
 
         self.map_name = f"{self.map_name}_{config['map_name']}_{self.variant}"
         self.mask_name = f"{config['mask_name']}_{self.variant}"
@@ -64,8 +71,16 @@ class MapperACTDR6k(MapperBase):
         return mask
 
     def get_nl_coupled(self):
-        # raise NotImplementedError("No noise model for the ACT maps")
-        return np.zeros([1, 3*self.nside])
+        if self.nl_coupled is None:
+            ell, nl = np.loadtxt(self.file_noise, unpack=True)
+            nl = interp1d(
+                ell, nl, bounds_error=False,
+                fill_value=(nl[0], nl[-1])
+            )(self.get_ell())
+            # Rescale to "couple" noise
+            nl *= np.mean(self.get_mask()**2)
+            self.nl_coupled = np.array([nl])
+        return self.nl_coupled
 
     def get_dtype(self):
         return 'cmb_convergence'
