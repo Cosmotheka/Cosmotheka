@@ -1,16 +1,19 @@
-from .mapper_ACT_base import MapperACTBase
+from .mapper_base import MapperBase
 from .utils import rotate_mask, rotate_map
 import numpy as np
 import healpy as hp
 import warnings
 
 
-class MapperACTDR6k(MapperACTBase):
+class MapperACTDR6k(MapperBase):
     """
     ACT DR6 kappa mapper class.
     """
     def __init__(self, config):
         self._get_defaults(config)
+        self.rot = self._get_rotator('C')
+
+        self.map_name = "ACT"
 
         self.mask_threshold = config.get("mask_threshold", 0.1)
         self.variant = config.get("variant", "baseline")
