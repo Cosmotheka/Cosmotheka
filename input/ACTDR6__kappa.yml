@@ -1,10 +1,10 @@
-mapper_class: MapperACTDR6k
-mask_name: ACT_kappa_DR6
-map_name: kappa_DR6
-path_rerun: /mnt/extraspace/damonge/Datasets/ACT_DR6/xcell_runs
-klm_file: /mnt/extraspace/damonge/Datasets/ACT_DR6/lensing_maps/baseline/kappa_alm_data_act_dr6_lensing_v1_baseline.fits
-file_mask: /mnt/extraspace/damonge/Datasets/ACT_DR6/lensing_maps/baseline/mask_act_dr6_lensing_v1_healpix_nside_4096_baseline.fits
-lmax: 4000
+mapper_class: MapperACTk
+mask_name: mask_ACT_kappa_D56
+map_name: kappa_D56
+path_rerun: '/mnt/extraspace/damonge/Datasets/ACT_DR4/xcell_runs'
+file_map: /mnt/extraspace/damonge/Datasets/ACT_DR4/lensing_kappa_maps/act_planck_dr4.01_s14s15_D56_lensing_kappa_baseline.fits
+file_mask: /mnt/extraspace/damonge/Datasets/ACT_DR4/masks/lensing_masks/act_dr4.01_s14s15_D56_lensing_mask.fits
+lmax: 6000
+mask_power: 2
 # Avoid ringing
 mask_threshold: 0.1
-variant: "baseline"
