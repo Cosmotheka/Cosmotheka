@@ -756,7 +756,7 @@ class Data():
         """
         config = self.data['tracers'][tr]
         nside = self.data['sphere']['nside']
-        niter_sht = self.data['sphere']['niter_sht']
+        n_iter_sht = self.data['sphere']['n_iter_sht']
         coords = self.data['sphere']['coords']
         config['ignore_rerun'] = config.get('ignore_rerun',
                                             self.data.get('ignore_rerun',
@@ -766,8 +766,8 @@ class Data():
         elif config['nside'] != nside:
             raise ValueError(f"Nside mismatch in tracer {tr} and " +
                              f"'sphere': {config['nside']} vs {nside}")
-        if 'niter_sht' not in config:
-            config['niter_sht'] = niter_sht
+        if 'n_iter_sht' not in config:
+            config['n_iter_sht'] = n_iter_sht
         if 'coords' not in config:
             config['coords'] = coords
         elif config['coords'] != coords:
