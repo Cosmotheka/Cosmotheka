@@ -14,7 +14,13 @@ import yaml
 
 @pytest.fixture(scope="module")
 def config(
-    catalog, weights, dndz, stardens, imaging_weights_coeffs, lrg_mask, randoms
+    catalog,
+    weights,
+    dndz,
+    stardens,
+    imaging_weights_coeffs,
+    lrg_mask_path,
+    randoms,
 ):
     return {
         "zbin": 0,
@@ -25,10 +31,17 @@ def config(
         "imaging_weights_coeffs": imaging_weights_coeffs,
         "randoms_path": randoms,
         "randoms_selection": None,
-        "randoms_lrgmask_path": lrg_mask,
+        "randoms_lrgmask_path": lrg_mask_path,
         "nside": 32,
         "coords": "C",
     }
+
+
+@pytest.fixture
+def rerun_config(config, tmp_path):
+    config = config.copy()
+    config["path_rerun"] = str(tmp_path)
+    return config
 
 
 @pytest.fixture(scope="module")
@@ -36,7 +49,7 @@ def dndz(tmp_path_factory):
     cat = create_dndz()
     fn = tmp_path_factory.mktemp("data") / "dndz.fits"
     cat.write(fn, overwrite=True)
-    return fn
+    return str(fn)
 
 
 @pytest.fixture(scope="module")
@@ -49,11 +62,11 @@ def stardens(tmp_path_factory):
     stardens = Table({"HPXPIXEL": np.arange(npix), "STARDENS": stardens})
     fn = tmp_path_factory.mktemp("data") / "stardens.fits"
     stardens.write(fn, overwrite=True)
-    return fn
+    return str(fn)
 
 
 @pytest.fixture(scope="module")
-def lrg_mask(tmp_path_factory):
+def lrg_mask_path(tmp_path_factory):
     nside = 32
     npix = hp.nside2npix(nside)
     # Generate a catalog Table with columns
@@ -61,9 +74,13 @@ def lrg_mask(tmp_path_factory):
     lrg_mask = half_on.copy()  # Half will pass the mask
     lrg_mask[:20] = 0  # Make first 20 pass too to test the other cuts
     cat = Table({"lrg_mask": lrg_mask})
-    fn = tmp_path_factory.mktemp("data") / "lrg_mask.fits"
-    cat.write(fn, overwrite=True)
-    return fn
+
+    basedir = tmp_path_factory.mktemp("lrgmask_v1.1")
+    fn10 = basedir / "randoms-1-0-lrgmask_v1.1.fits.gz"
+    fn11 = basedir / "randoms-1-1-lrgmask_v1.1.fits.gz"
+    cat.write(fn10, overwrite=True)
+    cat.write(fn11, overwrite=True)
+    return str(basedir)
 
 
 @pytest.fixture(scope="module")
@@ -71,7 +88,7 @@ def catalog(tmp_path_factory):
     cat = get_catalog()
     fn = tmp_path_factory.mktemp("data") / "catalog.fits"
     cat.write(fn, overwrite=True)
-    return fn
+    return str(fn)
 
 
 @pytest.fixture(scope="module")
@@ -79,7 +96,7 @@ def weights(tmp_path_factory):
     cat = Table({"weight": np.ones(hp.nside2npix(32))})
     fn = tmp_path_factory.mktemp("data") / "weights.fits"
     cat.write(fn, overwrite=True)
-    return fn
+    return str(fn)
 
 
 @pytest.fixture(scope="module")
@@ -90,7 +107,7 @@ def randoms(tmp_path_factory):
     fn11 = basedir / "randoms-1-1.fits"
     cat.write(fn10, overwrite=True)
     cat.write(fn11, overwrite=True)
-    return basedir
+    return str(basedir)
 
 
 def get_catalog(randoms=False):
@@ -113,10 +130,13 @@ def get_catalog(randoms=False):
     nobs_r[5:10] = 1  # Make first five fail
     nobs_z = on * 2  # This will pass the threshold
     nobs_z[5:10] = 1  # Make first five fail
-    maskbits = zeros.copy()
+    maskbits = zeros.copy().astype(int)
     maskbits[10:20] = 2048  #  These will fail
     lrg_mask = three4th_on.copy()  # Last 3/4 will pass the mask
     lrg_mask[:20] = 0  # Make first 20 pass too to test the other cuts
+
+    # Fluxes so that mag = 1
+    flux = (5 / 10 ** (-2 / 5 + 9)) ** 2 * on
 
     # Half will pass the quality cuts and half the pzbin
     # Then, "remove_island" will remove more pixels
@@ -134,9 +154,9 @@ def get_catalog(randoms=False):
             # Columns used for weights. With these values, the weights will be
             # w_North: 7, w_South: 14.
             "EBV": zeros,
-            "GALDEPTH_G": on,
-            "GALDEPTH_R": on,
-            "GALDEPTH_Z": on,
+            "GALDEPTH_G": flux,
+            "GALDEPTH_R": flux,
+            "GALDEPTH_Z": flux,
             "PSFSIZE_G": on,
             "PSFSIZE_R": on,
             "PSFSIZE_Z": on,
@@ -148,6 +168,7 @@ def get_catalog(randoms=False):
 
     if randoms:
         cat.remove_column("lrg_mask")
+        cat.remove_column("pz_bin")
         cat.rename_column("PIXEL_NOBS_G", "NOBS_G")
         cat.rename_column("PIXEL_NOBS_R", "NOBS_R")
         cat.rename_column("PIXEL_NOBS_Z", "NOBS_Z")
@@ -157,32 +178,29 @@ def get_catalog(randoms=False):
 
 @pytest.fixture(scope="module")
 def imaging_weights_coeffs(tmp_path_factory):
-    weights_dict = {
-        "north_bin_1": {
-            "EBV": 1,
-            "PSFSIZE_G": 1,
-            "PSFSIZE_R": 1,
-            "PSFSIZE_Z": 1,
-            "galdepth_gmag_ebv": 1,
-            "galdepth_rmag_ebv": 1,
-            "galdepth_zmag_ebv": 1,
-            "intercept": 1,
-        },
-        "south_bin_1": {
-            "EBV": 2,
-            "PSFSIZE_G": 2,
-            "PSFSIZE_R": 2,
-            "PSFSIZE_Z": 2,
-            "galdepth_gmag_ebv": 2,
-            "galdepth_rmag_ebv": 2,
-            "galdepth_zmag_ebv": 2,
-            "intercept": 2,
-        },
-    }
+
+    weights_dict = {}
+    for bin_index in range(1, 5):
+        n = 1 * bin_index
+        for loc in ["north", "south"]:
+            n += 0 if loc == "north" else 1  # Add 1 for south
+            # For bin 1, the coefficients are: 1 and 2
+            coeffs = {
+                "EBV": n,
+                "PSFSIZE_G": n,
+                "PSFSIZE_R": n,
+                "PSFSIZE_Z": n,
+                "galdepth_gmag_ebv": n,
+                "galdepth_rmag_ebv": n,
+                "galdepth_zmag_ebv": n,
+                "intercept": n,
+            }
+            weights_dict[f"{loc}_bin_{bin_index}"] = coeffs.copy()
+
     fn = tmp_path_factory.mktemp("data") / "imaging_weights_coeffs.yaml"
     with open(fn, "w") as f:
         yaml.dump(weights_dict, f)
-    return fn
+    return str(fn)
 
 
 def create_dndz():
@@ -230,16 +248,16 @@ def test_smoke(config):
     assert len(mapper.cat) == len(cat)
 
 
-def test_rerun(tmp_path):
-    conf = get_config()
-    conf["path_rerun"] = str(tmp_path)
-    m = MapperDESILRG(conf)
+def test_rerun(rerun_config):
+    m = MapperDESILRG(rerun_config)
+    path_rerun = rerun_config["path_rerun"]
 
     # Noise
-    dndz = m.get_nl_coupled()
-    fn = os.path.join(str(tmp_path), "DESI_LRG_Nell_coordC_ns32.npz")
+    nl = m.get_nl_coupled()
+    fn = os.path.join(path_rerun, "DESI_LRG_Nell_coordC_ns32.npz")
     d = np.load(fn)
     assert d["nls"].size == 32 * 3
+    assert np.all(nl == d["nls"])
 
     # TODO: Clean randoms
     # cat = m.get_catalog()

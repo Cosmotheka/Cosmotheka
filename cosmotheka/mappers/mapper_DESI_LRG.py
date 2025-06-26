@@ -191,6 +191,7 @@ class MapperDESILRG(MapperBase):
         """
 
         if self.cat is None:
+            print("Loading LRGs catalog...", flush=True)
             cat_path = self.config["data_catalog"]
             cat = Table(fitsio.read(cat_path))
             weights_path = self.config["weights_catalog"]
