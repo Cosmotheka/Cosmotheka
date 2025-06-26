@@ -3,7 +3,7 @@ import numpy as np
 import healpy as hp
 import pymaster as nmt
 import fitsio
-from .utils import get_map_from_points, get_rerun_data, save_rerun_data
+from .utils import get_map_from_points
 from .mapper_base import MapperBase
 from astropy.table import Table, hstack
 import yaml
@@ -87,8 +87,9 @@ class MapperDESILRG(MapperBase):
             self.cuts[k] = config.get(k, v)
 
             if self.cuts[k] != v:
+                vnew = self.cuts[k]
                 k = k.replace("_", "")
-                suffix_parts.append(f"{k}{v}")
+                suffix_parts.append(f"{k}{vnew}")
         self.suffix = "_".join(suffix_parts)
 
         # Modify the map name
@@ -548,8 +549,7 @@ class MapperDESILRG(MapperBase):
             "NOBS_Z",
             "MASKBITS",
             "EBV",
-        ]
-        columns += [
+            # The following ones are used to compute the weights
             "GALDEPTH_G",
             "GALDEPTH_R",
             "GALDEPTH_Z",
@@ -611,6 +611,8 @@ class MapperDESILRG(MapperBase):
             )
             # create 2-D array of imaging properties, with the first columns being unity
             data1 = np.insert(data, 0, 1.0, axis=1)
+
+            # Weight_i = coeffs_0 + coeffs_1 * x1 + coeffs_2 * x2 + ...
             weights[mask] = np.dot(coeffs, data1.T)
         return weights
 
