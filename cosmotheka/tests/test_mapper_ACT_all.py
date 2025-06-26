@@ -79,10 +79,11 @@ def test_get_mask(cls):
     mm = m.get_mask()
     assert (len(mm)/12)**(1/2) == 32
     assert (mb == mm).all()
+    testdir = 'cosmotheka/tests/data/'
     if isinstance(m, xc.mappers.MapperACTDR6tSZ):
-        fn = 'cosmotheka/tests/data/mask_mask_apo60.0arcmin_coordC_ns32.fits.gz'
+        fn = testdir + 'mask_mask_apo60.0arcmin_coordC_ns32.fits.gz'
     else:
-        fn = 'cosmotheka/tests/data/mask_mask_coordC_ns32.fits.gz'
+        fn = testdir + 'mask_mask_coordC_ns32.fits.gz'
     mrerun = hp.read_map(fn)
     assert (mrerun == mb).all()
     os.remove(fn)
