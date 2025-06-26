@@ -23,9 +23,6 @@ class MapperACTtSZ(MapperACTCompSept):
 
         - lmax: `6000`
     """
-    def __init__(self, config):
-        self._get_ACT_defaults(config)
-
     def get_dtype(self):
         return 'cmb_tSZ'
 
