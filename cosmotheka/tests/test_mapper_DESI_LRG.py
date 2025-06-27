@@ -176,6 +176,20 @@ def get_catalog(randoms=False, keep_lrgmask=False):
             ),  # Half will pass the masks
         }
     )
+    # To test that these are removed when computing weights. These are the first
+    # 70 elements
+    for i, key in enumerate(
+        [
+            "EBV",
+            "GALDEPTH_G",
+            "GALDEPTH_R",
+            "GALDEPTH_Z",
+            "PSFSIZE_G",
+            "PSFSIZE_R",
+            "PSFSIZE_Z",
+        ]
+    ):
+        cat[key][i * 10 : (i + 1) * 10] = np.nan
 
     if randoms:
         if not keep_lrgmask:
@@ -617,9 +631,22 @@ def test__get_list_randoms(config, randoms_selection_file, randoms_path):
     assert randoms_list == ["randoms-1-1", "randoms-1-2"]
 
 
-# TODO:
-def test_compute_weights():
-    pass
+def test_compute_weights(mapper_with_islands):
+    # Get the randoms. These don't have cuts applied but have the first 100
+    # elements with nans, so the code should assing them w=0
+    randoms = get_catalog(randoms=True)
+    weights = mapper_with_islands.compute_weights(randoms)
+    weights_expected = [7, 14, 21, 28, 35]
+    assert isinstance(weights, dict)
+    for bin_index in range(1, 5):
+        key = f"weight_pzbin{bin_index}"
+        assert key in weights
+        assert len(weights[key]) == NPIX
+        expected_w = weights_expected[bin_index - 1 : bin_index + 1] * (
+            (NPIX - 70) // 2
+        )
+        expected_w = [0] * 70 + expected_w
+        assert weights[key] == pytest.approx(expected_w, rel=1e-5)
 
 
 # TODO:
