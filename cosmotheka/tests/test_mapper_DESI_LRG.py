@@ -48,7 +48,7 @@ def rerun_config(config, tmp_path):
 def dndz(tmp_path_factory):
     cat = create_dndz()
     fn = tmp_path_factory.mktemp("data") / "dndz.fits"
-    cat.write(fn, overwrite=True)
+    cat.write(fn, format="ascii", overwrite=True)
     return str(fn)
 
 
@@ -218,7 +218,12 @@ def create_dndz():
         -((z_mid - 0.5) ** 2) / (2 * 0.1**2)
     )  # Gaussian-like distribution
     dndz = Table(
-        {"zmin": z_edges[:-1], "zmax": z_edges[1:], "z_mid": z_mid, "nz": nz}
+        {
+            "zmin": z_edges[:-1],
+            "zmax": z_edges[1:],
+            "z_mid": z_mid,
+            "bin_1_combined": nz,
+        }
     )
     return dndz
 
@@ -381,9 +386,12 @@ def test_get_catalog(config):
     assert len(mapper.cat) == len(cat)
 
 
-# TODO:
-def test_get_nz():
-    pass
+def test_get_nz(mapper, dndz):
+    dndz = create_dndz()
+    nz = mapper.get_nz()
+    print(dndz["z_mid"])
+    assert np.all(dndz["z_mid"] == nz[0])
+    assert np.all(dndz["bin_1_combined"] == nz[1])
 
 
 # TODO:
