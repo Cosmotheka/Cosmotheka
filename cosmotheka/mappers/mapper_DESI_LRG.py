@@ -31,7 +31,7 @@ class MapperDESILRG(MapperBase):
             `./lrg_xcorr_2023_v1/catalogs/imaging_weights/main_lrg_linear_coeffs_pz.yaml`
         - stardens_path: \
             ./lrg_xcorr_2023_v1/misc/pixweight-dr7.1-0.22.0_stardens_64_ring.fits
-        - download_missing_random: `True` (default `True`)
+        - download_missing_random: `False` (default `False`)
         - remove_random_after_clean: `True` (default `True`)
         - mask_name: `None` (default `None`, which means the same as map_name)
         - target_maskbits: `[1, 12, 13]` (default)
@@ -69,10 +69,10 @@ class MapperDESILRG(MapperBase):
         # Randoms
         self._list_randoms = None
         self._download_missing_random = config.get(
-            "download_missing_random", True
+            "download_missing_random", False
         )
-        self._remove_random_after_clean = config.get(
-            "remove_random_after_clean", True
+        self._remove_downloaded_random_after_clean = config.get(
+            "remove_downloaded_random_after_clean", True
         )
         # We use maps since the randoms are too large to fit in memory
         self.randoms_maps = {"n": None, "w": None, "w2": None}

@@ -10,7 +10,7 @@ from cosmotheka.mappers.mapper_DESI_LRG import (
 )
 import yaml
 
-# from unittest.mock import patch
+from unittest.mock import patch
 
 NSIDE = 32  # Healpix nside for the tests
 NPIX = hp.nside2npix(NSIDE)
@@ -654,7 +654,8 @@ def test_compute_weights(mapper_with_islands):
 
 # TODO:
 def test__load_full_randoms(mapper, randoms_path):
-    randoms = mapper._load_full_randoms("randoms-1-0")
+    randoms10 = mapper._load_full_randoms("randoms-1-0")
+    randoms = randoms10.copy()
     assert isinstance(randoms, Table)
     assert "lrg_mask" in randoms.colnames
     randoms.remove_column("lrg_mask")  # Remove for comparison
@@ -668,23 +669,23 @@ def test__load_full_randoms(mapper, randoms_path):
 
     # FIXME: This test is commented out because the patch is not working
     # Test download
-    # fn12 = os.path.join(randoms_path, "randoms-1-2.fits")
+    fn12 = os.path.join(randoms_path, "randoms-1-2.fits")
 
-    # def fake_download_randoms(self, base_name):
-    #     cat = get_catalog(randoms=True)
-    #     cat.write(fn12, overwrite=True)
-    #     return None
+    def fake_download_randoms(self, base_name):
+        cat = get_catalog(randoms=True)
+        cat.write(fn12, overwrite=True)
+        return None
 
-    # config = mapper.config.copy()
-    # config["download_missing_random"] = True
+    config = mapper.config.copy()
+    config["download_missing_random"] = True
 
-    # with patch.object(
-    #     MapperDESILRG, "_download_randoms_file", fake_download_randoms
-    # ):
-    #     mapper = MapperDESILRG(config)
-    #     randoms = mapper._load_full_randoms("randoms-1-2")
-    #     assert isinstance(randoms, Table)
-    #     assert np.all(randoms_orig == randoms)
+    with patch.object(
+        MapperDESILRG, "_download_randoms_file", fake_download_randoms
+    ):
+        mapper = MapperDESILRG(config)
+        randoms = mapper._load_full_randoms("randoms-1-2")
+        assert isinstance(randoms, Table)
+        assert randoms10.values_equal(randoms)
 
 
 def test__compute_weights_for_zbin(mapper_with_islands):
