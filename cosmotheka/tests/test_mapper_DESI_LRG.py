@@ -488,7 +488,6 @@ def test__get_mask(config_with_islands, mapper):
         )
 
 
-# TODO:
 @pytest.mark.parametrize("mapper", [MapperDESILRG, MapperDESILRGZhou2023])
 def test__get_nl_coupled(config_with_islands, mapper):
     m = mapper(config_with_islands)
@@ -508,7 +507,6 @@ def test__get_nl_coupled(config_with_islands, mapper):
         # Data is only in the north, so the last line becomes
         # 1 / Npix^data * (1/49) / (1/7)**2 = 4/Npix * 1
         expected_nl = NPIX / 2 * area * 0.5 / (NPIX / 4)
-
     else:
         # w2_p^randoms = 2*7^2 = 98 (North), 2*14^2 = 392 (South)
         # Nell = area_pix^2 / 4pi * sum_p w2_p^data + alpha^2 w2_p^randoms
@@ -521,9 +519,9 @@ def test__get_nl_coupled(config_with_islands, mapper):
     assert nl == pytest.approx(expected_nl, rel=1e-5)
 
 
-# TODO:
-def test_get_nl_coupled():
-    pass
+def test_get_nl_coupled(mapper):
+    nl = mapper.get_nl_coupled()
+    assert np.all(nl == mapper._get_nl_coupled()["nls"])
 
 
 # TODO:
