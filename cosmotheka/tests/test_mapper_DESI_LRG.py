@@ -520,18 +520,41 @@ def test__get_nl_coupled(config_with_islands, mapper):
 
 
 def test_get_nl_coupled(mapper):
+    # Rerun tested somewhere else
     nl = mapper.get_nl_coupled()
     assert np.all(nl == mapper._get_nl_coupled()["nls"])
 
 
-# TODO:
-def test___get_clean_randoms_with_weights():
-    pass
+def test_get_clean_randoms_with_weights(config_with_islands):
+    # Rerun tested somewhere else
+    mapper = MapperDESILRG(config_with_islands)
+    rands = mapper.get_clean_randoms_with_weights("randoms-1-0")
+    assert isinstance(rands, Table)
+    cols = sorted(rands.colnames)
+    expected_cols = sorted(
+        [
+            "RA",
+            "DEC",
+            "weight_pzbin1",
+            "weight_pzbin2",
+            "weight_pzbin3",
+            "weight_pzbin4",
+        ]
+    )
+    assert cols == expected_cols
+    assert len(rands) == NPIX // 2  # Half of the randoms pass the cuts
+    expected_weights = np.array([7, 14] * (NPIX // 4))
+    assert np.all(
+        rands["weight_pzbin1"] == pytest.approx(expected_weights, rel=1e-5)
+    )
 
-
-# TODO:
-def test_get_clean_randoms_with_weights():
-    pass
+    config = config_with_islands.copy()
+    config["remove_island"] = True
+    mapper = MapperDESILRG(config)
+    rands2 = mapper.get_clean_randoms_with_weights("randoms-1-0")
+    mask = get_mask_islands(rands)
+    rands = rands[~mask]  # Remove islands
+    assert np.all(rands2 == rands)
 
 
 # TODO:
