@@ -14,7 +14,7 @@ class MapperBase(object):
     # map_name is the name that will be used for rerun signal map files.
     map_name = None
 
-    masked_on_input = False  # If True, the mapper's signal map is masked 
+    masked_on_input = False  # If True, the mapper's signal map is masked
 
     def __init__(self, config):
         self._get_defaults(config)

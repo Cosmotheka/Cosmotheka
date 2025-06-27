@@ -3,14 +3,14 @@ import pytest
 import numpy as np
 import healpy as hp
 import os
-import shutil
 from astropy.table import Table
 from cosmotheka.mappers.mapper_DESI_LRG import (
     MapperDESILRG,
     MapperDESILRGZhou2023,
 )
 import yaml
-from unittest.mock import patch
+
+# from unittest.mock import patch
 
 NSIDE = 32  # Healpix nside for the tests
 NPIX = hp.nside2npix(NSIDE)
@@ -144,7 +144,7 @@ def get_catalog(randoms=False, keep_lrgmask=False):
     nobs_z = on * 2  # This will pass the threshold
     nobs_z[5:10] = 1  # Make first five fail
     maskbits = zeros.copy().astype(int)
-    maskbits[10:20] = 2048  #  These will fail
+    maskbits[10:20] = 2048  # These will fail
     lrg_mask = three4th_on.copy()  # Last 3/4 will pass the mask
     lrg_mask[:20] = 0  # Make first 20 pass too to test the other cuts
 
@@ -179,8 +179,8 @@ def get_catalog(randoms=False, keep_lrgmask=False):
             ),  # Half will pass the masks
         }
     )
-    # To test that these are removed when computing weights. These are the first
-    # 70 elements
+    # To test that these are removed when computing weights. These are the
+    #  first 70 elements
     for i, key in enumerate(
         [
             "EBV",
@@ -285,8 +285,8 @@ def mapper_with_islands(config_with_islands):
 
 
 def test_smoke(config):
-    mapper = MapperDESILRG(config)
-    mapper = MapperDESILRGZhou2023(config)
+    MapperDESILRG(config)
+    MapperDESILRGZhou2023(config)
 
 
 def test_rerun(rerun_config):
@@ -324,7 +324,7 @@ def test_rerun(rerun_config):
 
 
 def test_get_default_cuts(mapper):
-    cuts = m._get_default_cuts()
+    cuts = mapper._get_default_cuts()
     assert isinstance(cuts, dict)
     assert cuts == {
         "min_nobs": 2,
@@ -434,8 +434,8 @@ def test_get_nz(mapper, dndz):
 
 @pytest.mark.parametrize("mapper", [MapperDESILRG, MapperDESILRGZhou2023])
 def test__get_alpha(config_with_islands, mapper):
-    # We keep the islands so that the number of north and south elements are the
-    # same
+    # We keep the islands so that the number of north and south elements are
+    # the same
     m = mapper(config_with_islands)
     alpha_mapper = m._get_alpha()
     # Remember w_North = 7, w_South = 14 and that we have 2 randoms files so
@@ -472,7 +472,7 @@ def test__get_signal_map(config_with_islands, mapper):
     vals = np.unique(signal_map)
     if isinstance(m, MapperDESILRGZhou2023):
         mask_vals = 1  # = 1 / 28 * 28
-        data_vals = 1
+        # data_vals = 1
         assert vals == pytest.approx([-1, 0, mask_vals], rel=1e-5)
     else:
         vals = np.unique(signal_map)
@@ -499,7 +499,7 @@ def test__get_mask(config_with_islands, mapper):
         assert np.all(values == [0, 1])
         assert np.sum(mask) == NPIX / 2
         assert np.sum(mask[: NPIX // 2]) == 0
-        # Half of the randoms pass the cuts, since zbin selection does not apply
+        # Half of the randoms pass the cuts (no zbin selection for randoms)
         assert np.sum(mask[NPIX // 2 :]) == NPIX / 2
     else:
         mask_vals_north = 1 / 42 * 14
