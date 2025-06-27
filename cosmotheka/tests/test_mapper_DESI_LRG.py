@@ -44,6 +44,13 @@ def rerun_config(config, tmp_path):
     return config
 
 
+@pytest.fixture
+def config_with_islands(config):
+    config = config.copy()
+    config["remove_island"] = False
+    return config
+
+
 @pytest.fixture(scope="module")
 def dndz(tmp_path_factory):
     cat = create_dndz()
@@ -149,7 +156,8 @@ def get_catalog(randoms=False, keep_lrgmask=False):
         {
             "RA": ra,
             "DEC": dec,
-            "pz_bin": np.array([1, 2] * hnpix),  # Starting on 1, as the data
+            # Starting pz_bin at 1, as the data. pz_bin == 1 are in the north
+            "pz_bin": np.array([1, 2] * hnpix),
             # Columns used for the quality cuts
             "PIXEL_NOBS_G": nobs_g,
             "PIXEL_NOBS_R": nobs_r,
@@ -396,8 +404,25 @@ def test_get_nz(mapper, dndz):
 
 # TODO:
 @pytest.mark.parametrize("mapper", [MapperDESILRG, MapperDESILRGZhou2023])
-def test__get_alpha(mapper):
-    pass
+def test__get_alpha(config_with_islands, mapper):
+    # We keep the islands so that the number of north and south elements are the
+    # same
+    m = mapper(config_with_islands)
+    alpha_mapper = m._get_alpha()
+    # Remember w_North = 7, w_South = 14 and that we have 2 randoms files so
+    # w_North = 14, w_South = 28 per pixel (we have 1 galaxy per pixel)
+    # In addition, recall that we are only using 1/4th of the catalog for the
+    # "data" after pz_bin == 1. Recall that pz_bin == 1 choses galaxies only in
+    # the north.
+    if isinstance(m, MapperDESILRGZhou2023):
+        # <data / randoms> = 1/2 / w_north
+        alpha = 1 / 28
+    else:
+        # <data> / <randoms> = [1/2 / (1/2 * w_North + 1/2 * w_South)]
+        # = 1 / (w_North + w_South)
+        alpha = 1 / 42
+
+    assert alpha_mapper == pytest.approx(alpha, rel=1e-5)
 
 
 # TODO:
