@@ -557,9 +557,27 @@ def test_get_clean_randoms_with_weights(config_with_islands):
     assert np.all(rands2 == rands)
 
 
-# TODO:
-def test_get_randoms_maps():
-    pass
+def test_get_randoms_maps(mapper_with_islands):
+    maps = mapper_with_islands.get_randoms_maps()
+    assert isinstance(maps, dict)
+    # Half of the randoms pass the cuts but we have 2 randoms files
+    assert np.sum(maps["n"]) == NPIX
+
+    for key in ["n", "w", "w2"]:
+        assert key in maps
+        assert maps[key].size == NPIX
+        assert np.all(maps[key][NPIX // 2 :])
+        assert not np.any(maps[key][: NPIX // 2])
+
+    assert np.all(maps["n"][NPIX // 2 :] == 2)  # 2 randoms
+    expected_w = 2 * np.array([7, 14] * (NPIX // 4))  # 2 randoms
+    assert np.all(
+        maps["w"][NPIX // 2 :] == pytest.approx(expected_w, rel=1e-5)
+    )
+    expected_w = 2 * np.array([7**2, 14**2] * (NPIX // 4))  # 2 randoms
+    assert np.all(
+        maps["w2"][NPIX // 2 :] == pytest.approx(expected_w, rel=1e-5)
+    )
 
 
 # TODO:
