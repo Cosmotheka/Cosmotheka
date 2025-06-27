@@ -14,7 +14,7 @@ import yaml
 
 @pytest.fixture
 def config(
-    catalog,
+    catalog_path,
     weights,
     dndz,
     stardens,
@@ -24,7 +24,7 @@ def config(
 ):
     return {
         "zbin": 0,
-        "data_catalog": catalog,
+        "data_catalog": catalog_path,
         "weights_catalog": weights,
         "file_dndz": dndz,
         "stardens_path": stardens,
@@ -84,11 +84,16 @@ def lrg_mask_path(tmp_path_factory):
 
 
 @pytest.fixture(scope="module")
-def catalog(tmp_path_factory):
+def catalog_path(tmp_path_factory):
     cat = get_catalog()
     fn = tmp_path_factory.mktemp("data") / "catalog.fits"
     cat.write(fn, overwrite=True)
     return str(fn)
+
+
+@pytest.fixture
+def catalog():
+    return get_catalog()
 
 
 @pytest.fixture(scope="module")
@@ -110,7 +115,7 @@ def randoms(tmp_path_factory):
     return str(basedir)
 
 
-def get_catalog(randoms=False):
+def get_catalog(randoms=False, keep_lrgmask=False):
     nside = 32
     npix = hp.nside2npix(nside)
     hnpix = npix // 2
@@ -167,7 +172,9 @@ def get_catalog(randoms=False):
     )
 
     if randoms:
-        cat.remove_column("lrg_mask")
+        if not keep_lrgmask:
+            # Useful for some tests
+            cat.remove_column("lrg_mask")
         cat.remove_column("pz_bin")
         cat.rename_column("PIXEL_NOBS_G", "NOBS_G")
         cat.rename_column("PIXEL_NOBS_R", "NOBS_R")
@@ -233,19 +240,8 @@ def mapper(config):
 
 
 def test_smoke(config):
-    config2 = config.copy()
-    # Don't remove islands for this test to make count easier
-    config2["remove_island"] = False  # Default is True
-    mapper = MapperDESILRG(config2)
-    cat = mapper.get_catalog()
-    assert len(mapper.cat) == hp.nside2npix(32) / 4
-
-    mask = get_mask_islands(cat)
-    cat = cat[~mask]  # Remove islands
-
     mapper = MapperDESILRG(config)
-    mapper.get_catalog()
-    assert len(mapper.cat) == len(cat)
+    mapper = MapperDESILRGZhou2023(config)
 
 
 def test_rerun(rerun_config):
@@ -337,51 +333,52 @@ def test_suffix_generation_all_keys(config):
     assert suffix == "_".join(s)
 
 
-# TODO:
-def test_get_stardens_mask(monkeypatch):
-    config = get_config()
+def test__get_stardens_mask(mapper, catalog):
+    # Also tested through quality cuts and get_catalog and randoms
+    mask = mapper._get_stardens_mask(catalog)
+    npix = hp.nside2npix(mapper.nside)
+    assert np.sum(mask) == npix / 2
+    assert np.all(mask[npix // 2 :])
+    assert not np.any(mask[: npix // 2])
+
+
+@pytest.mark.parametrize("randoms", [False, True])
+def test__get_quality_cuts(config, randoms):
+    # TODO: To test this properly, we might need to change a bit the catalog or
+    # stardens
+    npix = hp.nside2npix(32)
+    catalog = get_catalog(randoms=randoms, keep_lrgmask=True)
+
+    config2 = config.copy()
+    config2["remove_island"] = False
+    mapper = MapperDESILRG(config2)
+
+    mask = mapper._get_quality_cuts(catalog, randoms)
+    assert np.sum(mask) == npix / 2
+    assert np.all(mask[npix // 2 :])
+    assert not np.any(mask[: npix // 2])
+
     mapper = MapperDESILRG(config)
-    # Patch fitsio.read and hp.npix2nside
-    monkeypatch.setattr(
-        "fitsio.read",
-        lambda fname: Table({"HPXPIXEL": [0, 1], "STARDENS": [1000, 3000]}),
-    )
-    monkeypatch.setattr("healpy.npix2nside", lambda n: 2)
-    monkeypatch.setattr(
-        "healpy.ang2pix", lambda nside, ra, dec, lonlat: np.array([0, 1])
-    )
-    cat = Table({"RA": [0, 1], "DEC": [0, 1]})
-    mask = mapper._get_stardens_mask(cat)
-    assert isinstance(mask, np.ndarray)
+    mask_islands = get_mask_islands(catalog)
+    mask_noisland = mapper._get_quality_cuts(catalog, randoms)
+
+    assert np.all(mask * (~mask_islands) == mask_noisland)
 
 
-# TODO:
-def test_get_quality_cuts(monkeypatch):
-    config = get_config()
+def test_get_catalog(config):
+    config2 = config.copy()
+    # Don't remove islands for this test to make count easier
+    config2["remove_island"] = False  # Default is True
+    mapper = MapperDESILRG(config2)
+    cat = mapper.get_catalog()
+    assert len(mapper.cat) == hp.nside2npix(32) / 4
+
+    mask = get_mask_islands(cat)
+    cat = cat[~mask]  # Remove islands
+
     mapper = MapperDESILRG(config)
-    # Patch _get_stardens_mask
-    monkeypatch.setattr(
-        mapper, "_get_stardens_mask", lambda cat: np.array([True, False, True])
-    )
-    cat = Table(
-        {
-            "lrg_mask": [0, 1, 0],
-            "MASKBITS": [0, 0, 0],
-            "PIXEL_NOBS_G": [2, 2, 2],
-            "PIXEL_NOBS_R": [2, 2, 2],
-            "PIXEL_NOBS_Z": [2, 2, 2],
-            "EBV": [0.1, 0.2, 0.05],
-            "RA": [0, 1, 2],
-            "DEC": [0, 1, 2],
-        }
-    )
-    mask = mapper._get_quality_cuts(cat)
-    assert isinstance(mask, np.ndarray)
-
-
-# TODO:
-def test_get_catalog():
-    pass
+    mapper.get_catalog()
+    assert len(mapper.cat) == len(cat)
 
 
 # TODO:
@@ -456,69 +453,3 @@ def test__load_full_randoms():
 # TODO:
 def test__compute_weights_for_zbin():
     pass
-
-
-def test_compute_weights(monkeypatch):
-    config = get_config()
-    mapper = MapperDESILRG(config)
-    # Patch yaml.safe_load
-    monkeypatch.setattr(
-        "yaml.safe_load",
-        lambda f: {
-            "north_bin_1": {"intercept": 1, "A": 0},
-            "south_bin_1": {"intercept": 1, "A": 0},
-            "north_bin_2": {"intercept": 1, "A": 0},
-            "south_bin_2": {"intercept": 1, "A": 0},
-            "north_bin_3": {"intercept": 1, "A": 0},
-            "south_bin_3": {"intercept": 1, "A": 0},
-            "north_bin_4": {"intercept": 1, "A": 0},
-            "south_bin_4": {"intercept": 1, "A": 0},
-        },
-    )
-    # Patch open
-    monkeypatch.setattr("builtins.open", lambda f, mode=None: f)
-    # Patch _compute_weights_for_zbin
-    monkeypatch.setattr(
-        mapper,
-        "_compute_weights_for_zbin",
-        lambda randoms, coeffs, bin_index: np.ones(len(randoms)),
-    )
-    randoms = Table(
-        {
-            "GALDEPTH_G": [1.0],
-            "GALDEPTH_R": [1.0],
-            "GALDEPTH_Z": [1.0],
-            "EBV": [0.1],
-            "PHOTSYS": ["N"],
-            "A": [1.0],
-        }
-    )
-    weights = mapper.compute_weights(randoms)
-    assert isinstance(weights, dict)
-    assert any(
-        "weight_pzbin" in k or "weight_noebv_pzbin" in k for k in weights
-    )
-
-
-def test_zhou2023_get_alpha_and_mask(monkeypatch):
-    config = get_config()
-    mapper = MapperDESILRGZhou2023(config)
-    # Patch get_randoms_maps and get_data_maps
-    monkeypatch.setattr(
-        mapper,
-        "get_randoms_maps",
-        lambda: {"w": np.array([2.0, 4.0, 0.0, 10.0])},
-    )
-    monkeypatch.setattr(
-        mapper, "get_data_maps", lambda: {"n": np.array([4.0, 8.0, 0.0, 20.0])}
-    )
-    # Patch _get_alpha to set alpha
-    mapper.alpha = 2.0
-    # Test _get_mask
-    mask = mapper._get_mask()
-    assert np.all((mask == 1.0) | (mask == 0.0))
-    # Test _get_signal_map
-    signal_map = mapper._get_signal_map()
-    assert isinstance(signal_map, np.ndarray)
-    # Test _get_alpha returns alpha
-    assert mapper._get_alpha() == 2.0
