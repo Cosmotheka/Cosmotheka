@@ -11,6 +11,9 @@ from cosmotheka.mappers.mapper_DESI_LRG import (
 )
 import yaml
 
+NSIDE = 32  # Healpix nside for the tests
+NPIX = hp.nside2npix(NSIDE)
+
 
 @pytest.fixture
 def config(
@@ -32,7 +35,7 @@ def config(
         "randoms_path": randoms,
         "randoms_selection": None,
         "randoms_lrgmask_path": lrg_mask_path,
-        "nside": 32,
+        "nside": NSIDE,
         "coords": "C",
     }
 
@@ -62,11 +65,10 @@ def dndz(tmp_path_factory):
 @pytest.fixture(scope="module")
 def stardens(tmp_path_factory):
     # Create a dummy stardens Table
-    npix = hp.nside2npix(32)
-    half_on = np.append(np.ones(int(npix / 2)), np.zeros(int(npix / 2)))
+    half_on = np.append(np.ones(int(NPIX / 2)), np.zeros(int(NPIX / 2)))
     stardens = half_on * 3000  # Second half will have stardens below 2500
 
-    stardens = Table({"HPXPIXEL": np.arange(npix), "STARDENS": stardens})
+    stardens = Table({"HPXPIXEL": np.arange(NPIX), "STARDENS": stardens})
     fn = tmp_path_factory.mktemp("data") / "stardens.fits"
     stardens.write(fn, overwrite=True)
     return str(fn)
@@ -74,10 +76,8 @@ def stardens(tmp_path_factory):
 
 @pytest.fixture(scope="module")
 def lrg_mask_path(tmp_path_factory):
-    nside = 32
-    npix = hp.nside2npix(nside)
     # Generate a catalog Table with columns
-    half_on = np.append(np.ones(int(npix / 2)), np.zeros(int(npix / 2)))
+    half_on = np.append(np.ones(int(NPIX / 2)), np.zeros(int(NPIX / 2)))
     lrg_mask = half_on.copy()  # Half will pass the mask
     lrg_mask[:20] = 0  # Make first 20 pass too to test the other cuts
     cat = Table({"lrg_mask": lrg_mask})
@@ -105,7 +105,7 @@ def catalog():
 
 @pytest.fixture(scope="module")
 def weights(tmp_path_factory):
-    cat = Table({"weight": np.ones(hp.nside2npix(32))})
+    cat = Table({"weight": np.ones(NPIX)})
     fn = tmp_path_factory.mktemp("data") / "weights.fits"
     cat.write(fn, overwrite=True)
     return str(fn)
@@ -123,16 +123,14 @@ def randoms(tmp_path_factory):
 
 
 def get_catalog(randoms=False, keep_lrgmask=False):
-    nside = 32
-    npix = hp.nside2npix(nside)
-    hnpix = npix // 2
+    hnpix = NPIX // 2
 
     # Generate a catalog Table with columns
-    ra, dec = hp.pix2ang(nside, np.arange(npix), lonlat=True)
-    on = np.ones(npix)
-    zeros = np.zeros(npix)
+    ra, dec = hp.pix2ang(NSIDE, np.arange(NPIX), lonlat=True)
+    on = np.ones(NPIX)
+    zeros = np.zeros(NPIX)
     three4th_on = np.append(
-        np.ones(int(npix / 4)), np.zeros(3 * int(npix / 4))
+        np.ones(int(NPIX / 4)), np.zeros(3 * int(NPIX / 4))
     )
 
     # Make first half fail but due to different cuts
@@ -354,17 +352,15 @@ def test_suffix_generation_all_keys(config):
 def test__get_stardens_mask(mapper, catalog):
     # Also tested through quality cuts and get_catalog and randoms
     mask = mapper._get_stardens_mask(catalog)
-    npix = hp.nside2npix(mapper.nside)
-    assert np.sum(mask) == npix / 2
-    assert np.all(mask[npix // 2 :])
-    assert not np.any(mask[: npix // 2])
+    assert np.sum(mask) == NPIX / 2
+    assert np.all(mask[NPIX // 2 :])
+    assert not np.any(mask[: NPIX // 2])
 
 
 @pytest.mark.parametrize("randoms", [False, True])
 def test__get_quality_cuts(config, randoms):
     # TODO: To test this properly, we might need to change a bit the catalog or
     # stardens
-    npix = hp.nside2npix(32)
     catalog = get_catalog(randoms=randoms, keep_lrgmask=True)
 
     config2 = config.copy()
@@ -372,9 +368,9 @@ def test__get_quality_cuts(config, randoms):
     mapper = MapperDESILRG(config2)
 
     mask = mapper._get_quality_cuts(catalog, randoms)
-    assert np.sum(mask) == npix / 2
-    assert np.all(mask[npix // 2 :])
-    assert not np.any(mask[: npix // 2])
+    assert np.sum(mask) == NPIX / 2
+    assert np.all(mask[NPIX // 2 :])
+    assert not np.any(mask[: NPIX // 2])
 
     mapper = MapperDESILRG(config)
     mask_islands = get_mask_islands(catalog)
@@ -389,7 +385,7 @@ def test_get_catalog(config):
     config2["remove_island"] = False  # Default is True
     mapper = MapperDESILRG(config2)
     cat = mapper.get_catalog()
-    assert len(mapper.cat) == hp.nside2npix(32) / 4
+    assert len(mapper.cat) == NPIX / 4
 
     mask = get_mask_islands(cat)
     cat = cat[~mask]  # Remove islands
@@ -431,17 +427,17 @@ def test__get_alpha(config_with_islands, mapper):
 
 def test_get_data_maps(mapper_with_islands):
     maps = mapper_with_islands.get_data_maps()
-    npix = hp.nside2npix(mapper_with_islands.nside)
     assert maps["n"] is maps["w"]
     assert maps["n"] is maps["w2"]
     assert np.all(maps["n"][maps["n"] != 0] == 1)
-    assert np.sum(maps["n"]) == npix / 4
+    assert np.sum(maps["n"]) == NPIX / 4
 
 
 @pytest.mark.parametrize("mapper", [MapperDESILRG, MapperDESILRGZhou2023])
 def test__get_signal_map(config_with_islands, mapper):
     m = mapper(config_with_islands)
     signal_map = m._get_signal_map()
+    assert signal_map.size == NPIX
     assert np.mean(signal_map) == pytest.approx(0, rel=1e-5)
 
     vals = np.unique(signal_map)
@@ -465,10 +461,31 @@ def test__get_signal_map(config_with_islands, mapper):
         )
 
 
-# TODO:
 @pytest.mark.parametrize("mapper", [MapperDESILRG, MapperDESILRGZhou2023])
-def test__get_mask(mapper):
-    pass
+def test__get_mask(config_with_islands, mapper):
+    m = mapper(config_with_islands)
+    mask = m._get_mask()
+    values = np.unique(mask)
+    if isinstance(m, MapperDESILRGZhou2023):
+        assert np.all(values == [0, 1])
+        assert np.sum(mask) == NPIX / 2
+        assert np.sum(mask[: NPIX // 2]) == 0
+        # Half of the randoms pass the cuts, since zbin selection does not apply
+        assert np.sum(mask[NPIX // 2 :]) == NPIX / 2
+    else:
+        mask_vals_north = 1 / 42 * 14
+        mask_vals_south = 1 / 42 * 28
+        assert values == pytest.approx(
+            [0, mask_vals_north, mask_vals_south], rel=1e-5
+        )
+        assert np.sum(mask[: NPIX // 2]) == 0
+        assert np.sum(mask[NPIX // 2 :]) == pytest.approx(
+            NPIX / 4 * (mask_vals_north + mask_vals_south), rel=1e-5
+        )
+        assert mask[NPIX // 2 :: 2] == pytest.approx(mask_vals_north, rel=1e-5)
+        assert mask[NPIX // 2 + 1 :: 2] == pytest.approx(
+            mask_vals_south, rel=1e-5
+        )
 
 
 # TODO:
