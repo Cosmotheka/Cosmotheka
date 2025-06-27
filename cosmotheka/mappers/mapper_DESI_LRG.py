@@ -415,7 +415,9 @@ class MapperDESILRG(MapperBase):
 
         list_randoms = []
         if self._randoms_selection is not None:
-            if os.path.isfile(self._randoms_selection):
+            if type(self._randoms_selection) is list:
+                list_randoms = self._randoms_selection
+            elif os.path.isfile(self._randoms_selection):
                 # If the path is a file, we assume it contains a list of randoms
                 with open(self._randoms_selection, "r") as f:
                     lines = f.readlines()
@@ -426,8 +428,6 @@ class MapperDESILRG(MapperBase):
                         if line.endswith(".fits"):
                             line = line.split(".")[0]
                         list_randoms.append(line)
-            elif type(self._randoms_selection) is list:
-                list_randoms = self._randoms_selection
             else:
                 raise ValueError(
                     f"Invalid randoms selection: {self._randoms_selection}. "
@@ -448,7 +448,10 @@ class MapperDESILRG(MapperBase):
                     fname = fname.replace("_clean_weights", "")
                     list_randoms.append(fname)
             elif os.path.isfile(path):
-                list_randoms.append(path.split(".")[0])
+                # Split the path to get the base name and dir
+                self._randoms_path = os.path.dirname(path)
+                basename = os.path.basename(path)
+                list_randoms.append(basename.split(".")[0])
             else:
                 raise ValueError(
                     f"Invalid path for randoms: {path}. It should be a directory or a file."

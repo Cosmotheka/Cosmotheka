@@ -23,7 +23,7 @@ def config(
     stardens,
     imaging_weights_coeffs,
     lrg_mask_path,
-    randoms,
+    randoms_path,
 ):
     return {
         "zbin": 0,
@@ -32,7 +32,7 @@ def config(
         "file_dndz": dndz,
         "stardens_path": stardens,
         "imaging_weights_coeffs": imaging_weights_coeffs,
-        "randoms_path": randoms,
+        "randoms_path": randoms_path,
         "randoms_selection": None,
         "randoms_lrgmask_path": lrg_mask_path,
         "nside": NSIDE,
@@ -112,7 +112,7 @@ def weights(tmp_path_factory):
 
 
 @pytest.fixture(scope="module")
-def randoms(tmp_path_factory):
+def randoms_path(tmp_path_factory):
     cat = get_catalog(randoms=True)
     basedir = tmp_path_factory.mktemp("randoms")
     fn10 = basedir / "randoms-1-0.fits"
@@ -240,6 +240,18 @@ def get_mask_islands(cat):
     toremove = (dec < -10.5) & (ra > 120) & (ra < 260)
 
     return toremove
+
+
+# Fixture to create a randoms selection file
+@pytest.fixture(scope="module")
+def randoms_selection_file(tmp_path_factory):
+    # Create a dummy randoms selection file
+    selection = ["randoms-1-1", "randoms-1-2"]  # Example selection
+    fn = tmp_path_factory.mktemp("data") / "randoms_selection.txt"
+    with open(fn, "w") as f:
+        for item in selection:
+            f.write(f"{item}\n")
+    return str(fn)
 
 
 @pytest.fixture()
@@ -580,9 +592,29 @@ def test_get_randoms_maps(mapper_with_islands):
     )
 
 
-# TODO:
-def test__get_list_randoms():
-    pass
+def test__get_list_randoms(config, randoms_selection_file, randoms_path):
+    mapper = MapperDESILRG(config)
+    randoms_list = mapper._get_list_randoms()
+    assert isinstance(randoms_list, list)
+    assert sorted(randoms_list) == sorted(["randoms-1-0", "randoms-1-1"])
+
+    # Test randoms file
+    config["randoms_path"] = os.path.join(randoms_path, "randoms-1-0.fits")
+    mapper = MapperDESILRG(config)
+    randoms_list = mapper._get_list_randoms()
+    assert randoms_list == ["randoms-1-0"]
+
+    # Test selection
+    config["randoms_selection"] = ["randoms-1-0"]
+    mapper = MapperDESILRG(config)
+    randoms_list = mapper._get_list_randoms()
+    assert randoms_list == ["randoms-1-0"]
+
+    # Test selection file
+    config["randoms_selection"] = randoms_selection_file
+    mapper = MapperDESILRG(config)
+    randoms_list = mapper._get_list_randoms()
+    assert randoms_list == ["randoms-1-1", "randoms-1-2"]
 
 
 # TODO:
