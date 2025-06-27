@@ -438,10 +438,31 @@ def test_get_data_maps(mapper_with_islands):
     assert np.sum(maps["n"]) == npix / 4
 
 
-# TODO:
 @pytest.mark.parametrize("mapper", [MapperDESILRG, MapperDESILRGZhou2023])
-def test__get_signal_map(mapper):
-    pass
+def test__get_signal_map(config_with_islands, mapper):
+    m = mapper(config_with_islands)
+    signal_map = m._get_signal_map()
+    assert np.mean(signal_map) == pytest.approx(0, rel=1e-5)
+
+    vals = np.unique(signal_map)
+    if isinstance(m, MapperDESILRGZhou2023):
+        mask_vals = 1  # = 1 / 28 * 28
+        data_vals = 1
+        assert vals == pytest.approx([-1, 0, mask_vals], rel=1e-5)
+    else:
+        vals = np.unique(signal_map)
+        mask_vals_north = 1 / 42 * 14
+        mask_vals_south = 1 / 42 * 28
+        data_vals_north = 1
+        data_vals_south = 0  # South patch from data by zbin==1
+        assert vals == pytest.approx(
+            [
+                data_vals_south - mask_vals_south,
+                0,
+                data_vals_north - mask_vals_north,
+            ],
+            rel=1e-5,
+        )
 
 
 # TODO:
