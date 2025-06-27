@@ -686,6 +686,7 @@ def test__load_full_randoms(mapper, randoms_path):
         randoms = mapper._load_full_randoms("randoms-1-2")
         assert isinstance(randoms, Table)
         assert randoms10.values_equal(randoms)
+        os.remove(fn12)  # Clean up the file after the test
 
 
 def test__compute_weights_for_zbin(mapper_with_islands):
