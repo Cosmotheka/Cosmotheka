@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import healpy as hp
-import pymaster as nmt
 import fitsio
 from .utils import get_map_from_points
 from .mapper_base import MapperBase
@@ -12,21 +11,26 @@ import warnings
 
 class MapperDESILRG(MapperBase):
     """
-    Mapper class for the DESI LRGs data set from (Zhou et al. 2023, 2309.06443).
+    Mapper class for the DESI LRGs data set from (Zhou et al. 2023, 2309.06443)
+
+    The data can be found at: \
+        `https://data.desi.lbl.gov/public/papers/c3/lrg_xcorr_2023/v1/`
 
     Config:
-        - zbin: `0` / `1` / `2` / `3`  [Note that the official files use the range [1, 4]]
+        - zbin: `0` / `1` / `2` / `3`  [The official files use [1, 4]]
         - data_catalog: \
           `'./lrg_xcorr_2023_v1/catalogs/dr9_lrg_pzbins.fits'`
         - file_dndz: \
           `'./lrg_xcorr_2023_v1/catalogs/dndz_lrg_pzbins.fits'`
-        - randoms_path: \
-        - randoms_selection: 
-        - randoms_lrgmask_path:
+        - randoms_path: `./randoms` (dictionary or single file path)
+        - randoms_selection: list or txt file with randoms names to include
+        - randoms_lrgmask_path: `lrg_xcorr_2023_v1/catalogs/lrgmask_v1.1/`
         - sample: `'main'` / `'extended'` (default `'main'`)
         - nside: `4096`
-        - imaging_weights_coeffs: `./lrg_xcorr_2023_v1/catalogs/imaging_weights/main_lrg_linear_coeffs_pz.yaml`
-        - stardens_path: ./lrg_xcorr_2023_v1/misc/pixweight-dr7.1-0.22.0_stardens_64_ring.fits
+        - imaging_weights_coeffs: \
+            `./lrg_xcorr_2023_v1/catalogs/imaging_weights/main_lrg_linear_coeffs_pz.yaml`
+        - stardens_path: \
+            ./lrg_xcorr_2023_v1/misc/pixweight-dr7.1-0.22.0_stardens_64_ring.fits
         - download_missing_random: `True` (default `True`)
         - remove_random_after_clean: `True` (default `True`)
         - mask_name: `None` (default `None`, which means the same as map_name)
@@ -34,7 +38,8 @@ class MapperDESILRG(MapperBase):
         - min_nobs: `2` (default)
         - max_ebv: `0.15` (default). Use None to apply no EBV cut.
         - max_stardens: `2500` (default)
-        - remove_island: `True` (default). If True, it removes the "island" in the NGC
+        - remove_island: `True` (default). If True, it removes the "island" \
+              in the NGC
     """
 
     map_name = "DESI_LRG"
@@ -148,8 +153,8 @@ class MapperDESILRG(MapperBase):
         print("Veto mask. Keeping ", mask.sum())
 
         if randoms:
-            # MASKBITS cut. The veto mask for randoms seem to miss some MASKBITS
-            # that's why I put it after, to show it.
+            # MASKBITS cut. The veto mask for randoms seem to miss some
+            # MASKBITS cuts. This is why I put it after and only for randoms.
             target_maskbits = self.cuts["target_maskbits"]
             for bit in target_maskbits:
                 mask &= (cat["MASKBITS"] & 2**bit) == 0
@@ -333,7 +338,7 @@ class MapperDESILRG(MapperBase):
 
         # Clean the randoms file
         print(
-            f"Removing unnecessary columns...",
+            "Removing unnecessary columns...",
             flush=True,
         )
         cols_to_keep = ["RA", "DEC"]
@@ -391,7 +396,7 @@ class MapperDESILRG(MapperBase):
             fname = "_".join(
                 [
                     f"map_{self.map_name}_{base_name}",
-                    f"n-w-w2",
+                    "n-w-w2",
                     f"coord{self.coords}",
                     f"ns{self.nside}.fits.gz",
                 ]
@@ -418,7 +423,7 @@ class MapperDESILRG(MapperBase):
             if type(self._randoms_selection) is list:
                 list_randoms = self._randoms_selection
             elif os.path.isfile(self._randoms_selection):
-                # If the path is a file, we assume it contains a list of randoms
+                # If the path is a file, it should contain a list of randoms
                 with open(self._randoms_selection, "r") as f:
                     lines = f.readlines()
                     for line in lines:
@@ -454,7 +459,8 @@ class MapperDESILRG(MapperBase):
                 list_randoms.append(basename.split(".")[0])
             else:
                 raise ValueError(
-                    f"Invalid path for randoms: {path}. It should be a directory or a file."
+                    f"Invalid path for randoms: {path}. It should be a "
+                    "directory or a file."
                 )
 
         if not list_randoms:
@@ -578,7 +584,8 @@ class MapperDESILRG(MapperBase):
         """
         if not self._download_missing_random:
             raise ValueError(
-                'If you want to download randoms, set "download_missing_random" to True.'
+                "If you want to download randoms, set "
+                '"download_missing_random" to True.'
             )
 
         print(
@@ -601,7 +608,7 @@ class MapperDESILRG(MapperBase):
         return rand_file
 
     def _compute_weights_for_zbin(self, randoms, linear_coeffs, bin_index):
-        # Copied from https://github.com/NoahSailer/MaPar/blob/main/maps/assign_randoms_weights.py
+        # Copied from https://github.com/NoahSailer/MaPar/blob/main/maps/assign_randoms_weights.py  # noqa
 
         # Assign zero weights to randoms with invalid imaging properties
         mask_bad = np.full(len(randoms), False)
@@ -625,15 +632,15 @@ class MapperDESILRG(MapperBase):
             data = np.column_stack(
                 [randoms[mask][xname] for xname in xnames_fit]
             )
-            #
+
             bin_str = "{}_bin_{}".format(field, bin_index)
-            #
-            # Create array of coefficients, with the first coefficient being the intercept
+
+            # Create array of coefficients. The first one is the intercept
             coeffs = np.array(
                 [linear_coeffs[bin_str]["intercept"]]
                 + [linear_coeffs[bin_str][xname] for xname in xnames_fit]
             )
-            # create 2-D array of imaging properties, with the first columns being unity
+            # create 2-D array of imaging properties. First column is 1
             data1 = np.insert(data, 0, 1.0, axis=1)
 
             # Weight_i = coeffs_0 + coeffs_1 * x1 + coeffs_2 * x2 + ...
@@ -643,7 +650,7 @@ class MapperDESILRG(MapperBase):
 
 class MapperDESILRGZhou2023(MapperDESILRG):
     """
-    Mapper class for the DESI LRGs data set from (Zhou et al. 2023, 2309.06443).
+    Mapper class for the DESI LRGs data set from (Zhou et al. 2023, 2309.06443)
 
     It uses the overdensity definition from Zhou2023, which is uses
     alpha = <w_data / w_random>, so that <delta> = 0.
@@ -664,7 +671,7 @@ class MapperDESILRGZhou2023(MapperDESILRG):
         return self.alpha
 
     def _get_mask(self):
-        # Copied from https://github.com/NoahSailer/MaPar/blob/main/maps/make_lrg_maps.py
+        # Copied from https://github.com/NoahSailer/MaPar/blob/main/maps/make_lrg_maps.py  # noqa
         rmap = self.get_randoms_maps()["w"].copy()
 
         mask = np.zeros_like(rmap)
@@ -676,7 +683,7 @@ class MapperDESILRGZhou2023(MapperDESILRG):
         return mask
 
     def _get_signal_map(self):
-        # Based on https://github.com/NoahSailer/MaPar/blob/main/maps/make_lrg_maps.py
+        # Based on https://github.com/NoahSailer/MaPar/blob/main/maps/make_lrg_maps.py  # noqa
 
         dmap = self.get_data_maps()["n"].copy()
         rmap = self.get_randoms_maps()["w"].copy()
@@ -692,14 +699,16 @@ class MapperDESILRGZhou2023(MapperDESILRG):
         return omap
 
     def _get_nl_coupled(self):
-        # Copied from https://github.com/NoahSailer/MaPar/blob/main/maps/make_lrg_maps.py
+        # Based on https://github.com/NoahSailer/MaPar/blob/main/maps/make_lrg_maps.py  # noqa
         dmap = self.get_data_maps()["n"].copy()
-        rmap = self.get_randoms_maps()["w"].copy()
-        wmap = rmap / (self.get_randoms_maps()["n"] + 1e-30)
         msk = self.get_mask().astype(bool)
 
-        shot = np.sum(dmap[msk] / wmap[msk]) ** 2 / np.sum(
-            dmap[msk] / wmap[msk] ** 2
+        randoms_maps = self.get_randoms_maps()
+        mean_weight_map = randoms_maps["w"].copy()
+        mean_weight_map[msk] /= randoms_maps["n"][msk]
+
+        shot = np.sum(dmap[msk] / mean_weight_map[msk]) ** 2 / np.sum(
+            dmap[msk] / mean_weight_map[msk] ** 2
         )
         shot = np.sum(msk) * hp.nside2pixarea(self.nside, False) / shot
 
