@@ -10,6 +10,7 @@ from cosmotheka.mappers.mapper_DESI_LRG import (
     MapperDESILRGZhou2023,
 )
 import yaml
+from unittest.mock import patch
 
 NSIDE = 32  # Healpix nside for the tests
 NPIX = hp.nside2npix(NSIDE)
@@ -85,8 +86,10 @@ def lrg_mask_path(tmp_path_factory):
     basedir = tmp_path_factory.mktemp("lrgmask_v1.1")
     fn10 = basedir / "randoms-1-0-lrgmask_v1.1.fits.gz"
     fn11 = basedir / "randoms-1-1-lrgmask_v1.1.fits.gz"
+    fn12 = basedir / "randoms-1-2-lrgmask_v1.1.fits.gz"  # For the download
     cat.write(fn10, overwrite=True)
     cat.write(fn11, overwrite=True)
+    cat.write(fn12, overwrite=True)
     return str(basedir)
 
 
@@ -650,10 +653,67 @@ def test_compute_weights(mapper_with_islands):
 
 
 # TODO:
-def test__load_full_randoms():
-    pass
+def test__load_full_randoms(mapper, randoms_path):
+    randoms = mapper._load_full_randoms("randoms-1-0")
+    assert isinstance(randoms, Table)
+    assert "lrg_mask" in randoms.colnames
+    randoms.remove_column("lrg_mask")  # Remove for comparison
+    randoms_orig = get_catalog(randoms=True)
+    assert randoms_orig.colnames == randoms.colnames
+    assert randoms_orig.values_equal(randoms)
+
+    # Test it raises an error if the file does not exist
+    with pytest.raises(FileNotFoundError):
+        mapper._load_full_randoms("randoms-1-2")
+
+    # FIXME: This test is commented out because the patch is not working
+    # Test download
+    # fn12 = os.path.join(randoms_path, "randoms-1-2.fits")
+
+    # def fake_download_randoms(self, base_name):
+    #     cat = get_catalog(randoms=True)
+    #     cat.write(fn12, overwrite=True)
+    #     return None
+
+    # config = mapper.config.copy()
+    # config["download_missing_random"] = True
+
+    # with patch.object(
+    #     MapperDESILRG, "_download_randoms_file", fake_download_randoms
+    # ):
+    #     mapper = MapperDESILRG(config)
+    #     randoms = mapper._load_full_randoms("randoms-1-2")
+    #     assert isinstance(randoms, Table)
+    #     assert np.all(randoms_orig == randoms)
 
 
-# TODO:
-def test__compute_weights_for_zbin():
-    pass
+def test__compute_weights_for_zbin(mapper_with_islands):
+    # I already tested the coefficients with the yaml file. Here i'm going
+    # to do something different. Basically, I will use the fluxed directly
+    # and test that the nan's are removed and the weights are the linear
+    # combination of the coefficients.
+
+    coeffs = {
+        "EBV": 1,  # multiply 1 in randoms
+        "PSFSIZE_G": 1,  # multiply 1 in randoms
+        "PSFSIZE_R": 1,  # multiply 1 in randoms
+        "PSFSIZE_Z": 1,  # multiply 1 in randoms
+        "GALDEPTH_G": 0,
+        "GALDEPTH_R": 0,
+        "GALDEPTH_Z": 0,
+        "intercept": 0,
+    }
+    linear_coeffs = {
+        "north_bin_1": coeffs.copy(),
+        "south_bin_1": coeffs.copy(),
+    }
+    linear_coeffs["south_bin_1"]["intercept"] = 1
+
+    randoms = get_catalog(randoms=True)
+    weights = mapper_with_islands._compute_weights_for_zbin(
+        randoms, linear_coeffs, 1
+    )
+    assert isinstance(weights, np.ndarray)
+    assert weights.size == NPIX
+    expected_w = [0] * 70 + [3, 4] * ((NPIX - 70) // 2)
+    assert weights == pytest.approx(expected_w, rel=1e-5)

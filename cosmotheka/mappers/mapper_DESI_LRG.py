@@ -519,7 +519,6 @@ class MapperDESILRG(MapperBase):
         lrgmask_file = os.path.join(
             self.config["randoms_lrgmask_path"], rand_mask_name
         )
-        base_url = "https://data.desi.lbl.gov/public/ets/target/catalogs/dr9/0.49.0/randoms/resolve/"
 
         # Check if the randoms file exists
         if not os.path.exists(rand_file) and not self._download_missing_random:
@@ -531,16 +530,7 @@ class MapperDESILRG(MapperBase):
                 f"[{base_name}] Randoms file does not exist, downloading...",
                 flush=True,
             )
-            # Download the randoms file
-            url = base_url + f"{base_name}.fits"
-            try:
-                os.system(
-                    f"wget {url} -O {rand_file}",
-                )
-                print(f"[{base_name}] Downloaded {rand_file}.", flush=True)
-            except Exception as e:
-                print(f"Error downloading {url}: {e}")
-                raise
+            self._download_randoms_file(base_name)
 
         # Load the randoms
         print(
@@ -581,6 +571,34 @@ class MapperDESILRG(MapperBase):
         randoms = hstack([randoms, lrgmask])
 
         return randoms
+
+    def _download_randoms_file(self, base_name):
+        """
+        Downloads the randoms from the DESI data portal.
+        """
+        if not self._download_missing_random:
+            raise ValueError(
+                'If you want to download randoms, set "download_missing_random" to True.'
+            )
+
+        print(
+            f"Downloading randoms {base_name} from {self._randoms_path}...",
+            flush=True,
+        )
+        url = (
+            "https://data.desi.lbl.gov/public/ets/target/catalogs/dr9/0.49.0/"
+            f"randoms/resolve/{base_name}.fits"
+        )
+        rand_file = os.path.join(self._randoms_path, f"{base_name}.fits")
+        # Download the randoms file
+        try:
+            os.system(f"wget {url} -O {rand_file}")
+            print(f"[{base_name}] Downloaded {rand_file}.", flush=True)
+        except Exception as e:
+            print(f"Error downloading {url}: {e}")
+            raise
+
+        return rand_file
 
     def _compute_weights_for_zbin(self, randoms, linear_coeffs, bin_index):
         # Copied from https://github.com/NoahSailer/MaPar/blob/main/maps/assign_randoms_weights.py
