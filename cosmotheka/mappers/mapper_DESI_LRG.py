@@ -257,8 +257,8 @@ class MapperDESILRG(MapperBase):
             cat_data = self.get_catalog()
             nmap_data = get_map_from_points(cat_data, self.nside, rot=self.rot)
             self.data_maps["n"] = nmap_data
-            self.data_maps["w"] = nmap_data.copy()  # \sum w = n with w=1
-            self.data_maps["w2"] = nmap_data.copy()  # \sum w2 = n with w=1
+            self.data_maps["w"] = nmap_data  # \sum w = n with w=1
+            self.data_maps["w2"] = nmap_data  # \sum w2 = n with w=1
 
         return self.data_maps
 

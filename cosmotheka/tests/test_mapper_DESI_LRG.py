@@ -249,6 +249,11 @@ def mapper(config):
     return MapperDESILRG(config)
 
 
+@pytest.fixture()
+def mapper_with_islands(config_with_islands):
+    return MapperDESILRG(config_with_islands)
+
+
 # Tests start here
 
 
@@ -402,7 +407,6 @@ def test_get_nz(mapper, dndz):
     assert np.all(dndz["bin_1_combined"] == nz[1])
 
 
-# TODO:
 @pytest.mark.parametrize("mapper", [MapperDESILRG, MapperDESILRGZhou2023])
 def test__get_alpha(config_with_islands, mapper):
     # We keep the islands so that the number of north and south elements are the
@@ -425,9 +429,13 @@ def test__get_alpha(config_with_islands, mapper):
     assert alpha_mapper == pytest.approx(alpha, rel=1e-5)
 
 
-# TODO:
-def test_get_data_maps():
-    pass
+def test_get_data_maps(mapper_with_islands):
+    maps = mapper_with_islands.get_data_maps()
+    npix = hp.nside2npix(mapper_with_islands.nside)
+    assert maps["n"] is maps["w"]
+    assert maps["n"] is maps["w2"]
+    assert np.all(maps["n"][maps["n"] != 0] == 1)
+    assert np.sum(maps["n"]) == npix / 4
 
 
 # TODO:
