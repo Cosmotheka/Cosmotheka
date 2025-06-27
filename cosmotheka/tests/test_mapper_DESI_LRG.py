@@ -490,8 +490,35 @@ def test__get_mask(config_with_islands, mapper):
 
 # TODO:
 @pytest.mark.parametrize("mapper", [MapperDESILRG, MapperDESILRGZhou2023])
-def test__get_nl_coupled(mapper):
-    pass
+def test__get_nl_coupled(config_with_islands, mapper):
+    m = mapper(config_with_islands)
+    nl = m._get_nl_coupled()["nls"]
+    assert nl.size == NSIDE * 3
+
+    area = hp.nside2pixarea(NSIDE, degrees=False)
+    # Recall that by construction
+    # w_data = w2_data = 1,
+    # w_North = 7, w_South = 14,
+    # We have 2 randoms so w = 14 (North), 28 (South)
+    if isinstance(m, MapperDESILRGZhou2023):
+        # shot = Npix^good * A_pix * fsky *\sum_p (<w2>) / (\sum <w>)**2
+        # with <*> = \sum_p w_p^data / N_rands
+        # N_rands = 2 since we have 2 randoms, so
+        # <*> is w = 7 (North), 14 (South)
+        # Data is only in the north, so the last line becomes
+        # 1 / Npix^data * (1/49) / (1/7)**2 = 4/Npix * 1
+        expected_nl = NPIX / 2 * area * 0.5 / (NPIX / 4)
+
+    else:
+        # w2_p^randoms = 2*7^2 = 98 (North), 2*14^2 = 392 (South)
+        # Nell = area_pix^2 / 4pi * sum_p w2_p^data + alpha^2 w2_p^randoms
+        # alpha = 1 / 42
+        expected_nl = (
+            area**2
+            / (4 * np.pi)
+            * (NPIX / 4 + (1 / 42) ** 2 * NPIX / 4 * (98 + 392))
+        )
+    assert nl == pytest.approx(expected_nl, rel=1e-5)
 
 
 # TODO:
