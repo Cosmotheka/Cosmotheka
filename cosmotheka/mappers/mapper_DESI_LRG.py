@@ -31,8 +31,8 @@ class MapperDESILRG(MapperBase):
             `./lrg_xcorr_2023_v1/catalogs/imaging_weights/main_lrg_linear_coeffs_pz.yaml`
         - stardens_path: \
             ./lrg_xcorr_2023_v1/misc/pixweight-dr7.1-0.22.0_stardens_64_ring.fits
-        - download_missing_random: `False` (default `False`)
-        - remove_random_after_clean: `True` (default `True`)
+        - download_missing_randoms: `False` (default `False`)
+        - remove_downloaded_randoms_after_clean: `True` (default `True`)
         - mask_name: `None` (default `None`, which means the same as map_name)
         - target_maskbits: `[1, 12, 13]` (default)
         - min_nobs: `2` (default)
@@ -68,11 +68,11 @@ class MapperDESILRG(MapperBase):
 
         # Randoms
         self._list_randoms = None
-        self._download_missing_random = config.get(
-            "download_missing_random", False
+        self._download_missing_randoms = config.get(
+            "download_missing_randoms", False
         )
-        self._remove_downloaded_random_after_clean = config.get(
-            "remove_downloaded_random_after_clean", True
+        self._remove_downloaded_randoms_after_clean = config.get(
+            "remove_downloaded_randoms_after_clean", True
         )
         # We use maps since the randoms are too large to fit in memory
         self.randoms_maps = {"n": None, "w": None, "w2": None}
@@ -324,7 +324,7 @@ class MapperDESILRG(MapperBase):
 
     def __get_clean_randoms_with_weights(self, base_name):
         print("Loading randoms for", base_name, flush=True)
-        randoms = self._load_full_randoms(base_name)
+        randoms, downloaded = self._load_full_randoms(base_name)
 
         # Apply cuts
         print(f"[{base_name}] Applying quality cuts...", flush=True)
@@ -343,6 +343,16 @@ class MapperDESILRG(MapperBase):
         )
         cols_to_keep = ["RA", "DEC"]
         randoms = hstack([randoms[cols_to_keep], Table(weights)])
+
+        # Remove the downloaded randoms file if requested
+        if downloaded and self._remove_downloaded_randoms_after_clean:
+            fn = os.path.join(self._randoms_path, f"{base_name}.fits")
+            if os.path.exists(fn):
+                print(
+                    f"[{base_name} Removing the downloaded randoms {fn}",
+                    flush=True,
+                )
+                os.remove(fn)
         return randoms
 
     def get_clean_randoms_with_weights(self, base_name):
@@ -525,18 +535,23 @@ class MapperDESILRG(MapperBase):
         lrgmask_file = os.path.join(
             self.config["randoms_lrgmask_path"], rand_mask_name
         )
+        downloaded = False
 
         # Check if the randoms file exists
-        if not os.path.exists(rand_file) and not self._download_missing_random:
+        if (
+            not os.path.exists(rand_file)
+            and not self._download_missing_randoms
+        ):
             raise FileNotFoundError(
                 f"Randoms file {rand_file} does not exist."
             )
-        elif not os.path.exists(rand_file) and self._download_missing_random:
+        elif not os.path.exists(rand_file) and self._download_missing_randoms:
             print(
                 f"[{base_name}] Randoms file does not exist, downloading...",
                 flush=True,
             )
             self._download_randoms_file(base_name)
+            downloaded = True
 
         # Load the randoms
         print(
@@ -576,13 +591,13 @@ class MapperDESILRG(MapperBase):
         lrgmask = Table(fitsio.read(lrgmask_file))
         randoms = hstack([randoms, lrgmask])
 
-        return randoms
+        return randoms, downloaded
 
     def _download_randoms_file(self, base_name):
         """
         Downloads the randoms from the DESI data portal.
         """
-        if not self._download_missing_random:
+        if not self._download_missing_randoms:
             raise ValueError(
                 "If you want to download randoms, set "
                 '"download_missing_random" to True.'

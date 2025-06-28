@@ -654,7 +654,8 @@ def test_compute_weights(mapper_with_islands):
 
 # TODO:
 def test__load_full_randoms(mapper, randoms_path):
-    randoms10 = mapper._load_full_randoms("randoms-1-0")
+    randoms10, downloaded = mapper._load_full_randoms("randoms-1-0")
+    assert downloaded is False
     randoms = randoms10.copy()
     assert isinstance(randoms, Table)
     assert "lrg_mask" in randoms.colnames
@@ -667,26 +668,7 @@ def test__load_full_randoms(mapper, randoms_path):
     with pytest.raises(FileNotFoundError):
         mapper._load_full_randoms("randoms-1-2")
 
-    # FIXME: This test is commented out because the patch is not working
-    # Test download
-    fn12 = os.path.join(randoms_path, "randoms-1-2.fits")
-
-    def fake_download_randoms(self, base_name):
-        cat = get_catalog(randoms=True)
-        cat.write(fn12, overwrite=True)
-        return None
-
-    config = mapper.config.copy()
-    config["download_missing_random"] = True
-
-    with patch.object(
-        MapperDESILRG, "_download_randoms_file", fake_download_randoms
-    ):
-        mapper = MapperDESILRG(config)
-        randoms = mapper._load_full_randoms("randoms-1-2")
-        assert isinstance(randoms, Table)
-        assert randoms10.values_equal(randoms)
-        os.remove(fn12)  # Clean up the file after the test
+    # Download test moved to a different test
 
 
 def test__compute_weights_for_zbin(mapper_with_islands):
@@ -719,3 +701,39 @@ def test__compute_weights_for_zbin(mapper_with_islands):
     assert weights.size == NPIX
     expected_w = [0] * 70 + [3, 4] * ((NPIX - 70) // 2)
     assert weights == pytest.approx(expected_w, rel=1e-5)
+
+
+def test_download_randoms_file(mapper, randoms_path):
+    # Test that the file is downloaded correctly
+    fn = os.path.join(randoms_path, "randoms-1-2.fits")
+    if os.path.exists(fn):
+        os.remove(fn)  # Clean up before the test
+
+    def fake_download_randoms(self, base_name):
+        cat = get_catalog(randoms=True)
+        cat.write(fn, overwrite=True)
+        return None
+
+    randoms10, downloaded = mapper._load_full_randoms("randoms-1-0")
+    config = mapper.config.copy()
+    config["download_missing_randoms"] = True
+
+    # Test that get_full_randoms downloads the file
+    with patch.object(
+        MapperDESILRG, "_download_randoms_file", fake_download_randoms
+    ):
+        mapper = MapperDESILRG(config)
+        randoms, downloaded = mapper._load_full_randoms("randoms-1-2")
+        assert downloaded is True
+        assert isinstance(randoms, Table)
+        assert randoms10.values_equal(randoms)
+        os.remove(fn)  # Clean up the file after the test
+
+    # Test that it is removed after the clean
+    config["remove_downloaded_randoms_after_clean"] = True
+    with patch.object(
+        MapperDESILRG, "_download_randoms_file", fake_download_randoms
+    ):
+        mapper = MapperDESILRG(config)
+        mapper.get_clean_randoms_with_weights("randoms-1-2")
+        assert not os.path.exists(fn)
