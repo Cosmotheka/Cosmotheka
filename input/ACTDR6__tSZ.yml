@@ -1,0 +1,16 @@
+mapper_class: MapperACTDR6tSZ
+mask_name: DR6_nilc
+map_name: DR6_nilc
+path_rerun: /mnt/extraspace/damonge/Datasets/ACT_DR6/xcell_reruns
+file_map: /mnt/extraspace/damonge/Datasets/ACT_DR6/act-planck_dr6.02_nilc_ComptonY.fits
+file_mask: /mnt/extraspace/damonge/Datasets/ACT_DR6/ilc_footprint_mask.fits
+beam_info: 
+  - type: 'Gaussian'
+    FWHM_arcmin: 1.6
+lmax: 15000
+deproj_type: null
+ps_mask_file: /mnt/extraspace/alaposta/ACT_DR6_tSZ/ilc_subtracted_mask.fits
+inpaint_mask_file: /mnt/extraspace/alaposta/ACT_DR6_tSZ/ilc_inpaint_mask.fits
+ps_aposize: 5
+footprint_aposize: 60
+n_iter_sht: 0
