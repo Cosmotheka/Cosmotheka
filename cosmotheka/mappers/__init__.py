@@ -31,16 +31,25 @@ from .mapper_ROSAT import MapperROSATXray
 from .mapper_dummy import MapperDummy
 from .mapper_Quaia import MapperQuaia
 from .mapper_PlanckPR4CMBK import MapperPlanckPR4CMBK
-from .utils import (get_map_from_points, get_DIR_Nz,
-                    get_rerun_data, save_rerun_data,
-                    rotate_mask, rotate_map)
+from .mapper_DESI_LRG import MapperDESILRG, MapperDESILRGZhou2023
+from .utils import (
+    get_map_from_points,
+    get_DIR_Nz,
+    get_rerun_data,
+    save_rerun_data,
+    rotate_mask,
+    rotate_map,
+)
+
 
 def mapper_from_name(name):
     def all_subclasses(cls):
         # Recursively find all subclasses (and their subclasses)
         # From https://stackoverflow.com/questions/3862310
         return set(cls.__subclasses__()).union(
-            [s for c in cls.__subclasses__() for s in all_subclasses(c)])
+            [s for c in cls.__subclasses__() for s in all_subclasses(c)]
+        )
+
     subcs = all_subclasses(MapperBase)
     mappers = {m.__name__: m for m in subcs}
     if name in mappers:

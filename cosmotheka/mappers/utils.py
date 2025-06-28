@@ -1,8 +1,10 @@
 """Library with functions used across different mappers."""
+
 import numpy as np
 import healpy as hp
 import fitsio
 import os
+from astropy.table import Table
 
 
 def _build_rerun_fname(mpr, fname):
@@ -18,7 +20,7 @@ def _build_rerun_fname(mpr, fname):
             - True if the file exists. False if not.
     """
     # Check if we want to save rerun data
-    path = mpr.config.get('path_rerun', None)
+    path = mpr.config.get("path_rerun", None)
     if path is None:
         return None, False
 
@@ -45,7 +47,7 @@ def get_rerun_data(mpr, fname, ftype, section=None, read=True):
         array or None: Loaded file or None if not present.
     """
     # Ignore rerun file if required
-    ignore = mpr.config.get('ignore_rerun', False)
+    ignore = mpr.config.get("ignore_rerun", False)
     if ignore:
         return None
 
@@ -66,13 +68,13 @@ def get_rerun_data(mpr, fname, ftype, section=None, read=True):
     print(f"Reading {fname_full}")
 
     # Read
-    if ftype == 'FITSTable':
+    if ftype == "FITSTable":
         return fitsio.read(fname_full, ext=section)
-    elif ftype == 'FITSMap':
+    elif ftype == "FITSMap":
         return np.array(hp.read_map(fname_full, field=section))
-    elif ftype == 'ASCII':
+    elif ftype == "ASCII":
         return np.loadtxt(fname_full, unpack=True)
-    elif ftype == 'NPZ':
+    elif ftype == "NPZ":
         d = np.load(fname_full)
         return dict(d)
     else:
@@ -95,13 +97,16 @@ def save_rerun_data(mpr, fname, ftype, data):
 
     print(f"Saving {fname_full}")
 
-    if ftype == 'FITSTable':
-        fitsio.write(fname_full, data, clobber=True)
-    elif ftype == 'FITSMap':
+    if ftype == "FITSTable":
+        if isinstance(data, Table):
+            data.write(fname_full, overwrite=True)
+        else:
+            fitsio.write(fname_full, data, clobber=True)
+    elif ftype == "FITSMap":
         hp.write_map(fname_full, data, overwrite=True)
-    elif ftype == 'ASCII':
+    elif ftype == "ASCII":
         np.savetxt(fname_full, data)
-    elif ftype == 'NPZ':
+    elif ftype == "NPZ":
         np.savez(fname_full, **data)
     else:
         raise ValueError(f"Unknown file format {ftype}")
@@ -148,9 +153,16 @@ def rotate_map(mapp, rot):
     return rot.rotate_map_alms(mapp)
 
 
-def get_map_from_points(cat, nside, w=None, rot=None,
-                        ra_name='RA', dec_name='DEC',
-                        in_radians=False, qu=None):
+def get_map_from_points(
+    cat,
+    nside,
+    w=None,
+    rot=None,
+    ra_name="RA",
+    dec_name="DEC",
+    in_radians=False,
+    qu=None,
+):
     """Return a map given a catalog of objects and a number of pixels.
 
     Args:
@@ -180,14 +192,14 @@ def get_map_from_points(cat, nside, w=None, rot=None,
         # Rotate spin-2 quantities if needed
         if qu is not None:
             angle_ref = rot.angle_ref(lon, lat, lonlat=True)
-            ll = (qu[0] + 1j*qu[1])*np.exp(1j*2*angle_ref)
+            ll = (qu[0] + 1j * qu[1]) * np.exp(1j * 2 * angle_ref)
             qu = [np.real(ll), np.imag(ll)]
         # Rotate coordinates
         lon, lat = rot(lon, lat, lonlat=True)
     ipix = hp.ang2pix(nside, lon, lat, lonlat=True)
     if qu is not None:
         if w is not None:
-            qu = [x*w for x in qu]
+            qu = [x * w for x in qu]
         q = np.bincount(ipix, weights=qu[0], minlength=npix)
         u = np.bincount(ipix, weights=qu[1], minlength=npix)
         numcount = [q, u]
@@ -196,9 +208,18 @@ def get_map_from_points(cat, nside, w=None, rot=None,
     return numcount
 
 
-def get_DIR_Nz(cat_spec, cat_photo, bands, zflag,
-               zrange, nz, nearest_neighbors=10, njk=100,
-               bands_photo=None, get_weights=False):
+def get_DIR_Nz(
+    cat_spec,
+    cat_photo,
+    bands,
+    zflag,
+    zrange,
+    nz,
+    nearest_neighbors=10,
+    njk=100,
+    bands_photo=None,
+    get_weights=False,
+):
     """Return the redshift distribution calibrated with DIR.
 
     Implementation of the DIR algorithm that calibrates a photometric galaxy
@@ -228,15 +249,16 @@ def get_DIR_Nz(cat_spec, cat_photo, bands, zflag,
     """
     from sklearn.neighbors import NearestNeighbors
     from scipy.spatial import cKDTree
+
     train_data = np.array([cat_spec[c] for c in bands]).T
     if bands_photo is None:
         bands_photo = bands
     photo_data = np.array([cat_photo[c] for c in bands_photo]).T
 
     # Get nearest neighbors
-    n_nbrs = NearestNeighbors(n_neighbors=nearest_neighbors,
-                              algorithm='kd_tree',
-                              metric='euclidean').fit(train_data)
+    n_nbrs = NearestNeighbors(
+        n_neighbors=nearest_neighbors, algorithm="kd_tree", metric="euclidean"
+    ).fit(train_data)
     # Get distances
     distances, _ = n_nbrs.kneighbors(train_data)
     # Get maximum distance
@@ -244,24 +266,33 @@ def get_DIR_Nz(cat_spec, cat_photo, bands, zflag,
     # Find all photo-z objects within this
     # distance of each spec-z object
     tree_NN_lookup = cKDTree(photo_data, leafsize=40)
-    num_photoz = np.array([len(tree_NN_lookup.query_ball_point(t, d+1E-6))
-                           for t, d in zip(train_data, distances)])
+    num_photoz = np.array(
+        [
+            len(tree_NN_lookup.query_ball_point(t, d + 1e-6))
+            for t, d in zip(train_data, distances)
+        ]
+    )
     # Weight as ratio of numbers
     ntrain = len(train_data)
-    weights = (num_photoz * ntrain /
-               (nearest_neighbors * len(photo_data)))
+    weights = num_photoz * ntrain / (nearest_neighbors * len(photo_data))
 
     # Compute N(z)
-    dndz, zz = np.histogram(cat_spec[zflag], range=zrange, bins=nz,
-                            weights=weights, density=True)
+    dndz, zz = np.histogram(
+        cat_spec[zflag], range=zrange, bins=nz, weights=weights, density=True
+    )
     # Loop over JK regions
     dndz_jk = []
     for i in range(njk):
-        id0 = int(ntrain*i/njk)
-        idf = int(ntrain*(i+1)/njk)
+        id0 = int(ntrain * i / njk)
+        idf = int(ntrain * (i + 1) / njk)
         msk = (np.arange(ntrain) >= idf) | (np.arange(ntrain) < id0)
-        n, _ = np.histogram(cat_spec[zflag][msk], range=zrange,
-                            bins=nz, weights=weights[msk], density=True)
+        n, _ = np.histogram(
+            cat_spec[zflag][msk],
+            range=zrange,
+            bins=nz,
+            weights=weights[msk],
+            density=True,
+        )
         dndz_jk.append(n)
     dndz_jk = np.array(dndz_jk)
 

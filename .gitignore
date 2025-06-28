@@ -1,3 +1,6 @@
 *pyc
 *out
 docs/build
+docs/_build
+build/
+*egg-info/

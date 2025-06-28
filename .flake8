@@ -1,0 +1,4 @@
+[flake8]
+# black compatibility 
+extend-ignore = E203
+exclude = .git,__pycache__,doc,docs,examples,tjpcov.egg-info,build
