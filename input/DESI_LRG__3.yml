@@ -1,0 +1,15 @@
+zbin: 3
+sample: main
+data_catalog: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/catalogs/dr9_lrg_pzbins.fits
+weights_catalog: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/catalogs/more/dr9_lrg_pzbins-weights.fits
+file_dndz: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/catalogs/more/dr9_lrg_pz.fits
+stardens_path: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/misc/pixweight-dr7.1-0.22.0_stardens_64_ring.fits
+imaging_weights_coeffs: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/catalogs/imaging_weights/main_lrg_linear_coeffs_pz.yaml
+randoms_lrgmask_path: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/catalogs/lrgmask_v1.1
+randoms_path: /mnt/extraspace/damonge/Datasets/DESI/randoms_for_lrg_xcorr_2023_v1
+randoms_selection: /mnt/extraspace/damonge/Datasets/DESI/randoms_for_lrg_xcorr_2023_v1/randoms_Rongpu.txt
+download_missing_random: false
+remove_random_after_clean: false
+mapper_class: 'MapperDESILRG'
+# mask_name is set dynamically in the code.
+path_rerun: /mnt/extraspace/damonge/Datasets/DESI/cosmotheka_rerun

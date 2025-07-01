@@ -13,6 +13,7 @@ class CustomLoader(yaml.SafeLoader):
     Custom yaml.SafeLoader class that allows to populate the yaml by reading
     other by writing !include path_to_other_yaml
     """
+
     # This was copied from https://stackoverflow.com/questions/528281
     def __init__(self, stream):
         super(CustomLoader, self).__init__(stream)
@@ -20,20 +21,22 @@ class CustomLoader(yaml.SafeLoader):
     def include(self, node):
         filename = self.construct_scalar(node)
 
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             return yaml.load(f, CustomLoader)
 
 
-CustomLoader.add_constructor('!include', CustomLoader.include)
+CustomLoader.add_constructor("!include", CustomLoader.include)
 
 
-class Data():
+class Data:
     """
     Data class. This is in charge of reading the configuration yaml file or
     dictionary.
     """
-    def __init__(self, data_path='', data={}, override=False,
-                 ignore_existing_yml=False):
+
+    def __init__(
+        self, data_path="", data={}, override=False, ignore_existing_yml=False
+    ):
         """
         Parameters
         ----------
@@ -55,8 +58,10 @@ class Data():
 
         """
         if (data_path) and (data):
-            raise ValueError('Only one of data_path or data must be given. \
-                             Both set.')
+            raise ValueError(
+                "Only one of data_path or data must be given. \
+                             Both set."
+            )
         elif data_path:
             self.data_path = data_path
             self.data = self.read_data(data_path)
@@ -64,10 +69,12 @@ class Data():
             self.data_path = None
             self.data = data
         else:
-            raise ValueError('One of data_path or data must be set. \
-                             None set.')
+            raise ValueError(
+                "One of data_path or data must be set. \
+                             None set."
+            )
 
-        os.makedirs(self.data['output'], exist_ok=True)
+        os.makedirs(self.data["output"], exist_ok=True)
         self._check_yml_in_outdir(override, ignore_existing_yml)
         # Bellow define dictionaries with keys:
         # 'all': for lists of all considered cases (tracers, pairs of tracers,
@@ -76,16 +83,16 @@ class Data():
         # workspaces. In the case of self.tracers this is the subset with
         # different masks.
         # tracers are the tracer used
-        self.tracers = {'wsp': None, 'all': None}
+        self.tracers = {"wsp": None, "all": None}
         # cl_tracers are pair of tracers used to compute the cl
-        self.cl_tracers = {'wsp': None, 'all': None}
+        self.cl_tracers = {"wsp": None, "all": None}
         # cov_tracers are tuples of 4 tracers
-        self.cov_tracers = {'wsp': None, 'all': None}
+        self.cov_tracers = {"wsp": None, "all": None}
         self.tr_matrix = None
 
         # What the code will do if not specified
-        self.default_cls_to_compute = 'None'
-        self.default_clcov_from_data = 'None'
+        self.default_cls_to_compute = "None"
+        self.default_clcov_from_data = "None"
 
     def _get_tracers_defined(self):
         """
@@ -97,7 +104,7 @@ class Data():
         tracers: list
             List of the tracers listed in the configuration file
         """
-        trs_section = self._get_section('tracers')
+        trs_section = self._get_section("tracers")
         return list(trs_section.keys())
 
     def _get_section(self, section):
@@ -140,13 +147,15 @@ class Data():
         """
         auto = tr1 == tr2
         value = value.lower()
-        if (value == 'none') or ((value == 'auto') and not auto):
+        if (value == "none") or ((value == "auto") and not auto):
             compute = False
-        elif ((value == 'auto') and auto) or (value == 'all'):
+        elif ((value == "auto") and auto) or (value == "all"):
             compute = True
         else:
-            raise ValueError("Compute value = {value} not understood. It " +
-                             "has to be one of 'all', 'None' or 'auto'")
+            raise ValueError(
+                "Compute value = {value} not understood. It "
+                + "has to be one of 'all', 'None' or 'auto'"
+            )
 
         return compute
 
@@ -172,10 +181,12 @@ class Data():
         trs = self._get_tracers_defined()
 
         # Default values should be 0, 1, 2
-        compute_matrix, compute_default = \
+        compute_matrix, compute_default = (
             self._get_requested_survey_cls_matrix()
-        clcov_from_data_matrix, clcov_fdata_default = \
+        )
+        clcov_from_data_matrix, clcov_fdata_default = (
             self._get_clcov_from_data_matrix()
+        )
 
         tr_matrix = {}
         for i, tr1 in enumerate(trs):
@@ -185,24 +196,28 @@ class Data():
                 survey_comb = (tr1_nn, tr2_nn)
 
                 cmi = compute_matrix.get(survey_comb, compute_default)
-                clcov_mi = clcov_from_data_matrix.get(survey_comb,
-                                                      clcov_fdata_default)
+                clcov_mi = clcov_from_data_matrix.get(
+                    survey_comb, clcov_fdata_default
+                )
                 # clcov_from_data_matrix can have keys as (survey1, survey2)
                 # or (tracer1, tracer2)
                 # If clcov_mi has the default value, try using the other
                 # keys
                 if clcov_mi == clcov_fdata_default:
-                    clcov_mi = clcov_from_data_matrix.get((tr1, tr2),
-                                                          clcov_fdata_default)
-                compute = \
-                    self._map_compute_to_bool_for_trs(tr1, tr2, cmi)
+                    clcov_mi = clcov_from_data_matrix.get(
+                        (tr1, tr2), clcov_fdata_default
+                    )
+                compute = self._map_compute_to_bool_for_trs(tr1, tr2, cmi)
 
-                clcov_from_data = \
-                    self._map_compute_to_bool_for_trs(tr1, tr2, clcov_mi)
+                clcov_from_data = self._map_compute_to_bool_for_trs(
+                    tr1, tr2, clcov_mi
+                )
 
-                tr_matrix[(tr1, tr2)] = {'compute': compute,
-                                         'clcov_from_data': clcov_from_data,
-                                         'inv': j < i}
+                tr_matrix[(tr1, tr2)] = {
+                    "compute": compute,
+                    "clcov_from_data": clcov_from_data,
+                    "inv": j < i,
+                }
         return tr_matrix
 
     def _get_clcov_from_data_matrix(self, return_default=True):
@@ -226,7 +241,7 @@ class Data():
         default: str, (if return_default is True)
             Default value for the cases not specified in the configuration.
         """
-        conf = self._get_section('cov').get('cls_from_data', {})
+        conf = self._get_section("cov").get("cls_from_data", {})
         # Backwards compatibility
         if isinstance(conf, str):
             combs = []
@@ -238,21 +253,21 @@ class Data():
             combs = conf
             default = self.default_clcov_from_data
         else:
-            default = conf.get('default', self.default_clcov_from_data)
+            default = conf.get("default", self.default_clcov_from_data)
             combs = conf.keys()
 
         survey_matrix = {}
         for c in combs:
             # Skip entries that are not a combination of pair of surveys
-            if '-' not in c:
+            if "-" not in c:
                 continue
-            s1, s2 = c.split('-')
+            s1, s2 = c.split("-")
             if isinstance(conf, dict):
-                val = conf[c].get('compute', default)
+                val = conf[c].get("compute", default)
             else:
                 # If they're a list, note that s1, s2 can be tracer names,
                 # instead of survey names
-                val = 'all'
+                val = "all"
             survey_matrix[(s1, s2)] = val
             survey_matrix[(s2, s1)] = val
 
@@ -282,16 +297,16 @@ class Data():
         default: str, (if return_default is True)
             Default value for the cases not specified in the configuration.
         """
-        cls_conf = self._get_section('cls')
+        cls_conf = self._get_section("cls")
         default = self.default_cls_to_compute
         if isinstance(cls_conf, str):
             survey_matrix = self._load_survey_cls_matrix(cls_conf)
-        elif 'file' in cls_conf:
-            survey_matrix = self._load_survey_cls_matrix(cls_conf['file'])
-            default = cls_conf.get('default', default)
+        elif "file" in cls_conf:
+            survey_matrix = self._load_survey_cls_matrix(cls_conf["file"])
+            default = cls_conf.get("default", default)
         else:
             survey_matrix = self._read_cls_section_matrix()
-            default = cls_conf.get('default', default)
+            default = cls_conf.get("default", default)
 
         if return_default:
             return survey_matrix, default
@@ -319,12 +334,12 @@ class Data():
             specified); i.e. one of 'None' or 'none', 'all', 'auto'.
         """
         clsf = np.load(fname)
-        surveys = clsf['surveys']
-        survey_matrix = clsf['cls_matrix']
+        surveys = clsf["surveys"]
+        survey_matrix = clsf["cls_matrix"]
 
         # The matrix will have values 0, 1, 2 and we will map them to the human
         # friendly 'all', 'auto', 'None'
-        cls_legend = {2: 'all', 1: 'auto', 0: 'None'}
+        cls_legend = {2: "all", 1: "auto", 0: "None"}
 
         matrix = {}
         for i, s1 in enumerate(surveys):
@@ -346,14 +361,14 @@ class Data():
             and value the computation value requested (or the default if not
             specified); i.e. one of 'None' or 'none', 'all', 'auto'.
         """
-        cls_conf = self._get_section('cls')
+        cls_conf = self._get_section("cls")
         combs = cls_conf.keys()
         survey_matrix = {}
         for c in combs:
             if c == "default":
                 continue
-            s1, s2 = c.split('-')
-            val = cls_conf[c]['compute']
+            s1, s2 = c.split("-")
+            val = cls_conf[c]["compute"]
             survey_matrix[(s1, s2)] = val
             survey_matrix[(s2, s1)] = val
 
@@ -373,7 +388,7 @@ class Data():
         bias: float
             Linear galaxy bias
         """
-        return self.data['tracers'][tracer].get('bias', 1.)
+        return self.data["tracers"][tracer].get("bias", 1.0)
 
     def _check_yml_in_outdir(self, override=False, ignore_existing_yml=False):
         """
@@ -394,18 +409,19 @@ class Data():
             If both override and ignore_existing_yml are True or if there is
             more than 1 yaml file in the output directory.
         """
-        outdir = self.data['output']
-        fname = os.path.join(outdir, '*.yml')
+        outdir = self.data["output"]
+        fname = os.path.join(outdir, "*.yml")
         files = glob(fname)
         # Start if-else with sanity checks
         if override and ignore_existing_yml:
-            raise ValueError('Only one of override or ignore_existing_yml can '
-                             + 'be set.')
+            raise ValueError(
+                "Only one of override or ignore_existing_yml can " + "be set."
+            )
         elif len(files) > 1:
-            raise ValueError(f'More than 1 YML file in outdir: {outdir}.')
+            raise ValueError(f"More than 1 YML file in outdir: {outdir}.")
         elif override:
             if len(files):
-                warn('Overriding configuration')
+                warn("Overriding configuration")
             if self.data_path:
                 shutil.copy(self.data_path, outdir)
             else:
@@ -413,8 +429,10 @@ class Data():
         elif ignore_existing_yml:
             pass
         elif len(files) == 1:
-            warn(f'A YML file was found in outdir: {outdir}. Using it \
-                 instead of input config.')
+            warn(
+                f"A YML file was found in outdir: {outdir}. Using it \
+                 instead of input config."
+            )
             self.data_path = files[0]
             self.data = self.read_data(files[0])
         elif (len(files) == 0) and self.data_path:
@@ -427,9 +445,9 @@ class Data():
         Write the loaded configuration to a yaml file called 'data.yml' in the
         output directory
         """
-        outdir = self.data['output']
-        fname = os.path.join(outdir, 'data.yml')
-        with open(fname, 'w') as f:
+        outdir = self.data["output"]
+        fname = os.path.join(outdir, "data.yml")
+        with open(fname, "w") as f:
             yaml.dump(self.data, f)
 
     def read_data(self, data_path):
@@ -460,7 +478,7 @@ class Data():
             List of tracers used to compute the requested Cell.
 
         """
-        lab = ['all', 'wsp'][wsp]
+        lab = ["all", "wsp"][wsp]
         if self.tracers[lab] is None:
             # Get all tracers in the yaml file
             tr_names = self._get_tracers_defined()
@@ -474,7 +492,7 @@ class Data():
             for tr1 in tr_names:
                 for tr2 in tr_names:
                     req = tmat[(tr1, tr2)]
-                    if req['compute'] and (tr1 not in tracers):
+                    if req["compute"] and (tr1 not in tracers):
                         tracers.append(tr1)
                         break
             if wsp:
@@ -500,8 +518,8 @@ class Data():
         tracer_bare_name: str
             Tracer name without the tomographic index
         """
-        if '__' in tracer:
-            tracer = ''.join(tracer.split('__')[:-1])
+        if "__" in tracer:
+            tracer = "".join(tracer.split("__")[:-1])
         return tracer
 
     def will_pair_be_computed(self, tn1, tn2):
@@ -525,8 +543,8 @@ class Data():
         """
         tmat = self.get_tracer_matrix()
         t = tmat[(tn1, tn2)]
-        if t['compute']:
-            if t['inv']:
+        if t["compute"]:
+            if t["inv"]:
                 return (tn2, tn1)
             else:
                 return (tn1, tn2)
@@ -555,7 +573,7 @@ class Data():
             self.tr_matrix = self._init_tracer_matrix()
         return self.tr_matrix
 
-    def get_tracers_bare_name_pair(self, tr1, tr2, connector='-'):
+    def get_tracers_bare_name_pair(self, tr1, tr2, connector="-"):
         """
         Return the tracer names without the tomographic index (e.g. for
         DES__0, it returns DES) joined by a connector.
@@ -595,7 +613,7 @@ class Data():
         cl_tracers: list
             List of pair of tracers for which to compute the Cell.
         """
-        lab = ['all', 'wsp'][wsp]
+        lab = ["all", "wsp"][wsp]
         if self.cl_tracers[lab] is None:
             cl_tracers = []
             tr_names = self.get_tracers_used(wsp)
@@ -604,7 +622,7 @@ class Data():
             for tr1 in tr_names:
                 for tr2 in tr_names:
                     req = tmat[(tr1, tr2)]
-                    if req['inv'] or (req['compute'] is False):
+                    if req["inv"] or (req["compute"] is False):
                         continue
                     cl_tracers.append((tr1, tr2))
 
@@ -629,7 +647,7 @@ class Data():
             List of tuples of 4 tracers with the tracers to compute a
             covariance block.
         """
-        lab = ['all', 'wsp'][wsp]
+        lab = ["all", "wsp"][wsp]
         if self.cov_tracers[lab] is None:
             cl_tracers = self.get_cl_trs_names(wsp)
             cov_tracers = []
@@ -658,21 +676,21 @@ class Data():
             has been built.
         """
         cl_tracers = self.get_cl_trs_names()
-        order_extra = self.data['cov']['extra']['order']
+        order_extra = self.data["cov"]["extra"]["order"]
         cl_extra = [[] for i in order_extra]
         ix_reverse = []
 
         for tr1, tr2 in cl_tracers:
             tr1_nn = self.get_tracer_bare_name(tr1)
             tr2_nn = self.get_tracer_bare_name(tr2)
-            if (tr1_nn + '-' + tr2_nn) in order_extra:
-                ix = order_extra.index(tr1_nn + '-' + tr2_nn)
-            elif (tr2_nn + '-' + tr1_nn) in order_extra:
-                ix = order_extra.index(tr2_nn + '-' + tr1_nn)
+            if (tr1_nn + "-" + tr2_nn) in order_extra:
+                ix = order_extra.index(tr1_nn + "-" + tr2_nn)
+            elif (tr2_nn + "-" + tr1_nn) in order_extra:
+                ix = order_extra.index(tr2_nn + "-" + tr1_nn)
                 if ix not in ix_reverse:
                     ix_reverse.append(ix)
             else:
-                warn(f'Tracers {tr1}-{tr2} not found in extra cov.')
+                warn(f"Tracers {tr1}-{tr2} not found in extra cov.")
                 continue
             cl_extra[ix].append((tr1, tr2))
 
@@ -699,7 +717,20 @@ class Data():
         tracers_torun = []
         masks = []
         for tr in tracers:
-            mtr = self.data['tracers'][tr]['mask_name']
+            if "mask_name" not in self.data["tracers"][tr]:
+                # mask_name dynamically assigned in the mapper
+                tracer = self.get_mapper(tr)
+                mtr = tracer.mask_name
+            else:
+                # mask_name assigned in the configuration file
+                mtr = self.data["tracers"][tr].get("mask_name", None)
+
+            if mtr is None:
+                raise ValueError(
+                    f"Tracer {tr} does not have a mask_name assigned. "
+                    + "Please assign it in the configuration file."
+                )
+
             if mtr not in masks:
                 tracers_torun.append(tr)
                 masks.append(mtr)
@@ -728,12 +759,12 @@ class Data():
              Delta ell band in Fig. 3 of that paper. Set to -1 if not specified
              in the configuration file.
         """
-        if ('toeplitz' in self.data) and (dtype in self.data['toeplitz']):
-            toeplitz = self.data['toeplitz'][dtype]
+        if ("toeplitz" in self.data) and (dtype in self.data["toeplitz"]):
+            toeplitz = self.data["toeplitz"][dtype]
 
-            l_toeplitz = toeplitz['l_toeplitz']
-            l_exact = toeplitz['l_exact']
-            dl_band = toeplitz['dl_band']
+            l_toeplitz = toeplitz["l_toeplitz"]
+            l_exact = toeplitz["l_exact"]
+            dl_band = toeplitz["dl_band"]
         else:
             l_toeplitz = l_exact = dl_band = -1
 
@@ -754,28 +785,32 @@ class Data():
             Initialized mapper class of the corresponding input tracer.
 
         """
-        config = self.data['tracers'][tr]
-        nside = self.data['sphere']['nside']
-        n_iter_sht = self.data['sphere']['n_iter_sht']
-        coords = self.data['sphere']['coords']
-        config['ignore_rerun'] = config.get('ignore_rerun',
-                                            self.data.get('ignore_rerun',
-                                                          False))
-        if 'nside' not in config:
-            config['nside'] = nside
-        elif config['nside'] != nside:
-            raise ValueError(f"Nside mismatch in tracer {tr} and " +
-                             f"'sphere': {config['nside']} vs {nside}")
-        if 'n_iter_sht' not in config:
-            config['n_iter_sht'] = n_iter_sht
-        if 'coords' not in config:
-            config['coords'] = coords
-        elif config['coords'] != coords:
-            raise ValueError(f"Coordinate mismatch in tracer {tr} and " +
-                             f"'sphere': {config['coords']} vs {coords}")
-        if 'path_rerun' not in config:
-            config['path_rerun'] = self.data.get('path_rerun', None)
-        mapper_class = config['mapper_class']
+        config = self.data["tracers"][tr]
+        nside = self.data["sphere"]["nside"]
+        n_iter_sht = self.data["sphere"]["n_iter_sht"]
+        coords = self.data["sphere"]["coords"]
+        config["ignore_rerun"] = config.get(
+            "ignore_rerun", self.data.get("ignore_rerun", False)
+        )
+        if "nside" not in config:
+            config["nside"] = nside
+        elif config["nside"] != nside:
+            raise ValueError(
+                f"Nside mismatch in tracer {tr} and "
+                + f"'sphere': {config['nside']} vs {nside}"
+            )
+        if "n_iter_sht" not in config:
+            config["n_iter_sht"] = n_iter_sht
+        if "coords" not in config:
+            config["coords"] = coords
+        elif config["coords"] != coords:
+            raise ValueError(
+                f"Coordinate mismatch in tracer {tr} and "
+                + f"'sphere': {config['coords']} vs {coords}"
+            )
+        if "path_rerun" not in config:
+            config["path_rerun"] = self.data.get("path_rerun", None)
+        mapper_class = config["mapper_class"]
         return mapper_from_name(mapper_class)(config)
 
     def read_symmetric(self, tr1, tr2):
@@ -798,4 +833,4 @@ class Data():
 
         """
         tmat = self.get_tracer_matrix()
-        return tmat[(tr1, tr2)]['inv']
+        return tmat[(tr1, tr2)]["inv"]
