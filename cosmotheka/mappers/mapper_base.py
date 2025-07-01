@@ -147,10 +147,10 @@ class MapperBase(object):
 
     def _rerun_read_cycle(self, fname, ftype, func,
                           section=None, saved_by_func=False, **func_kwargs):
-        print(f"Rerun read cycle for {fname} of type {ftype}")
+        print(f"Rerun read cycle for {fname} of type {ftype}", flush=True)
         d = get_rerun_data(self, fname, ftype,
                            section=section)
-        print(f"Data loaded: {d is not None}")
+        print(f"Data loaded: {d is not None}", flush=True)
         if d is None:
             d = func(**func_kwargs)
             if not saved_by_func:
