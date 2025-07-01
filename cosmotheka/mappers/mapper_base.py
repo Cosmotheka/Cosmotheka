@@ -1,3 +1,4 @@
+# fmt: off
 import numpy as np
 import healpy as hp
 import pymaster as nmt
@@ -12,6 +13,8 @@ class MapperBase(object):
     """
     # map_name is the name that will be used for rerun signal map files.
     map_name = None
+
+    masked_on_input = False  # If True, the mapper's signal map is masked
 
     def __init__(self, config):
         self._get_defaults(config)
@@ -143,11 +146,13 @@ class MapperBase(object):
         raise NotImplementedError("Do not use base class")
 
     def _rerun_read_cycle(self, fname, ftype, func,
-                          section=None, saved_by_func=False):
+                          section=None, saved_by_func=False, **func_kwargs):
+        print(f"Rerun read cycle for {fname} of type {ftype}")
         d = get_rerun_data(self, fname, ftype,
                            section=section)
+        print(f"Data loaded: {d is not None}")
         if d is None:
-            d = func()
+            d = func(**func_kwargs)
             if not saved_by_func:
                 save_rerun_data(self, fname, ftype, d)
         return d
@@ -236,7 +241,8 @@ class MapperBase(object):
 
         n_iter = kwargs.get('n_iter', 0)
         return nmt.NmtField(mask, signal, beam=beam_eff,
-                            templates=cont, n_iter=n_iter)
+                            templates=cont, n_iter=n_iter,
+                            masked_on_input=self.masked_on_input)
 
     def get_nmt_field(self, **kwargs):
         """
