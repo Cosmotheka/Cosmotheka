@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 79
-include = './*\.pyi?$|tests\/.*\.pyi?$|tjpcov\/.*\.pyi?$'
+include = './*\.pyi?$|tests\/.*\.pyi?$|cosmotheka\/.*\.pyi?$'
 
 [build-system]
 requires = ["setuptools>=61.0"]
