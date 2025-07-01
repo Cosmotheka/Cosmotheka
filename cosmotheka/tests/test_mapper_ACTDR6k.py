@@ -9,6 +9,7 @@ def get_config():
     path = 'cosmotheka/tests/data/'
     c = {'klm_file': path+'alm.fits',
          'file_mask': path+'map.fits',
+         'file_noise': path+'nl_dr6k.txt',
          'map_name': 'DR6_kappa_test',
          'mask_name': 'DR6_kappa_test',
          'coords': 'C',
@@ -29,6 +30,15 @@ def test_get_spin(cls, spin):
 def test_get_dtype(cls, typ):
     m = cls(get_config())
     assert m.get_dtype() == typ
+
+
+def test_get_nl_coupled():
+    conf = get_config()
+    m = xc.mappers.MapperACTDR6k(conf)
+    nl = m.get_nl_coupled()
+    msk = m.get_mask()
+    w2 = np.mean(msk**2)
+    assert np.allclose(nl, w2)
 
 
 @pytest.mark.parametrize('cls', [(xc.mappers.MapperACTDR6k)])
