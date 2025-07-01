@@ -104,6 +104,7 @@ class MapperDESILRG(MapperBase):
             f"_{self._sample}" if self._sample == "extended" else ""
         )
         self.map_name += f"_{self.suffix}" if self.suffix else ""
+        self.map_name += f"_zbin{self.zbin}"
 
         # Mask name
         # If not given, we use the same name as the map name since the mask is
