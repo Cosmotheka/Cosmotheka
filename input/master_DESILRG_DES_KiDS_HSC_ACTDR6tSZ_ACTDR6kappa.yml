@@ -3,6 +3,13 @@ tracers:
   DESI_LRG__1: !include input/DESI_LRG__1.yml
   DESI_LRG__2: !include input/DESI_LRG__2.yml
   DESI_LRG__3: !include input/DESI_LRG__3.yml
+
+  # For comparison with our definition of delta
+  DESI_LRG_Zhou23__0: !include input/DESI_LRG_Zhou23__0.yml
+  DESI_LRG_Zhou23__1: !include input/DESI_LRG_Zhou23__1.yml
+  DESI_LRG_Zhou23__2: !include input/DESI_LRG_Zhou23__2.yml
+  DESI_LRG_Zhou23__3: !include input/DESI_LRG_Zhou23__3.yml
+
   # To cross-correlate with
   ACTDR6__kappa: !include input/ACTDR6__kappa.yml
   ACTDR6__tSZ: !include input/ACTDR6__tSZ.yml
@@ -25,7 +32,10 @@ tracers:
 
 cls:
   DESI_LRG-DESI_LRG:
-    compute: 'all'
+    compute: 'auto'
+
+  DESI_LRG_Zhou23-DESI_LRG_Zhou23:
+    compute: 'auto'
 
   DESI_LRG-ACTDR6:
     compute: 'all'
