@@ -295,7 +295,7 @@ def test_rerun(rerun_config):
 
     # Noise
     nl = m.get_nl_coupled()
-    fn = os.path.join(path_rerun, "DESI_LRG_Nell_coordC_ns32.npz")
+    fn = os.path.join(path_rerun, "DESI_LRG_zbin0_Nell_coordC_ns32.npz")
     d = np.load(fn)
     assert d["nls"].size == 32 * 3
     assert np.all(nl == d["nls"])
@@ -309,12 +309,12 @@ def test_rerun(rerun_config):
     # Randoms maps
     random_maps = m.get_randoms_maps()
     fn = os.path.join(
-        path_rerun, "map_DESI_LRG_randoms-1-0_n-w-w2_coordC_ns32.fits.gz"
+        path_rerun, "map_DESI_LRG_zbin0_randoms-1-0_n-w-w2_coordC_ns32.fits.gz"
     )
     read_maps = hp.read_map(fn, verbose=False, field=None)
 
     fn = os.path.join(
-        path_rerun, "map_DESI_LRG_randoms-1-1_n-w-w2_coordC_ns32.fits.gz"
+        path_rerun, "map_DESI_LRG_zbin0_randoms-1-1_n-w-w2_coordC_ns32.fits.gz"
     )
     read_maps += hp.read_map(fn, verbose=False, field=None)
 
