@@ -40,6 +40,8 @@ class MapperDESILRG(MapperBase):
         - max_stardens: `2500` (default)
         - remove_island: `True` (default). If True, it removes the "island" \
               in the NGC
+        - mask_threshold: `0.2` (default). This is the minimum relative value \
+            respect to the mean of the mask to keep a pixel in the mask.
     """
 
     map_name = "DESI_LRG"
@@ -81,12 +83,19 @@ class MapperDESILRG(MapperBase):
         # To avoid loading the same randoms multiple times
         self._loaded_randoms = {}
 
-        # Cuts
+        # Suffix to change the map name and rerun files
+        suffix_parts = []
+
+        # Parts affecting the weight values
+        # Sample type
+        if self._sample == "extended":
+            suffix_parts.append("extended")
+
+        # Quality cuts
         self._stardens_good_hp_idx = None
         self._stardens_nside = None
         cuts = self._get_default_cuts()
 
-        suffix_parts = []
         self.cuts = {}
         keys_cuts = sorted(cuts.keys())
         for k in keys_cuts:
@@ -97,14 +106,22 @@ class MapperDESILRG(MapperBase):
                 vnew = self.cuts[k]
                 k = k.replace("_", "")
                 suffix_parts.append(f"{k}{vnew}")
-        self.suffix = "_".join(suffix_parts)
+        self.suffix_weights = "_".join(suffix_parts)
+
+        # Parts affecting other parts of the mapper
+        # Mask threshold
+        self.mask_threshold = config.get("mask_threshold", 0.2)
+        if self.mask_threshold != 0.2:
+            suffix_parts.append(f"maskthresh{self.mask_threshold}")
+
+        # zbin
+        suffix_parts.append(f"zbin{self.zbin}")
+
+        # Join the suffix parts
+        suffix = "_".join(suffix_parts)
 
         # Modify the map name
-        self.map_name += (
-            f"_{self._sample}" if self._sample == "extended" else ""
-        )
-        self.map_name += f"_{self.suffix}" if self.suffix else ""
-        self.map_name += f"_zbin{self.zbin}"
+        self.map_name += f"_{suffix}" if suffix else ""
 
         # Mask name
         # If not given, we use the same name as the map name since the mask is
@@ -285,11 +302,11 @@ class MapperDESILRG(MapperBase):
         mask = alpha * w_map
 
         # Apply a threshold
-        # goodpix = mask > 0
-        # avg = np.mean(mask[goodpix])
-        # goodpix = mask > 0.20 * avg
+        goodpix = mask > 0
+        avg = np.mean(mask[goodpix])
+        goodpix = mask > self.mask_threshold * avg
 
-        # mask[~goodpix] = 0.0
+        mask[~goodpix] = 0.0
         return mask
 
     def _get_nl_coupled(self):
@@ -367,7 +384,9 @@ class MapperDESILRG(MapperBase):
         if base_name in self._loaded_randoms:
             return self._loaded_randoms[base_name]
 
-        fn = "".join([f"{base_name}_clean_weights", f"{self.suffix}.fits.gz"])
+        fn = "".join(
+            [f"{base_name}_clean_weights", f"{self.suffix_weights}.fits.gz"]
+        )
         print(f"{fn}", flush=True)
         randoms = Table(
             self._rerun_read_cycle(
@@ -703,7 +722,7 @@ class MapperDESILRGZhou2023(MapperDESILRG):
         mask = np.zeros_like(rmap)
         msk = np.nonzero(rmap > 0)[0]
         avg = np.mean(rmap[msk])
-        msk = np.nonzero(rmap > 0.20 * avg)[0]
+        msk = np.nonzero(rmap > self.mask_threshold * avg)[0]
         mask[msk] = 1.0
 
         return mask

@@ -348,7 +348,8 @@ def test_get_default_cuts(mapper):
 def test_suffix_generation(config, key, val):
     config[key] = val  # change from default
     mapper = MapperDESILRG(config)
-    assert key.replace("_", "") in mapper.suffix
+    assert key.replace("_", "") in mapper.suffix_weights
+    assert key.replace("_", "") in mapper.map_name
 
 
 def test_suffix_generation_all_keys(config):
@@ -360,7 +361,7 @@ def test_suffix_generation_all_keys(config):
     config["remove_island"] = False
 
     mapper = MapperDESILRG(config)
-    suffix = mapper.suffix
+    suffix = mapper.suffix_weights
 
     # Check that all keys are reflected in the suffix
     s = []
@@ -376,6 +377,10 @@ def test_suffix_generation_all_keys(config):
         s.append(key.replace("_", "") + str(config[key]))
 
     assert suffix == "_".join(s)
+    assert mapper.map_name.endswith(suffix + "_zbin0")
+
+
+# TODO: Add test for mask_threshold
 
 
 def test__get_stardens_mask(mapper, catalog):
