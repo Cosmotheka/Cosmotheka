@@ -283,6 +283,13 @@ class MapperDESILRG(MapperBase):
         w_map = self.get_randoms_maps()["w"]
 
         mask = alpha * w_map
+
+        # Apply a threshold
+        # goodpix = mask > 0
+        # avg = np.mean(mask[goodpix])
+        # goodpix = mask > 0.20 * avg
+
+        # mask[~goodpix] = 0.0
         return mask
 
     def _get_nl_coupled(self):
@@ -385,6 +392,9 @@ class MapperDESILRG(MapperBase):
 
         randoms_maps = np.zeros((3, npix))
 
+        # Hack to remove the density definition from the randoms map name
+        map_name = self.map_name.replace("_densdefZhou2023", "")
+
         # TODO: consider if I want to save the sum of all maps. Problem, it
         # makes the code a bit more complex and it's difficult to know which
         # randoms when into the map.
@@ -406,7 +416,7 @@ class MapperDESILRG(MapperBase):
 
             fname = "_".join(
                 [
-                    f"map_{self.map_name}_{base_name}",
+                    f"map_{map_name}_{base_name}",
                     "n-w-w2",
                     f"coord{self.coords}",
                     f"ns{self.nside}.fits.gz",
