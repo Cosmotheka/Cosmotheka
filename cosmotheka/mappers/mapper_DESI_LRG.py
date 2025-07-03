@@ -305,6 +305,10 @@ class MapperDESILRG(MapperBase):
         goodpix = mask > 0
         avg = np.mean(mask[goodpix])
         goodpix = mask > self.mask_threshold * avg
+        print(
+            "Masking pixels with less than",
+            f"{self.mask_threshold:.2f} average weight.",
+        )
 
         mask[~goodpix] = 0.0
         return mask
@@ -717,13 +721,18 @@ class MapperDESILRGZhou2023(MapperDESILRG):
 
     def _get_mask(self):
         # Copied from https://github.com/NoahSailer/MaPar/blob/main/maps/make_lrg_maps.py  # noqa
-        rmap = self.get_randoms_maps()["w"].copy()
+        rmap = self.get_randoms_maps()["w"]
 
         mask = np.zeros_like(rmap)
         msk = np.nonzero(rmap > 0)[0]
         avg = np.mean(rmap[msk])
         msk = np.nonzero(rmap > self.mask_threshold * avg)[0]
         mask[msk] = 1.0
+
+        print(
+            "Masking pixels with less than",
+            f"{self.mask_threshold:.2f} average weight.",
+        )
 
         return mask
 

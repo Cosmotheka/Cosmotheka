@@ -343,12 +343,17 @@ def test_get_default_cuts(mapper):
         ("max_ebv", 0.2),
         ("max_stardens", 3000),
         ("remove_island", False),
+        ("mask_threshold", 0.3),
     ],
 )
 def test_suffix_generation(config, key, val):
     config[key] = val  # change from default
     mapper = MapperDESILRG(config)
-    assert key.replace("_", "") in mapper.suffix_weights
+    if key != "mask_threshold":
+        assert key.replace("_", "") in mapper.suffix_weights
+    else:
+        # mask_threshold is not used in suffix_weights
+        assert key.replace("_", "") not in mapper.suffix_weights
     assert key.replace("_", "") in mapper.map_name
 
 
@@ -359,6 +364,7 @@ def test_suffix_generation_all_keys(config):
     config["max_ebv"] = 0.2
     config["max_stardens"] = 3000
     config["remove_island"] = False
+    config["mask_threshold"] = 0.5  # Not used in suffix_weights
 
     mapper = MapperDESILRG(config)
     suffix = mapper.suffix_weights
@@ -372,15 +378,13 @@ def test_suffix_generation_all_keys(config):
             "max_ebv",
             "max_stardens",
             "remove_island",
+            "mask_threshold",
         ]
     ):
         s.append(key.replace("_", "") + str(config[key]))
 
     assert suffix == "_".join(s)
     assert mapper.map_name.endswith(suffix + "_zbin0")
-
-
-# TODO: Add test for mask_threshold
 
 
 def test__get_stardens_mask(mapper, catalog):
@@ -507,8 +511,8 @@ def test__get_mask(config_with_islands, mapper):
         # Half of the randoms pass the cuts (no zbin selection for randoms)
         assert np.sum(mask[NPIX // 2 :]) == NPIX / 2
     else:
-        mask_vals_north = 1 / 42 * 14
-        mask_vals_south = 1 / 42 * 28
+        mask_vals_north = 1 / 42 * 14  # = 0.333...
+        mask_vals_south = 1 / 42 * 28  # = 0.666...
         assert values == pytest.approx(
             [0, mask_vals_north, mask_vals_south], rel=1e-5
         )
@@ -520,6 +524,20 @@ def test__get_mask(config_with_islands, mapper):
         assert mask[NPIX // 2 + 1 :: 2] == pytest.approx(
             mask_vals_south, rel=1e-5
         )
+
+    # Test mask threshold
+    # Since <w_p> = 1/2, setting mask_threshold > 2/3  will leave only the
+    # "south" pixels
+    config = config_with_islands.copy()
+    config["mask_threshold"] = 2 / 3 + 0.1
+    m = mapper(config)
+    mask = m._get_mask()
+    goodpix = mask > 0
+    ix = np.arange(NPIX)
+    ix_good = ix[NPIX // 2 + 1 :: 2]  # Pixels corresponding to "south"
+    assert np.all(ix[goodpix] == ix_good)
+    if not isinstance(m, MapperDESILRGZhou2023):
+        assert mask[goodpix] == pytest.approx(mask_vals_south, rel=1e-5)
 
 
 @pytest.mark.parametrize("mapper", [MapperDESILRG, MapperDESILRGZhou2023])
