@@ -658,6 +658,28 @@ class Data:
             self.cov_tracers[lab] = cov_tracers
         return self.cov_tracers[lab]
 
+    def get_mask_name_for_tracer(self, tracer):
+        """
+        Return the mask name for the input tracer.
+
+        Parameters
+        ----------
+        tracer: str
+            Tracer name
+
+        Returns
+        -------
+        mask_name: str
+            Mask name for the input tracer.
+        """
+        if "mask_name" not in self.data["tracers"][tracer]:
+            # mask_name dynamically assigned in the mapper
+            tracer = self.get_mapper(tracer)
+            return tracer.mask_name
+        else:
+            # mask_name assigned in the configuration file
+            return self.data["tracers"][tracer]["mask_name"]
+
     def get_cov_extra_cl_tracers(self):
         """
         Return a list of pair of tracers in the order that the extra covariance
@@ -717,13 +739,7 @@ class Data:
         tracers_torun = []
         masks = []
         for tr in tracers:
-            if "mask_name" not in self.data["tracers"][tr]:
-                # mask_name dynamically assigned in the mapper
-                tracer = self.get_mapper(tr)
-                mtr = tracer.mask_name
-            else:
-                # mask_name assigned in the configuration file
-                mtr = self.data["tracers"][tr].get("mask_name", None)
+            mtr = self.get_mask_name_for_tracer(tr)
 
             if mtr is None:
                 raise ValueError(

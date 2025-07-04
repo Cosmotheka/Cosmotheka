@@ -9,6 +9,8 @@ from datetime import datetime
 from glob import glob
 import sys
 
+PYTHON = sys.executable
+
 
 ##############################################################################
 def get_mem(data, trs, compute):
@@ -53,7 +55,7 @@ def get_pyexec(
         pyexec = ""
     else:
         # Use the same python that launched run_cls.py
-        pyexec = sys.executable
+        pyexec = PYTHON
 
     if not onlogin:
         logdir = os.path.join(outdir, "log")
@@ -82,7 +84,7 @@ def get_jobs_with_same_cwsp(data):
 
         # The problem with this is that any change in cov.py will not be seen here
         mask1, mask2, mask3, mask4 = [
-            data.data["tracers"][trsi]["mask_name"] for trsi in trs
+            data.get_mask_name_for_tracer(trsi) for trsi in trs
         ]
         fname = os.path.join(
             data.data["output"],
@@ -163,7 +165,8 @@ def launch_cov_batches(
         # successes or fails)
         create_lock_file(cw)
         s = f"echo Running {cw}\n"
-        s += f"/usr/bin/python3.8 run_cwsp_batch.py {args.INPUT}"
+        # Add environment used when launched
+        s += f"{PYTHON} run_cwsp_batch.py {args.INPUT}"
         if remove_cwsp:
             s += " --no_save_cw"
         for covi in covs_tbc:

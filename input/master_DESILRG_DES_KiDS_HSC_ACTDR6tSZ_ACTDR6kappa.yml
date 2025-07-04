@@ -28,7 +28,6 @@ tracers:
   KiDS1000__4: !include input/KiDS1000__4.yml
   Planck__kappa18: !include input/Planck__kappa18.yml
   Planck__tSZ15: !include input/Planck__tSZ15.yml
-  Planck__CMB18: !include input/Planck__CMB18.yml
 
 cls:
   DESI_LRG-DESI_LRG:
@@ -49,13 +48,10 @@ cls:
   DESI_LRG-KiDS1000:
     compute: 'all'
 
-  DESI_LRG-Planck__CMB18:
+  DESI_LRG-Planck__kappa18:
     compute: 'all'
 
-  DESI_LRG-KiDS1000:
-    compute: 'all'
-
-  DESI_LRG-PLAcv:
+  DESI_LRG-Planck__tSZ18:
     compute: 'all'
 
   DESY3wl-DESY3wl:
