@@ -13,21 +13,11 @@ tracers:
   # To cross-correlate with
   ACTDR6__kappa: !include input/ACTDR6__kappa.yml
   ACTDR6__tSZ: !include input/ACTDR6__tSZ.yml
-  DESY3wl__0: !include input/DESY1wl__0.yml
-  DESY3wl__1: !include input/DESY1wl__1.yml
-  DESY3wl__2: !include input/DESY1wl__2.yml
-  DESY3wl__3: !include input/DESY1wl__3.yml
-  HSCDR1wl__0: !include input/HSCDR1wl__0.yml
-  HSCDR1wl__1: !include input/HSCDR1wl__1.yml
-  HSCDR1wl__2: !include input/HSCDR1wl__2.yml
-  HSCDR1wl__3: !include input/HSCDR1wl__3.yml 
-  KiDS1000__0: !include input/KiDS1000__0.yml
-  KiDS1000__1: !include input/KiDS1000__1.yml
-  KiDS1000__2: !include input/KiDS1000__2.yml
-  KiDS1000__3: !include input/KiDS1000__3.yml
-  KiDS1000__4: !include input/KiDS1000__4.yml
   Planck__kappa18: !include input/Planck__kappa18.yml
   Planck__tSZ15: !include input/Planck__tSZ15.yml
+  CIBLenz__353: !include input/CIBLenz__353.yml
+  CIBLenz__545: !include input/CIBLenz__545.yml
+  CIBLenz__857: !include input/CIBLenz__857.yml
 
 cls:
   DESI_LRG-DESI_LRG:
@@ -39,37 +29,10 @@ cls:
   DESI_LRG-ACTDR6:
     compute: 'all'
 
-  DESI_LRG-DESY3wl:
+  DESI_LRG-Planck:
     compute: 'all'
 
-  DESI_LRG-HSCDR1wl:
-    compute: 'all'
-
-  DESI_LRG-KiDS1000:
-    compute: 'all'
-
-  DESI_LRG-Planck__kappa18:
-    compute: 'all'
-
-  DESI_LRG-Planck__tSZ18:
-    compute: 'all'
-
-  DESY3wl-DESY3wl:
-    compute: 'all'
-
-  DESY3wl-ACTDR6:
-    compute: 'all'
-
-  HSCDR1wl-HSCDR1wl:
-    compute: 'all'
-
-  HSCDR1wl-ACTDR6:
-    compute: 'all'
-
-  KiDS1000-KiDS1000:
-    compute: 'all'
-
-  KiDS1000-ACTDR6:
+  DESI_LRG-CIBLenz:
     compute: 'all'
 
 
@@ -112,4 +75,4 @@ recompute:
   mcm: False
   cmcm: False
 
-output:  '/mnt/extraspace/davidjamiecarlos/DESILRG_DES_KiDS_HSC_ACTDR6tSZ_ACTDR6kappa_nside2048_run1'
+output:  '/mnt/extraspace/davidjamiecarlos/DESILRG_ACTDR6_Planck18_CIB_nside2048_run1'
