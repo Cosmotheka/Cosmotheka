@@ -675,7 +675,6 @@ def test_compute_weights(mapper_with_islands):
         assert weights[key] == pytest.approx(expected_w, rel=1e-5)
 
 
-# TODO:
 def test__load_full_randoms(mapper, randoms_path):
     randoms10, downloaded = mapper._load_full_randoms("randoms-1-0")
     assert downloaded is False

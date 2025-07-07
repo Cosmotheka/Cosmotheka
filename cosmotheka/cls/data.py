@@ -423,9 +423,12 @@ class Data:
             if len(files):
                 warn("Overriding configuration")
             if self.data_path:
-                shutil.copy(self.data_path, outdir)
-            else:
-                self._dump_data()
+                basename = os.path.basename(self.data_path)
+                outfile = os.path.join(outdir, basename + ".orig")
+                shutil.copy(self.data_path, outfile)
+            # Always dump the loaded data so we know the mapper options.
+            # Otherwise, we just see the file they refer to.
+            self._dump_data()
         elif ignore_existing_yml:
             pass
         elif len(files) == 1:
@@ -436,7 +439,10 @@ class Data:
             self.data_path = files[0]
             self.data = self.read_data(files[0])
         elif (len(files) == 0) and self.data_path:
-            shutil.copy(self.data_path, outdir)
+            basename = os.path.basename(self.data_path)
+            outfile = os.path.join(outdir, basename + ".orig")
+            shutil.copy(self.data_path, outfile)
+            self._dump_data()
         else:
             self._dump_data()
 
