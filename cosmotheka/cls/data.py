@@ -856,3 +856,54 @@ class Data:
         """
         tmat = self.get_tracer_matrix()
         return tmat[(tr1, tr2)]["inv"]
+
+    def get_cl_tracers_per_wsp(self):
+        """
+        Return a dictionary with keys a tuple of masks and values a list of
+        pair of tracers that will use the same workspace.
+        """
+        cl_tracers = self.get_cl_trs_names()
+        cl_tracers_per_wsp = {}
+        for tr1, tr2 in cl_tracers:
+            m1 = self.get_mask_name_for_tracer(tr1)
+            m2 = self.get_mask_name_for_tracer(tr2)
+            key = (m1, m2)
+            key_inv = (m2, m1)
+            if key not in cl_tracers_per_wsp:
+                if key_inv in cl_tracers_per_wsp:
+                    # If the key is already there, we add the pair to the
+                    # existing list
+                    cl_tracers_per_wsp[key_inv].append((tr2, tr1))
+                else:
+                    # If not, we create a new entry
+                    cl_tracers_per_wsp[key] = [(tr1, tr2)]
+            else:
+                # If the key is already there, we add the pair to the existing
+                # list
+                cl_tracers_per_wsp[key].append((tr1, tr2))
+
+        return cl_tracers_per_wsp
+
+    def get_cov_tracers_per_cwsp(self):
+        """
+        Return a dictionary with keys a tuple of masks and values a list of
+        tuples of 4 tracers that will use the same covariance workspace.
+        """
+        # TODO: This could be improved by checking the symmetries. It requires
+        # modifying cov.py
+        cov_tracers = self.get_cov_trs_names()
+        cov_tracers_per_cwsp = {}
+        for tr1, tr2, tr3, tr4 in cov_tracers:
+            m1 = self.get_mask_name_for_tracer(tr1)
+            m2 = self.get_mask_name_for_tracer(tr2)
+            m3 = self.get_mask_name_for_tracer(tr3)
+            m4 = self.get_mask_name_for_tracer(tr4)
+            key = (m1, m2, m3, m4)
+            if key not in cov_tracers_per_cwsp:
+                cov_tracers_per_cwsp[key] = [(tr1, tr2, tr3, tr4)]
+            else:
+                # If the key is already there, we add the pair to the existing
+                # list
+                cov_tracers_per_cwsp[key].append((tr1, tr2, tr3, tr4))
+
+        return cov_tracers_per_cwsp
