@@ -21,7 +21,7 @@ class MapperDESILRG(MapperBase):
         - data_catalog: \
           `'./lrg_xcorr_2023_v1/catalogs/dr9_lrg_pzbins.fits'`
         - file_dndz: \
-          `'./lrg_xcorr_2023_v1/catalogs/dndz_lrg_pzbins.fits'`
+          `./lrg_xcorr_2023_v1/redshift_dist/main_lrg_pz_dndz_iron_v0.4_dz_0.02.txt`
         - randoms_path: `./randoms` (dictionary or single file path)
         - randoms_selection: list or txt file with randoms names to include
         - randoms_lrgmask_path: `lrg_xcorr_2023_v1/catalogs/lrgmask_v1.1/`
@@ -256,6 +256,7 @@ class MapperDESILRG(MapperBase):
         """
         if self.dndz is None:
             fname = self.config["file_dndz"]
+            print(f"Reading dndz for zbin {self.zbin} from", fname, flush=True)
             dndz = Table.read(
                 fname, format="ascii", header_start=0, data_start=1
             )

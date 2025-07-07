@@ -2,7 +2,7 @@ zbin: 0
 sample: main
 data_catalog: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/catalogs/dr9_lrg_pzbins.fits
 weights_catalog: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/catalogs/more/dr9_lrg_pzbins-weights.fits
-file_dndz: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/catalogs/more/dr9_lrg_pz.fits
+file_dndz: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/redshift_dist/main_lrg_pz_dndz_iron_v0.4_dz_0.02.txt
 stardens_path: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/misc/pixweight-dr7.1-0.22.0_stardens_64_ring.fits
 imaging_weights_coeffs: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/catalogs/imaging_weights/main_lrg_linear_coeffs_pz.yaml
 randoms_lrgmask_path: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/catalogs/lrgmask_v1.1
