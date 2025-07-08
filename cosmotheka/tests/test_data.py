@@ -564,5 +564,54 @@ def test_read_symmetric():
     remove_yml_file(data.data)
 
 
+def test_get_cl_tracers_per_wsp():
+    data = get_data()
+    config = get_config_dict()
+
+    # Check that the function returns the correct tracers
+    cl_trs = data.get_cl_tracers_per_wsp()
+
+    assert isinstance(cl_trs, dict)
+
+    keys = (
+        ("mask_DESgc", "mask_DESgc"),
+        ("mask_DESgc", "mask_DESwl0"),
+        ("mask_DESgc", "mask_DESwl1"),
+        ("mask_DESgc", "mask_DESwl2"),
+        ("mask_DESgc", "mask_DESwl3"),
+        ("mask_DESgc", "mask_PLAcv"),
+        ("mask_DESwl0", "mask_DESwl0"),
+        ("mask_DESwl0", "mask_DESwl1"),
+        ("mask_DESwl0", "mask_DESwl2"),
+        ("mask_DESwl0", "mask_DESwl3"),
+        ("mask_DESwl0", "mask_PLAcv"),
+        ("mask_DESwl1", "mask_DESwl1"),
+        ("mask_DESwl1", "mask_DESwl2"),
+        ("mask_DESwl1", "mask_DESwl3"),
+        ("mask_DESwl1", "mask_PLAcv"),
+        ("mask_DESwl2", "mask_DESwl2"),
+        ("mask_DESwl2", "mask_DESwl3"),
+        ("mask_DESwl2", "mask_PLAcv"),
+        ("mask_DESwl3", "mask_DESwl3"),
+        ("mask_DESwl3", "mask_PLAcv"),
+    )
+
+    cl_trs_keys = list(cl_trs.keys())
+    print(cl_trs_keys)
+    assert len(cl_trs) == len(keys)
+    for key in keys:
+        assert key in cl_trs_keys
+
+    for tr1, tr2 in data.get_cl_trs_names():
+        m1 = data.get_mask_name_for_tracer(tr1)
+        m2 = data.get_mask_name_for_tracer(tr2)
+        if (m1, m2) in keys:
+            assert (tr1, tr2) in cl_trs[(m1, m2)]
+        else:
+            assert (tr1, tr2) in cl_trs[(m2, m1)]
+
+    remove_yml_file(config)
+
+
 # Remove outdir
 remove_outdir(get_config_dict())
