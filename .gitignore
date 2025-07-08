@@ -4,3 +4,4 @@ docs/build
 docs/_build
 build/
 *egg-info/
+cosmotheka/tests/cls
