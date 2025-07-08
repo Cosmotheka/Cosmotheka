@@ -532,6 +532,22 @@ class Data:
             tracer = "".join(tracer.split("__")[:-1])
         return tracer
 
+    def get_tracers_used_by_barename(self):
+        """
+        Return a dictionary with key the barenames and value the list of
+        tracers.
+        """
+        tracers = self.get_tracers_used()
+        tracers_by_barename = {}
+
+        for tr in tracers:
+            tr_bare = self.get_tracer_bare_name(tr)
+            if tr_bare not in tracers_by_barename:
+                tracers_by_barename[tr_bare] = []
+            tracers_by_barename[tr_bare].append(tr)
+
+        return tracers_by_barename
+
     def will_pair_be_computed(self, tn1, tn2):
         """
         Return the ordered tracer pair for which the Cell will be computed. If

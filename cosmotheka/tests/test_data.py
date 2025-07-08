@@ -421,6 +421,24 @@ def test_get_tracer_bare_name():
     remove_yml_file(data.data)
 
 
+def test_get_tracers_used_by_barename():
+    data = get_data()
+
+    tracers_by_barename = data.get_tracers_used_by_barename()
+
+    assert isinstance(tracers_by_barename, dict)
+
+    tracers_by_barename_test = {
+        "DESgc": ["DESgc__0", "DESgc__1", "DESgc__2", "DESgc__3", "DESgc__4"],
+        "DESwl": ["DESwl__0", "DESwl__1", "DESwl__2", "DESwl__3"],
+        "PLAcv": ["PLAcv"],
+    }
+
+    assert tracers_by_barename == tracers_by_barename_test
+
+    remove_yml_file(data.data)
+
+
 @pytest.mark.parametrize("wsp", [True, False])
 def test_get_cl_trs_names(wsp):
     data = get_data()

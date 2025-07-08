@@ -23,6 +23,41 @@ def check_skip(data, skip, trs):
     return False
 
 
+def launch_mappers(data, skip=None):
+    """
+    Launch the computation of mappers for all tracers in data.
+    This is a preliminary step to precompute the heavy parts
+    """
+    if RANK == 0:
+        print("Computing mappers...", flush=True)
+
+    # We split it by barename to avoid recomputing the same mapper
+    tracers_by_barename = data.get_tracers_used_by_barename()
+
+    my_tracers = [
+        tracers_by_barename[keys]
+        for i, keys in enumerate(tracers_by_barename.keys())
+        if i % SIZE == RANK
+    ]
+
+    counter = 0
+    total = len(my_tracers)
+    for tr in my_tracers:
+        print(
+            f"[Rank {RANK}] Processing mapper for {tr} \
+              ({counter + 1}/{total})",
+            flush=True,
+        )
+
+        mapper = data.get_mapper(tr)
+        mapper.get_signal_map()
+
+        counter += 1
+
+    print(f"[Rank {RANK}] Mapper pre-computation finished.", flush=True)
+    COMM.Barrier()
+
+
 def launch_cls(data, fiducial=False, skip=None):
     """
     Launch the computation of Cls for all tracers in data.
@@ -249,6 +284,10 @@ if __name__ == "__main__":
 
     # Broadcast the data object from rank 0 to all ranks
     data = COMM.bcast(data, root=0)
+
+    # 0. TODO: We could loop over the mappers to make sure the heavy parts have
+    # been precomputed.
+    launch_mappers(data, skip=args.skip)
 
     # 1. Compute Cells
     launch_cls(data, fiducial=args.cls_fiducial, skip=args.skip)
