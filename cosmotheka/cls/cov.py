@@ -158,8 +158,10 @@ class Cov:
         if self.cw is not None:
             return self.cw
 
-        mask1, mask2 = self.clA1A2.get_masks_names()
-        mask3, mask4 = self.clB1B2.get_masks_names()
+        mask1, mask2, mask3, mask4 = self.data.get_cwsp_masks_for_tracers(
+            self.trA1, self.trA2, self.trB1, self.trB2
+        )
+
         fname = os.path.join(
             self.outdir, f"cw__{mask1}__{mask2}__{mask3}__{mask4}.fits"
         )

@@ -90,6 +90,10 @@ class Data:
         self.cov_tracers = {"wsp": None, "all": None}
         self.tr_matrix = None
 
+        # Dictionary with keys a tuple of mask for the covariance wsp and
+        # keys a list of tuples with the tracers that will use it
+        self.cov_tracers_per_cwsp = None
+
         # What the code will do if not specified
         self.default_cls_to_compute = "None"
         self.default_clcov_from_data = "None"
@@ -884,26 +888,106 @@ class Data:
 
         return cl_tracers_per_wsp
 
+    def get_symmetric_mask_combinations_cov(self, m1, m2, m3, m4):
+        symmetric = [
+            (m1, m2, m3, m4),
+            (m2, m1, m3, m4),
+            (m1, m2, m4, m3),
+            (m2, m1, m4, m3),
+            (m3, m4, m1, m2),
+            (m4, m3, m1, m2),
+            (m3, m4, m2, m1),
+            (m4, m3, m2, m1),
+        ]
+
+        # The output must be a list/tuple of tuples so they can be used as
+        # dictionary keys
+
+        return tuple(
+            [tuple(li) for li in np.unique(symmetric, axis=0).tolist()]
+        )
+
     def get_cov_tracers_per_cwsp(self):
         """
         Return a dictionary with keys a tuple of masks and values a list of
         tuples of 4 tracers that will use the same covariance workspace.
         """
-        # TODO: This could be improved by checking the symmetries. It requires
-        # modifying cov.py
+        # TODO: We might need to check the spin too.
+        if self.cov_tracers_per_cwsp is not None:
+            return self.cov_tracers_per_cwsp
+
         cov_tracers = self.get_cov_trs_names()
         cov_tracers_per_cwsp = {}
+
         for tr1, tr2, tr3, tr4 in cov_tracers:
             m1 = self.get_mask_name_for_tracer(tr1)
             m2 = self.get_mask_name_for_tracer(tr2)
             m3 = self.get_mask_name_for_tracer(tr3)
             m4 = self.get_mask_name_for_tracer(tr4)
-            key = (m1, m2, m3, m4)
-            if key not in cov_tracers_per_cwsp:
-                cov_tracers_per_cwsp[key] = [(tr1, tr2, tr3, tr4)]
-            else:
-                # If the key is already there, we add the pair to the existing
-                # list
+
+            # Symmetries
+            symmetric = self.get_symmetric_mask_combinations_cov(
+                m1, m2, m3, m4
+            )
+
+            in_dict = []
+            for key in symmetric:
+                if key in cov_tracers_per_cwsp:
+                    in_dict.append(key)
+
+            if len(in_dict) > 1:
+                raise ValueError(
+                    f"Covariance tracers {tr1}, {tr2}, {tr3}, {tr4} "
+                    + "have more than one symmetric key in the dictionary. "
+                    + "This is not expected."
+                )
+            elif len(in_dict) == 1:
+                key = in_dict[0]
                 cov_tracers_per_cwsp[key].append((tr1, tr2, tr3, tr4))
+            else:
+                key = (m1, m2, m3, m4)
+                cov_tracers_per_cwsp[key] = [(tr1, tr2, tr3, tr4)]
+
+        self.cov_tracers_per_cwsp = cov_tracers_per_cwsp
 
         return cov_tracers_per_cwsp
+
+    def get_cwsp_masks_for_tracers(self, tr1, tr2, tr3, tr4):
+        """
+        Return the masks linked to the covariance wsp for the input tracers.
+
+        Parameters
+        ----------
+        tr1: str
+            First tracer's name
+        tr2: str
+            Second tracer's name
+        tr3: str
+            Third tracer's name
+        tr4: str
+            Fourth tracer's name
+
+        Returns
+        -------
+        masks: tuple
+            Tuple with the masks for the input tracers.
+        """
+        m1 = self.get_mask_name_for_tracer(tr1)
+        m2 = self.get_mask_name_for_tracer(tr2)
+        m3 = self.get_mask_name_for_tracer(tr3)
+        m4 = self.get_mask_name_for_tracer(tr4)
+
+        symmetric = self.get_symmetric_mask_combinations_cov(m1, m2, m3, m4)
+
+        cov_tracers_per_cwsp = self.get_cov_tracers_per_cwsp()
+        print(cov_tracers_per_cwsp)
+
+        for key in symmetric:
+            if key in cov_tracers_per_cwsp:
+                # If the key is already there, we return it
+                return key
+
+        raise ValueError(
+            f"Covariance tracers {tr1}, {tr2}, {tr3}, {tr4} "
+            + "do not have key in the dictionary of cwsp. "
+        )
