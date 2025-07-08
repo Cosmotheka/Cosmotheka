@@ -54,13 +54,13 @@ def launch_mappers(data, skip=None, stop_at_error=False):
         try:
             mapper.get_signal_map()
         except Exception as e:
+            print(
+                f"[Rank {RANK}] Error while computing mapper for {tr}: {e}",
+                flush=True,
+            )
             if stop_at_error:
-                raise e
+                COMM.Abort()
             else:
-                print(
-                    f"[Rank {RANK}] Error while computing mapper for {tr}: {e}",
-                    flush=True,
-                )
                 continue
 
         counter += 1
@@ -132,15 +132,16 @@ def launch_cls(data, fiducial=False, skip=None, stop_at_error=False):
             try:
                 cl.get_cl_file()
             except Exception as e:
+                print(
+                    f"[Rank {RANK}] Error while computing Cl for \
+                        {tr1}, {tr2}: {e}",
+                    flush=True,
+                )
                 if stop_at_error:
-                    raise e
+                    COMM.Abort()
                 else:
-                    print(
-                        f"[Rank {RANK}] Error while computing Cl for \
-                           {tr1}, {tr2}: {e}",
-                        flush=True,
-                    )
                     continue
+
             if wsp is None and isinstance(cl, Cl):
                 wsp = cl.get_workspace()
 
@@ -211,14 +212,14 @@ def launch_cov(data, skip=[], stop_at_error=False):
             try:
                 cov.get_covariance()
             except Exception as e:
+                print(
+                    f"[Rank {RANK}] Error while computing Cov for \
+                            {trs}: {e}",
+                    flush=True,
+                )
                 if stop_at_error:
-                    raise e
+                    COMM.Abort()
                 else:
-                    print(
-                        f"[Rank {RANK}] Error while computing Cov for \
-                              {trs}: {e}",
-                        flush=True,
-                    )
                     continue
 
             if cwsp is None:
