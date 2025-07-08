@@ -42,9 +42,17 @@ def launch_cls(data, fiducial=False, skip=None):
         if i % SIZE == RANK
     ]
 
+    counter = 0
+    total = sum(len(sublist) for sublist in my_cl_jobs)
     for cl_tracers_with_wsp in my_cl_jobs:
         wsp = None
         for tr1, tr2 in cl_tracers_with_wsp:
+            print(
+                f"[Rank {RANK}] Processing Cl for {tr1}, {tr2} \
+                  ({counter + 1}/{total})",
+                flush=True,
+            )
+
             if check_skip(data, skip, [tr1, tr2]):
                 print(
                     f"[Rank {RANK}] Skipping Cl for {tr1}, {tr2} as requested.",
@@ -77,6 +85,8 @@ def launch_cls(data, fiducial=False, skip=None):
             if wsp is None and isinstance(cl, Cl):
                 wsp = cl.get_workspace()
 
+            counter += 1
+
     print(f"[Rank {RANK}] Cl computation finished.", flush=True)
     COMM.Barrier()
 
@@ -100,9 +110,17 @@ def launch_cov(data, skip=[]):
         if i % SIZE == RANK
     ]
 
+    counter = 0
+    total = sum(len(sublist) for sublist in my_cov_jobs)
     for cov_tracers_with_wsp in my_cov_jobs:
         cwsp = None
         for trs in cov_tracers_with_wsp:
+            print(
+                f"[Rank {RANK}] Processing Cov for {trs} \
+                  ({counter + 1}/{total})",
+                flush=True,
+            )
+
             if check_skip(data, skip, trs):
                 print(
                     f"[Rank {RANK}] Skipping Cov for {trs} as requested.",
@@ -132,6 +150,8 @@ def launch_cov(data, skip=[]):
 
             if cwsp is None:
                 cwsp = cov.get_covariance_workspace()
+
+            counter += 1
 
     print(f"[Rank {RANK}] Covariance computation finished.")
     COMM.Barrier()
