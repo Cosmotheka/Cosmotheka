@@ -58,6 +58,7 @@ def launch_cls(data, fiducial=False, skip=None):
                     f"[Rank {RANK}] Skipping Cl for {tr1}, {tr2} as requested.",
                     flush=True,
                 )
+                counter += 1
                 continue
             fname = os.path.join(
                 data.data["output"],
@@ -72,6 +73,7 @@ def launch_cls(data, fiducial=False, skip=None):
                     f"[Rank {RANK}] Cl for {tr1}, {tr2} already exists, skipping.",
                     flush=True,
                 )
+                counter += 1
                 continue
             print(f"[Rank {RANK}] Computing Cl for {tr1}, {tr2}", flush=True)
 
@@ -126,6 +128,7 @@ def launch_cov(data, skip=[]):
                     f"[Rank {RANK}] Skipping Cov for {trs} as requested.",
                     flush=True,
                 )
+                counter += 1
                 continue
             fname = os.path.join(
                 data.data["output"],
@@ -140,6 +143,7 @@ def launch_cov(data, skip=[]):
                     f"[Rank {RANK}] Cov for {trs} already exists, skipping.",
                     flush=True,
                 )
+                counter += 1
                 continue
             print(f"[Rank {RANK}] Computing Cov for {trs}", flush=True)
 
@@ -233,9 +237,18 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    ##############################################################################
+    ###########################################################################
 
-    data = Data(data_path=args.INPUT, override=args.override_yaml)
+    # Read the data file only on rank 0 to avoid overwriting the copy in the
+    # first run
+    if RANK == 0:
+        print(f"[Rank {RANK}] Reading data from {args.INPUT}", flush=True)
+        data = Data(data_path=args.INPUT, override=args.override_yaml)
+    else:
+        data = None
+
+    # Broadcast the data object from rank 0 to all ranks
+    data = COMM.bcast(data, root=0)
 
     # 1. Compute Cells
     launch_cls(data, fiducial=args.cls_fiducial, skip=args.skip)
