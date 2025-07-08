@@ -367,7 +367,7 @@ def test_suffix_generation_all_keys(config):
     config["mask_threshold"] = 0.5  # Not used in suffix_weights
 
     mapper = MapperDESILRG(config)
-    suffix = mapper.suffix_weights
+    suffix_weights = mapper.suffix_weights
 
     # Check that all keys are reflected in the suffix
     s = []
@@ -378,13 +378,12 @@ def test_suffix_generation_all_keys(config):
             "max_ebv",
             "max_stardens",
             "remove_island",
-            "mask_threshold",
         ]
     ):
         s.append(key.replace("_", "") + str(config[key]))
 
-    assert suffix == "_".join(s)
-    assert mapper.map_name.endswith(suffix + "_zbin0")
+    assert suffix_weights == "_".join(s)
+    assert mapper.map_name.endswith(suffix_weights + "_maskthreshold0.5_zbin0")
 
 
 def test__get_stardens_mask(mapper, catalog):

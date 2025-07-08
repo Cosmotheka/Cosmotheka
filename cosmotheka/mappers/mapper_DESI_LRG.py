@@ -112,7 +112,7 @@ class MapperDESILRG(MapperBase):
         # Mask threshold
         self.mask_threshold = config.get("mask_threshold", 0.2)
         if self.mask_threshold != 0.2:
-            suffix_parts.append(f"maskthresh{self.mask_threshold}")
+            suffix_parts.append(f"maskthreshold{self.mask_threshold}")
 
         # zbin
         suffix_parts.append(f"zbin{self.zbin}")
