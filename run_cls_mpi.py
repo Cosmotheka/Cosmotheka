@@ -47,7 +47,8 @@ def launch_cls(data, fiducial=False, skip=None):
         for tr1, tr2 in cl_tracers_with_wsp:
             if check_skip(data, skip, [tr1, tr2]):
                 print(
-                    f"[Rank {RANK}] Skipping Cl for {tr1}, {tr2} as requested."
+                    f"[Rank {RANK}] Skipping Cl for {tr1}, {tr2} as requested.",
+                    flush=True,
                 )
                 continue
             fname = os.path.join(
@@ -60,10 +61,11 @@ def launch_cls(data, fiducial=False, skip=None):
             )
             if os.path.isfile(fname) and not recompute:
                 print(
-                    f"[Rank {RANK}] Cl for {tr1}, {tr2} already exists, skipping."
+                    f"[Rank {RANK}] Cl for {tr1}, {tr2} already exists, skipping.",
+                    flush=True,
                 )
                 continue
-            print(f"[Rank {RANK}] Computing Cl for {tr1}, {tr2}")
+            print(f"[Rank {RANK}] Computing Cl for {tr1}, {tr2}", flush=True)
 
             if fiducial:
                 cl = ClFid(data.data, tr1, tr2)
@@ -75,6 +77,7 @@ def launch_cls(data, fiducial=False, skip=None):
             if wsp is None and isinstance(cl, Cl):
                 wsp = cl.get_workspace()
 
+    print(f"[Rank {RANK}] Cl computation finished.", flush=True)
     COMM.Barrier()
 
 
@@ -83,7 +86,7 @@ def launch_cov(data, skip=[]):
     Launch the computation of Covariance blocks for all tracers in data.
     """
     cov_tracers = data.get_cov_trs_names()
-    cov_tracers_per_wsp = data.get_cov_tracers_per_wsp()
+    cov_tracers_per_cwsp = data.get_cov_tracers_per_cwsp()
 
     if RANK == 0:
         print(
@@ -92,8 +95,8 @@ def launch_cov(data, skip=[]):
         )
 
     my_cov_jobs = [
-        cov_tracers_per_wsp[keys]
-        for i, keys in enumerate(cov_tracers_per_wsp.keys())
+        cov_tracers_per_cwsp[keys]
+        for i, keys in enumerate(cov_tracers_per_cwsp.keys())
         if i % SIZE == RANK
     ]
 
@@ -101,7 +104,10 @@ def launch_cov(data, skip=[]):
         cwsp = None
         for trs in cov_tracers_with_wsp:
             if check_skip(data, skip, trs):
-                print(f"[Rank {RANK}] Skipping Cov for {trs} as requested.")
+                print(
+                    f"[Rank {RANK}] Skipping Cov for {trs} as requested.",
+                    flush=True,
+                )
                 continue
             fname = os.path.join(
                 data.data["output"],
@@ -112,9 +118,12 @@ def launch_cov(data, skip=[]):
                 data.data["recompute"]["cov"] or data.data["recompute"]["cmcm"]
             )
             if os.path.isfile(fname) and not recompute:
-                print(f"[Rank {RANK}] Cov for {trs} already exists, skipping.")
+                print(
+                    f"[Rank {RANK}] Cov for {trs} already exists, skipping.",
+                    flush=True,
+                )
                 continue
-            print(f"[Rank {RANK}] Computing Cov for {trs}")
+            print(f"[Rank {RANK}] Computing Cov for {trs}", flush=True)
 
             cov = Cov(data.data, *trs)
             # Avoid reading the workspace if it is already computed
@@ -124,6 +133,7 @@ def launch_cov(data, skip=[]):
             if cwsp is None:
                 cwsp = cov.get_covariance_workspace()
 
+    print(f"[Rank {RANK}] Covariance computation finished.")
     COMM.Barrier()
 
 
@@ -211,15 +221,17 @@ if __name__ == "__main__":
     launch_cls(data, fiducial=args.cls_fiducial, skip=args.skip)
 
     if args.compute == "cls":
-        print("Cls computation finished.")
+        if RANK == 0:
+            print("Cls computation finished.")
         exit(0)
 
     # 2. Compute Covariance
-    if args.to_sacc_use_nl:
+    if not args.to_sacc_use_nl:
         launch_cov(data, skip=args.skip)
 
         if args.compute == "cov":
-            print("Covariance computation finished.")
+            if RANK == 0:
+                print("Covariance computation finished.")
             exit(0)
 
     # 3. Convert to Sacc
@@ -234,8 +246,11 @@ if __name__ == "__main__":
     else:
         use = "cls"
 
-    m_marg = args.cov_type == "m_marg"
-    launch_to_sacc(data, fname=args.to_sacc_name, use=use, m_marg=m_marg)
+    m_marg = args.to_sacc_m_marg == "m_marg"
+    launch_to_sacc(
+        data.data_path, fname=args.to_sacc_name, use=use, m_marg=m_marg
+    )
 
-    print("Sacc compilation finished.")
+    if RANK == 0:
+        print("Sacc compilation finished.")
     exit(0)
