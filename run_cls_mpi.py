@@ -23,22 +23,23 @@ def check_skip(data, skip, trs):
     return False
 
 
-def launch_mappers(data, skip=None):
+def launch_mappers(data, skip=None, stop_at_error=False):
     """
     Launch the computation of mappers for all tracers in data.
     This is a preliminary step to precompute the heavy parts
     """
+    tracers_used = data.get_tracers_used()
+
     if RANK == 0:
-        print("Computing mappers...", flush=True)
+        print(f"Pre-computing {len(tracers_used)} mappers...", flush=True)
 
     # We split it by barename to avoid recomputing the same mapper
     tracers_by_barename = data.get_tracers_used_by_barename()
 
-    my_tracers = [
-        tracers_by_barename[keys]
-        for i, keys in enumerate(tracers_by_barename.keys())
-        if i % SIZE == RANK
-    ]
+    my_tracers = []
+    for i, keys in enumerate(tracers_by_barename.keys()):
+        if i % SIZE == RANK:
+            my_tracers += tracers_by_barename[keys]
 
     counter = 0
     total = len(my_tracers)
@@ -50,7 +51,17 @@ def launch_mappers(data, skip=None):
         )
 
         mapper = data.get_mapper(tr)
-        mapper.get_signal_map()
+        try:
+            mapper.get_signal_map()
+        except Exception as e:
+            if stop_at_error:
+                raise e
+            else:
+                print(
+                    f"[Rank {RANK}] Error while computing mapper for {tr}: {e}",
+                    flush=True,
+                )
+                continue
 
         counter += 1
 
@@ -58,7 +69,7 @@ def launch_mappers(data, skip=None):
     COMM.Barrier()
 
 
-def launch_cls(data, fiducial=False, skip=None):
+def launch_cls(data, fiducial=False, skip=None, stop_at_error=False):
     """
     Launch the computation of Cls for all tracers in data.
     If fiducial is True, compute the fiducial Cls.
@@ -118,7 +129,18 @@ def launch_cls(data, fiducial=False, skip=None):
                 cl = Cl(data.data, tr1, tr2)
                 # Avoid reading the workspace if it is already computed
                 cl._w = wsp
-            cl.get_cl_file()
+            try:
+                cl.get_cl_file()
+            except Exception as e:
+                if stop_at_error:
+                    raise e
+                else:
+                    print(
+                        f"[Rank {RANK}] Error while computing Cl for \
+                           {tr1}, {tr2}: {e}",
+                        flush=True,
+                    )
+                    continue
             if wsp is None and isinstance(cl, Cl):
                 wsp = cl.get_workspace()
 
@@ -128,7 +150,7 @@ def launch_cls(data, fiducial=False, skip=None):
     COMM.Barrier()
 
 
-def launch_cov(data, skip=[]):
+def launch_cov(data, skip=[], stop_at_error=False):
     """
     Launch the computation of Covariance blocks for all tracers in data.
     """
@@ -185,7 +207,19 @@ def launch_cov(data, skip=[]):
             cov = Cov(data.data, *trs)
             # Avoid reading the workspace if it is already computed
             cov.cw = cwsp
-            cov.get_covariance()
+
+            try:
+                cov.get_covariance()
+            except Exception as e:
+                if stop_at_error:
+                    raise e
+                else:
+                    print(
+                        f"[Rank {RANK}] Error while computing Cov for \
+                              {trs}: {e}",
+                        flush=True,
+                    )
+                    continue
 
             if cwsp is None:
                 cwsp = cov.get_covariance_workspace()
@@ -269,6 +303,12 @@ if __name__ == "__main__":
         help="Set if you want to use store the covariance for the maginalized \
               multiplicative bias.",
     )
+    parser.add_argument(
+        "--stop_at_error",
+        default=False,
+        action="store_true",
+        help="Stop the execution at the first error encountered.",
+    )
 
     args = parser.parse_args()
 
@@ -287,10 +327,15 @@ if __name__ == "__main__":
 
     # 0. TODO: We could loop over the mappers to make sure the heavy parts have
     # been precomputed.
-    launch_mappers(data, skip=args.skip)
+    launch_mappers(data, skip=args.skip, stop_at_error=args.stop_at_error)
 
     # 1. Compute Cells
-    launch_cls(data, fiducial=args.cls_fiducial, skip=args.skip)
+    launch_cls(
+        data,
+        fiducial=args.cls_fiducial,
+        skip=args.skip,
+        stop_at_error=args.stop_at_error,
+    )
 
     if args.compute == "cls":
         if RANK == 0:
@@ -299,7 +344,7 @@ if __name__ == "__main__":
 
     # 2. Compute Covariance
     if not args.to_sacc_use_nl:
-        launch_cov(data, skip=args.skip)
+        launch_cov(data, skip=args.skip, stop_at_error=args.stop_at_error)
 
         if args.compute == "cov":
             if RANK == 0:
