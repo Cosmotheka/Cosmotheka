@@ -362,12 +362,14 @@ def test_initizalization():
     with pytest.raises(ValueError):
         data2 = Data(data=config, ignore_existing_yml=True, override=True)
     remove_yml_file(config)
-        
-    # Check that when path is given, it is copied to the output directory and 
+
+    # Check that when path is given, it is copied to the output directory and
     # also data.yml is dumped
     data = Data(input_file)
     assert os.path.isfile("cosmotheka/tests/cls/data.yml")
-    assert os.path.isfile("cosmotheka/tests/cls/desy1_ebossqso_p18cmbk.yml.orig")
+    assert os.path.isfile(
+        "cosmotheka/tests/cls/desy1_ebossqso_p18cmbk.yml.orig"
+    )
 
 
 def test_read_data():
