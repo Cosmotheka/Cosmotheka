@@ -694,5 +694,37 @@ def test_get_cov_tracers_per_cwsp():
     remove_yml_file(config)
 
 
+def test_get_cwsp_masks_for_tracers():
+    data = get_data()
+    config = get_config_dict()
+
+    # Check that the function returns the correct masks
+    tr1 = "DESgc__0"
+    tr2 = "DESwl__0"
+    tr3 = "DESwl__1"
+    tr4 = "DESwl__2"
+
+    cwsp_masks = data.get_cwsp_masks_for_tracers(tr1, tr2, tr3, tr4)
+
+    assert isinstance(cwsp_masks, tuple)
+    assert cwsp_masks == (
+        "mask_DESgc",
+        "mask_DESwl0",
+        "mask_DESwl1",
+        "mask_DESwl2",
+    )
+
+    # Check correct order
+    cwsp_masks = data.get_cwsp_masks_for_tracers(tr1, tr2, tr4, tr3)
+    assert cwsp_masks == (
+        "mask_DESgc",
+        "mask_DESwl0",
+        "mask_DESwl1",
+        "mask_DESwl2",
+    )
+
+    remove_yml_file(config)
+
+
 # Remove outdir
 remove_outdir(get_config_dict())
