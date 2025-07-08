@@ -613,5 +613,29 @@ def test_get_cl_tracers_per_wsp():
     remove_yml_file(config)
 
 
+def test_get_symmetric_mask_combinations_cov():
+    data = get_data()
+    config = get_config_dict()
+
+    # Check that the function returns the correct symmetric combinations
+    m1 = "mask_DESgc"
+    m2 = "mask_DESwl0"
+    m3 = "mask_DESwl1"
+    m4 = "mask_DESwl2"
+
+    symmetric = data.get_symmetric_mask_combinations_cov(m1, m2, m3, m4)
+
+    # Test correct data type
+    assert isinstance(symmetric, tuple)
+    assert all(isinstance(isym, tuple) for isym in symmetric)
+
+    # Test non duplicated
+    m1 = m2 = m3 = m4 = "mask_DESgc"
+    symmetric = data.get_symmetric_mask_combinations_cov(m1, m2, m3, m4)
+    assert len(symmetric) == 1
+
+    remove_yml_file(config)
+
+
 # Remove outdir
 remove_outdir(get_config_dict())
