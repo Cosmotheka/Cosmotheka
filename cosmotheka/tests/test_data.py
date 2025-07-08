@@ -637,5 +637,62 @@ def test_get_symmetric_mask_combinations_cov():
     remove_yml_file(config)
 
 
+def test_get_cov_tracers_per_cwsp():
+    data = get_data()
+    config = get_config_dict()
+
+    # Check that the function returns the correct tracers
+    cov_trs = data.get_cov_tracers_per_cwsp()
+
+    assert isinstance(cov_trs, dict)
+
+    # Keys for the 2pt
+    keys = (
+        ("mask_DESgc", "mask_DESgc"),
+        ("mask_DESgc", "mask_DESwl0"),
+        ("mask_DESgc", "mask_DESwl1"),
+        ("mask_DESgc", "mask_DESwl2"),
+        ("mask_DESgc", "mask_DESwl3"),
+        ("mask_DESgc", "mask_PLAcv"),
+        ("mask_DESwl0", "mask_DESwl0"),
+        ("mask_DESwl0", "mask_DESwl1"),
+        ("mask_DESwl0", "mask_DESwl2"),
+        ("mask_DESwl0", "mask_DESwl3"),
+        ("mask_DESwl0", "mask_PLAcv"),
+        ("mask_DESwl1", "mask_DESwl1"),
+        ("mask_DESwl1", "mask_DESwl2"),
+        ("mask_DESwl1", "mask_DESwl3"),
+        ("mask_DESwl1", "mask_PLAcv"),
+        ("mask_DESwl2", "mask_DESwl2"),
+        ("mask_DESwl2", "mask_DESwl3"),
+        ("mask_DESwl2", "mask_PLAcv"),
+        ("mask_DESwl3", "mask_DESwl3"),
+        ("mask_DESwl3", "mask_PLAcv"),
+    )
+
+    keys_cwsp = []
+    for i, ikey in enumerate(keys):
+        for j, jkey in enumerate(keys[i:]):
+            keys_cwsp.append((*ikey, *jkey))
+
+    assert len(cov_trs) == len(keys_cwsp)
+
+    cov_trs_names = data.get_cov_trs_names()
+    for tr1, tr2, tr3, tr4 in cov_trs_names:
+        m1 = data.get_mask_name_for_tracer(tr1)
+        m2 = data.get_mask_name_for_tracer(tr2)
+        m3 = data.get_mask_name_for_tracer(tr3)
+        m4 = data.get_mask_name_for_tracer(tr4)
+        symmetric = data.get_symmetric_mask_combinations_cov(m1, m2, m3, m4)
+        in_dict = []
+        for isym in symmetric:
+            if isym in cov_trs:
+                in_dict.append(True)
+
+        assert len(in_dict) == 1
+
+    remove_yml_file(config)
+
+
 # Remove outdir
 remove_outdir(get_config_dict())
