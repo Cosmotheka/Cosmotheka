@@ -980,7 +980,6 @@ class Data:
         symmetric = self.get_symmetric_mask_combinations_cov(m1, m2, m3, m4)
 
         cov_tracers_per_cwsp = self.get_cov_tracers_per_cwsp()
-        print(cov_tracers_per_cwsp)
 
         for key in symmetric:
             if key in cov_tracers_per_cwsp:
