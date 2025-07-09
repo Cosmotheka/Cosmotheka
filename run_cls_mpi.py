@@ -52,7 +52,8 @@ def launch_mappers(data, skip=None, stop_at_error=False):
 
         mapper = data.get_mapper(tr)
         try:
-            mapper.get_signal_map()
+            mapper.get_nmt_field()
+            mapper.get_nl_coupled()
         except Exception as e:
             print(
                 f"[Rank {RANK}] Error while computing mapper for {tr}: {e}",
