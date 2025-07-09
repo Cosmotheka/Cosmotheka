@@ -4,3 +4,7 @@ docs/build
 docs/_build
 build/
 *egg-info/
+cosmotheka/tests/cls
+*.code-workspace
+*.vscode
+*.ipynb_checkpoints

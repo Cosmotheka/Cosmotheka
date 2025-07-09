@@ -21,7 +21,7 @@ class MapperDESILRG(MapperBase):
         - data_catalog: \
           `'./lrg_xcorr_2023_v1/catalogs/dr9_lrg_pzbins.fits'`
         - file_dndz: \
-          `'./lrg_xcorr_2023_v1/catalogs/dndz_lrg_pzbins.fits'`
+          `./lrg_xcorr_2023_v1/redshift_dist/main_lrg_pz_dndz_iron_v0.4_dz_0.02.txt`
         - randoms_path: `./randoms` (dictionary or single file path)
         - randoms_selection: list or txt file with randoms names to include
         - randoms_lrgmask_path: `lrg_xcorr_2023_v1/catalogs/lrgmask_v1.1/`
@@ -40,6 +40,8 @@ class MapperDESILRG(MapperBase):
         - max_stardens: `2500` (default)
         - remove_island: `True` (default). If True, it removes the "island" \
               in the NGC
+        - mask_threshold: `0.2` (default). This is the minimum relative value \
+            respect to the mean of the mask to keep a pixel in the mask.
     """
 
     map_name = "DESI_LRG"
@@ -81,12 +83,19 @@ class MapperDESILRG(MapperBase):
         # To avoid loading the same randoms multiple times
         self._loaded_randoms = {}
 
-        # Cuts
+        # Suffix to change the map name and rerun files
+        suffix_parts = []
+
+        # Parts affecting the weight values
+        # Sample type
+        if self._sample == "extended":
+            suffix_parts.append("extended")
+
+        # Quality cuts
         self._stardens_good_hp_idx = None
         self._stardens_nside = None
         cuts = self._get_default_cuts()
 
-        suffix_parts = []
         self.cuts = {}
         keys_cuts = sorted(cuts.keys())
         for k in keys_cuts:
@@ -97,13 +106,22 @@ class MapperDESILRG(MapperBase):
                 vnew = self.cuts[k]
                 k = k.replace("_", "")
                 suffix_parts.append(f"{k}{vnew}")
-        self.suffix = "_".join(suffix_parts)
+        self.suffix_weights = "_".join(suffix_parts)
+
+        # Parts affecting other parts of the mapper
+        # Mask threshold
+        self.mask_threshold = config.get("mask_threshold", 0.2)
+        if self.mask_threshold != 0.2:
+            suffix_parts.append(f"maskthreshold{self.mask_threshold}")
+
+        # zbin
+        suffix_parts.append(f"zbin{self.zbin}")
+
+        # Join the suffix parts
+        suffix = "_".join(suffix_parts)
 
         # Modify the map name
-        self.map_name += (
-            f"_{self._sample}" if self._sample == "extended" else ""
-        )
-        self.map_name += f"_{self.suffix}" if self.suffix else ""
+        self.map_name += f"_{suffix}" if suffix else ""
 
         # Mask name
         # If not given, we use the same name as the map name since the mask is
@@ -238,6 +256,7 @@ class MapperDESILRG(MapperBase):
         """
         if self.dndz is None:
             fname = self.config["file_dndz"]
+            print(f"Reading dndz for zbin {self.zbin} from", fname, flush=True)
             dndz = Table.read(
                 fname, format="ascii", header_start=0, data_start=1
             )
@@ -282,6 +301,17 @@ class MapperDESILRG(MapperBase):
         w_map = self.get_randoms_maps()["w"]
 
         mask = alpha * w_map
+
+        # Apply a threshold
+        goodpix = mask > 0
+        avg = np.mean(mask[goodpix])
+        goodpix = mask > self.mask_threshold * avg
+        print(
+            "Masking pixels with less than",
+            f"{self.mask_threshold:.2f} average weight.",
+        )
+
+        mask[~goodpix] = 0.0
         return mask
 
     def _get_nl_coupled(self):
@@ -359,7 +389,9 @@ class MapperDESILRG(MapperBase):
         if base_name in self._loaded_randoms:
             return self._loaded_randoms[base_name]
 
-        fn = "".join([f"{base_name}_clean_weights", f"{self.suffix}.fits.gz"])
+        fn = "".join(
+            [f"{base_name}_clean_weights", f"{self.suffix_weights}.fits.gz"]
+        )
         print(f"{fn}", flush=True)
         randoms = Table(
             self._rerun_read_cycle(
@@ -384,6 +416,9 @@ class MapperDESILRG(MapperBase):
 
         randoms_maps = np.zeros((3, npix))
 
+        # Hack to remove the density definition from the randoms map name
+        map_name = self.map_name.replace("_densdefZhou2023", "")
+
         # TODO: consider if I want to save the sum of all maps. Problem, it
         # makes the code a bit more complex and it's difficult to know which
         # randoms when into the map.
@@ -405,7 +440,7 @@ class MapperDESILRG(MapperBase):
 
             fname = "_".join(
                 [
-                    f"map_{self.map_name}_{base_name}",
+                    f"map_{map_name}_{base_name}",
                     "n-w-w2",
                     f"coord{self.coords}",
                     f"ns{self.nside}.fits.gz",
@@ -687,13 +722,18 @@ class MapperDESILRGZhou2023(MapperDESILRG):
 
     def _get_mask(self):
         # Copied from https://github.com/NoahSailer/MaPar/blob/main/maps/make_lrg_maps.py  # noqa
-        rmap = self.get_randoms_maps()["w"].copy()
+        rmap = self.get_randoms_maps()["w"]
 
         mask = np.zeros_like(rmap)
         msk = np.nonzero(rmap > 0)[0]
         avg = np.mean(rmap[msk])
-        msk = np.nonzero(rmap > 0.20 * avg)[0]
+        msk = np.nonzero(rmap > self.mask_threshold * avg)[0]
         mask[msk] = 1.0
+
+        print(
+            "Masking pixels with less than",
+            f"{self.mask_threshold:.2f} average weight.",
+        )
 
         return mask
 

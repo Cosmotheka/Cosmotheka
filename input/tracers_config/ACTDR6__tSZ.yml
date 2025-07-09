@@ -9,8 +9,9 @@ beam_info:
     FWHM_arcmin: 1.6
 lmax: 15000
 deproj_type: null
-ps_mask_file: /mnt/extraspace/alaposta/ACT_DR6_tSZ/ilc_subtracted_mask.fits
-inpaint_mask_file: /mnt/extraspace/alaposta/ACT_DR6_tSZ/ilc_inpaint_mask.fits
+# ps_mask_file: /mnt/extraspace/damonge/Datasets/ACT_DR6/ilc_subtracted_mask.fits
+ps_mask_file: null
+inpaint_mask_file: /mnt/extraspace/damonge/Datasets/ACT_DR6/ilc_inpaint_mask.fits
 ps_aposize: 5
 footprint_aposize: 60
 n_iter_sht: 0

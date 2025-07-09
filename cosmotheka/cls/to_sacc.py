@@ -7,12 +7,14 @@ import sacc
 import os
 
 
-class ClSack():
+class ClSack:
     """
     ClSack class. Use it to generate a sacc file with the requested Cell and
-    covariance matrix.
+    covariance matrix. It runs serialy, so precompute everything first with
+    run_cls_mpi.py.
     """
-    def __init__(self, datafile, output, use='cls', m_marg=False):
+
+    def __init__(self, datafile, output, use="cls", m_marg=False):
         """
         Parameters
         ----------
@@ -33,17 +35,17 @@ class ClSack():
             If use is not one of 'cls', 'nl' or 'fiducial'
         """
         self.data = Data(data_path=datafile)
-        self.outdir = self.data.data['output']
+        self.outdir = self.data.data["output"]
         self.use_nl = False
         self.use_fiducial = False
-        if use == 'cls':
+        if use == "cls":
             pass
-        elif use == 'nl':
+        elif use == "nl":
             self.use_nl = True
-        elif use == 'fiducial':
+        elif use == "fiducial":
             self.use_fiducial = True
         else:
-            raise ValueError('Use must be one of cls, nl or fiducial')
+            raise ValueError("Use must be one of cls, nl or fiducial")
         self.m_marg = m_marg
         self.s = sacc.Sacc()
         self.add_tracers()
@@ -90,22 +92,23 @@ class ClSack():
         #
         cl_extra_tracers = self.data.get_cov_extra_cl_tracers()
         # Read the extra covmat from file
-        cov_extra = self.data.data['cov']['extra']
-        cov = np.load(cov_extra['path'])
+        cov_extra = self.data.data["cov"]["extra"]
+        cov = np.load(cov_extra["path"])
         ncls = int(cov.shape[0] / nbpw)
         cov = cov.reshape((ncls, nbpw, ncls, nbpw))
-        if ('has_b' in cov_extra) and (cov_extra['has_b'] is True):
-            raise NotImplementedError('Reading extra Cov with B-modes not ' +
-                                      'implemented')
+        if ("has_b" in cov_extra) and (cov_extra["has_b"] is True):
+            raise NotImplementedError(
+                "Reading extra Cov with B-modes not " + "implemented"
+            )
 
         else:
             if ncls != len(cl_extra_tracers):
-                raise ValueError('Number of cls do not match')
+                raise ValueError("Number of cls do not match")
 
         # Initialize the covmat that will go into the sacc file
         ndim = self.s.mean.size
-        covmat = np.zeros((int(ndim/nbpw), nbpw, int(ndim/nbpw), nbpw))
-        print(ndim/nbpw)
+        covmat = np.zeros((int(ndim / nbpw), nbpw, int(ndim / nbpw), nbpw))
+        print(ndim / nbpw)
         cl_tracers = self.s.get_tracer_combinations()
         for i, trs1 in enumerate(cl_tracers):
             if trs1 not in cl_extra_tracers:
@@ -159,8 +162,9 @@ class ClSack():
                 dtypes2 = self.get_datatypes_from_dof(dof2)
                 print(trs1, trs2)
 
-                cov_class = Cov(self.data.data, *trs1, *trs2,
-                                ignore_existing_yml=True)
+                cov_class = Cov(
+                    self.data.data, *trs1, *trs2, ignore_existing_yml=True
+                )
                 if m_marg:
                     cov = cov_class.get_covariance_m_marg()
                 else:
@@ -189,7 +193,7 @@ class ClSack():
         if self.use_nl:
             if self.m_marg:
                 self.add_covariance_G(self.m_marg)
-            elif 'extra' in self.data.data['cov']:
+            elif "extra" in self.data.data["cov"]:
                 self.add_covariance_extra()
         else:
             self.add_covariance_G(self.m_marg)
@@ -213,25 +217,39 @@ class ClSack():
         mapper = self.data.get_mapper(tr)
         quantity = mapper.get_dtype()
         spin = mapper.get_spin()
-        if quantity in ['galaxy_density', 'galaxy_shear']:
+        if quantity in ["galaxy_density", "galaxy_shear"]:
             try:
                 z, nz = mapper.get_nz(dz=0)
-                self.s.add_tracer('NZ', tr, quantity=quantity, spin=spin,
-                                  z=z, nz=nz)
+                self.s.add_tracer(
+                    "NZ", tr, quantity=quantity, spin=spin, z=z, nz=nz
+                )
                 return
             except NotImplementedError:
                 pass
-        elif quantity in ['cmb_convergence', 'cmb_tSZ', 'cmb_kSZ', 'generic',
-                          'cmb_temperature']:
+        elif quantity in [
+            "cmb_convergence",
+            "cmb_tSZ",
+            "cmb_kSZ",
+            "generic",
+            "cmb_temperature",
+        ]:
             pass
         else:
-            raise NotImplementedError(f'Tracer type {quantity} not ' +
-                                      'implemented')
+            raise NotImplementedError(
+                f"Tracer type {quantity} not " + "implemented"
+            )
         ell = mapper.get_ell()
         nl = mapper.get_nl_coupled()[0]
         beam = mapper.get_beam()
-        self.s.add_tracer('Map', tr, quantity=quantity, spin=spin,
-                          ell=ell, beam=beam, beam_extra={'nl': nl})
+        self.s.add_tracer(
+            "Map",
+            tr,
+            quantity=quantity,
+            spin=spin,
+            ell=ell,
+            beam=beam,
+            beam_extra={"nl": nl},
+        )
 
     def add_ell_cl(self, tr1, tr2):
         """
@@ -244,7 +262,7 @@ class ClSack():
         tr2: str
             Second tracer's name
         """
-        ells_nobin = np.arange(3 * self.data.data['sphere']['nside'])
+        ells_nobin = np.arange(3 * self.data.data["sphere"]["nside"])
         cl = Cl(self.data.data, tr1, tr2, ignore_existing_yml=True)
         ells_eff = cl.b.get_effective_ells()
 
@@ -260,7 +278,7 @@ class ClSack():
         cl_types = self.get_datatypes_from_dof(cl.cl.shape[0])
 
         for i, cl_type in enumerate(cl_types):
-            if (cl_type == 'cl_be') and (tr1 == tr2):
+            if (cl_type == "cl_be") and (tr1 == tr2):
                 continue
             elif self.use_nl:
                 cli = cl.nl[i]
@@ -288,8 +306,9 @@ class ClSack():
         dof: int
             Number of degrees of freedom
         """
-        cl = Cl(self.data.data, tracers[0], tracers[1],
-                ignore_existing_yml=True)
+        cl = Cl(
+            self.data.data, tracers[0], tracers[1], ignore_existing_yml=True
+        )
         return cl.get_n_cls()
 
     def get_datatypes_from_dof(self, dof):
@@ -313,42 +332,61 @@ class ClSack():
             List of data types for the given number of degrees of freedom
         """
         if dof == 1:
-            cl_types = ['cl_00']
+            cl_types = ["cl_00"]
         elif dof == 2:
-            cl_types = ['cl_0e', 'cl_0b']
+            cl_types = ["cl_0e", "cl_0b"]
         elif dof == 4:
-            cl_types = ['cl_ee', 'cl_eb', 'cl_be', 'cl_bb']
+            cl_types = ["cl_ee", "cl_eb", "cl_be", "cl_bb"]
         else:
-            raise ValueError('dof does not match 1, 2, or 4.')
+            raise ValueError("dof does not match 1, 2, or 4.")
 
         return cl_types
 
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="Compute Cls and cov from \
-                                     data.yml file")
-    parser.add_argument('INPUT', type=str, help='Input YAML data file')
-    parser.add_argument('name', type=str, help="Name of the generated sacc \
-                        file. Stored in yml['output']")
-    parser.add_argument('--use_nl', action='store_true', default=False,
-                        help="Set if you want to use nl and extra cov \
-                        (if present) instead of cls and covG")
-    parser.add_argument('--use_fiducial', action='store_true', default=False,
-                        help="Set if you want to use the fiducial Cl and \
-                        covG instead of data cls")
-    parser.add_argument('--m_marg', action='store_true', default=False,
-                        help="Set if you want to use store the covariance for \
-                        the maginalized multiplicative bias.")
+
+    parser = argparse.ArgumentParser(
+        description="Compute Cls and cov from \
+                                     data.yml file"
+    )
+    parser.add_argument("INPUT", type=str, help="Input YAML data file")
+    parser.add_argument(
+        "name",
+        type=str,
+        help="Name of the generated sacc \
+                        file. Stored in yml['output']",
+    )
+    parser.add_argument(
+        "--use_nl",
+        action="store_true",
+        default=False,
+        help="Set if you want to use nl and extra cov \
+                        (if present) instead of cls and covG",
+    )
+    parser.add_argument(
+        "--use_fiducial",
+        action="store_true",
+        default=False,
+        help="Set if you want to use the fiducial Cl and \
+                        covG instead of data cls",
+    )
+    parser.add_argument(
+        "--m_marg",
+        action="store_true",
+        default=False,
+        help="Set if you want to use store the covariance for \
+                        the maginalized multiplicative bias.",
+    )
     args = parser.parse_args()
 
     if args.use_nl and args.use_fiducial:
-        raise ValueError('Only one of --use_nl or --use_fiducial can be set')
+        raise ValueError("Only one of --use_nl or --use_fiducial can be set")
     elif args.use_nl:
-        use = 'nl'
+        use = "nl"
     elif args.use_fiducial:
-        use = 'fiducial'
+        use = "fiducial"
     else:
-        use = 'cls'
+        use = "cls"
 
     sfile = ClSack(args.INPUT, args.name, use, args.m_marg)
