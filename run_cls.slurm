@@ -1,17 +1,18 @@
 #!/bin/bash
 #SBATCH --job-name=run_cls
 #SBATCH --partition=berg          # or berg, normal, redwood
-#SBATCH --nodes=2
-#SBATCH --ntasks=2                # total number of MPI tasks 
-#SBATCH --cpus-per-task=28        # cores/job_per_node
+#SBATCH --nodes=4
+#SBATCH --ntasks=8                # total number of MPI tasks 
+#SBATCH --cpus-per-task=14        # cores/job_per_node
 #SBATCH --output=log/slurm-%j.out 
 
 # Set up environment
-export OMP_NUM_THREADS=28        # threads to match cpus-per-task
+export OMP_NUM_THREADS=14        # threads to match cpus-per-task
 PYTHON=$HOME/mambaforge/envs/cosmotheka/bin/python
 
 # Input
-input="input/master_DESILRG_tSZ_ns1024.yml"
+# input="input/master_DESILRG_tSZ_ns1024.yml"
+input="input/master_DESILRG_CIB_ns1024.yml"
 
 # Log file
 # output_path=$(grep '^output:' "$input" | awk -F': ' '{print $2}' | tr -d "'\"")
@@ -23,4 +24,4 @@ input="input/master_DESILRG_tSZ_ns1024.yml"
 
 # Run the job
 # $PYTHON run_cls_mpi.py "$input" to_sacc > "$logname" 2>&1
-mpirun $PYTHON run_cls_mpi.py "$input" to_sacc 
+mpirun $PYTHON run_cls_mpi.py "$input" to_sacc --override_yaml
