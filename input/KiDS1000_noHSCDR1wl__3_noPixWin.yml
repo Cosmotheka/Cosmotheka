@@ -1,0 +1,11 @@
+mapper_class: MapperKiDS1000
+data_catalog: /mnt/extraspace/damonge/Datasets/KiDS1000/KiDS_DR4.1_ugriZYJHKs_SOM_gold_WL_cat.fits
+file_nz: /mnt/extraspace/damonge/Datasets/KiDS1000/SOM_N_of_Z/K1000_NS_V1.0.0A_ugriZYJHKs_photoz_SG_mask_LF_svn_309c_2Dbins_v2_SOMcols_Fid_blindC_TOMO4_Nz.asc
+mode: "shear"
+zbin: "3"
+remove_overlap:
+  HSCDR1wl: '/mnt/extraspace/damonge/Datasets/HSC_DR1/lite/HSCDR1wl_mask_galaxies_bin0123_ns4096_binary_nowholes.fits.gz'
+mask_name: "mask_KiDS1000__3_noHSCDR1wl"
+path_rerun: '/mnt/extraspace/damonge/Datasets/KiDS1000/xcell_runs'
+m: 0
+sigma_m: 0.012
