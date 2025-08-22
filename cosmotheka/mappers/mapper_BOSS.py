@@ -4,6 +4,19 @@ import numpy as np
 
 class MapperBOSS(MapperSDSS):
     """
+    Mapper class for the BOSS DR12 data sets mappers. \
+
+    The analysis of the BOSS DR12 catalogs is done following \
+    the methodology described in Reid et al, 2015:\
+    https://arxiv.org/pdf/1509.06529.pdf \
+    The catalog is divided into 2 redshift bins.\
+    The weight of each source is calculated by combining \
+    the angular systematics weight with the fibre collision \
+    and redshift failure nearest neighbour weights. \
+    (See eqn. 50 of the paper for the formula.) \
+    We do not include the Feldman, Kaiser & Peacock (FKP) \
+    weights.
+
     Note that X in file names stands for either `'CMASS'` or `'LOWZ'`.
 
     **Config**
