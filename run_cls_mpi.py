@@ -152,7 +152,7 @@ def launch_cls(data, fiducial=False, skip=None, stop_at_error=False):
     COMM.Barrier()
 
 
-def launch_cov(data, skip=[], stop_at_error=False):
+def launch_cov(data, skip=[], stop_at_error=False, save_cw=True):
     """
     Launch the computation of Covariance blocks for all tracers in data.
     """
@@ -211,7 +211,7 @@ def launch_cov(data, skip=[], stop_at_error=False):
             cov.cw = cwsp
 
             try:
-                cov.get_covariance()
+                cov.get_covariance(save_cw=save_cw)
             except Exception as e:
                 print(
                     f"[Rank {RANK}] Error while computing Cov for \
@@ -224,7 +224,7 @@ def launch_cov(data, skip=[], stop_at_error=False):
                     continue
 
             if cwsp is None:
-                cwsp = cov.get_covariance_workspace()
+                cwsp = cov.get_covariance_workspace(save_cw=save_cw)
 
             counter += 1
 
@@ -312,6 +312,13 @@ if __name__ == "__main__":
         help="Stop the execution at the first error encountered.",
     )
 
+    parser.add_argument(
+        "--not_save_cw",
+        default=False,
+        action="store_true",
+        help="Do not save the covariance workspace to disk after computation.",
+    )
+
     args = parser.parse_args()
 
     ###########################################################################
@@ -346,7 +353,12 @@ if __name__ == "__main__":
 
     # 2. Compute Covariance
     if not args.to_sacc_use_nl:
-        launch_cov(data, skip=args.skip, stop_at_error=args.stop_at_error)
+        launch_cov(
+            data,
+            skip=args.skip,
+            stop_at_error=args.stop_at_error,
+            save_cw=~args.not_save_cw,
+        )
 
         if args.compute == "cov":
             if RANK == 0:
