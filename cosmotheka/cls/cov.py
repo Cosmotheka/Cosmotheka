@@ -7,6 +7,7 @@ import os
 import numpy as np
 import pymaster as nmt
 import time
+import healpy as hp
 
 
 class Cov:
@@ -59,6 +60,7 @@ class Cov:
         self.recompute_cov = self.data.data["recompute"]["cov"]
         self.recompute_cmcm = self.data.data["recompute"]["cmcm"]
         self.cov = None
+        self.fsky = self.data.data["cov"].get("fsky_NG", None)  # fsky for SSC and NG term
         # Noise marginalization?
         self.nl_marg = False
         if trA1 == trA2 == trB1 == trB2:
@@ -69,8 +71,18 @@ class Cov:
         self.spin0 = self.data.data["cov"].get("spin0", False)
         # Multiplicative bias marginalization
         self.m_marg = self.data.data["cov"].get("m_marg", False)
-        self.do_NG = self.data.data["cov"].get("non_Gaussian", False)
         self.cw = None
+
+        # Non-Gaussian covariance terms
+        self.NG_config = self.data.data["cov"].get("non_Gaussian")
+        self.SSC_config = self.data.data["cov"].get("SSC")
+        self.do_NG = self.NG_config.get("compute", False)
+        self.do_SSC = self.SSC_config.get("compute", False)
+        self.th = None
+        self.ccl_trA1 = None
+        self.ccl_trA2 = None
+        self.ccl_trB1 = None
+        self.ccl_trB2 = None
 
     def _load_Cls(self):
         """
@@ -1040,6 +1052,7 @@ class Cov:
         size2 = self.clB1B2.get_ell_cl()[1].size
         cov_G = np.zeros((size1, size2))
         cov_NG = np.zeros((size1, size2))
+        cov_SSC = np.zeros((size1, size2))
         cov_nlm = np.zeros((size1, size2))
         cov_mm = np.zeros((size1, size2))
         if notnull:
@@ -1116,31 +1129,27 @@ class Cov:
                 flush=True,
             )
 
-        if self.do_NG and notnull:
-            fsky = self.data.data["cov"].get("fsky_NG", None)
-            if fsky is None:  # Calculate from masks
-                print("Computing fsky from masks", flush=True)
-                # Load all masks once
-                itime = time.time()
-                m_a1, m_a2 = self.clA1A2.get_masks()
-                m_b1, m_b2 = self.clB1B2.get_masks()
-                ftime = time.time()
-                print(
-                    f"Masks read. It took {(ftime - itime) / 60} min",
-                    flush=True,
-                )
+        if self.do_SSC and notnull:
+            itime = time.time()
+            cov_SSC = self.get_SSC_halomodel(s_a1, s_a2, s_b1, s_b2)
+            ftime = time.time()
+            print(
+                f"Computed SSC. It took {(ftime - itime) / 60} min",
+                flush=True,
+            )
 
-                fsky = np.mean(
-                    ((m_a1 > 0) & (m_a2 > 0) & (m_b1 > 0) & (m_b2 > 0))
-                )
-            kinds = self.data.data["cov"].get("NG_terms", ["1h"])
-            for kind in kinds:
-                cov_NG += self.get_covariance_ng_halomodel(
-                    s_a1, s_a2, s_b1, s_b2, fsky, kind
-                )
+        if self.do_NG and notnull:
+            fsky = self.get_fsky()
+            itime = time.time()
+            cov_NG = self.get_covariance_ng_halomodel(s_a1, s_a2, s_b1, s_b2, fsky)
+            ftime = time.time()
+            print(
+                f"Computed NG covariance. It took {(ftime - itime) / 60} min",
+                flush=True,
+            )
 
         itime = time.time()
-        self.cov = cov_G + cov_nlm + cov_mm + cov_NG
+        self.cov = cov_G + cov_nlm + cov_mm + cov_SSC + cov_NG
         ftime = time.time()
         print(
             "Added all covariances terms. It took "
@@ -1161,6 +1170,7 @@ class Cov:
             threshold=threshold,
             cov=self.cov,
             cov_G=cov_G,
+            cov_SSC=cov_SSC,
             cov_NG=cov_NG,
             cov_nl_marg=cov_nlm,
             cov_m_marg=cov_mm,
@@ -1173,8 +1183,56 @@ class Cov:
         self.recompute_cov = False
         return self.cov
 
+    def get_fsky(self):
+        if self.fsky is not None:
+            return self.fsky
+
+        # Load all masks once
+        itime = time.time()
+        m_a1, m_a2 = self.clA1A2.get_masks()
+        m_b1, m_b2 = self.clB1B2.get_masks()
+        ftime = time.time()
+        print(
+            f"Masks read. It took {(ftime - itime) / 60} min",
+            flush=True,
+        )
+
+        fsky = np.mean(
+            ((m_a1 > 0) & (m_a2 > 0) & (m_b1 > 0) & (m_b2 > 0))
+        )
+        self.fsky = fsky
+
+        return fsky
+
+    def _get_thoery(self):
+        if self.th is not None:
+            return self.th
+
+        self.th = Theory(self.data.data)
+        return self.th
+
+    def _get_CCL_tracers(self):
+        if self.ccl_trA1 is not None:
+            return (
+                self.ccl_trA1,
+                self.ccl_trA2,
+                self.ccl_trB1,
+                self.ccl_trB2,
+            )
+
+        mpA1, mpA2 = self.clA1A2.get_mappers()
+        mpB1, mpB2 = self.clB1B2.get_mappers()
+        trlist = self.data.data["tracers"]
+        th = self._get_thoery()
+        self.ccl_trA1 = th.compute_tracer_ccl(self.trA1, trlist[self.trA1], mpA1)
+        self.ccl_trA2 = th.compute_tracer_ccl(self.trA2, trlist[self.trA2], mpA2)
+        self.ccl_trB1 = th.compute_tracer_ccl(self.trB1, trlist[self.trB1], mpB1)
+        self.ccl_trB2 = th.compute_tracer_ccl(self.trB2, trlist[self.trB2], mpB2)
+
+        return self.ccl_trA1, self.ccl_trA2, self.ccl_trB1, self.ccl_trB2
+
     def get_covariance_ng_halomodel(
-        self, s_a1, s_a2, s_b1, s_b2, fsky, kind="1h"
+        self, s_a1, s_a2, s_b1, s_b2, fsky
     ):
         """
         Return the block non-Guassian covariance under the halo model.
@@ -1191,9 +1249,6 @@ class Cov:
             Spin of the field `b2`
         fsky: float
             Fraction of the observed sky
-        kind: str
-            Halo model term: '1h', '2h', '3h' or '4h' for the 1-, 2-, 3- and
-            4-halo terms.
 
         Return
         ------
@@ -1205,23 +1260,90 @@ class Cov:
         nclsa = np.max([1, s_a1 + s_a2])
         nclsb = np.max([1, s_b1 + s_b2])
         cov = np.zeros([ellA.size, nclsa, ellB.size, nclsb])
-        th = Theory(self.data.data)
-        mpA1, mpA2 = self.clA1A2.get_mappers()
-        mpB1, mpB2 = self.clB1B2.get_mappers()
-        trlist = self.data.data["tracers"]
-        ccl_trA1 = th.compute_tracer_ccl(self.trA1, trlist[self.trA1], mpA1)
-        bA1 = self.data.get_bias(self.trA1)
-        ccl_trA2 = th.compute_tracer_ccl(self.trA2, trlist[self.trA2], mpA2)
-        bA2 = self.data.get_bias(self.trA2)
-        ccl_trB1 = th.compute_tracer_ccl(self.trB1, trlist[self.trB1], mpB1)
-        bB1 = self.data.get_bias(self.trB1)
-        ccl_trB2 = th.compute_tracer_ccl(self.trB2, trlist[self.trB2], mpB2)
-        bB2 = self.data.get_bias(self.trB2)
+        th = self._get_thoery()
+        ccl_trA1, ccl_trA2, ccl_trB1, ccl_trB2 = self._get_CCL_tracers()
         covNG = th.get_ccl_cl_covNG(
-            ccl_trA1, ccl_trA2, ellA, ccl_trB1, ccl_trB2, ellB, fsky, kind=kind
+            ccl_trA1, ccl_trA2, ellA, ccl_trB1, ccl_trB2, ellB, fsky
         )
         # NG covariances can only be calculated for E-modes
-        cov[:, 0, :, 0] = covNG * bA1 * bA2 * bB1 * bB2
+        # bA1 = self.data.get_bias(self.trA1)
+        # bA2 = self.data.get_bias(self.trA2)
+        # bB1 = self.data.get_bias(self.trB1)
+        # bB2 = self.data.get_bias(self.trB2)
+        # cov[:, 0, :, 0] = covNG * bA1 * bA2 * bB1 * bB2
+
+        cov[:, 0, :, 0] = covNG  # bias already included via HOD
+        return cov.reshape([ellA.size * nclsa, ellB.size * nclsb])
+
+    def get_SSC_halomodel(
+        self, s_a1, s_a2, s_b1, s_b2
+    ):
+        """
+        Return the block non-Guassian covariance under the halo model.
+
+        Parameters
+        ----------
+        s_a1: int
+            Spin of the field `a1`
+        s_a2: int
+            Spin of the field `a2`
+        s_b1: int
+            Spin of the field `b1`
+        s_b2: int
+            Spin of the field `b2`
+
+        Return
+        ------
+        cov: numpy.array
+            Block covariance
+        """
+        ellA = self.clA1A2.b.get_effective_ells()
+        ellB = self.clB1B2.b.get_effective_ells()
+        nclsa = np.max([1, s_a1 + s_a2])
+        nclsb = np.max([1, s_b1 + s_b2])
+        cov = np.zeros([ellA.size, nclsa, ellB.size, nclsb])
+        th = self._get_thoery()
+        ccl_trA1, ccl_trA2, ccl_trB1, ccl_trB2 = self._get_CCL_tracers()
+        # We need the biases for the "linear_bias" approx
+        bA1 = self.data.get_bias(self.trA1)
+        bA2 = self.data.get_bias(self.trA2)
+        bB1 = self.data.get_bias(self.trB1)
+        bB2 = self.data.get_bias(self.trB2)
+        
+        sigma2_B_method = self.SSC_config.get("sigma2_B", "mask_wl")
+
+        mask_wl = None
+        fsky = None
+        if sigma2_B_method == "mask_wl":
+            print("Using mask window function method for SSC", flush=True)
+            m_a1, m_a2 = self.clA1A2.get_masks()
+            m_b1, m_b2 = self.clB1B2.get_masks()
+            m12 = m_a1 * m_a2
+            m34 = m_b1 * m_b2
+            area = hp.nside2pixarea(hp.npix2nside(m12.size))
+
+            alm = hp.map2alm(m12)
+            blm = hp.map2alm(m34)
+
+            mask_wl = hp.alm2cl(alm, blm)
+            mask_wl *= 2 * np.arange(mask_wl.size) + 1
+            mask_wl /= np.sum(m12) * np.sum(m34) * area**2
+        elif sigma2_B_method == "fsky":
+            print("Using fsky method for SSC", flush=True)
+            fsky = self.get_fsky()
+        else:
+            raise ValueError(
+                "Unknown sigma2_B_method for SSC: {}".format(
+                    sigma2_B_method
+                )
+            )
+
+        covSSC = th.get_ccl_cl_covSSC(
+            ccl_trA1, ccl_trA2, ellA, ccl_trB1, ccl_trB2, ellB,
+            bA1, bA2, bB1, bB2, mask_wl=mask_wl, fsky=fsky
+        )
+        # NG covariances can only be calculated for E-modes
+        cov[:, 0, :, 0] = covSSC
         return cov.reshape([ellA.size * nclsa, ellB.size * nclsb])
 
     def get_covariance_nl_marg(self):
