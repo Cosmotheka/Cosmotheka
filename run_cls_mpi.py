@@ -357,7 +357,7 @@ if __name__ == "__main__":
             data,
             skip=args.skip,
             stop_at_error=args.stop_at_error,
-            save_cw=~args.not_save_cw,
+            save_cw=not args.not_save_cw,
         )
 
         if args.compute == "cov":
