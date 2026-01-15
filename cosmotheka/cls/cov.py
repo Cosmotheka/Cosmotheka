@@ -74,8 +74,8 @@ class Cov:
         self.cw = None
 
         # Non-Gaussian covariance terms
-        self.NG_config = self.data.data["cov"].get("non_Gaussian")
-        self.SSC_config = self.data.data["cov"].get("SSC")
+        self.NG_config = self.data.data["cov"].get("non_Gaussian", {})
+        self.SSC_config = self.data.data["cov"].get("SSC", {})
         self.do_NG = self.NG_config.get("compute", False)
         self.do_SSC = self.SSC_config.get("compute", False)
         self.th = None
@@ -1004,6 +1004,34 @@ class Cov:
         cov: numpy.array
             Block covariance
         """
+        # Prepare the covariance dictionary
+        s_a1, s_a2 = self.clA1A2.get_spins()
+        s_b1, s_b2 = self.clB1B2.get_spins()
+
+        size1 = self.clA1A2.get_ell_cl()[1].size
+        size2 = self.clB1B2.get_ell_cl()[1].size
+
+        zeros = np.zeros((size1, size2))
+
+        cov_dict = {'cov': zeros.copy(),
+                    'cov_G': zeros.copy(),
+                    'cov_NG': zeros.copy(),
+                    'cov_SSC': zeros.copy(),
+                    'cov_nl_marg': zeros.copy(),
+                    'cov_m_marg': zeros.copy(),
+                    'cov_NG_1h': zeros.copy(),
+                    'cov_NG_2h': zeros.copy(),
+                    'cov_NG_3h': zeros.copy(),
+                    'cov_NG_4h': zeros.copy(),
+                    'threshold': None,
+                    'notnull': None
+                    }
+
+        # Check if the covariance has already been computed and load it.
+        # It will check if any new term needs to be computed; e.g.
+        # the first time you only requested cov_G, but now you also want
+        # cov_SSC. To avoid recomputing cov_G, we will load it from file,
+        # compute SSC and save it again.
         fname = os.path.join(
             self.outdir,
             "cov_{}_{}_{}_{}.npz".format(
@@ -1012,8 +1040,14 @@ class Cov:
         )
         recompute = self.recompute_cov or self.recompute_cmcm
         if (not recompute) and os.path.isfile(fname):
-            self.cov = np.load(fname)["cov"]
-            return self.cov
+            print(f"Loading covariance from {fname}", flush=True)
+            covf = np.load(fname)
+            # Check if there is overlap. If not, we can return directly,
+            # as it will be 0.
+            if covf['notnull'] is False:
+                self.cov = cov_dict['cov']
+                return self.cov
+            cov_dict.update(dict(covf))
 
         # Compute weighted Cls
         # Check if it's the auto-covariance of an auto-correlation
@@ -1045,17 +1079,8 @@ class Cov:
             or np.any(cla2b1)
             or np.any(cla2b2)
         )
-        s_a1, s_a2 = self.clA1A2.get_spins()
-        s_b1, s_b2 = self.clB1B2.get_spins()
 
-        size1 = self.clA1A2.get_ell_cl()[1].size
-        size2 = self.clB1B2.get_ell_cl()[1].size
-        cov_G = np.zeros((size1, size2))
-        cov_NG = np.zeros((size1, size2))
-        cov_SSC = np.zeros((size1, size2))
-        cov_nlm = np.zeros((size1, size2))
-        cov_mm = np.zeros((size1, size2))
-        if notnull:
+        if notnull and not np.any(cov_dict['cov_G']):
             itime = time.time()
             wa = self.clA1A2.get_workspace_cov()
             wb = self.clB1B2.get_workspace_cov()
@@ -1076,7 +1101,7 @@ class Cov:
 
             itime = time.time()
             if self.spin0 and (s_a1 + s_a2 + s_b1 + s_b2 != 0):
-                cov_G = self._get_covariance_spin0_approx(
+                cov_dict['cov_G'] = self._get_covariance_spin0_approx(
                     cw,
                     s_a1,
                     s_a2,
@@ -1091,7 +1116,7 @@ class Cov:
                 )
 
             else:
-                cov_G = nmt.gaussian_covariance(
+                cov_dict['cov_G'] = nmt.gaussian_covariance(
                     cw,
                     s_a1,
                     s_a2,
@@ -1111,37 +1136,53 @@ class Cov:
                 flush=True,
             )
 
-        if self.nl_marg and notnull:
+        if self.nl_marg and notnull and not np.any(cov_dict['cov_nl_marg']):
             itime = time.time()
-            cov_nlm = self.get_covariance_nl_marg()
+            cov_dict['cov_nl_marg'] = self.get_covariance_nl_marg()
             ftime = time.time()
             print(
                 f"Computed nl_marg. It took {(ftime - itime) / 60} min",
                 flush=True,
             )
 
-        if self.m_marg and notnull:
+        if self.m_marg and notnull and not np.any(cov_dict['cov_m_marg']):
             itime = time.time()
-            cov_mm = self.get_covariance_m_marg()
+            cov_dict['cov_m_marg'] = self.get_covariance_m_marg()
             ftime = time.time()
             print(
                 f"Computed m_marg. It took {(ftime - itime) / 60} min",
                 flush=True,
             )
 
-        if self.do_SSC and notnull:
+        if self.do_SSC and notnull and not np.any(cov_dict['cov_SSC']):
             itime = time.time()
-            cov_SSC = self.get_SSC_halomodel(s_a1, s_a2, s_b1, s_b2)
+            cov_dict['cov_SSC'] = self.get_SSC_halomodel(s_a1, s_a2, s_b1, s_b2)
             ftime = time.time()
             print(
                 f"Computed SSC. It took {(ftime - itime) / 60} min",
                 flush=True,
             )
 
-        if self.do_NG and notnull:
-            fsky = self.get_fsky()
+        if self.do_NG and notnull and not np.any(cov_dict['cov_NG']):
+            kinds = self.NG_config.get("NG_terms", None)
+
             itime = time.time()
-            cov_NG = self.get_covariance_ng_halomodel(s_a1, s_a2, s_b1, s_b2, fsky)
+            if kinds is None:
+                print("Computing the full cNG covariance", flush=True)
+                cov_dict['cov_NG'] = self.get_covariance_ng_halomodel(s_a1, s_a2, s_b1, s_b2)
+            else:
+                for kind in kinds:
+                    print(f"Computing the cNG covariance term: {kind}", flush=True)
+                    itime_kind = time.time()
+                    cov_dict[f'cov_NG_{kind}'] = self.get_covariance_ng_halomodel(
+                        s_a1, s_a2, s_b1, s_b2, kind
+                    )
+                    cov_dict['cov_NG'] += cov_dict[f'cov_NG_{kind}']
+                    ftime_kind = time.time()
+                    print(
+                        f"Computed NG covariance for {kind}. It took {(ftime_kind - itime_kind) / 60} min",
+                        flush=True,
+                    )
             ftime = time.time()
             print(
                 f"Computed NG covariance. It took {(ftime - itime) / 60} min",
@@ -1149,7 +1190,9 @@ class Cov:
             )
 
         itime = time.time()
-        self.cov = cov_G + cov_nlm + cov_mm + cov_SSC + cov_NG
+        self.cov = cov_dict['cov_G'] + cov_dict['cov_nl_marg'] + cov_dict['cov_m_marg'] + cov_dict['cov_SSC'] + cov_dict['cov_NG']
+        cov_dict['cov'] = self.cov
+        #
         ftime = time.time()
         print(
             "Added all covariances terms. It took "
@@ -1165,15 +1208,11 @@ class Cov:
             # Use order of magnitude
             # Squaring the errors to compare cov vs sigma^2, not sigma
             threshold = 10 ** int(np.log10(np.max([err1, err2]) ** 2)) * 1e5
+        cov_dict['threshold'] = threshold
+        cov_dict['notnull'] = notnull
         tools.save_npz(
             fname,
-            threshold=threshold,
-            cov=self.cov,
-            cov_G=cov_G,
-            cov_SSC=cov_SSC,
-            cov_NG=cov_NG,
-            cov_nl_marg=cov_nlm,
-            cov_m_marg=cov_mm,
+            **cov_dict,
         )
         ftime = time.time()
         print(
@@ -1232,7 +1271,7 @@ class Cov:
         return self.ccl_trA1, self.ccl_trA2, self.ccl_trB1, self.ccl_trB2
 
     def get_covariance_ng_halomodel(
-        self, s_a1, s_a2, s_b1, s_b2, fsky
+        self, s_a1, s_a2, s_b1, s_b2, kind=None
     ):
         """
         Return the block non-Guassian covariance under the halo model.
@@ -1247,8 +1286,10 @@ class Cov:
             Spin of the field `b1`
         s_b2: int
             Spin of the field `b2`
-        fsky: float
-            Fraction of the observed sky
+        kind: str or None
+            Kind of NG covariance to compute. If None, compute the full NG
+            covariance. Else, halo model term: '1h', '2h', '3h' or '4h' for
+            the 1-, 2-, 3- and 4-halo terms.
 
         Return
         ------
@@ -1262,8 +1303,9 @@ class Cov:
         cov = np.zeros([ellA.size, nclsa, ellB.size, nclsb])
         th = self._get_thoery()
         ccl_trA1, ccl_trA2, ccl_trB1, ccl_trB2 = self._get_CCL_tracers()
+        fsky = self.get_fsky()
         covNG = th.get_ccl_cl_covNG(
-            ccl_trA1, ccl_trA2, ellA, ccl_trB1, ccl_trB2, ellB, fsky
+            ccl_trA1, ccl_trA2, ellA, ccl_trB1, ccl_trB2, ellB, fsky, kind
         )
         # NG covariances can only be calculated for E-modes
         # bA1 = self.data.get_bias(self.trA1)

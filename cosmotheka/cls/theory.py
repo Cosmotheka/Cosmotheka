@@ -92,7 +92,7 @@ class Theory:
         # self.k_s = np.geomspace(1e-4, 1e2, 512)
         # self.lk_s = np.log(self.k_s)
         # self.a_arr = 1.0 / (1 + np.linspace(0.0, 6.0, 30)[::-1])
-        self.k_arr = None
+        # self.k_arr = None
         self.lk_arr = None
         self.a_arr = None
 
@@ -109,15 +109,15 @@ class Theory:
             self._cosmo = ccl.Cosmology(**(self.config["cosmo"]))
         return self._cosmo
 
-    def get_k_arr(self):
-        """
-        Return the k array
-        """
-        if self.k_arr is None:
-            lk = self.get_lk_arr()
-            self.k_arr = np.exp(lk)
+    # def get_k_arr(self):
+    #     """
+    #     Return the k array
+    #     """
+    #     if self.k_arr is None:
+    #         lk = self.get_lk_arr()
+    #         self.k_arr = np.exp(lk)
 
-        return self.k_arr
+    #     return self.k_arr
     
     def get_lk_arr(self):
         """
@@ -125,8 +125,11 @@ class Theory:
         """
         if self.lk_arr is None:
             cosmo = self.get_cosmo_ccl()
+            # kmax should be read from dndz but for now hardcoded
+            lkmax = np.log(100) 
             lk = cosmo.get_pk_spline_lk()
-            self.lk_arr = lk
+            sel = lk <= lkmax
+            self.lk_arr = lk[sel]
 
         return self.lk_arr
 
@@ -321,7 +324,7 @@ class Theory:
             "is_number_counts": dtype == "galaxy_density",
         }
 
-    def get_ccl_tkka(self, ccl_trA1, ccl_trA2, ccl_trB1, ccl_trB2):
+    def get_ccl_tkka(self, ccl_trA1, ccl_trA2, ccl_trB1, ccl_trB2, kind=None):
         """
         Return the trispectrum of four given tracers (cl of tracers A1, A2 and
         cl of tracers B1, B2)
@@ -340,6 +343,10 @@ class Theory:
         ccl_trB2: dict
             Dictionary with the ccl information of tracer B2. See
             `compute_tracer_ccl` output.
+        kind: str or None
+            Kind of NG covariance to compute. If None, compute the full NG
+            covariance. Else, halo model term: '1h', '2h', '3h' or '4h' for
+            the 1-, 2-, 3- and 4-halo terms.
 
         Return
         ------
@@ -356,7 +363,9 @@ class Theory:
         pB1 = ccl_trB1["ccl_pr"]
         pB2 = ccl_trB2["ccl_pr"]
 
-        # Profiles 2pt and check if some of them are the same
+        # Profiles 2pt and check if some of them are the same.
+        # I believe that initializing them does not consume time, so we 
+        # avoid cherry-picking here for the different kinds.
         # 12
         if ccl_trA1["name"] == ccl_trA2["name"]:
             pr2ptA = ccl_trA1["ccl_pr_2pt"]
@@ -394,29 +403,72 @@ class Theory:
         else:
             pr2ptB = hm_par["prof_2pt"]
 
-        # Define default k and a arrays
-        k_s = np.geomspace(1e-4, 1e2, 512)
-
         # Get trispectrum
         separable_growth = hm_par.get("separable_growth", True)
+        a_s = self.get_a_arr()
+        lk_s = self.get_lk_arr()
 
-        tkk = ccl.halos.halomod_Tk3D_cNG(
-            cosmo=cosmo,
-            hmc=hm_par["calculator"],
-            prof=pA1,
-            prof2=pA2,
-            prof3=pB1,
-            prof4=pB2,
-            prof12_2pt=pr2ptA,
-            prof13_2pt=prof13_2pt,
-            prof14_2pt=prof14_2pt,
-            prof24_2pt=prof24_2pt,
-            prof32_2pt=prof32_2pt,
-            prof34_2pt=pr2ptB,
-            a_arr=self.get_a_arr(),
-            lk_arr=self.get_lk_arr(),
-            separable_growth=separable_growth,
-        )
+        if kind is None:
+            tkk = ccl.halos.halomod_Tk3D_cNG(
+                cosmo=cosmo,
+                hmc=hm_par["calculator"],
+                prof=pA1,
+                prof2=pA2,
+                prof3=pB1,
+                prof4=pB2,
+                prof12_2pt=pr2ptA,
+                prof13_2pt=prof13_2pt,
+                prof14_2pt=prof14_2pt,
+                prof24_2pt=prof24_2pt,
+                prof32_2pt=prof32_2pt,
+                prof34_2pt=pr2ptB,
+                a_arr=a_s,
+                lk_arr=lk_s,
+                separable_growth=separable_growth,
+            )
+        elif kind == "1h":
+            tkk = ccl.halos.halomod_Tk3D_1h(cosmo=cosmo,
+                                            hmc=hm_par['calculator'],
+                                            prof=pA1, prof2=pA2,
+                                            prof12_2pt=pr2ptA,
+                                            prof3=pB1, prof4=pB2,
+                                            prof34_2pt=pr2ptB,
+                                            a_arr=a_s, lk_arr=lk_s)
+        elif kind == "2h":
+            tkk = ccl.halos.halomod_Tk3D_2h(cosmo=cosmo,
+                                            hmc=hm_par['calculator'],
+                                            prof=pA1, prof2=pA2,
+                                            prof3=pB1, prof4=pB2,
+                                            prof12_2pt=pr2ptA,
+                                            prof13_2pt=prof13_2pt,
+                                            prof14_2pt=prof14_2pt,
+                                            prof24_2pt=prof24_2pt,
+                                            prof32_2pt=prof32_2pt,
+                                            prof34_2pt=pr2ptB,
+                                            separable_growth=separable_growth,
+                                            a_arr=a_s, lk_arr=lk_s)
+        elif kind == "3h":
+            tkk = ccl.halos.halomod_Tk3D_3h(cosmo=cosmo,
+                                            hmc=hm_par['calculator'],
+                                            prof=pA1, prof2=pA2,
+                                            prof3=pB1, prof4=pB2,
+                                            prof13_2pt=prof13_2pt,
+                                            prof14_2pt=prof14_2pt,
+                                            prof24_2pt=prof24_2pt,
+                                            prof32_2pt=prof32_2pt,
+                                            separable_growth=separable_growth,
+                                            a_arr=a_s, lk_arr=lk_s)
+        elif kind == "4h":
+            tkk = ccl.halos.halomod_Tk3D_3h(cosmo=cosmo,
+                                            hmc=hm_par['calculator'],
+                                            prof=pA1, prof2=pA2,
+                                            prof3=pB1, prof4=pB2,
+                                            separable_growth=separable_growth,
+                                            a_arr=a_s, lk_arr=lk_s)
+        else:
+            raise ValueError(f"Unknown kind of NG covariance term: {kind}. It "
+                             f"has to be None, '1h', '2h', '3h' or '4h'.")
+            
         return tkk
 
     def get_ccl_pk(self, ccl_tr1, ccl_tr2):
@@ -496,7 +548,7 @@ class Theory:
         )
 
     def get_ccl_cl_covNG(
-        self, ccl_trA1, ccl_trA2, ellA, ccl_trB1, ccl_trB2, ellB, fsky
+        self, ccl_trA1, ccl_trA2, ellA, ccl_trB1, ccl_trB2, ellB, fsky, kind
     ):
         """
         Return the non-Gaussian block covariance of two Cells clA1A2 and
@@ -518,6 +570,10 @@ class Theory:
             `compute_tracer_ccl` output.
         fsky: float
             Fraction of the observed sky
+        kind: str or None
+            Kind of NG covariance to compute. If None, compute the full NG
+            covariance. Else, halo model term: '1h', '2h', '3h' or '4h' for
+            the 1-, 2-, 3- and 4-halo terms.
 
         Return
         ------
@@ -526,7 +582,12 @@ class Theory:
         """
         cosmo = self.get_cosmo_ccl()
 
-        tkk = self.get_ccl_tkka(ccl_trA1, ccl_trA2, ccl_trB1, ccl_trB2)
+        tkk = self.get_ccl_tkka(ccl_trA1, ccl_trA2, ccl_trB1, ccl_trB2, kind)
+
+        # For debugging: save tkk spline arrays
+        a, lk1, lk2, tkk_arr = tkk.get_spline_arrays()
+        np.savez_compressed('/mnt/users/gravityls_3/codes/Cosmotheka/output/test_NG/tk3D_cNG_DESY3wl_DESY3wl_debug.npz', a=a, lk1=lk1, lk2=lk2, tkk=tkk_arr)
+
         return ccl.angular_cl_cov_cNG(
             cosmo,
             tracer1=ccl_trA1["ccl_tr"],

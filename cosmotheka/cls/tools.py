@@ -9,6 +9,8 @@ def save_npz(fname, threshold=1e100, **kwargs):
     print(f"Saving {fname}")
     for kn, kv in kwargs.items():
         maxv = np.max(np.abs(kv))
+        if maxv in (True, False, None):
+            continue
         if np.isnan(maxv) or (maxv > threshold):
             raise RuntimeError(f"Some values in {kn} are nan or "
                                f">{threshold} (e.g. {maxv}). Stopping here")
