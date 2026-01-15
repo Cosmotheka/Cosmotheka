@@ -1081,6 +1081,7 @@ class Cov:
         )
 
         if notnull and not np.any(cov_dict['cov_G']):
+            print('Computing Gaussian covariance...', flush=True)
             itime = time.time()
             wa = self.clA1A2.get_workspace_cov()
             wb = self.clB1B2.get_workspace_cov()
@@ -1137,6 +1138,7 @@ class Cov:
             )
 
         if self.nl_marg and notnull and not np.any(cov_dict['cov_nl_marg']):
+            print('Computing nl_marg covariance...', flush=True)
             itime = time.time()
             cov_dict['cov_nl_marg'] = self.get_covariance_nl_marg()
             ftime = time.time()
@@ -1146,6 +1148,7 @@ class Cov:
             )
 
         if self.m_marg and notnull and not np.any(cov_dict['cov_m_marg']):
+            print('Computing m_marg covariance...', flush=True)
             itime = time.time()
             cov_dict['cov_m_marg'] = self.get_covariance_m_marg()
             ftime = time.time()
@@ -1155,6 +1158,7 @@ class Cov:
             )
 
         if self.do_SSC and notnull and not np.any(cov_dict['cov_SSC']):
+            print('Computing SSC...', flush=True)
             itime = time.time()
             cov_dict['cov_SSC'] = self.get_SSC_halomodel(s_a1, s_a2, s_b1, s_b2)
             ftime = time.time()
@@ -1164,6 +1168,7 @@ class Cov:
             )
 
         if self.do_NG and notnull and not np.any(cov_dict['cov_NG']):
+            print('Computing cNG covariance...', flush=True)
             kinds = self.NG_config.get("NG_terms", None)
 
             itime = time.time()
