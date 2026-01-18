@@ -675,9 +675,6 @@ class Theory:
         else:
             sigma2_B = ccl.sigma2_B_disc(cosmo, a_arr=a_arr, fsky=fsky)
 
-        # Save sigma2_B for debugging
-        np.savez_compressed('sigma2_B_debug.npz', a=a_arr, sigma2_B=sigma2_B)
-                
         tk3D = ccl.halos.halomod_Tk3D_SSC_linear_bias(
             cosmo=cosmo,
             hmc=hmc,

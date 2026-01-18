@@ -1044,7 +1044,7 @@ class Cov:
             covf = np.load(fname)
             # Check if there is overlap. If not, we can return directly,
             # as it will be 0.
-            if covf['notnull'] is False:
+            if not covf.get('notnull', True):
                 self.cov = cov_dict['cov']
                 return self.cov
             cov_dict.update(dict(covf))

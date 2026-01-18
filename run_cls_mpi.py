@@ -152,7 +152,7 @@ def launch_cls(data, fiducial=False, skip=None, stop_at_error=False):
     COMM.Barrier()
 
 
-def launch_cov(data, skip=[], stop_at_error=False, save_cw=True):
+def launch_cov(data, skip=[], stop_at_error=False, save_cw=True, override=False):
     """
     Launch the computation of Covariance blocks for all tracers in data.
     """
@@ -197,7 +197,9 @@ def launch_cov(data, skip=[], stop_at_error=False, save_cw=True):
             recompute = (
                 data.data["recompute"]["cov"] or data.data["recompute"]["cmcm"]
             )
-            if os.path.isfile(fname) and not recompute:
+            # If override is True, we check the covariance in case new terms
+            # have been added (e.g. SSC or cNG)
+            if os.path.isfile(fname) and not recompute and not override:
                 print(
                     f"[Rank {RANK}] Cov for {trs} already exists, skipping.",
                     flush=True,
@@ -358,6 +360,7 @@ if __name__ == "__main__":
             skip=args.skip,
             stop_at_error=args.stop_at_error,
             save_cw=not args.not_save_cw,
+            override=args.override_yaml,
         )
 
         if args.compute == "cov":
