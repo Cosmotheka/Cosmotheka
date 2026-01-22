@@ -1049,36 +1049,44 @@ class Cov:
                 return self.cov
             cov_dict.update(dict(covf))
 
-        # Compute weighted Cls
-        # Check if it's the auto-covariance of an auto-correlation
-        auto_auto = self.trA1 == self.trA2 == self.trB1 == self.trB2
-        # Check if it must be computed from data
-        aa_data = (
-            auto_auto and self.tmat[(self.trA1, self.trA2)]["clcov_from_data"]
-        )
-        # If so, get these C_ells
-        itime = time.time()
-        if aa_data:
-            mean_mamb = self.clA1B1.get_mean_mamb()
-            _, cla1b1, cla1b2, cla2b2 = self.clA1B1.get_ell_cls_cp_cov_auto()
-            cla2b2 = cla2b2 / mean_mamb
-            cla2b1 = cla1b2 / mean_mamb
-            cla1b2 = cla1b2 / mean_mamb
-            cla1b1 = cla1b1 / mean_mamb
-        else:
-            cla1b1 = self._get_cl_for_cov(self.clA1B1, self.clfid_A1B1)
-            cla1b2 = self._get_cl_for_cov(self.clA1B2, self.clfid_A1B2)
-            cla2b1 = self._get_cl_for_cov(self.clA2B1, self.clfid_A2B1)
-            cla2b2 = self._get_cl_for_cov(self.clA2B2, self.clfid_A2B2)
-        ftime = time.time()
-        print(f"Get C_ells. It took {(ftime - itime) / 60} min", flush=True)
+        notnull = cov_dict['notnull']
+        # If notnull is None, it means that it hasn't been computed yet.
+        # If it is not None, we check if it's True and if cov_G is empty.
+        # As of now, cov_G is always computes, so it shouldn't be empty.
+        if notnull is None or (notnull is True and 
+                               not np.any(cov_dict['cov_G'])):
+            print("Computing required C_ells for covariance and checking if "
+                  "they are non-zero...", flush=True)
+            # Compute weighted Cls
+            # Check if it's the auto-covariance of an auto-correlation
+            auto_auto = self.trA1 == self.trA2 == self.trB1 == self.trB2
+            # Check if it must be computed from data
+            aa_data = (
+                auto_auto and self.tmat[(self.trA1, self.trA2)]["clcov_from_data"]
+            )
+            # If so, get these C_ells
+            itime = time.time()
+            if aa_data:
+                mean_mamb = self.clA1B1.get_mean_mamb()
+                _, cla1b1, cla1b2, cla2b2 = self.clA1B1.get_ell_cls_cp_cov_auto()
+                cla2b2 = cla2b2 / mean_mamb
+                cla2b1 = cla1b2 / mean_mamb
+                cla1b2 = cla1b2 / mean_mamb
+                cla1b1 = cla1b1 / mean_mamb
+            else:
+                cla1b1 = self._get_cl_for_cov(self.clA1B1, self.clfid_A1B1)
+                cla1b2 = self._get_cl_for_cov(self.clA1B2, self.clfid_A1B2)
+                cla2b1 = self._get_cl_for_cov(self.clA2B1, self.clfid_A2B1)
+                cla2b2 = self._get_cl_for_cov(self.clA2B2, self.clfid_A2B2)
+            ftime = time.time()
+            print(f"Get C_ells. It took {(ftime - itime) / 60} min", flush=True)
 
-        notnull = (
-            np.any(cla1b1)
-            or np.any(cla1b2)
-            or np.any(cla2b1)
-            or np.any(cla2b2)
-        )
+            notnull = (
+                np.any(cla1b1)
+                or np.any(cla1b2)
+                or np.any(cla2b1)
+                or np.any(cla2b2)
+            )
 
         if notnull and not np.any(cov_dict['cov_G']):
             print('Computing Gaussian covariance...', flush=True)
