@@ -226,7 +226,10 @@ def launch_cov(data, skip=[], stop_at_error=False, save_cw=True, override=False)
                     continue
 
             if cwsp is None:
-                cwsp = cov.get_covariance_workspace(save_cw=save_cw)
+                # cwsp = cov.get_covariance_workspace(save_cw=save_cw)
+                # Access directly cov.cw to avoid compiling it in case its
+                # computation has been skipped.
+                cwsp = cov.cw
 
             counter += 1
 
