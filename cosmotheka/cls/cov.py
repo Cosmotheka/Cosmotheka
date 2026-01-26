@@ -1038,7 +1038,9 @@ class Cov:
                 self.trA1, self.trA2, self.trB1, self.trB2
             ),
         )
+        # TODO: recompute_cmcm should trigger only cov_G recomputation
         recompute = self.recompute_cov or self.recompute_cmcm
+        write_npz = True  # We will save the covariance at the end
         if (not recompute) and os.path.isfile(fname):
             print(f"Loading covariance from {fname}", flush=True)
             covf = np.load(fname)
@@ -1048,6 +1050,7 @@ class Cov:
                 self.cov = cov_dict['cov']
                 return self.cov
             cov_dict.update(dict(covf))
+            write_npz = False  # We will not overwrite the file unless needed
 
         notnull = cov_dict['notnull']
         # If notnull is None, it means that it hasn't been computed yet.
@@ -1087,6 +1090,8 @@ class Cov:
                 or np.any(cla2b1)
                 or np.any(cla2b2)
             )
+            cov_dict['notnull'] = notnull
+            write_npz = True  # We will need to save the file again
 
         if notnull and not np.any(cov_dict['cov_G']):
             print('Computing Gaussian covariance...', flush=True)
@@ -1144,6 +1149,7 @@ class Cov:
                 + f"{(ftime - itime) / 60} min",
                 flush=True,
             )
+            write_npz = True  # We will need to save the file again
 
         if self.nl_marg and notnull and not np.any(cov_dict['cov_nl_marg']):
             print('Computing nl_marg covariance...', flush=True)
@@ -1154,6 +1160,7 @@ class Cov:
                 f"Computed nl_marg. It took {(ftime - itime) / 60} min",
                 flush=True,
             )
+            write_npz = True  # We will need to save the file again
 
         if self.m_marg and notnull and not np.any(cov_dict['cov_m_marg']):
             print('Computing m_marg covariance...', flush=True)
@@ -1164,6 +1171,7 @@ class Cov:
                 f"Computed m_marg. It took {(ftime - itime) / 60} min",
                 flush=True,
             )
+            write_npz = True  # We will need to save the file again
 
         if self.do_SSC and notnull and not np.any(cov_dict['cov_SSC']):
             print('Computing SSC...', flush=True)
@@ -1174,6 +1182,7 @@ class Cov:
                 f"Computed SSC. It took {(ftime - itime) / 60} min",
                 flush=True,
             )
+            write_npz = True  # We will need to save the file again
 
         if self.do_NG and notnull and not np.any(cov_dict['cov_NG']):
             print('Computing cNG covariance...', flush=True)
@@ -1201,6 +1210,7 @@ class Cov:
                 f"Computed NG covariance. It took {(ftime - itime) / 60} min",
                 flush=True,
             )
+            write_npz = True  # We will need to save the file again
 
         itime = time.time()
         self.cov = cov_dict['cov_G'] + cov_dict['cov_nl_marg'] + cov_dict['cov_m_marg'] + cov_dict['cov_SSC'] + cov_dict['cov_NG']
@@ -1213,25 +1223,32 @@ class Cov:
             flush=True,
         )
 
-        itime = time.time()
-        threshold = self.data.data["cov"].get("error_threshold", None)
-        if threshold is None:
-            err1 = np.max(self.clA1A2.get_ell_cl_crude_error()[1])
-            err2 = np.max(self.clB1B2.get_ell_cl_crude_error()[1])
-            # Use order of magnitude
-            # Squaring the errors to compare cov vs sigma^2, not sigma
-            threshold = 10 ** int(np.log10(np.max([err1, err2]) ** 2)) * 1e5
-        cov_dict['threshold'] = threshold
-        cov_dict['notnull'] = notnull
-        tools.save_npz(
-            fname,
-            **cov_dict,
-        )
-        ftime = time.time()
-        print(
-            f"Saved cov npz file. It took {(ftime - itime) / 60} min",
-            flush=True,
-        )
+        if cov_dict['threshold'] is None:
+            print("Setting error threshold...", flush=True)
+            threshold = self.data.data["cov"].get("error_threshold", None)
+            if threshold is None:
+                print("Computing error threshold...", flush=True)
+                err1 = np.max(self.clA1A2.get_ell_cl_crude_error()[1])
+                err2 = np.max(self.clB1B2.get_ell_cl_crude_error()[1])
+                # Use order of magnitude
+                # Squaring the errors to compare cov vs sigma^2, not sigma
+                threshold = 10 ** int(np.log10(np.max([err1, err2]) ** 2)) * 1e5
+            cov_dict['threshold'] = threshold
+            write_npz = True  # We will need to save the file again
+
+        if write_npz:
+            itime = time.time()
+            tools.save_npz(
+                fname,
+                **cov_dict,
+            )
+            ftime = time.time()
+            print(
+                f"Saved cov npz file. It took {(ftime - itime) / 60} min",
+                flush=True,
+            )
+        else:
+            print("Covariance npz file up to date.", flush=True)
         self.recompute_cov = False
         return self.cov
 
