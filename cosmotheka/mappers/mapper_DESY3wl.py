@@ -366,8 +366,6 @@ class MapperDESY3wl(MapperBase):
     def get_spin(self):
         return 2
 
-    # New code added for catalogue implementation
-
     def _get_nmt_catalog_field(self, mode=None, **kwargs):
         """
         Build a catalog-based NaMaster field for DES-Y3 WL.
