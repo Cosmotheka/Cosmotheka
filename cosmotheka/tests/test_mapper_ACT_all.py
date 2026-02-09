@@ -52,9 +52,9 @@ def test_get_signal_map(cls):
     conf['path_rerun'] = 'cosmotheka/tests/data/'
     m = cls(conf)
     mb_pxll = enmap.read_map(conf['file_map'])
-    mb = [reproject.healpix_from_enmap(mb_pxll,
-                                       lmax=6000,
-                                       nside=32)]
+    mb = [reproject.map2healpix(mb_pxll,
+                                lmax=6000,
+                                nside=32)]
     mm = m.get_signal_map()[0]
     assert (len(mm)/12)**(1/2) == 32
     assert (mb == mm).all()
@@ -73,9 +73,9 @@ def test_get_mask(cls):
     conf['path_rerun'] = 'cosmotheka/tests/data/'
     m = cls(conf)
     mb_pxll = enmap.read_map(conf['file_mask'])
-    mb = [reproject.healpix_from_enmap(mb_pxll,
-                                       lmax=6000,
-                                       nside=32)]
+    mb = [reproject.map2healpix(mb_pxll,
+                                lmax=6000,
+                                nside=32)]
     mm = m.get_mask()
     assert (len(mm)/12)**(1/2) == 32
     assert (mb == mm).all()

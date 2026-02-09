@@ -34,9 +34,9 @@ class MapperACTk(MapperACTBase):
 
         self.pixell_mask = self._get_pixell_mask()
         mp = enmap.read_map(self.file_map)
-        mp = reproject.healpix_from_enmap(mp,
-                                          lmax=self.lmax,
-                                          nside=self.nside)
+        mp = reproject.map2healpix(mp,
+                                   lmax=self.lmax,
+                                   nside=self.nside)
         mp = rotate_map(mp, self.rot)
         mp *= np.mean(self.pixell_mask**2)
         return mp
@@ -46,9 +46,9 @@ class MapperACTk(MapperACTBase):
         # and coverts it to healpy
 
         self.pixell_mask = self._get_pixell_mask()
-        msk = reproject.healpix_from_enmap(self.pixell_mask,
-                                           lmax=self.lmax,
-                                           nside=self.nside)
+        msk = reproject.map2healpix(self.pixell_mask,
+                                    lmax=self.lmax,
+                                    nside=self.nside)
         msk = rotate_mask(msk, self.rot)
         # Cap it (there is noise due to the change of pixelization)
         goodpix = msk > self.mask_threshold
