@@ -2,6 +2,7 @@ from .utils import get_map_from_points
 from .mapper_base import MapperBase
 import h5py
 import numpy as np
+import pymaster as nmt
 import healpy as hp
 import fitsio
 import os
@@ -364,6 +365,40 @@ class MapperDESY3wl(MapperBase):
 
     def get_spin(self):
         return 2
+    
+    # New code added for catalogue implementation
+
+    def _get_nmt_catalog_field(self, mode=None, **kwargs):
+        """
+        Build a catalog-based NaMaster field for DES-Y3 WL.
+        """
+        # Spin-2 shear only
+        e1f, e2f, mod = self._set_mode(mode)
+        if mod != 'shear':
+            raise NotImplementedError(
+                "Catalog-based fields are only implemented for shear."
+            )
+        
+        # Positions (RA/Dec in degrees)
+        pos = self.get_positions()
+        ra = pos['ra']
+        dec = pos['dec']
+        positions = np.array([ra, dec])
+
+        # Weights
+        weights = self.get_weights()
+
+        # Bias-corrected ellipticities
+        ellips = self.get_ellips_unbiased(mode=mod)
+        e1 = -ellips[0].copy()
+        e2 = ellips[1].copy()
+        field = np.array([e1, e2])
+
+        # Retrieve the maximum multipole
+        lmax = kwargs.get("lmax", 3*self.nside-1)
+
+        return nmt.NmtFieldCatalog(positions, weights, field,
+                                   spin=2, lmax=lmax, lonlat=True)
 
 
 # This function was used to shorten the official catalog. It is not used to

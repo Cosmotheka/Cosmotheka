@@ -137,7 +137,9 @@ class Cov:
         root = self.data.data["output"]
         outdir = os.path.join(root, "cov")
         return outdir
-
+    
+    # New code added for catalogue implementation
+    # Previous function did not have use_maps argument
     def get_covariance_workspace(self, save_cw=True):
         """
         Return the covariance workspace needed to compute the Gaussian
@@ -173,8 +175,8 @@ class Cov:
                 return cw
 
         l_toeplitz, l_exact, dl_band = self.data.check_toeplitz("cov")
-        fA1, fB1 = self.clA1B1.get_nmt_fields()
-        fA2, fB2 = self.clA2B2.get_nmt_fields()
+        fA1, fB1 = self.clA1B1.get_nmt_fields(use_maps=True)
+        fA2, fB2 = self.clA2B2.get_nmt_fields(use_maps=True)
         cw.compute_coupling_coefficients(
             fA1,
             fA2,

@@ -235,8 +235,10 @@ class Cl(ClBase):
             bpw_edges = np.append(bpw_edges, 3*nside)
         b = nmt.NmtBin.from_edges(bpw_edges[:-1], bpw_edges[1:])
         return b
-
-    def get_nmt_fields(self):
+    
+    # New code added for catalogue implementation
+    # Previous function did not have use_maps argument
+    def get_nmt_fields(self, use_maps=False):
         """
         Return the pymaster.NmtField instances of the correlated tracers.
 
@@ -248,8 +250,12 @@ class Cl(ClBase):
             Field of tracer 2
         """
         mapper1, mapper2 = self.get_mappers()
-        f1 = mapper1.get_nmt_field()
-        f2 = mapper2.get_nmt_field()
+        if use_maps:
+            f1 = mapper1.get_nmt_field(for_cov=True)
+            f2 = mapper2.get_nmt_field(for_cov=True)
+        else:
+            f1 = mapper1.get_nmt_field()
+            f2 = mapper2.get_nmt_field()
         return f1, f2
 
     def get_workspace(self, read_unbinned_MCM=True):
@@ -268,8 +274,7 @@ class Cl(ClBase):
             Workspace with the mode-coupling matrix of both tracers
         """
         if self._w is None:
-            self._w = \
-                self._compute_workspace(read_unbinned_MCM=read_unbinned_MCM)
+            self._w = self._compute_workspace(read_unbinned_MCM=read_unbinned_MCM, use_maps=False)
         return self._w
 
     def get_workspace_cov(self):
@@ -289,13 +294,14 @@ class Cl(ClBase):
             spin0 = self.data.data['cov'].get('spin0', False)
             if spin0 and (self.get_spins() != (0, 0)):
                 self._wcov = self._compute_workspace(spin0=spin0,
-                                                     read_unbinned_MCM=False)
+                                                     read_unbinned_MCM=False, 
+                                                     use_maps=True)
             else:
-                self._wcov = self.get_workspace(read_unbinned_MCM=False)
+                self._wcov = self._compute_workspace(read_unbinned_MCM=False, use_maps=True)
 
         return self._wcov
 
-    def _compute_workspace(self, spin0=False, read_unbinned_MCM=True):
+    def _compute_workspace(self, spin0=False, read_unbinned_MCM=True, use_maps=False):
         """
         Return the pymaster.NmtWorkspace with the mode-coupling matrix of the
         correlated fields.
@@ -319,10 +325,17 @@ class Cl(ClBase):
         mask1, mask2 = self.get_masks_names()
         if self._read_symmetric:
             mask1, mask2 = mask2, mask1
-        if spin0:
-            fname = os.path.join(self.outdir, f'w0__{mask1}__{mask2}.fits')
-        else:
-            fname = os.path.join(self.outdir, f'w__{mask1}__{mask2}.fits')
+        
+        #if spin0:
+        #    fname = os.path.join(self.outdir, f'w0__{mask1}__{mask2}.fits')
+        #else:
+        #    fname = os.path.join(self.outdir, f'w__{mask1}__{mask2}.fits')
+
+        # These three lines replace the commented out if/else statement above
+        tag = "map" if use_maps else "data"
+        spin_tag = "w0" if spin0 else "w"
+        fname = os.path.join(self.outdir, f'{spin_tag}_{tag}__{mask1}__{mask2}.fits')
+
         w = nmt.NmtWorkspace()
         if (not self.recompute_mcm) and os.path.isfile(fname):
             tools.read_wsp(w, fname, read_unbinned_MCM=read_unbinned_MCM)
@@ -337,12 +350,16 @@ class Cl(ClBase):
             f1 = nmt.NmtField(msk1, None, spin=0)
             f2 = nmt.NmtField(msk2, None, spin=0)
         else:
-            f1, f2 = self.get_nmt_fields()
+            f1, f2 = self.get_nmt_fields(use_maps=use_maps)
+        if use_maps:
+            assert f1.maps is not None and f2.maps is not None, \
+                "Covariance workspace must be built from map-based NmtFields"
+
         w.compute_coupling_matrix(f1, f2, self.b,
                                   l_toeplitz=l_toeplitz, l_exact=l_exact,
                                   dl_band=dl_band)
         tools.save_wsp(w, fname)
-        self.recompute_mcmc = False
+        self.recompute_mcm = False
 
         return w
 
@@ -427,6 +444,9 @@ class Cl(ClBase):
             print(f"Computing Cell for {self.tr1} {self.tr2}")
             mapper1, mapper2 = self.get_mappers()
             f1, f2 = self.get_nmt_fields()
+            f1c, f2c = self.get_nmt_fields(use_maps=True)
+            # f1, f2   : data / catalogue fields (for Cl estimation)
+            # f1c, f2c : map-based fields (for covariance inputs)   
             w = self.get_workspace()
             wins = w.get_bandpower_windows()
             w_a = mapper1.get_mask()
@@ -447,6 +467,10 @@ class Cl(ClBase):
                 nl = np.zeros([n_cls, self.b.get_n_bands()])
             # Signal
             if auto and mapper1.custom_auto:
+                # **Note** that no mappers currently exist where this
+                # custom auto-correlations are needed and which are
+                # also catalog-based, so we are implicitly assuming
+                # here that all mappers are map-based.
                 cl_cp = mapper1.get_cl_coupled()
                 cl = w.decouple_cell(cl_cp)
                 cls_cov = mapper1.get_cls_covar_coupled()
@@ -474,7 +498,7 @@ class Cl(ClBase):
                 # the noise-less power spectrum. No need
                 # to subtract it here.
             else:
-                cl_cov_cp = nmt.compute_coupled_cell(f1, f2)
+                cl_cov_cp = nmt.compute_coupled_cell(f1c, f2c)
                 # A standard auto-correlation auto-covariance
                 # is just ~propto 2*C_ell^2 rather than
                 # (C_ell^11 C_ell^22+C_ell^12^2), which can be
@@ -482,9 +506,16 @@ class Cl(ClBase):
                 cl_cov_11_cp = cl_cov_cp
                 cl_cov_12_cp = cl_cov_cp
                 cl_cov_22_cp = cl_cov_cp
-                cl = w.decouple_cell(cl_cov_cp)
-                cl_cp = cl_cov_cp - nl_cp
-                cl -= nl
+                if (f1 == f1c) and (f2 == f2c):
+                    # With the check above, this means that both
+                    # fields are map-based.
+                    cl = w.decouple_cell(cl_cov_cp)
+                    cl_cp = cl_cov_cp - nl_cp
+                    cl -= nl
+                else:
+                    cl_cp = nmt.compute_coupled_cell(f1, f2)
+                    cl = w.decouple_cell(cl_cp)
+
             # Note that while we have subtracted the noise
             # bias from `cl_cp`, `cl_cov_cp` still includes it.
             correction = 1
@@ -507,7 +538,7 @@ class Cl(ClBase):
                 cl_cov_22_cp *= correction
 
             # Crude estimation of the error
-            crude_err = self._get_cl_crude_error(cl_cp+nl_cp, mean_mamb)
+            crude_err = self._get_cl_crude_error(cl_cov_cp, mean_mamb)
 
             tools.save_npz(fname, ell=ell, cl=cl, cl_cp=cl_cp, nl=nl,
                            nl_cp=nl_cp, cl_cov_cp=cl_cov_cp,
