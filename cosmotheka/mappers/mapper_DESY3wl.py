@@ -365,7 +365,7 @@ class MapperDESY3wl(MapperBase):
 
     def get_spin(self):
         return 2
-    
+
     # New code added for catalogue implementation
 
     def _get_nmt_catalog_field(self, mode=None, **kwargs):
@@ -378,7 +378,7 @@ class MapperDESY3wl(MapperBase):
             raise NotImplementedError(
                 "Catalog-based fields are only implemented for shear."
             )
-        
+
         # Positions (RA/Dec in degrees)
         pos = self.get_positions()
         ra = pos['ra']

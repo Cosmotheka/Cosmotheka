@@ -40,7 +40,7 @@ class MapperBase(object):
         # See ACTk case for an example
         self.mask_power = config.get('mask_power', 1)
         self.coords = config['coords']
-        self.catalog_enabled = config.get("catalog_enabled", False) # New code added for catalog implementation
+        self.catalog_enabled = config.get("catalog_enabled", False)
         self.mask = None
         self.signal_map = None
         # dndz needs to be defined for _get_shifted_nz. We should consider
@@ -246,22 +246,6 @@ class MapperBase(object):
                             templates=cont, n_iter=n_iter,
                             masked_on_input=self.masked_on_input)
 
-    #def get_nmt_field(self, **kwargs):
-    #    """
-    #    Returns an instance of Namaster field given a mapper's \
-    #    signal map, mask and beam.
-
-    #    Returns:
-    #        nmt_field (:class:`NaMaster.NmtField`): a Namaster \
-    #        field instance. \
-    #    """
-    #    if self.nmt_field is None:
-    #        self.nmt_field = self._get_nmt_field(signal=None, **kwargs)
-    #    return self.nmt_field
-
-
-    # New code added for catalog implementation
-
     def get_nmt_field(self, for_cov=False, **kwargs):
         """
         Returns an instance of Namaster field given a mapper's \
@@ -279,7 +263,7 @@ class MapperBase(object):
             if self.nmt_field is None:
                 self.nmt_field = self._get_nmt_field(signal=None, **kwargs)
             return self.nmt_field
-        
+
         # Option to use catalog-based fields for Cl estimation
         if self.catalog_enabled:
             if self.nmt_cat_field is None:
@@ -290,7 +274,7 @@ class MapperBase(object):
         if self.nmt_field is None:
             self.nmt_field = self._get_nmt_field(signal=None, **kwargs)
         return self.nmt_field
-    
+
     def _get_nmt_catalog_field(self, **kwargs):
         raise NotImplementedError(
             f"{self.__class__.__name__} does not support "

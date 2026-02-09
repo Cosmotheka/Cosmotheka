@@ -235,9 +235,7 @@ class Cl(ClBase):
             bpw_edges = np.append(bpw_edges, 3*nside)
         b = nmt.NmtBin.from_edges(bpw_edges[:-1], bpw_edges[1:])
         return b
-    
-    # New code added for catalogue implementation
-    # Previous function did not have use_maps argument
+
     def get_nmt_fields(self, use_maps=False):
         """
         Return the pymaster.NmtField instances of the correlated tracers.
@@ -274,7 +272,9 @@ class Cl(ClBase):
             Workspace with the mode-coupling matrix of both tracers
         """
         if self._w is None:
-            self._w = self._compute_workspace(read_unbinned_MCM=read_unbinned_MCM, use_maps=False)
+            self._w = self._compute_workspace(
+                read_unbinned_MCM=read_unbinned_MCM,
+                use_maps=False)
         return self._w
 
     def get_workspace_cov(self):
@@ -294,14 +294,16 @@ class Cl(ClBase):
             spin0 = self.data.data['cov'].get('spin0', False)
             if spin0 and (self.get_spins() != (0, 0)):
                 self._wcov = self._compute_workspace(spin0=spin0,
-                                                     read_unbinned_MCM=False, 
+                                                     read_unbinned_MCM=False,
                                                      use_maps=True)
             else:
-                self._wcov = self._compute_workspace(read_unbinned_MCM=False, use_maps=True)
+                self._wcov = self._compute_workspace(read_unbinned_MCM=False,
+                                                     use_maps=True)
 
         return self._wcov
 
-    def _compute_workspace(self, spin0=False, read_unbinned_MCM=True, use_maps=False):
+    def _compute_workspace(self, spin0=False,
+                           read_unbinned_MCM=True, use_maps=False):
         """
         Return the pymaster.NmtWorkspace with the mode-coupling matrix of the
         correlated fields.
@@ -325,16 +327,17 @@ class Cl(ClBase):
         mask1, mask2 = self.get_masks_names()
         if self._read_symmetric:
             mask1, mask2 = mask2, mask1
-        
-        #if spin0:
+
+        # if spin0:
         #    fname = os.path.join(self.outdir, f'w0__{mask1}__{mask2}.fits')
-        #else:
+        # else:
         #    fname = os.path.join(self.outdir, f'w__{mask1}__{mask2}.fits')
 
         # These three lines replace the commented out if/else statement above
         tag = "map" if use_maps else "data"
         spin_tag = "w0" if spin0 else "w"
-        fname = os.path.join(self.outdir, f'{spin_tag}_{tag}__{mask1}__{mask2}.fits')
+        fname = os.path.join(self.outdir,
+                             f'{spin_tag}_{tag}__{mask1}__{mask2}.fits')
 
         w = nmt.NmtWorkspace()
         if (not self.recompute_mcm) and os.path.isfile(fname):
@@ -446,7 +449,7 @@ class Cl(ClBase):
             f1, f2 = self.get_nmt_fields()
             f1c, f2c = self.get_nmt_fields(use_maps=True)
             # f1, f2   : data / catalogue fields (for Cl estimation)
-            # f1c, f2c : map-based fields (for covariance inputs)   
+            # f1c, f2c : map-based fields (for covariance inputs)
             w = self.get_workspace()
             wins = w.get_bandpower_windows()
             w_a = mapper1.get_mask()

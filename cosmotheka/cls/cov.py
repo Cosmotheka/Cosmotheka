@@ -137,9 +137,7 @@ class Cov:
         root = self.data.data["output"]
         outdir = os.path.join(root, "cov")
         return outdir
-    
-    # New code added for catalogue implementation
-    # Previous function did not have use_maps argument
+
     def get_covariance_workspace(self, save_cw=True):
         """
         Return the covariance workspace needed to compute the Gaussian
