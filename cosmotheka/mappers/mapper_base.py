@@ -32,6 +32,7 @@ class MapperBase(object):
         self.nside = config['nside']
         self.npix = hp.nside2npix(self.nside)
         self.nmt_field = None
+        self.nmt_cat_field = None
         self.beam = None
         self.custom_auto = False
         # Option introduced to modify the Mode Coupling Matrix
@@ -39,6 +40,7 @@ class MapperBase(object):
         # See ACTk case for an example
         self.mask_power = config.get('mask_power', 1)
         self.coords = config['coords']
+        self.catalog_enabled = config.get("catalog_enabled", False)
         self.mask = None
         self.signal_map = None
         # dndz needs to be defined for _get_shifted_nz. We should consider
@@ -244,15 +246,37 @@ class MapperBase(object):
                             templates=cont, n_iter=n_iter,
                             masked_on_input=self.masked_on_input)
 
-    def get_nmt_field(self, **kwargs):
+    def get_nmt_field(self, for_cov=False, **kwargs):
         """
         Returns an instance of Namaster field given a mapper's \
         signal map, mask and beam.
+
+        Parameters:
+            for_cov: if True, always use map-based fields. \
 
         Returns:
             nmt_field (:class:`NaMaster.NmtField`): a Namaster \
             field instance. \
         """
+        # Covariance always uses map-based fields
+        if for_cov:
+            if self.nmt_field is None:
+                self.nmt_field = self._get_nmt_field(signal=None, **kwargs)
+            return self.nmt_field
+
+        # Option to use catalog-based fields for Cl estimation
+        if self.catalog_enabled:
+            if self.nmt_cat_field is None:
+                self.nmt_cat_field = self._get_nmt_catalog_field(**kwargs)
+            return self.nmt_cat_field
+
+        # Fall back to map-based fields
         if self.nmt_field is None:
             self.nmt_field = self._get_nmt_field(signal=None, **kwargs)
         return self.nmt_field
+
+    def _get_nmt_catalog_field(self, **kwargs):
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not support "
+            "catalog-based NmtFields."
+            )

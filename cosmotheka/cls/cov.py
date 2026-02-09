@@ -173,8 +173,8 @@ class Cov:
                 return cw
 
         l_toeplitz, l_exact, dl_band = self.data.check_toeplitz("cov")
-        fA1, fB1 = self.clA1B1.get_nmt_fields()
-        fA2, fB2 = self.clA2B2.get_nmt_fields()
+        fA1, fB1 = self.clA1B1.get_nmt_fields(use_maps=True)
+        fA2, fB2 = self.clA2B2.get_nmt_fields(use_maps=True)
         cw.compute_coupling_coefficients(
             fA1,
             fA2,
