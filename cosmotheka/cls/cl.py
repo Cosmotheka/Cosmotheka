@@ -240,6 +240,11 @@ class Cl(ClBase):
         """
         Return the pymaster.NmtField instances of the correlated tracers.
 
+        Parameters
+        ----------
+        use_maps: bool
+            If True, compute the workspace using map-based fields.
+
         Return
         ------
         f1: pymaster.NmtField
@@ -328,13 +333,7 @@ class Cl(ClBase):
         if self._read_symmetric:
             mask1, mask2 = mask2, mask1
 
-        # if spin0:
-        #    fname = os.path.join(self.outdir, f'w0__{mask1}__{mask2}.fits')
-        # else:
-        #    fname = os.path.join(self.outdir, f'w__{mask1}__{mask2}.fits')
-
-        # These three lines replace the commented out if/else statement above
-        tag = "map" if use_maps else "data"
+        tag = "map" if use_maps else ""
         spin_tag = "w0" if spin0 else "w"
         fname = os.path.join(self.outdir,
                              f'{spin_tag}_{tag}__{mask1}__{mask2}.fits')
@@ -354,9 +353,6 @@ class Cl(ClBase):
             f2 = nmt.NmtField(msk2, None, spin=0)
         else:
             f1, f2 = self.get_nmt_fields(use_maps=use_maps)
-        if use_maps:
-            assert f1.maps is not None and f2.maps is not None, \
-                "Covariance workspace must be built from map-based NmtFields"
 
         w.compute_coupling_matrix(f1, f2, self.b,
                                   l_toeplitz=l_toeplitz, l_exact=l_exact,
