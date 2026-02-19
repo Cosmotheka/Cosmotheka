@@ -585,8 +585,8 @@ class Theory:
         tkk = self.get_ccl_tkka(ccl_trA1, ccl_trA2, ccl_trB1, ccl_trB2, kind)
 
         # For debugging: save tkk spline arrays
-        a, lk1, lk2, tkk_arr = tkk.get_spline_arrays()
-        np.savez_compressed('/mnt/users/gravityls_3/codes/Cosmotheka/output/test_NG/tk3D_cNG_DESY3wl_DESY3wl_debug.npz', a=a, lk1=lk1, lk2=lk2, tkk=tkk_arr)
+        # a, lk1, lk2, tkk_arr = tkk.get_spline_arrays()
+        # np.savez_compressed('/mnt/users/gravityls_3/codes/Cosmotheka/output/test_NG/tk3D_cNG_DESY3wl_DESY3wl_debug.npz', a=a, lk1=lk1, lk2=lk2, tkk=tkk_arr)
 
         return ccl.angular_cl_cov_cNG(
             cosmo,
