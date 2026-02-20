@@ -758,6 +758,10 @@ class Cl(ClBase):
         mask_cmbk = mapper_cmbk.get_mask()
         mask_x = mapper_x.get_mask()
 
+        # Read the ell eff to store it in the same file, to facilitate
+        # debugging
+        ell = self.b.get_effective_ells()
+
         # Get workspace
         w = self.get_workspace()
 
@@ -792,11 +796,13 @@ class Cl(ClBase):
 
             save_rerun_data(mapper_cmbk, fname_i, 'NPZ',
                             {'Tl': Tli,
-                             'Tl_cp': Tli_cp})
+                             'Tl_cp': Tli_cp,
+                             'ell': ell})
             Tl.append(Tli)
             Tl_cp.append(Tli_cp)
 
-        out = {'Tl': np.mean(Tl, axis=0), 'Tl_cp': np.mean(Tl_cp, axis=0)}
+        out = {'Tl': np.mean(Tl, axis=0), 'Tl_cp': np.mean(Tl_cp, axis=0),
+               'ell': ell}
         save_rerun_data(mapper_cmbk, fname, 'NPZ', out)
 
         return out['Tl'], out['Tl_cp']

@@ -136,13 +136,24 @@ class MapperP18CMBK(MapperBase):
         rec_sims_path = self.config['sims_rec_path']
         input_sims_path = self.config['sims_in_path']
 
+        # Using glob because it's handy. If the naming convention is wrong,
+        # this might silently mix rec and input sims and spoil the transfer 
+        # function.
         rec_sims = sorted(glob.glob(rec_sims_path + '/' + 'sim_klm_*.fits'))
         input_sims = sorted(glob.glob(input_sims_path + '/' + 'sky_klm_*.fits'))
 
-        print(f"Found {len(rec_sims)} reconstructed sims and {len(input_sims)}"
-              " input sims")
+        nrec = len(rec_sims)
+        ninput = len(input_sims)
+        print(f"Found {nrec} reconstructed sims and {ninput} input sims")
+
+        # Check that there are the same number of sims
+        if len(rec_sims) != len(input_sims):
+            raise ValueError("Number of reconstructed and input sims must be "
+                             "the same. Found {nrec} reconstructed and "
+                             "{ninput} input sims.")
 
         for i in range(len(rec_sims)):
+            print("Loading sim {}/{}".format(i+1, len(rec_sims)))
             kappa_rec_alm = self._get_klm(rec_sims[i])
             kappa_input_alm = self._get_klm(input_sims[i])
 
