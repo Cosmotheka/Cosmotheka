@@ -765,21 +765,26 @@ class Cl(ClBase):
         # Get workspace
         w = self.get_workspace()
 
-        # Loop over all
+        # Get the list of simulations and loop over them
+        rec_sims, input_sims = mapper_cmbk._get_sims_fnames()
+        nsims = len(rec_sims)
         Tl = []
         Tl_cp = []
-        iterator = mapper_cmbk.get_sims()
-        for i, (kappa_rec_map, kappa_input_map) in enumerate(iterator):
-            # Check if this correction has already been computed for this simulation
+        for i, (rec_sim, input_sim) in enumerate(zip(rec_sims, input_sims)):
             fname_i = f"Tl_{mn1}_{mn2}_sim{i}.npz"
+            # Check if this correction has already been computed.
             d = get_rerun_data(mapper_cmbk, fname_i, 'NPZ')
             if d is not None:
-                print(f"Loading correction for Tl #{i+1} from file", flush=True)
+                print(f"Loading correction for Tl {i+1}/{nsims} from file",
+                      flush=True)
                 Tl.append(d['Tl'])
                 Tl_cp.append(d['Tl_cp'])
                 continue
-            
-            print(f"Computing Tl #{i+1}", flush=True)
+
+            # If not already computed, compute it.
+            print(f"Computing Tl {i+1} / {nsims}", flush=True)
+            kappa_input_map = mapper_cmbk._get_map_from_klm_file(input_sim)
+            kappa_rec_map = mapper_cmbk._get_map_from_klm_file(rec_sim)
 
             kin_gmask = nmt.NmtField(mask_x, [kappa_input_map])  # K_in,g-mask
             krec = nmt.NmtField(mask_cmbk, [kappa_rec_map])  # K_rec

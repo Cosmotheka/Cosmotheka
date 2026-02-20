@@ -42,27 +42,8 @@ class MapperP18CMBK(MapperBase):
         self.nl_coupled = None
         self.cl_fid = None
 
-    def _get_klm(self, file):
-        # Read alms and rotate if needed
-        klm, lmax = hp.read_alm(file, return_mmax=True)
-        # First element may be nan. Fix that.
-        klm[0] = 0+0j
-        if self.rot is not None:
-            klm = self.rot.rotate_alm(klm)
-        # Filter if lmax is too large
-        if lmax > 3*self.nside-1:
-            fl = np.ones(lmax+1)
-            fl[3*self.nside:] = 0
-            klm = hp.almxfl(klm, fl, inplace=True)
-
-        klm = klm
-
-        return klm
-
     def _get_signal_map(self):
-        klm = self._get_klm(self.config['file_klm'])
-        signal_map = np.array([hp.alm2map(klm, self.nside)])
-        return signal_map
+        return self._get_map_from_klm_file(self.config['file_klm'])
 
     def _get_mask(self):
         msk = hp.read_map(self.config['file_mask'],
@@ -127,11 +108,13 @@ class MapperP18CMBK(MapperBase):
     def get_spin(self):
         return 0
 
-    def get_sims(self):
+    def _get_sims_fnames(self):
         """
-        Returns an iterator of paths to the reconstructed and input kappa 
-        simulations for the Monte Carlo correction of the CMBk
-        cross-correlation.
+        Returns the paths of the reconstructed and input simulation maps.
+
+        Returns:
+            rec_sims (List): list of paths to reconstructed simulation maps
+            input_sims (List): list of paths to input simulation maps
         """
         rec_sims_path = self.config['sims_rec_path']
         input_sims_path = self.config['sims_in_path']
@@ -144,6 +127,7 @@ class MapperP18CMBK(MapperBase):
 
         nrec = len(rec_sims)
         ninput = len(input_sims)
+
         print(f"Found {nrec} reconstructed sims and {ninput} input sims")
 
         # Check that there are the same number of sims
@@ -152,14 +136,4 @@ class MapperP18CMBK(MapperBase):
                              "the same. Found {nrec} reconstructed and "
                              "{ninput} input sims.")
 
-        for i in range(len(rec_sims)):
-            print("Loading sim {}/{}".format(i+1, len(rec_sims)))
-            kappa_rec_alm = self._get_klm(rec_sims[i])
-            kappa_input_alm = self._get_klm(input_sims[i])
-
-            kappa_input_map = np.array([hp.alm2map(kappa_input_alm,
-                                                   self.nside)])
-            kappa_rec_map = np.array([hp.alm2map(kappa_rec_alm,
-                                                 self.nside)])
-
-            yield kappa_rec_map, kappa_input_map
+        return rec_sims, input_sims

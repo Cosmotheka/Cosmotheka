@@ -46,18 +46,7 @@ class MapperACTDR6k(MapperBase):
         )
 
     def _get_signal_map(self):
-        klm, mmax = hp.read_alm(self.klm_file, return_mmax=True)
-        klm = klm.astype(np.complex128)
-        klm = np.nan_to_num(klm)
-
-        fl = np.ones(mmax + 1)
-        fl[3 * self.nside :] = 0
-        hp.almxfl(klm, fl, inplace=True)
-
-        map = hp.alm2map(klm, nside=self.nside)
-        map = rotate_map(map, self.rot)
-
-        return map
+        return self._get_map_from_klm_file(self.klm_file)
 
     def _get_mask(self):
         mask = hp.read_map(self.file_mask)
