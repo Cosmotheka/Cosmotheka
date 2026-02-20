@@ -1,3 +1,5 @@
+import glob
+
 from .mapper_base import MapperBase
 from scipy.interpolate import interp1d
 import numpy as np
@@ -20,6 +22,8 @@ class MapperP18CMBK(MapperBase):
         - mask_apotype: `"C12"`
         - mask_name: `"mask_P18kappa"`
         - path_rerun: `".../Datasets/Planck_lensing/Lensing2018/xcell_runs"`
+        - sims_rec_path = '/mnt/extraspace/vonhausegger/Datasets/Planck_lensing/COM_Lensing-SimMap_4096_R3.00'
+        - sims_in_path = '/mnt/extraspace/vonhausegger/Datasets/Planck_lensing/COM_Lensing-SimMap-inputs_4096_R3.00/'
 
     """
     map_name = 'P18CMBK'
@@ -37,28 +41,26 @@ class MapperP18CMBK(MapperBase):
         # Defaults
         self.nl_coupled = None
         self.cl_fid = None
-        self.klm = None
 
-    def _get_klm(self):
-        if self.klm is None:
-            # Read alms and rotate if needed
-            klm, lmax = hp.read_alm(self.config['file_klm'], return_mmax=True)
-            # First element may be nan. Fix that.
-            klm[0] = 0+0j
-            if self.rot is not None:
-                klm = self.rot.rotate_alm(klm)
-            # Filter if lmax is too large
-            if lmax > 3*self.nside-1:
-                fl = np.ones(lmax+1)
-                fl[3*self.nside:] = 0
-                klm = hp.almxfl(klm, fl, inplace=True)
+    def _get_klm(self, file):
+        # Read alms and rotate if needed
+        klm, lmax = hp.read_alm(file, return_mmax=True)
+        # First element may be nan. Fix that.
+        klm[0] = 0+0j
+        if self.rot is not None:
+            klm = self.rot.rotate_alm(klm)
+        # Filter if lmax is too large
+        if lmax > 3*self.nside-1:
+            fl = np.ones(lmax+1)
+            fl[3*self.nside:] = 0
+            klm = hp.almxfl(klm, fl, inplace=True)
 
-            self.klm = klm
+        klm = klm
 
-        return self.klm
+        return klm
 
     def _get_signal_map(self):
-        klm = self._get_klm()
+        klm = self._get_klm(self.config['file_klm'])
         signal_map = np.array([hp.alm2map(klm, self.nside)])
         return signal_map
 
@@ -124,3 +126,29 @@ class MapperP18CMBK(MapperBase):
 
     def get_spin(self):
         return 0
+
+    def get_sims(self):
+        """
+        Returns an iterator of paths to the reconstructed and input kappa 
+        simulations for the Monte Carlo correction of the CMBk
+        cross-correlation.
+        """
+        rec_sims_path = self.config['sims_rec_path']
+        input_sims_path = self.config['sims_in_path']
+
+        rec_sims = sorted(glob.glob(rec_sims_path + '/' + 'sim_klm_*.fits'))
+        input_sims = sorted(glob.glob(input_sims_path + '/' + 'sky_klm_*.fits'))
+
+        print(f"Found {len(rec_sims)} reconstructed sims and {len(input_sims)}"
+              " input sims")
+
+        for i in range(len(rec_sims)):
+            kappa_rec_alm = self._get_klm(rec_sims[i])
+            kappa_input_alm = self._get_klm(input_sims[i])
+
+            kappa_input_map = np.array([hp.alm2map(kappa_input_alm,
+                                                   self.nside)])
+            kappa_rec_map = np.array([hp.alm2map(kappa_rec_alm,
+                                                 self.nside)])
+
+            yield kappa_rec_map, kappa_input_map

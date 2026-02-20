@@ -6,6 +6,7 @@ import numpy as np
 import pymaster as nmt
 import os
 import warnings
+from ..mappers.utils import get_rerun_data, save_rerun_data
 
 
 class ClBase():
@@ -536,6 +537,20 @@ class Cl(ClBase):
                 cl_cov_12_cp *= correction
                 cl_cov_22_cp *= correction
 
+            d1, d2 = self.get_dtypes()
+            iscmbk1 = d1 == 'cmb_convergence'
+            iscmbk2 = d2 == 'cmb_convergence'
+
+            if (iscmbk1 or iscmbk2) and not (iscmbk1 and iscmbk2):
+                # In cross-correlation, we need to correct for the survey mask
+                # see Eq. I11 2309.05659
+                # TODO: For now, we only apply it to the decoupled Cl,
+                # but this will not propagate to the Cov, although the effect
+                # is small
+                correction_cmb, correction_cmb_cp = self.get_correction_cmbk()
+                cl *= correction_cmb
+                # cl_cp *= correction_cmb_cp
+
             # Crude estimation of the error
             crude_err = self._get_cl_crude_error(cl_cov_cp, mean_mamb)
 
@@ -544,7 +559,8 @@ class Cl(ClBase):
                            cl_cov_11_cp=cl_cov_11_cp,
                            cl_cov_12_cp=cl_cov_12_cp,
                            cl_cov_22_cp=cl_cov_22_cp, wins=wins,
-                           correction=correction, mean_mamb=mean_mamb,
+                           correction=correction,
+                           correction_cmb=correction_cmb,
                            crude_err=crude_err)
             self.recompute_cls = False
 
@@ -713,6 +729,77 @@ class Cl(ClBase):
         if self.ell is None:
             self.get_cl_file()
         return self.wins
+
+    def get_correction_cmbk(self):
+        """
+        Return the Monte Carlo correction for CMBk (Eq. I11 2309.05659). 
+        We correct the effect of the mask of the other field.
+        """
+        # TODO: consider moving this function to the mapper level.
+        # Get masks
+        m1, m2 = self.get_mappers()
+        if m1.get_dtype() == 'cmb_convergence':
+            mapper_cmbk = m1
+            mapper_x = m2
+        elif m2.get_dtype() == 'cmb_convergence':
+            mapper_cmbk = m2
+            mapper_x = m1
+        else:
+            raise ValueError('Neither of the two tracers is a CMB convergence!')
+
+        # Check if the correction has already been computed
+        mn1, mn2 = self.get_masks_names()
+        fname = f"Tl_{mn1}_{mn2}.npz"
+        d = get_rerun_data(mapper_cmbk, fname, 'NPZ')
+        if d is not None:
+            return d['Tl'], d['Tl_cp']
+
+        # Otherwise, compute it
+        mask_cmbk = mapper_cmbk.get_mask()
+        mask_x = mapper_x.get_mask()
+
+        # Get workspace
+        w = self.get_workspace()
+
+        # Loop over all
+        Tl = []
+        Tl_cp = []
+        iterator = mapper_cmbk.get_sims()
+        for i, (kappa_rec_map, kappa_input_map) in enumerate(iterator):
+            # Check if this correction has already been computed for this simulation
+            fname_i = f"Tl_{mn1}_{mn2}_sim{i}.npz"
+            d = get_rerun_data(mapper_cmbk, fname_i, 'NPZ')
+            if d is not None:
+                print(f"Loading correction for Tl #{i+1} from file", flush=True)
+                Tl.append(d['Tl'])
+                Tl_cp.append(d['Tl_cp'])
+                continue
+            
+            print(f"Computing Tl #{i+1}", flush=True)
+
+            kin_gmask = nmt.NmtField(mask_x, [kappa_input_map])  # K_in,g-mask
+            krec = nmt.NmtField(mask_cmbk, [kappa_rec_map])  # K_rec
+            kin_kmask = nmt.NmtField(mask_cmbk, [kappa_input_map]) # K_in,k-mask
+
+            cl_kin_kmask__kin_gmask_cp = nmt.compute_coupled_cell(kin_kmask, kin_gmask)
+            cl_kin_kmask__kin_gmask = w.decouple_cell(cl_kin_kmask__kin_gmask_cp)
+
+            cl_krec__kin_gmask_cp = nmt.compute_coupled_cell(krec, kin_gmask)
+            cl_krec__kin_gmask = w.decouple_cell(cl_krec__kin_gmask_cp)
+
+            Tli = cl_kin_kmask__kin_gmask/cl_krec__kin_gmask
+            Tli_cp = cl_kin_kmask__kin_gmask_cp/cl_krec__kin_gmask_cp
+
+            save_rerun_data(mapper_cmbk, fname_i, 'NPZ',
+                            {'Tl': Tli,
+                             'Tl_cp': Tli_cp})
+            Tl.append(Tli)
+            Tl_cp.append(Tli_cp)
+
+        out = {'Tl': np.mean(Tl, axis=0), 'Tl_cp': np.mean(Tl_cp, axis=0)}
+        save_rerun_data(mapper_cmbk, fname, 'NPZ', out)
+
+        return out['Tl'], out['Tl_cp']
 
 
 class ClFid(ClBase):
