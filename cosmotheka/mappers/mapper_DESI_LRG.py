@@ -153,7 +153,7 @@ class MapperDESILRG(MapperBase):
         lrg_hp_idx = hp.ang2pix(
             self._stardens_nside, cat["RA"], cat["DEC"], lonlat=True
         )
-        mask = np.in1d(lrg_hp_idx, self._stardens_good_hp_idx)
+        mask = np.isin(lrg_hp_idx, self._stardens_good_hp_idx)
 
         return mask
 
