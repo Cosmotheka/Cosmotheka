@@ -1,4 +1,4 @@
-mapper_class: 'MapperNPIPEnu'
+mapper_class: 'MapperPlanckNPIPE'
 file_map: /mnt/extraspace/alaposta/planck_maps/npipe6v20_143_map.fits
 file_hm1: /mnt/extraspace/alaposta/planck_maps/npipe6v20A_143_map.fits
 file_hm2: /mnt/extraspace/alaposta/planck_maps/npipe6v20B_143_map.fits
@@ -10,7 +10,5 @@ file_ps_mask: /mnt/extraspace/damonge/Datasets/Planck_masks/HFI_Mask_PointSrc_20
 gp_mask_mode: '0.6'
 freq: 'F143'
 ps_mask_mode: ['F100', 'F143', 'F217', 'F353']
-mask_name: NPIPEnu
+mask_name: PlanckNPIPE
 path_rerun: '/mnt/extraspace/alaposta/planck_maps/cosmotheka_runs_40percent'
-# [30,    44,    70,    100,  143,  353,  217,  545]
-# [32.29, 27.94, 13.08, 9.66, 7.22, 4.92, 4.90, 4.67]
