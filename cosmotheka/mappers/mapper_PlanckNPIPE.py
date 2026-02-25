@@ -4,7 +4,7 @@ import healpy as hp
 import numpy as np
 
 
-class MapperNPIPEnu(MapperPlanckBase):
+class MapperPlanckNPIPE(MapperPlanckBase):
     """
     path = `".../Datasets/Planck_SMICA"`
     **Config**
@@ -27,7 +27,7 @@ class MapperNPIPEnu(MapperPlanckBase):
         - mask_name: `mask_P18SMICA`
         - path_rerun: `'.../Datasets/Planck_SMICA/xcell_runs'`
     """
-    map_name = "NPIPE_MF"
+    map_name = "PlanckNPIPE"
 
     def __init__(self, config):
         self._get_Planck_defaults(config)
@@ -97,12 +97,6 @@ class MapperNPIPEnu(MapperPlanckBase):
         return m
 
     def _generate_hm_maps(self):
-
-        # hm1_map = self._read_and_rotate(self.file_hm1)
-        # hm1_map = self._remove_dipole(hm1_map)
-
-        # hm2_map = self._read_and_rotate(self.file_hm2)
-        # hm2_map = self._remove_dipole(hm2_map)
         hm1_map = self._read_and_remove_dipole(self.file_hm1)
         hm1_map = self._rotate_map(hm1_map)
         hm2_map = self._read_and_remove_dipole(self.file_hm2)
@@ -111,9 +105,6 @@ class MapperNPIPEnu(MapperPlanckBase):
         return np.array([hm1_map, hm2_map])
 
     def _get_signal_map(self):
-
-        # signal_map = self._read_and_rotate(self.file_map)
-        # signal_map = self._remove_dipole(signal_map)
         signal_map = self._read_and_remove_dipole(self.file_map)
         signal_map = self._rotate_map(signal_map)
 
