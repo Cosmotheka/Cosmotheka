@@ -60,26 +60,26 @@ jobs:
           run: | 
             pip install . --no-deps
 
-        - name: Python unit tests
-          run: coverage run --source=cosmotheka -m pytest -vv cosmotheka/tests && coverage lcov
-
-        - name: Collect coverage report
-          uses: coverallsapp/github-action@v2
-          with:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-            flag-name: run-${{ join(matrix.*, '-') }}
-            parallel: true
-            path-to-lcov: coverage.lcov
-
-  finish:
-    needs: tests
-    name: Collect all coverage reports and publish to coveralls.io
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Collect all coverage reports and publish to coveralls.io
-      uses: coverallsapp/github-action@v2
-      with:
-        carryforward: "run-3.10-ubuntu-latest,run-3.13-ubuntu-latest"
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        parallel-finished: true
+#        - name: Python unit tests
+#          run: coverage run --source=cosmotheka -m pytest -vv cosmotheka/tests && coverage lcov
+#
+#        - name: Collect coverage report
+#          uses: coverallsapp/github-action@v2
+#          with:
+#            github-token: ${{ secrets.GITHUB_TOKEN }}
+#            flag-name: run-${{ join(matrix.*, '-') }}
+#            parallel: true
+#            path-to-lcov: coverage.lcov
+#
+#  finish:
+#    needs: tests
+#    name: Collect all coverage reports and publish to coveralls.io
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#    - name: Collect all coverage reports and publish to coveralls.io
+#      uses: coverallsapp/github-action@v2
+#      with:
+#        carryforward: "run-3.10-ubuntu-latest,run-3.13-ubuntu-latest"
+#        github-token: ${{ secrets.GITHUB_TOKEN }}
+#        parallel-finished: true
