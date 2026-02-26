@@ -6,7 +6,8 @@ class ConcentrationDuffy08M500c(ccl.halos.Concentration):
     """Concentration-mass relation by Duffy et al. 2008
     (arXiv:0804.2486) extended to Delta = 500-critical.
     """
-    name = 'Duffy08M500c'
+
+    name = "Duffy08M500c"
 
     def __init__(self, *, mass_def=None):
         """
@@ -23,7 +24,7 @@ class ConcentrationDuffy08M500c(ccl.halos.Concentration):
         Set the mass definition mass_def parameter to the default
         ccl.halos.MassDef(500, 'critical')
         """
-        self.mass_def = ccl.halos.MassDef(500, 'critical')
+        self.mass_def = ccl.halos.MassDef(500, "critical")
 
     def _check_mass_def_strict(self, mass_def):
         """
@@ -41,7 +42,7 @@ class ConcentrationDuffy08M500c(ccl.halos.Concentration):
             True if mass_def is different to the default. False, elsewise.
 
         """
-        if (mass_def.Delta != 500) or (mass_def.rho_type != 'critical'):
+        if (mass_def.Delta != 500) or (mass_def.rho_type != "critical"):
             return True
         return False
 
@@ -68,15 +69,16 @@ class ConcentrationDuffy08M500c(ccl.halos.Concentration):
             Scale factor
         """
         # Same as Eq. 4 of the paper.
-        M_pivot_inv = cosmo.cosmo.params.h * 5E-13
-        return self.A * (M * M_pivot_inv)**self.B * a**(-self.C)
+        M_pivot_inv = cosmo.cosmo.params.h * 5e-13
+        return self.A * (M * M_pivot_inv) ** self.B * a ** (-self.C)
 
 
-class Theory():
+class Theory:
     """
     Theory class. It returns theory quantities (e.g. Cell or analytical
     approximations for the covariance)
     """
+
     def __init__(self, data):
         """
         Parameters
@@ -84,9 +86,15 @@ class Theory():
         data: dict
             Configuration dictionary (e.g. read yaml)
         """
-        self.config = data['cov']['fiducial']
+        self.config = data["cov"]["fiducial"]
         self._cosmo = None
         self._hm_par = None
+        # self.k_s = np.geomspace(1e-4, 1e2, 512)
+        # self.lk_s = np.log(self.k_s)
+        # self.a_arr = 1.0 / (1 + np.linspace(0.0, 6.0, 30)[::-1])
+        # self.k_arr = None
+        self.lk_arr = None
+        self.a_arr = None
 
     def get_cosmo_ccl(self):
         """
@@ -98,8 +106,47 @@ class Theory():
             ccl.Cosmology instance
         """
         if self._cosmo is None:
-            self._cosmo = ccl.Cosmology(**(self.config['cosmo']))
+            self._cosmo = ccl.Cosmology(**(self.config["cosmo"]))
         return self._cosmo
+
+    # def get_k_arr(self):
+    #     """
+    #     Return the k array
+    #     """
+    #     if self.k_arr is None:
+    #         lk = self.get_lk_arr()
+    #         self.k_arr = np.exp(lk)
+
+    #     return self.k_arr
+    
+    def get_lk_arr(self):
+        """
+        Return the log(k) array
+        """
+        if self.lk_arr is None:
+            cosmo = self.get_cosmo_ccl()
+            # kmax should be read from dndz but for now hardcoded
+            lkmax = np.log(100) 
+            lk = cosmo.get_pk_spline_lk()
+            sel = lk <= lkmax
+            self.lk_arr = lk[sel]
+
+        return self.lk_arr
+
+    def get_a_arr(self):
+        """
+        Return the a_arr array
+        """
+        if self.a_arr is None:
+            cosmo = self.get_cosmo_ccl()
+            a = cosmo.get_pk_spline_a()
+            z_max = 6.0  # It should be read from dndz but for now hardcoded
+
+            # Cut the array for efficiency
+            sel = 1 / a <= z_max + 1
+            self.a_arr = a[sel]
+
+        return self.a_arr
 
     def get_halomodel_params(self):
         """
@@ -124,57 +171,60 @@ class Theory():
         if self._hm_par is not None:
             return self._hm_par
 
-        if 'halo_model' not in self.config:
-            self.config['halo_model'] = {}
-        hmp = self.config['halo_model']
+        if "halo_model" not in self.config:
+            self.config["halo_model"] = {}
+        hmp = self.config["halo_model"]
 
-        if 'mass_def' not in hmp:
-            md = ccl.halos.MassDef.from_name('200m')
+        if "mass_def" not in hmp:
+            md = ccl.halos.MassDef.from_name("200m")
         else:
-            mds = hmp['mass_def']
+            mds = hmp["mass_def"]
             Delta = int(mds[:-1])
-            if mds[-1] == 'm':
-                rho_type = 'matter'
-            elif mds[-1] == 'c':
-                rho_type = 'critical'
+            if mds[-1] == "m":
+                rho_type = "matter"
+            elif mds[-1] == "c":
+                rho_type = "critical"
             else:
                 raise ValueError("Unknown density type %s" % (mds[-1]))
             md = ccl.halos.MassDef(Delta, rho_type)
 
-        mfc = ccl.halos.MassFunc.from_name(hmp.get('mass_function',
-                                                   'Tinker10'))
-        mfc = ccl.halos.MassFunc.from_name(hmp.get('mass_function',
-                                                   'Tinker10'))
+        mfc = ccl.halos.MassFunc.from_name(
+            hmp.get("mass_function", "Tinker10")
+        )
         mf = mfc(mass_def=md)
 
-        hbc = ccl.halos.HaloBias.from_name(hmp.get('halo_bias', 'Tinker10'))
+        hbc = ccl.halos.HaloBias.from_name(hmp.get("halo_bias", "Tinker10"))
         hb = hbc(mass_def=md)
 
         # We also need an NFW profile to handle certain cases
-        cmc = ccl.halos.Concentration.from_name(hmp.get('concentration',
-                                                        'Duffy08'))
+        cmc = ccl.halos.Concentration.from_name(
+            hmp.get("concentration", "Duffy08")
+        )
         cm = cmc(mass_def=md)
         pNFW = ccl.halos.HaloProfileNFW(mass_def=md, concentration=cm)
         p2pt = ccl.halos.Profile2pt()
 
         # Halo model calculator
-        hmc = ccl.halos.HMCalculator(mass_function=mf, halo_bias=hb,
-                                     mass_def=md)
+        hmc = ccl.halos.HMCalculator(
+            mass_function=mf, halo_bias=hb, mass_def=md
+        )
 
         # Transition smoothing
-        alpha = hmp.get('alpha_HMCODE', 0.7)
+        alpha = hmp.get("alpha_HMCODE", 0.7)
         # Small-k damping
-        klow = hmp.get('k_suppress', 0.01)
+        klow = hmp.get("k_suppress", 0.01)
 
-        self._hm_par = {'mass_def': md,
-                        'mass_func': mf,
-                        'halo_bias': hb,
-                        'cM': cm,
-                        'prof_NFW': pNFW,
-                        'prof_2pt': p2pt,
-                        'calculator': hmc,
-                        'alpha': (lambda a: alpha),
-                        'k_suppress': (lambda a: klow)}
+        self._hm_par = {
+            "mass_def": md,
+            "mass_func": mf,
+            "halo_bias": hb,
+            "cM": cm,
+            "prof_NFW": pNFW,
+            "prof_2pt": p2pt,
+            "calculator": hmc,
+            "alpha": (lambda a: alpha),
+            "k_suppress": (lambda a: klow),
+        }
         return self._hm_par
 
     def compute_tracer_ccl(self, name, tracer, mapper):
@@ -200,34 +250,42 @@ class Theory():
              - 'ccl_pr_2pt': Instance of ccl.halos.profiles_2pt
              - 'with_hm': True if halo model is used (i.e. if 'use_halo_model'
                in tracer config
+             - 'is_number_counts': True if the tracer is galaxy_density
+
         """
         cosmo = self.get_cosmo_ccl()
         hm_par = self.get_halomodel_params()
 
         dtype = mapper.get_dtype()
-        ccl_pr = hm_par['prof_NFW']
-        ccl_pr_2pt = hm_par['prof_2pt']
-        with_hm = tracer.get('use_halo_model', False)
+        ccl_pr = hm_par["prof_NFW"]
+        ccl_pr_2pt = hm_par["prof_2pt"]
+        with_hm = tracer.get("use_halo_model", False)
         # Get Tracers
-        if dtype == 'galaxy_density':
+        if dtype == "galaxy_density":
             # Import z, pz
             z, pz = mapper.get_nz(dz=0)
             bias = (z, np.ones_like(z))
             mag_bias = None
-            mag_s = tracer.get('magnif_s', None)
+            mag_s = tracer.get("magnif_s", None)
             if mag_s:
                 mag_bias = (z, np.ones_like(z) * mag_s)
             # Get tracer
-            ccl_tr = ccl.NumberCountsTracer(cosmo, has_rsd=False,
-                                            dndz=(z, pz), bias=bias,
-                                            mag_bias=mag_bias)
+            ccl_tr = ccl.NumberCountsTracer(
+                cosmo,
+                has_rsd=False,
+                dndz=(z, pz),
+                bias=bias,
+                mag_bias=mag_bias,
+            )
             if with_hm:
-                hod_pars = tracer.get('hod_params', {})
-                ccl_pr = ccl.halos.HaloProfileHOD(mass_def=hm_par['mass_def'],
-                                                  concentration=hm_par['cM'],
-                                                  **hod_pars)
+                hod_pars = tracer.get("hod_params", {})
+                ccl_pr = ccl.halos.HaloProfileHOD(
+                    mass_def=hm_par["mass_def"],
+                    concentration=hm_par["cM"],
+                    **hod_pars,
+                )
                 ccl_pr_2pt = ccl.halos.Profile2ptHOD()
-        elif dtype == 'galaxy_shear':
+        elif dtype == "galaxy_shear":
             # Import z, pz
             z, pz = mapper.get_nz(dz=0)
             # # Calculate bias IA
@@ -237,32 +295,36 @@ class Theory():
                 # TODO: Improve this in yml file
                 A, eta, z0 = config_ia
                 # pyccl2 -> has already the factor inside. Only needed bz
-                bz = A*((1.+z)/(1.+z0))**eta*0.0139/0.013872474
+                bz = A * ((1.0 + z) / (1.0 + z0)) ** eta * 0.0139 / 0.013872474
                 ia_bias = (z, bz)
             # Get tracer
-            ccl_tr = ccl.WeakLensingTracer(cosmo, dndz=(z, pz),
-                                           ia_bias=ia_bias)
-        elif dtype == 'cmb_convergence':
+            ccl_tr = ccl.WeakLensingTracer(
+                cosmo, dndz=(z, pz), ia_bias=ia_bias
+            )
+        elif dtype == "cmb_convergence":
             # TODO: correct z_source
             ccl_tr = ccl.CMBLensingTracer(cosmo, z_source=1100)
-        elif dtype == 'cmb_tSZ':
-            ccl_tr = ccl.tSZTracer(cosmo, z_max=3.)
+        elif dtype == "cmb_tSZ":
+            ccl_tr = ccl.tSZTracer(cosmo, z_max=3.0)
             if with_hm:
-                pars = tracer.get('gnfw_params', {})
+                pars = tracer.get("gnfw_params", {})
                 ccl_pr = ccl.halos.HaloProfilePressureGNFW(**pars)
         else:
-            raise ValueError('Type of tracer not recognized. It can be \
+            raise ValueError(
+                "Type of tracer not recognized. It can be \
                              galaxy_density, galaxy_shear, cmb_tSZ, or \
-                             cmb_convergence!')
-        return {'name': name,
-                'ccl_tr': ccl_tr,
-                'ccl_pr': ccl_pr,
-                'ccl_pr_2pt': ccl_pr_2pt,
-                'with_hm': with_hm,
-                }
+                             cmb_convergence!"
+            )
+        return {
+            "name": name,
+            "ccl_tr": ccl_tr,
+            "ccl_pr": ccl_pr,
+            "ccl_pr_2pt": ccl_pr_2pt,
+            "with_hm": with_hm,
+            "is_number_counts": dtype == "galaxy_density",
+        }
 
-    def get_ccl_tkka(self, ccl_trA1, ccl_trA2, ccl_trB1, ccl_trB2,
-                     kind='1h'):
+    def get_ccl_tkka(self, ccl_trA1, ccl_trA2, ccl_trB1, ccl_trB2, kind=None):
         """
         Return the trispectrum of four given tracers (cl of tracers A1, A2 and
         cl of tracers B1, B2)
@@ -281,9 +343,10 @@ class Theory():
         ccl_trB2: dict
             Dictionary with the ccl information of tracer B2. See
             `compute_tracer_ccl` output.
-        kind: str
-            Halo model term: '1h', '2h', '3h' or '4h' for the 1-, 2-, 3- and
-            4-halo terms.
+        kind: str or None
+            Kind of NG covariance to compute. If None, compute the full NG
+            covariance. Else, halo model term: '1h', '2h', '3h' or '4h' for
+            the 1-, 2-, 3- and 4-halo terms.
 
         Return
         ------
@@ -291,36 +354,121 @@ class Theory():
             Trispectrum of the four tracers
         """
         # Returns trispectrum for one of the non-Gaussian covariance terms.
-        if kind not in ['1h']:
-            raise NotImplementedError(f"Non-Gaussian term {kind} "
-                                      "not supported.")
-
         cosmo = self.get_cosmo_ccl()
         hm_par = self.get_halomodel_params()
 
-        pA1 = ccl_trA1['ccl_pr']
-        pA2 = ccl_trA2['ccl_pr']
-        if ccl_trA1['name'] == ccl_trA2['name']:
-            pr2ptA = ccl_trA1['ccl_pr_2pt']
+        # Profiles
+        pA1 = ccl_trA1["ccl_pr"]
+        pA2 = ccl_trA2["ccl_pr"]
+        pB1 = ccl_trB1["ccl_pr"]
+        pB2 = ccl_trB2["ccl_pr"]
+
+        # Profiles 2pt and check if some of them are the same.
+        # I believe that initializing them does not consume time, so we 
+        # avoid cherry-picking here for the different kinds.
+        # 12
+        if ccl_trA1["name"] == ccl_trA2["name"]:
+            pr2ptA = ccl_trA1["ccl_pr_2pt"]
             pA2 = pA1
         else:
-            pr2ptA = hm_par['prof_2pt']
-        pB1 = ccl_trB1['ccl_pr']
-        pB2 = ccl_trB2['ccl_pr']
-        if ccl_trB1['name'] == ccl_trB2['name']:
-            pr2ptB = ccl_trB1['ccl_pr_2pt']
+            pr2ptA = hm_par["prof_2pt"]
+        # 13
+        if ccl_trA1["name"] == ccl_trB1["name"]:
+            prof13_2pt = ccl_trA1["ccl_pr_2pt"]
+            pB1 = pA1
+        else:
+            prof13_2pt = hm_par["prof_2pt"]
+        # 14
+        if ccl_trA1["name"] == ccl_trB2["name"]:
+            prof14_2pt = ccl_trA1["ccl_pr_2pt"]
+            pB2 = pA1
+        else:
+            prof14_2pt = hm_par["prof_2pt"]
+        # 32
+        if ccl_trA2["name"] == ccl_trB1["name"]:
+            prof32_2pt = ccl_trA2["ccl_pr_2pt"]
+            pB1 = pA2
+        else:
+            prof32_2pt = hm_par["prof_2pt"]
+        # 24
+        if ccl_trA2["name"] == ccl_trB2["name"]:
+            prof24_2pt = ccl_trA2["ccl_pr_2pt"]
+            pB2 = pA1
+        else:
+            prof24_2pt = hm_par["prof_2pt"]
+        # 34
+        if ccl_trB1["name"] == ccl_trB2["name"]:
+            pr2ptB = ccl_trB1["ccl_pr_2pt"]
             pB2 = pB1
         else:
-            pr2ptB = hm_par['prof_2pt']
-        k_s = np.geomspace(1E-4, 1E2, 512)
-        lk_s = np.log(k_s)
-        a_s = 1./(1+np.linspace(0., 6., 30)[::-1])
-        tkk = ccl.halos.halomod_Tk3D_1h(cosmo, hm_par['calculator'],
-                                        prof=pA1, prof2=pA2,
-                                        prof12_2pt=pr2ptA,
-                                        prof3=pB1, prof4=pB2,
-                                        prof34_2pt=pr2ptB,
-                                        a_arr=a_s, lk_arr=lk_s)
+            pr2ptB = hm_par["prof_2pt"]
+
+        # Get trispectrum
+        separable_growth = hm_par.get("separable_growth", True)
+        a_s = self.get_a_arr()
+        lk_s = self.get_lk_arr()
+
+        if kind is None:
+            tkk = ccl.halos.halomod_Tk3D_cNG(
+                cosmo=cosmo,
+                hmc=hm_par["calculator"],
+                prof=pA1,
+                prof2=pA2,
+                prof3=pB1,
+                prof4=pB2,
+                prof12_2pt=pr2ptA,
+                prof13_2pt=prof13_2pt,
+                prof14_2pt=prof14_2pt,
+                prof24_2pt=prof24_2pt,
+                prof32_2pt=prof32_2pt,
+                prof34_2pt=pr2ptB,
+                a_arr=a_s,
+                lk_arr=lk_s,
+                separable_growth=separable_growth,
+            )
+        elif kind == "1h":
+            tkk = ccl.halos.halomod_Tk3D_1h(cosmo=cosmo,
+                                            hmc=hm_par['calculator'],
+                                            prof=pA1, prof2=pA2,
+                                            prof12_2pt=pr2ptA,
+                                            prof3=pB1, prof4=pB2,
+                                            prof34_2pt=pr2ptB,
+                                            a_arr=a_s, lk_arr=lk_s)
+        elif kind == "2h":
+            tkk = ccl.halos.halomod_Tk3D_2h(cosmo=cosmo,
+                                            hmc=hm_par['calculator'],
+                                            prof=pA1, prof2=pA2,
+                                            prof3=pB1, prof4=pB2,
+                                            prof12_2pt=pr2ptA,
+                                            prof13_2pt=prof13_2pt,
+                                            prof14_2pt=prof14_2pt,
+                                            prof24_2pt=prof24_2pt,
+                                            prof32_2pt=prof32_2pt,
+                                            prof34_2pt=pr2ptB,
+                                            separable_growth=separable_growth,
+                                            a_arr=a_s, lk_arr=lk_s)
+        elif kind == "3h":
+            tkk = ccl.halos.halomod_Tk3D_3h(cosmo=cosmo,
+                                            hmc=hm_par['calculator'],
+                                            prof=pA1, prof2=pA2,
+                                            prof3=pB1, prof4=pB2,
+                                            prof13_2pt=prof13_2pt,
+                                            prof14_2pt=prof14_2pt,
+                                            prof24_2pt=prof24_2pt,
+                                            prof32_2pt=prof32_2pt,
+                                            separable_growth=separable_growth,
+                                            a_arr=a_s, lk_arr=lk_s)
+        elif kind == "4h":
+            tkk = ccl.halos.halomod_Tk3D_3h(cosmo=cosmo,
+                                            hmc=hm_par['calculator'],
+                                            prof=pA1, prof2=pA2,
+                                            prof3=pB1, prof4=pB2,
+                                            separable_growth=separable_growth,
+                                            a_arr=a_s, lk_arr=lk_s)
+        else:
+            raise ValueError(f"Unknown kind of NG covariance term: {kind}. It "
+                             f"has to be None, '1h', '2h', '3h' or '4h'.")
+            
         return tkk
 
     def get_ccl_pk(self, ccl_tr1, ccl_tr2):
@@ -345,26 +493,25 @@ class Theory():
         cosmo = self.get_cosmo_ccl()
         hm_par = self.get_halomodel_params()
 
-        if ccl_tr1['with_hm'] or ccl_tr2['with_hm']:
-            p1 = ccl_tr1['ccl_pr']
-            p2 = ccl_tr2['ccl_pr']
-            if ccl_tr1['name'] == ccl_tr2['name']:
-                pr2pt = ccl_tr1['ccl_pr_2pt']
+        if ccl_tr1["with_hm"] or ccl_tr2["with_hm"]:
+            p1 = ccl_tr1["ccl_pr"]
+            p2 = ccl_tr2["ccl_pr"]
+            if ccl_tr1["name"] == ccl_tr2["name"]:
+                pr2pt = ccl_tr1["ccl_pr_2pt"]
                 p2 = p1
             else:
                 pr2pt = None
-            k_s = np.geomspace(1E-4, 1E2, 512)
-            lk_s = np.log(k_s)
-            a_s = 1./(1+np.linspace(0., 6., 30)[::-1])
 
-            pk = ccl.halos.halomod_Pk2D(cosmo,
-                                        hm_par['calculator'],
-                                        p1, prof_2pt=pr2pt, prof2=p2,
-                                        lk_arr=lk_s, a_arr=a_s)
-            # We comment this out for now because these features are
-            # not present in the pip release of CCL
-            # smooth_transition=hm_par['alpha'],
-            # supress_1h=hm_par['k_suppress'])
+            pk = ccl.halos.halomod_Pk2D(
+                cosmo,
+                hm_par["calculator"],
+                p1,
+                prof_2pt=pr2pt,
+                prof2=p2,
+                lk_arr=self.get_lk_arr(),
+                a_arr=self.get_a_arr(),
+                smooth_transition=hm_par['alpha'],
+                supress_1h=hm_par['k_suppress'])
         else:
             # Use DEFAULT_POWER_SPECTRUM instead of None. CCLv3 is failing to
             # accept None
@@ -396,14 +543,13 @@ class Theory():
         cosmo = self.get_cosmo_ccl()
 
         pk = self.get_ccl_pk(ccl_tr1, ccl_tr2)
-        return ccl.angular_cl(cosmo,
-                              ccl_tr1['ccl_tr'],
-                              ccl_tr2['ccl_tr'],
-                              ell, p_of_k_a=pk)
+        return ccl.angular_cl(
+            cosmo, ccl_tr1["ccl_tr"], ccl_tr2["ccl_tr"], ell, p_of_k_a=pk
+        )
 
-    def get_ccl_cl_covNG(self, ccl_trA1, ccl_trA2, ellA,
-                         ccl_trB1, ccl_trB2, ellB, fsky,
-                         kind='1h'):
+    def get_ccl_cl_covNG(
+        self, ccl_trA1, ccl_trA2, ellA, ccl_trB1, ccl_trB2, ellB, fsky, kind
+    ):
         """
         Return the non-Gaussian block covariance of two Cells clA1A2 and
         clB1B2; i.e. four given tracers A1, A2 and B1, B2.
@@ -424,9 +570,10 @@ class Theory():
             `compute_tracer_ccl` output.
         fsky: float
             Fraction of the observed sky
-        kind: str
-            Halo model term: '1h', '2h', '3h' or '4h' for the 1-, 2-, 3- and
-            4-halo terms.
+        kind: str or None
+            Kind of NG covariance to compute. If None, compute the full NG
+            covariance. Else, halo model term: '1h', '2h', '3h' or '4h' for
+            the 1-, 2-, 3- and 4-halo terms.
 
         Return
         ------
@@ -435,14 +582,122 @@ class Theory():
         """
         cosmo = self.get_cosmo_ccl()
 
-        tkk = self.get_ccl_tkka(ccl_trA1, ccl_trA2,
-                                ccl_trB1, ccl_trB2,
-                                kind=kind)
-        return ccl.angular_cl_cov_cNG(cosmo,
-                                      tracer1=ccl_trA1['ccl_tr'],
-                                      tracer2=ccl_trA2['ccl_tr'],
-                                      ell=ellA,
-                                      t_of_kk_a=tkk, fsky=fsky,
-                                      tracer3=ccl_trB1['ccl_tr'],
-                                      tracer4=ccl_trB2['ccl_tr'],
-                                      ell2=ellB, integration_method='spline')
+        tkk = self.get_ccl_tkka(ccl_trA1, ccl_trA2, ccl_trB1, ccl_trB2, kind)
+
+        # For debugging: save tkk spline arrays
+        # a, lk1, lk2, tkk_arr = tkk.get_spline_arrays()
+        # np.savez_compressed('/mnt/users/gravityls_3/codes/Cosmotheka/output/test_NG/tk3D_cNG_DESY3wl_DESY3wl_debug.npz', a=a, lk1=lk1, lk2=lk2, tkk=tkk_arr)
+
+        return ccl.angular_cl_cov_cNG(
+            cosmo,
+            tracer1=ccl_trA1["ccl_tr"],
+            tracer2=ccl_trA2["ccl_tr"],
+            ell=ellA,
+            t_of_kk_a=tkk,
+            fsky=fsky,
+            tracer3=ccl_trB1["ccl_tr"],
+            tracer4=ccl_trB2["ccl_tr"],
+            ell2=ellB,
+            integration_method="spline",
+        )
+
+    def get_ccl_cl_covSSC(
+        self,
+        ccl_trA1,
+        ccl_trA2,
+        ellA,
+        ccl_trB1,
+        ccl_trB2,
+        ellB,
+        bias_trA1,
+        bias_trA2,
+        bias_trB1,
+        bias_trB2,
+        mask_wl=None,
+        fsky=None,
+    ):
+        """
+            Return the Super Sample Covariance block covariance of two Cells clA1A2
+            and clB1B2; i.e. four given tracers A1, A2 and B1, B2.
+
+        Parameters
+            ----------
+            ccl_trA1: dict
+                Dictionary with the ccl information of tracer A1. See
+                `compute_tracer_ccl` output.
+            ccl_trA2: dict
+                Dictionary with the ccl information of tracer A2. See
+                `compute_tracer_ccl` output.
+            ccl_trB1: dict
+                Dictionary with the ccl information of tracer B1. See
+                `compute_tracer_ccl` output.
+            ccl_trB2: dict
+                Dictionary with the ccl information of tracer B2. See
+                `compute_tracer_ccl` output.
+            fsky: float
+                Fraction of the observed sky. If None, it will use the masks.
+                Otherwise, it will assume a survey area like a disc of area 4pi*fsky.
+            bias_trA1: float
+                Linear bias of tracer A1
+            bias_trA2: float
+                Linear bias of tracer A2
+            bias_trB1: float
+                Linear bias of tracer B1
+            bias_trB2: float
+                Linear bias of tracer B2
+            mask_wl: numpyarray
+                Weak lensing mask to compute sigma2_B. If None, it will use fsky
+            fsky: float
+                Fraction of the observed sky. If None, it will use the masks.
+                Otherwise, it will assume a survey area like a disc of area 4pi*fsky.
+
+            Return
+            ------
+            covNG: numpyarray
+                non-Gaussian block covariance
+        """
+        cosmo = self.get_cosmo_ccl()
+
+        hm_par = self.get_halomodel_params()
+        hmc = hm_par["calculator"]
+        prof = hm_par["prof_NFW"]
+
+        is_number_counts1 = ccl_trA1["is_number_counts"]
+        is_number_counts2 = ccl_trA2["is_number_counts"]
+        is_number_counts3 = ccl_trB1["is_number_counts"]
+        is_number_counts4 = ccl_trB2["is_number_counts"]
+
+        a_arr = self.get_a_arr()
+        if mask_wl is not None:
+            sigma2_B = ccl.sigma2_B_from_mask(
+                cosmo, a_arr=a_arr, mask_wl=mask_wl
+            )
+        else:
+            sigma2_B = ccl.sigma2_B_disc(cosmo, a_arr=a_arr, fsky=fsky)
+
+        tk3D = ccl.halos.halomod_Tk3D_SSC_linear_bias(
+            cosmo=cosmo,
+            hmc=hmc,
+            prof=prof,
+            bias1=bias_trA1,
+            bias2=bias_trA2,
+            bias3=bias_trB1,
+            bias4=bias_trB2,
+            is_number_counts1=is_number_counts1,
+            is_number_counts2=is_number_counts2,
+            is_number_counts3=is_number_counts3,
+            is_number_counts4=is_number_counts4,
+        )
+
+        return ccl.covariances.angular_cl_cov_SSC(
+            cosmo,
+            tracer1=ccl_trA1["ccl_tr"],
+            tracer2=ccl_trA2["ccl_tr"],
+            tracer3=ccl_trB1["ccl_tr"],
+            tracer4=ccl_trB2["ccl_tr"],
+            ell=ellA,
+            ell2=ellB,
+            t_of_kk_a=tk3D,
+            sigma2_B=(a_arr, sigma2_B),
+            integration_method="spline",
+        )

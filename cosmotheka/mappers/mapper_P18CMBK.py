@@ -1,3 +1,5 @@
+import glob
+
 from .mapper_base import MapperBase
 from scipy.interpolate import interp1d
 import numpy as np
@@ -20,6 +22,8 @@ class MapperP18CMBK(MapperBase):
         - mask_apotype: `"C12"`
         - mask_name: `"mask_P18kappa"`
         - path_rerun: `".../Datasets/Planck_lensing/Lensing2018/xcell_runs"`
+        - sims_rec_path = '/mnt/extraspace/vonhausegger/Datasets/Planck_lensing/COM_Lensing-SimMap_4096_R3.00'
+        - sims_in_path = '/mnt/extraspace/vonhausegger/Datasets/Planck_lensing/COM_Lensing-SimMap-inputs_4096_R3.00/'
 
     """
     map_name = 'P18CMBK'
@@ -37,30 +41,9 @@ class MapperP18CMBK(MapperBase):
         # Defaults
         self.nl_coupled = None
         self.cl_fid = None
-        self.klm = None
-
-    def _get_klm(self):
-        if self.klm is None:
-            # Read alms and rotate if needed
-            klm, lmax = hp.read_alm(self.config['file_klm'], return_mmax=True)
-            # First element may be nan. Fix that.
-            klm[0] = 0+0j
-            if self.rot is not None:
-                klm = self.rot.rotate_alm(klm)
-            # Filter if lmax is too large
-            if lmax > 3*self.nside-1:
-                fl = np.ones(lmax+1)
-                fl[3*self.nside:] = 0
-                klm = hp.almxfl(klm, fl, inplace=True)
-
-            self.klm = klm
-
-        return self.klm
 
     def _get_signal_map(self):
-        klm = self._get_klm()
-        signal_map = np.array([hp.alm2map(klm, self.nside)])
-        return signal_map
+        return self._get_map_from_klm_file(self.config['file_klm'])
 
     def _get_mask(self):
         msk = hp.read_map(self.config['file_mask'],
@@ -124,3 +107,33 @@ class MapperP18CMBK(MapperBase):
 
     def get_spin(self):
         return 0
+
+    def _get_sims_fnames(self):
+        """
+        Returns the paths of the reconstructed and input simulation maps.
+
+        Returns:
+            rec_sims (List): list of paths to reconstructed simulation maps
+            input_sims (List): list of paths to input simulation maps
+        """
+        rec_sims_path = self.config['sims_rec_path']
+        input_sims_path = self.config['sims_in_path']
+
+        # Using glob because it's handy. If the naming convention is wrong,
+        # this might silently mix rec and input sims and spoil the transfer 
+        # function.
+        rec_sims = sorted(glob.glob(rec_sims_path + '/' + 'sim_klm_*.fits'))
+        input_sims = sorted(glob.glob(input_sims_path + '/' + 'sky_klm_*.fits'))
+
+        nrec = len(rec_sims)
+        ninput = len(input_sims)
+
+        print(f"Found {nrec} reconstructed sims and {ninput} input sims")
+
+        # Check that there are the same number of sims
+        if len(rec_sims) != len(input_sims):
+            raise ValueError("Number of reconstructed and input sims must be "
+                             "the same. Found {nrec} reconstructed and "
+                             "{ninput} input sims.")
+
+        return rec_sims, input_sims

@@ -10,11 +10,12 @@ class MapperACTDR6k(MapperBase):
     """
     ACT DR6 kappa mapper class.
     """
+
     map_name = "ACT"
 
     def __init__(self, config):
         self._get_defaults(config)
-        self.rot = self._get_rotator('C')
+        self.rot = self._get_rotator("C")
 
         self.mask_threshold = config.get("mask_threshold", 0.1)
         self.variant = config.get("variant", "baseline")
@@ -38,28 +39,14 @@ class MapperACTDR6k(MapperBase):
         self.map_name = f"{self.map_name}_{config['map_name']}_{self.variant}"
         self.mask_name = f"{config['mask_name']}_{self.variant}"
 
-        self.lmax = config.get('lmax', 4000)
+        self.lmax = config.get("lmax", 4000)
         warnings.warn(
             f"lmax is set to {self.lmax} but ACT DR6"
             "kappa maps are bandlimited to lmax=4000"
         )
 
     def _get_signal_map(self):
-        klm, mmax = hp.read_alm(self.klm_file, return_mmax=True)
-        klm = klm.astype(np.complex128)
-        klm = np.nan_to_num(klm)
-
-        fl = np.ones(mmax + 1)
-        fl[3*self.nside:] = 0
-        hp.almxfl(klm, fl, inplace=True)
-
-        map = hp.alm2map(klm, nside=self.nside)
-        map = rotate_map(map, self.rot)
-
-        mask = self._get_mask()
-        map *= np.mean(mask**2)
-
-        return map
+        return self._get_map_from_klm_file(self.klm_file)
 
     def _get_mask(self):
         mask = hp.read_map(self.file_mask)
@@ -74,16 +61,15 @@ class MapperACTDR6k(MapperBase):
         if self.nl_coupled is None:
             ell, nl = np.loadtxt(self.file_noise, unpack=True)
             nl = interp1d(
-                ell, nl, bounds_error=False,
-                fill_value=(nl[0], nl[-1])
+                ell, nl, bounds_error=False, fill_value=(nl[0], nl[-1])
             )(self.get_ell())
             # Rescale to "couple" noise
-            nl *= np.mean(self.get_mask()**2)
+            nl *= np.mean(self.get_mask() ** 2)
             self.nl_coupled = np.array([nl])
         return self.nl_coupled
 
     def get_dtype(self):
-        return 'cmb_convergence'
+        return "cmb_convergence"
 
     def get_spin(self):
         return 0
