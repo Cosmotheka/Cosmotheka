@@ -77,6 +77,7 @@ class MapperBase(object):
         klm, lmax = hp.read_alm(file, return_mmax=True)
         # Some elements may be nan (e.g. 1st in Planck18CMBk, 2 first in
         # ACTDR6CMBk). Fix that.
+        klm = klm.astype(np.complex128)
         klm = np.nan_to_num(klm)
 
         # Rotate
