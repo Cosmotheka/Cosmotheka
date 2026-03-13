@@ -433,6 +433,9 @@ class Cl(ClBase):
              - wins: bandpower window functions,
              - correction: a mapper level correction applied to the power
                spectra
+             - correction_cmbk: a correction applied to the power spectra to 
+               take into account for the fact that the CMB lensing convergence 
+               map has a mask applied to it. Only there if cmbk needed
         """
         if self._read_symmetric:
             fname = os.path.join(self.outdir, f'cl_{self.tr2}_{self.tr1}.npz')
@@ -541,28 +544,33 @@ class Cl(ClBase):
                 cl_cov_12_cp *= correction
                 cl_cov_22_cp *= correction
 
-            correction_cmb = np.ones_like(cl)
+            # Crude estimation of the error
+            crude_err = self._get_cl_crude_error(cl_cov_cp, mean_mamb)
+
+            # TODO: Temporary solution. We can be more selective and only
+            # save those parts that we need for each case.
+            out = dict(ell=ell, cl=cl, cl_cp=cl_cp, nl=nl,
+                           nl_cp=nl_cp, cl_cov_cp=cl_cov_cp,
+                           cl_cov_11_cp=cl_cov_11_cp,
+                           cl_cov_12_cp=cl_cov_12_cp,
+                           cl_cov_22_cp=cl_cov_22_cp, wins=wins,
+                           correction=correction, mean_mamb=mean_mamb,
+                           crude_err=crude_err)
+
             if is_cmbk_correction_needed:
                 # In cross-correlation, we need to correct for the survey mask
                 # see Eq. I11 2309.05659
                 # TODO: For now, we only apply it to the decoupled Cl,
                 # but this will not propagate to the Cov, although the effect
                 # is small
-                correction_cmb, correction_cmb_cp = self.get_correction_cmbk()
-                cl *= correction_cmb
+                correction_cmbk, _ = self.get_correction_cmbk()
+                cl *= correction_cmbk
                 # cl_cp *= correction_cmb_cp
 
-            # Crude estimation of the error
-            crude_err = self._get_cl_crude_error(cl_cov_cp, mean_mamb)
+                # Add it to the output
+                out['correction_cmbk'] = correction_cmbk
 
-            tools.save_npz(fname, ell=ell, cl=cl, cl_cp=cl_cp, nl=nl,
-                           nl_cp=nl_cp, cl_cov_cp=cl_cov_cp,
-                           cl_cov_11_cp=cl_cov_11_cp,
-                           cl_cov_12_cp=cl_cov_12_cp,
-                           cl_cov_22_cp=cl_cov_22_cp, wins=wins,
-                           correction=correction, mean_mamb=mean_mamb,
-                           correction_cmb=correction_cmb,
-                           crude_err=crude_err)
+            tools.save_npz(fname, **out)
             self.recompute_cls = False
 
         cl_file = np.load(fname)
@@ -584,7 +592,9 @@ class Cl(ClBase):
                         'auto_22': cl_file['cl_cov_22_cp']}
         self.mean_mamb = cl_file['mean_mamb']
         self.crude_err = cl_file['crude_err']
-        self.correction_cmb = cl_file['correction_cmb']
+
+        if is_cmbk_correction_needed:
+            self.correction_cmbk = cl_file['correction_cmbk']
 
         return cl_file
 
@@ -782,7 +792,7 @@ class Cl(ClBase):
 
         # Check if the correction has already been computed
         mn1, mn2 = self.get_masks_names()
-        fname = f"Tl_{mn1}_{mn2}.npz"
+        fname = f"Tl_{mn1}_{mn2}_coord{mapper_x.coords}_ns{self.nside}.npz"
         d = get_rerun_data(mapper_cmbk, fname, 'NPZ')
         if d is not None:
             return d['Tl'], d['Tl_cp']
@@ -804,7 +814,7 @@ class Cl(ClBase):
         Tl = []
         Tl_cp = []
         for i, (rec_sim, input_sim) in enumerate(zip(rec_sims, input_sims)):
-            fname_i = f"Tl_{mn1}_{mn2}_sim{i}.npz"
+            fname_i = fname.replace('.npz', f'_sim{i}.npz')
             # Check if this correction has already been computed.
             d = get_rerun_data(mapper_cmbk, fname_i, 'NPZ')
             if d is not None:

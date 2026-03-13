@@ -9,3 +9,5 @@ lmax: 4000
 # Avoid ringing
 mask_threshold: 0.1
 variant: "baseline"
+sims_rec_path: /mnt/extraspace/damonge/Datasets/ACT_DR6/lensing_maps/baseline/simulations
+sims_in_path: /mnt/extraspace/damonge/Datasets/ACT_DR6/lensing_maps/sims_inputs
