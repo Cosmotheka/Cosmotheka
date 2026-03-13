@@ -5,4 +5,6 @@ file_noise: /mnt/extraspace/damonge/Datasets/Planck_lensing/Lensing2018/MV/nlkk.
 mask_aposize: 0.2
 mask_apotype: 'C1'
 mask_name: mask_P18kappa
+sims_rec_path: '/mnt/extraspace/vonhausegger/Datasets/Planck_lensing/COM_Lensing-SimMap_4096_R3.00'
+sims_in_path: '/mnt/extraspace/vonhausegger/Datasets/Planck_lensing/COM_Lensing-SimMap-inputs_4096_R3.00/'
 path_rerun: '/mnt/extraspace/damonge/Datasets/Planck_lensing/Lensing2018/xcell_runs'

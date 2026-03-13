@@ -4,17 +4,36 @@ from scipy.interpolate import interp1d
 import numpy as np
 import healpy as hp
 import warnings
+import glob
 
 
 class MapperACTDR6k(MapperBase):
     """
     ACT DR6 kappa mapper class.
+
+    Information about the data used in this mapper: https://lambda.gsfc.nasa.gov/product/act/actadv_dr6_lensing_maps_info.html
+    Extended products available at: https://portal.nersc.gov/project/act/dr6_lensing_v1/
+
+    **Config**
+
+        - mask_name: ACT_kappa_DR6
+        - map_name: kappa_DR6
+        - path_rerun: /mnt/extraspace/damonge/Datasets/ACT_DR6/xcell_runs
+        - klm_file: /mnt/extraspace/damonge/Datasets/ACT_DR6/lensing_maps/baseline/kappa_alm_data_act_dr6_lensing_v1_baseline.fits
+        - file_mask: /mnt/extraspace/damonge/Datasets/ACT_DR6/lensing_maps/baseline/mask_act_dr6_lensing_v1_healpix_nside_4096_baseline.fits
+        - file_noise: /mnt/extraspace/damonge/Datasets/ACT_DR6/lensing_maps/baseline/N_L_kk_act_dr6_lensing_v1_baseline.txt
+        - lmax: 4000
+        - mask_threshold: 0.1  # Avoid ringing
+        - variant: "baseline"
+        - sims_rec_path: /mnt/extraspace/damonge/Datasets/ACT_DR6/lensing_maps/baseline/simulations
+        - sims_in_path: /mnt/extraspace/damonge/Datasets/ACT_DR6/lensing_maps/baseline/simulations
     """
+
     map_name = "ACT"
 
     def __init__(self, config):
         self._get_defaults(config)
-        self.rot = self._get_rotator('C')
+        self.rot = self._get_rotator("C")
 
         self.mask_threshold = config.get("mask_threshold", 0.1)
         self.variant = config.get("variant", "baseline")
@@ -38,28 +57,14 @@ class MapperACTDR6k(MapperBase):
         self.map_name = f"{self.map_name}_{config['map_name']}_{self.variant}"
         self.mask_name = f"{config['mask_name']}_{self.variant}"
 
-        self.lmax = config.get('lmax', 4000)
+        self.lmax = config.get("lmax", 4000)
         warnings.warn(
             f"lmax is set to {self.lmax} but ACT DR6"
             "kappa maps are bandlimited to lmax=4000"
         )
 
     def _get_signal_map(self):
-        klm, mmax = hp.read_alm(self.klm_file, return_mmax=True)
-        klm = klm.astype(np.complex128)
-        klm = np.nan_to_num(klm)
-
-        fl = np.ones(mmax + 1)
-        fl[3*self.nside:] = 0
-        hp.almxfl(klm, fl, inplace=True)
-
-        map = hp.alm2map(klm, nside=self.nside)
-        map = rotate_map(map, self.rot)
-
-        mask = self._get_mask()
-        map *= np.mean(mask**2)
-
-        return map
+        return self._get_map_from_klm_file(self.klm_file)
 
     def _get_mask(self):
         mask = hp.read_map(self.file_mask)
@@ -74,16 +79,48 @@ class MapperACTDR6k(MapperBase):
         if self.nl_coupled is None:
             ell, nl = np.loadtxt(self.file_noise, unpack=True)
             nl = interp1d(
-                ell, nl, bounds_error=False,
-                fill_value=(nl[0], nl[-1])
+                ell, nl, bounds_error=False, fill_value=(nl[0], nl[-1])
             )(self.get_ell())
             # Rescale to "couple" noise
-            nl *= np.mean(self.get_mask()**2)
+            nl *= np.mean(self.get_mask() ** 2)
             self.nl_coupled = np.array([nl])
         return self.nl_coupled
 
     def get_dtype(self):
-        return 'cmb_convergence'
+        return "cmb_convergence"
 
     def get_spin(self):
         return 0
+
+    # TODO: Create a kappa mapers class to avoid repetition.
+    def _get_sims_fnames(self):
+        """
+        Returns the paths of the reconstructed and input simulation maps.
+
+        Returns:
+            rec_sims (List): list of paths to reconstructed simulation maps
+            input_sims (List): list of paths to input simulation maps
+        """
+        rec_sims_path = self.config['sims_rec_path']
+        input_sims_path = self.config['sims_in_path']
+
+        # Using glob because it's handy. If the naming convention is wrong,
+        # this might silently mix rec and input sims and spoil the transfer 
+        # function.
+        pattern = 'kappa_alm_sim_act_dr6_lensing_v1_baseline_*.fits'
+        rec_sims = sorted(glob.glob(rec_sims_path + '/' + pattern))
+        pattern = 'input_kappa_alm_sim_*.fits'
+        input_sims = sorted(glob.glob(input_sims_path + '/' + pattern))
+
+        nrec = len(rec_sims)
+        ninput = len(input_sims)
+
+        print(f"Found {nrec} reconstructed sims and {ninput} input sims")
+
+        # Check that there are the same number of sims
+        if len(rec_sims) != len(input_sims):
+            raise ValueError("Number of reconstructed and input sims must be "
+                             "the same. Found {nrec} reconstructed and "
+                             "{ninput} input sims.")
+
+        return rec_sims, input_sims
