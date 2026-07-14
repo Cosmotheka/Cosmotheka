@@ -201,6 +201,7 @@ class Cl(ClBase):
         self.recompute_mcm = self.data.data['recompute']['mcm']
         # Not needed to load cl if already computed
         self._w = None
+        self._w0 = None
         self._wcov = None
         ##################
         self.nl = None
@@ -298,6 +299,9 @@ class Cl(ClBase):
         w: pymaster.NmtWorkspace
             Workspace with the mode-coupling matrix of both tracers
         """
+        if self._w0 is not None:
+            return self._w0
+
         if self.get_spins() == (0, 0):
             self._w0 = self.get_workspace(read_unbinned_MCM=read_unbinned_MCM)
         elif self._w0 is None:
