@@ -283,6 +283,29 @@ class Cl(ClBase):
                 use_maps=False)
         return self._w
 
+    def get_workspace_spin0(self, read_unbinned_MCM=True):
+        """
+        Return the pymaster.NmtWorkspace instance with the mode-coupling matrix
+        of the correlated fields, assuming all fields have spin-0.
+
+        Parameters
+        ----------
+        read_unbinned_MCM: bool
+            If True, load the unbinned mode-coupling matrix as well
+
+        Return
+        ------
+        w: pymaster.NmtWorkspace
+            Workspace with the mode-coupling matrix of both tracers
+        """
+        if self.get_spins() == (0, 0):
+            self._w0 = self.get_workspace(read_unbinned_MCM=read_unbinned_MCM)
+        elif self._w0 is None:
+            self._w0 = self._compute_workspace(
+                read_unbinned_MCM=read_unbinned_MCM,
+                use_maps=False, spin0=True)
+        return self._w0
+
     def get_workspace_cov(self):
         """
         Return the pymaster.NmtWorkspace instance with the mode-coupling matrix
@@ -560,11 +583,13 @@ class Cl(ClBase):
             if is_cmbk_correction_needed:
                 # In cross-correlation, we need to correct for the survey mask
                 # see Eq. I11 2309.05659
+                # NOTE: For shear, we apply the same correction to all
+                # components.
                 # TODO: For now, we only apply it to the decoupled Cl,
                 # but this will not propagate to the Cov, although the effect
                 # is small
                 correction_cmbk, _ = self.get_correction_cmbk()
-                cl *= correction_cmbk
+                cl *= correction_cmbk[None, :]
                 # cl_cp *= correction_cmb_cp
 
                 # Add it to the output
@@ -623,12 +648,14 @@ class Cl(ClBase):
 
         isneeded = (iscmbk1 or iscmbk2) and not (iscmbk1 and iscmbk2)
 
-        # TODO: Fix this for spin-2 data.
-        # ACT-DR4 x DESY3wl had a S/N ~ 7 (2309.04412), so it might not be 
-        # important.
-        if self.get_spins() != (0, 0):
-            warnings.warn("The CMB lensing convergence correction is currently only implemented for spin-0 data. Check if this is important for your spin-2 fields") 
-            isneeded = False
+        # NOTE: For weak lensing data, we are going to apply the same transfer
+        # function to all components, without accounting for spin.
+        # It is not clear if this is correct or not but given the low S/N 
+        # (ACT-DR4 x DESY3wl had a S/N ~ 7 (2309.04412)), it will probably be 
+        # irrelevant.
+        # if self.get_spins() != (0, 0):
+        #     warnings.warn("The CMB lensing convergence correction is currently only implemented for spin-0 data. Check if this is important for your spin-2 fields") 
+        #     isneeded = False
 
         if isneeded and return_mappers:
             mapper1, mapper2 = self.get_mappers()
@@ -816,8 +843,8 @@ class Cl(ClBase):
         # debugging
         ell = self.b.get_effective_ells()
 
-        # Get workspace
-        w = self.get_workspace()
+        # Get workspace (with spin-0 approximation)
+        w = self.get_workspace_spin0()
 
         # Get the list of simulations and loop over them
         num = []
