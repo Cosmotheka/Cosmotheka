@@ -623,6 +623,13 @@ class Cl(ClBase):
 
         isneeded = (iscmbk1 or iscmbk2) and not (iscmbk1 and iscmbk2)
 
+        # TODO: Fix this for spin-2 data.
+        # ACT-DR4 x DESY3wl had a S/N ~ 7 (2309.04412), so it might not be 
+        # important.
+        if self.get_spins() != (0, 0):
+            warnings.warn("The CMB lensing convergence correction is currently only implemented for spin-0 data. Check if this is important for your spin-2 fields") 
+            isneeded = False
+
         if isneeded and return_mappers:
             mapper1, mapper2 = self.get_mappers()
             if iscmbk1:
@@ -789,12 +796,16 @@ class Cl(ClBase):
         # Get masks
         _, mapper_cmbk, mapper_x = \
             self._is_cmbk_correction_needed(return_mappers=True)
+        
+        # Get the number of sims that are used.
+        rec_sims, input_sims = mapper_cmbk._get_sims_fnames()
+        nsims = len(rec_sims)
 
         # Check if the correction has already been computed
         mn1, mn2 = self.get_masks_names()
         fname = f"Tl_{mn1}_{mn2}_coord{mapper_x.coords}_ns{self.nside}.npz"
         d = get_rerun_data(mapper_cmbk, fname, 'NPZ')
-        if d is not None:
+        if d is not None and d['computed'] == nsims:
             return d['Tl'], d['Tl_cp']
 
         # Otherwise, compute it
@@ -809,20 +820,20 @@ class Cl(ClBase):
         w = self.get_workspace()
 
         # Get the list of simulations and loop over them
-        rec_sims, input_sims = mapper_cmbk._get_sims_fnames()
-        nsims = len(rec_sims)
-        Tl = []
-        Tl_cp = []
+        num = []
+        denom = []
+        num_cp = []
+        denom_cp = []
+        # We use Tl = mean(num) / mean(denom) instead of mean(num/denom),
+        # as in Sailer. It is supposed to be more numerically stable.
         for i, (rec_sim, input_sim) in enumerate(zip(rec_sims, input_sims)):
-            fname_i = fname.replace('.npz', f'_sim{i}.npz')
-            # Check if this correction has already been computed.
-            d = get_rerun_data(mapper_cmbk, fname_i, 'NPZ')
-            if d is not None:
-                print(f"Loading correction for Tl {i+1}/{nsims} from file",
-                      flush=True)
-                Tl.append(d['Tl'])
-                Tl_cp.append(d['Tl_cp'])
-                continue
+            # If step already computed, read it and append it to the list.
+            if d is not None and d['computed'] < i:
+                print(f"Reading step {i+1} / {nsims}", flush=True)
+                num.append(d['num'][i])
+                denom.append(d['denom'][i])
+                num_cp.append(d['num_cp'][i])
+                denom_cp.append(d['denom_cp'][i])
 
             # If not already computed, compute it.
             print(f"Computing Tl {i+1} / {nsims}", flush=True)
@@ -839,18 +850,14 @@ class Cl(ClBase):
             cl_krec__kin_gmask_cp = nmt.compute_coupled_cell(krec, kin_gmask)
             cl_krec__kin_gmask = w.decouple_cell(cl_krec__kin_gmask_cp)
 
-            Tli = cl_kin_kmask__kin_gmask/cl_krec__kin_gmask
-            Tli_cp = cl_kin_kmask__kin_gmask_cp/cl_krec__kin_gmask_cp
+            num.append(cl_kin_kmask__kin_gmask)
+            denom.append(cl_krec__kin_gmask)
+            num_cp.append(cl_kin_kmask__kin_gmask_cp)
+            denom_cp.append(cl_krec__kin_gmask_cp)
 
-            save_rerun_data(mapper_cmbk, fname_i, 'NPZ',
-                            {'Tl': Tli,
-                             'Tl_cp': Tli_cp,
-                             'ell': ell})
-            Tl.append(Tli)
-            Tl_cp.append(Tli_cp)
-
-        out = {'Tl': np.mean(Tl, axis=0), 'Tl_cp': np.mean(Tl_cp, axis=0),
-               'ell': ell}
+        out = {'Tl': np.mean(num, axis=0), 'Tl_cp': np.mean(num_cp, axis=0),
+               'ell': ell, 'num': np.array(num), 'denom': np.array(denom),
+               'num_cp': np.array(num_cp), 'denom_cp': np.array(denom_cp)}
         save_rerun_data(mapper_cmbk, fname, 'NPZ', out)
 
         return out['Tl'], out['Tl_cp']
