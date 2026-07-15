@@ -196,14 +196,6 @@ def test_cov_nlmarg():
 
 
 # TODO: Upudate cNG cov
-# def test_cov_ng_error():
-#     data = get_config(fsky=0.2)
-#     covc = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
-#     with pytest.raises(NotImplementedError):
-#         covc.get_covariance_ng_halomodel(0, 0, 0, 0, 0.2, kind="3h")
-#     _clean_tmpdir(tmpdir1)
-# 
-# 
 # def test_cov_ng_1h():
 #     # From CCL directly
 #     data = get_config(fsky=0.2)
