@@ -587,8 +587,12 @@ class Cl(ClBase):
             if is_cmbk_correction_needed:
                 # In cross-correlation, we need to correct for the survey mask
                 # see Eq. I11 2309.05659
-                # NOTE: For shear, we apply the same correction to all
-                # components.
+                # NOTE: For weak lensing data, we are going to apply the same 
+                # transfer function to all components, without accounting for
+                # spin. It is not clear if this is correct or not but given 
+                # the low S/N (ACT-DR4 x DESY3wl had a S/N ~ 7 (2309.04412)),
+                # it will probably be irrelevant.
+
                 # TODO: For now, we only apply it to the decoupled Cl,
                 # but this will not propagate to the Cov, although the effect
                 # is small
@@ -652,14 +656,16 @@ class Cl(ClBase):
 
         isneeded = (iscmbk1 or iscmbk2) and not (iscmbk1 and iscmbk2)
 
-        # NOTE: For weak lensing data, we are going to apply the same transfer
-        # function to all components, without accounting for spin.
-        # It is not clear if this is correct or not but given the low S/N 
-        # (ACT-DR4 x DESY3wl had a S/N ~ 7 (2309.04412)), it will probably be 
-        # irrelevant.
-        # if self.get_spins() != (0, 0):
-        #     warnings.warn("The CMB lensing convergence correction is currently only implemented for spin-0 data. Check if this is important for your spin-2 fields") 
-        #     isneeded = False
+        # Check if the user has requested to neglect the correction for this 
+        # pair of tracers
+        cls_info = self.data.data['cls']
+        key = f"{self.tr1}-{self.tr2}" if not self._read_symmetric else f"{self.tr2}-{self.tr1}"
+        if key in cls_info:
+            isneeded *= not cls_info[key].get("neglect_mc_correction", False)
+        else:
+            key = self.data.get_tracers_bare_name_pair(self.tr1, self.tr2, '-')
+            if key in cls_info:
+                isneeded *= not cls_info[key].get("neglect_mc_correction", False)
 
         if isneeded and return_mappers:
             mapper1, mapper2 = self.get_mappers()

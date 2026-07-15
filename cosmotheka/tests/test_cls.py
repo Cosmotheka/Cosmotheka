@@ -93,7 +93,7 @@ def get_config(
     }
     bpw_edges = list(range(0, 3 * nside, 4))
 
-    return {
+    out = {
         "tracers": {
             "Dummy__0": dummy0,
             "Dummy__1": dummy1,
@@ -112,6 +112,11 @@ def get_config(
         "recompute": {"cls": True, "cov": True, "mcm": True, "cmcm": True},
         "output": tmpdir1,
     }
+
+    if dtype0 == "cmb_convergence" or dtype1 == "cmb_convergence":
+        out["cls"]["Dummy-Dummy"]["neglect_mc_correction"] = True
+
+    return out
 
 
 def get_cl_class(fsky=0.2, fiducial=False):
