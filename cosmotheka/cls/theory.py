@@ -511,7 +511,7 @@ class Theory:
                 lk_arr=self.get_lk_arr(),
                 a_arr=self.get_a_arr(),
                 smooth_transition=hm_par['alpha'],
-                supress_1h=hm_par['k_suppress'])
+                suppress_1h=hm_par['k_suppress'])
         else:
             # Use DEFAULT_POWER_SPECTRUM instead of None. CCLv3 is failing to
             # accept None

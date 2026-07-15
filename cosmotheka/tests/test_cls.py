@@ -15,13 +15,30 @@ tmpdir1 = "./cosmotheka/tests/cls/dummy1"
 tmpdir2 = "./cosmotheka/tests/cls/dummy2"
 
 
+def setup_module():
+    os.makedirs(tmpdir1, exist_ok=True)
+    os.makedirs(tmpdir2, exist_ok=True)
+
+
 # Cleaning the tmp dir before running and after running the tests
+def _clean_tmpdir(path):
+    if os.path.exists(path):
+        shutil.rmtree(path, ignore_errors=True)
+
+def _clean_tmpdirs():
+    for path in (tmpdir1, tmpdir2):
+        _clean_tmpdir(path)
+
+
+def teardown_module():
+    _clean_tmpdirs()
+
+
 @pytest.fixture(autouse=True)
 def run_clean_tmp():
-    if os.path.isdir(tmpdir1):
-        shutil.rmtree(tmpdir1)
-    if os.path.isdir(tmpdir2):
-        shutil.rmtree(tmpdir2)
+    _clean_tmpdirs()   # before each test
+    yield
+    _clean_tmpdirs()   # after each test
 
 
 def get_config(
@@ -113,7 +130,7 @@ def get_cov_class(fsky=0.2):
 def test_smoke():
     get_cl_class()
     get_cov_class()
-    shutil.rmtree(tmpdir1)
+    # _clean_tmpdir(tmpdir1)
 
 
 def test_cl_correction():
@@ -138,11 +155,11 @@ def test_get_nmtbin():
     # 1. From global
     data = get_config()
     cl1 = Cl(data, "Dummy__0", "Dummy__0")
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     # 2. From cross-correlations
     data["cls"]["Dummy-Dummy"]["bpw_edges"] = data.pop("bpw_edges")
     cl2 = Cl(data, "Dummy__0", "Dummy__0")
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     # Check they are the same
     b1 = cl1.get_NmtBin()
     b2 = cl2.get_NmtBin()
@@ -162,7 +179,7 @@ def test_cov_nlmarg():
     oo = np.ones(num_l)
     chi2 = np.dot(oo, np.linalg.solve(cov, oo))
     assert np.fabs(chi2) < 1e-5 * num_l
-    shutil.rmtree(tmpdir2)
+    _clean_tmpdir(tmpdir2)
 
     # The prior is huge so check that it will fail if the error_threshold is
     # not set (i.e. it is based on an estimation from data)
@@ -170,7 +187,7 @@ def test_cov_nlmarg():
         del data["cov"]["error_threshold"]
         cov_class = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
         cov = cov_class.get_covariance()
-    shutil.rmtree(tmpdir2)
+    _clean_tmpdir(tmpdir2)
 
 
 def test_cov_ng_error():
@@ -178,7 +195,7 @@ def test_cov_ng_error():
     covc = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
     with pytest.raises(NotImplementedError):
         covc.get_covariance_ng_halomodel(0, 0, 0, 0, 0.2, kind="3h")
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
 
 def test_cov_ng_1h():
@@ -186,7 +203,7 @@ def test_cov_ng_1h():
     data = get_config(fsky=0.2)
     clc = Cl(data, "Dummy__0", "Dummy__0")
     ells = clc.b.get_effective_ells()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     cosmo = ccl.Cosmology(**data["cov"]["fiducial"]["cosmo"])
     md = ccl.halos.MassDef200m
     mf = ccl.halos.MassFuncTinker10(mass_def=md)
@@ -244,7 +261,7 @@ def test_cov_ng_1h():
     }
     covcG = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
     covG = covcG.get_covariance()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # Gaussian + non-Gaussian
     data = get_config(fsky=0.2, inc_hm=True)
@@ -260,7 +277,7 @@ def test_cov_ng_1h():
     fsky = np.mean((mapper.get_mask() > 0))
     covNG1 = covc1.get_covariance_ng_halomodel(0, 0, 0, 0, fsky)
     cov1 = covc1.get_covariance()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # fsky on input
     data = get_config(fsky=0.2, inc_hm=True)
@@ -274,7 +291,7 @@ def test_cov_ng_1h():
     }
     covc2 = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
     covNG2 = covc2.get_covariance() - covG
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # Tests
     # Compare result of NG method with G+NG-G
@@ -298,7 +315,7 @@ def test_file_inconsistent_errors():
     clo2 = Cl(data, "Dummy__0", "Dummy__0")
     with pytest.raises(ValueError):
         clo2.get_ell_cl()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
 
 def test_get_ell_cl():
@@ -312,12 +329,12 @@ def test_get_ell_cl():
     cl_m1 = m1.get_cl()
     cl_m1_cp = w.couple_cell([cl_m1])
     cl_m1 = w.decouple_cell(cl_m1_cp)
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # Compute covariance
     cov_class = get_cov_class()
     cov = cov_class.get_covariance()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # Check that true Cl is within 5sigma of data Cl
     sigma = np.sqrt(np.diag(cov))
@@ -380,7 +397,7 @@ def test_custom_auto():
     data = get_config()
     clc1 = Cl(data, "Dummy__0", "Dummy__0")
     l1, cl1 = clc1.get_ell_cl_cp()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # With custom auto
     data = get_config()
@@ -388,7 +405,7 @@ def test_custom_auto():
     data["tracers"]["Dummy__0"]["custom_offset"] = np.pi * 1e-5
     clc2 = Cl(data, "Dummy__0", "Dummy__0")
     l2, cl2 = clc2.get_ell_cl_cp()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     assert np.allclose(cl1, cl2 - np.pi * 1e-5, rtol=1e-4, atol=0)
 
@@ -398,7 +415,7 @@ def test_custom_auto():
     data["tracers"]["Dummy__0"]["custom_offset"] = np.pi * 1e-5
     clc3 = Cl(data, "Dummy__0", "Dummy__0")
     l2, cl3 = clc3.get_ell_cl_cp_cov()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     assert np.allclose(cl1, cl3, rtol=1e-4, atol=0)
 
@@ -411,7 +428,7 @@ def test_get_ell_cl_cp():
 
     w = cl_class.get_workspace()
     cl2 = w.decouple_cell(cl_cp)
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     assert np.all(np.fabs(cl / cl2 - 1) < 1e-10)
 
     # Test it also in ClFid
@@ -419,7 +436,7 @@ def test_get_ell_cl_cp():
     ell, cl = cl_class.get_ell_cl()
     ell, cl_cp = cl_class.get_ell_cl_cp()
     cl_cp2 = w.couple_cell(cl)
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     assert np.all(np.fabs(cl_cp / cl_cp2 - 1) < 1e-10)
 
 
@@ -434,7 +451,7 @@ def test_get_ell_cl_binned():
     cl = cl_class.get_ell_cl()[1]
     ell_binned, cl_binned = cl_class.get_ell_cl_binned()
     cl_binned2 = w.decouple_cell(w.couple_cell(cl))
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     assert np.all(np.fabs(cl_binned / cl_binned2 - 1) < 1e-10)
     assert np.all(np.fabs(ell / ell_binned - 1) < 1e-10)
 
@@ -444,21 +461,21 @@ def test_covar_from_data():
     # Can't compute covariance unless we allow doing it from data
     with pytest.raises(NotImplementedError):
         Cov(config, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # Allow falling back to data
     config = get_config(dtype0="generic")
     config["cov"]["data_fallback"] = True
     cov_obj = Cov(config, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
     cov1 = cov_obj.get_covariance()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # Compute from data on purpose
     config = get_config(dtype0="generic")
     config["cov"]["cls_from_data"] = "all"
     cov_obj = Cov(config, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
     cov2 = cov_obj.get_covariance()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     assert np.allclose(cov1, cov2, atol=1e-10, rtol=0)
 
@@ -518,7 +535,7 @@ def test_get_covariance(cldata):
     chi2 = dCl.dot(icov).dot(dCl)
     chi2_m = dCl.dot(icov_m).dot(dCl)
 
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     assert np.fabs(chi2 / chi2_m - 1) < 0.03
 
 
@@ -533,12 +550,12 @@ def test_cls_vs_namaster():
     clfile = np.load(
         os.path.join(tmpdir1, "Dummy_Dummy", "cl_Dummy__0_Dummy__0.npz")
     )
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # Compute covariance
     cov_class = get_cov_class()
     cov = cov_class.get_covariance()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # NaMaster
     config = get_config()
@@ -626,7 +643,7 @@ def test_symmetric():
     assert np.all(
         cl_class01.get_ell_nl_cp()[1] == cl_class10.get_ell_nl_cp()[1]
     )
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
 
 def test_ignore_existing_yml():
@@ -660,14 +677,14 @@ def test_ignore_existing_yml():
         ignore_existing_yml=False,
     )
     assert cov_class.data.data["cls"]["Dummy-Dummy"]["compute"] == "all"
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
 
 def test_unsupported_quantity():
     data = get_config(dtype0="generic")
     with pytest.raises(NotImplementedError):
         ClFid(data, "Dummy__0", "Dummy__1")
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
 
 def test_symmetric_fid():
@@ -682,7 +699,7 @@ def test_symmetric_fid():
     fname = os.path.join(cl_class10.outdir, "cl_Dummy__1_Dummy__0.npz")
     assert not os.path.isfile(fname)
     assert np.all(cl_class01.get_ell_cl()[1] == cl_class10.get_ell_cl()[1])
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
 
 def test_cov_nonoverlap():
@@ -691,7 +708,7 @@ def test_cov_nonoverlap():
     data["tracers"]["Dummy__1"]["dec0"] = 180.0
     covc = Cov(data, "Dummy__0", "Dummy__0", "Dummy__1", "Dummy__1")
     cov = covc.get_covariance()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     assert np.all(cov == 0)
 
 
@@ -705,11 +722,11 @@ def test_cov_mmarg():
     # Theory power spectra
     clf = ClFid(data, "Dummy__0", "Dummy__0")
     _, cl = clf.get_ell_cl()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     # Binning
     clc = Cl(data, "Dummy__0", "Dummy__0")
     wp = clc.get_bandpower_windows()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     ncl, nbpw, _, nl = wp.shape
     wp = wp.reshape((ncl * nbpw, ncl * nl))
     cl = cl.reshape(ncl * nl)
@@ -736,7 +753,7 @@ def test_cov_mmarg():
 
             assert np.amax(np.fabs(covmargij / covmargbij - 1)) < 1e-5
 
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
 
 @pytest.mark.parametrize(
@@ -775,7 +792,7 @@ def test_cov_spin0(perm):
     assert not covc2.spin0
     cov2 = covc2.get_covariance()
     assert cov2.shape == (ncls1 * nbpw, ncls2 * nbpw)
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # Spin-0 covariance class
     data["cov"]["spin0"] = True
@@ -789,7 +806,7 @@ def test_cov_spin0(perm):
     assert covc0.spin0
     cov0 = covc0.get_covariance()
     assert cov0.shape == (ncls1 * nbpw, ncls2 * nbpw)
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     if ncls1 == ncls2:
         # Check that they are the same on all bandpowers
@@ -812,7 +829,7 @@ def test_clfid_halomod_settings():
     assert hm_par["mass_func"].name == "Tinker10"
     assert hm_par["halo_bias"].name == "Tinker10"
     assert hm_par["cM"].name == "Duffy08"
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # Custom halo model parameters
     md = "200c"
@@ -833,7 +850,7 @@ def test_clfid_halomod_settings():
     assert hm_par["mass_func"].name == mf
     assert hm_par["halo_bias"].name == hb
     assert hm_par["cM"].name == cM
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
 
 @pytest.mark.parametrize(
@@ -869,7 +886,7 @@ def test_clfid_against_ccl(tr1, tr2):
     cosmo = ccl.Cosmology(**data["cov"]["fiducial"]["cosmo"])
     clf = ClFid(data, "Dummy__0", "Dummy__1")
     d = clf.get_cl_file()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     def get_ccl_tracer(tr):
         if tr == "galaxy_density":
@@ -975,7 +992,7 @@ def test_clfid_halomod(tr1, tr2):
 
     clf = ClFid(data, "Dummy__0", "Dummy__1")
     d = clf.get_cl_file()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     k_arr = np.geomspace(1e-4, 1e2, 512)
     a_arr = 1.0 / (1 + np.linspace(0, 3, 15)[::-1])
@@ -1021,7 +1038,7 @@ def test_clfid_halomod_M500c():
 
     clf = ClFid(data, "Dummy__0", "Dummy__1")
     d = clf.get_cl_file()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     k_arr = np.geomspace(1e-4, 1e2, 512)
     a_arr = 1.0 / (1 + np.linspace(0, 6.0, 30)[::-1])
