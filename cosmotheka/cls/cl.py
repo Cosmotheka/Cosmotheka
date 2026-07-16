@@ -661,17 +661,17 @@ class Cl(ClBase):
         # Check if the user has requested to neglect the correction for this
         # pair of tracers
         cls_info = self.data.data['cls']
-        if not self._read_symmetric:
-            key = f"{self.tr1}-{self.tr2}"
-        else:
-            key = f"{self.tr2}-{self.tr1}"
-        if key in cls_info:
-            isneeded *= not cls_info[key].get("neglect_mc_correction", False)
-        else:
-            key = self.data.get_tracers_bare_name_pair(self.tr1, self.tr2, '-')
-            if key in cls_info:
-                isneeded *= not cls_info[key].get("neglect_mc_correction",
-                                                  False)
+
+        key = f"{self.tr1}-{self.tr2}"
+        key_rev = f"{self.tr2}-{self.tr1}"
+
+        key_bare = self.data.get_tracers_bare_name_pair(self.tr1, self.tr2, '-')
+        key_bare_rev = self.data.get_tracers_bare_name_pair(self.tr2, self.tr1, '-')
+
+        for k in [key, key_rev, key_bare, key_bare_rev]:
+            if k in cls_info:
+                isneeded *= not cls_info[k].get("neglect_mc_correction", False)
+                break
 
         if isneeded and return_mappers:
             mapper1, mapper2 = self.get_mappers()
