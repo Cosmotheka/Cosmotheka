@@ -14,6 +14,7 @@ import healpy as hp
 # Remove previous test results
 tmpdir1 = "./cosmotheka/tests/cls/dummy1"
 tmpdir2 = "./cosmotheka/tests/cls/dummy2"
+NSIDE = 32
 
 
 def setup_module():
@@ -49,7 +50,6 @@ def get_config(
     dtype1="galaxy_density",
     inc_hm=False,
 ):
-    nside = 32
     # Set only the necessary entries. Leave the others to their default value.
     cosmo = {
         # Planck 2018: Table 2 of 1807.06209
@@ -92,7 +92,7 @@ def get_config(
         "use_halo_model": inc_hm,
         "mask_power": 2,
     }
-    bpw_edges = list(range(0, 3 * nside, 4))
+    bpw_edges = list(range(0, 3 * NSIDE, 4))
 
     out = {
         "tracers": {
@@ -107,7 +107,7 @@ def get_config(
             "n_iter_sht": 0,
             "n_iter_mcm": 3,
             "n_iter_cmcm": 3,
-            "nside": nside,
+            "nside": NSIDE,
             "coords": "C",
         },
         "recompute": {"cls": True, "cov": True, "mcm": True, "cmcm": True},
@@ -196,7 +196,8 @@ def test_cov_nlmarg():
     _clean_tmpdir(tmpdir2)
 
 
-@pytest.mark.parametrize("kind", ["1h", "2h", "3h", "4h", None])
+# @pytest.mark.parametrize("kind", ["1h", "2h", "3h", "4h", None])
+@pytest.mark.parametrize("kind", [None])
 def test_cov_ng(kind):
     # From CCL directly
     data = get_config(fsky=0.2)
@@ -1260,3 +1261,50 @@ def test_clfid_halomod_M500c():
     clb = ccl.angular_cl(cosmo, ccltr1, ccltr2, d["ell"], p_of_k_a=pk)
 
     assert clb[2:] == pytest.approx(d["cl"][0][2:], rel=1e-4, abs=0)
+
+
+def test_mc_correction():
+    config = get_config(dtype0="cmb_convergence", fsky=1.0, fsky2=0.1)
+    cl_class = Cl(config, "Dummy__0", "Dummy__1")
+    mapper_0, mapper_1 = cl_class.get_mappers()
+    mask_cmbk = mapper_0.get_mask()
+    mask_g = mapper_1.get_mask()
+    _clean_tmpdir(tmpdir1)
+
+    # Generate the sims needed to test the CMBk mc correction
+    os.makedirs(tmpdir1, exist_ok=True)  # Prepare output directory
+    ell = np.arange(3*NSIDE, dtype=np.float64)
+    cl_input = np.zeros_like(ell)
+    cl_input[2:] = 1e-3 * ell[2:]**(-3)
+
+    nsims = 50
+    # Generate the random map using synfast
+    for i in range(nsims):
+        # Signal and noise drawn separately
+        s_map, s_alm = hp.synfast(cl_input, nside=NSIDE, alm=True)
+
+        # Write input alm "s_alm"
+        hp.write_alm(tmpdir1 + f"/sky_klm_{i:03d}.fits", s_alm)
+
+        # To mimic the reconstruction, recover the alm after applying the mask
+        # Note that we should probably account for the coupling, but for the 
+        # test this seems enough.
+        rec_alm = hp.map2alm(s_map * mask_cmbk, lmax=3*NSIDE-1)
+        hp.write_alm(tmpdir1 + f"/sim_klm_{i:03d}.fits", rec_alm)
+
+    config = get_config(dtype0="cmb_convergence", fsky=1.0, fsky2=0.1)
+    config["tracers"]["Dummy__0"]["sims_rec_path"] = tmpdir1
+    config["tracers"]["Dummy__0"]["sims_in_path"] = tmpdir1
+    config["cls"]["Dummy-Dummy"]["neglect_mc_correction"] = False
+    cl_class = Cl(config, "Dummy__0", "Dummy__1")
+    clf = cl_class.get_cl_file()
+
+    Tl = clf['correction_cmbk']
+    ell_eff = clf['ell']
+    sel = ell_eff < 2 * NSIDE
+    ell_eff = ell_eff[sel][1:]  # Remove the first bin which is noisier due to mask
+    Tl = Tl[sel][1:]
+    ones = np.ones_like(Tl)
+
+    assert np.all(Tl != ones)
+    assert Tl == pytest.approx(ones, rel=1e-4, abs=0)

@@ -194,11 +194,10 @@ class MapperDummy(MapperBase):
         return self.spin
 
     def _get_sims_fnames(self):
-        return
-        # rec_sims_path = self.config['sims_rec_path']
-        # input_sims_path = self.config['sims_in_path']
+        rec_sims_path = self.config['sims_rec_path']
+        input_sims_path = self.config['sims_in_path']
 
-        # rec_sims = sorted(glob.glob(rec_sims_path + '/' + 'sim_klm_*.fits'))
-        # input_sims = sorted(glob.glob(input_sims_path + '/' + 'sky_klm_*.fits'))
+        rec_sims = sorted(glob.glob(rec_sims_path + '/' + 'sim_klm_*.fits'))
+        input_sims = sorted(glob.glob(input_sims_path + '/' + 'sky_klm_*.fits'))
 
-        # return rec_sims, input_sims
+        return rec_sims, input_sims

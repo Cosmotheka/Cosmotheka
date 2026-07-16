@@ -874,8 +874,8 @@ class Cl(ClBase):
 
             # If not already computed, compute it.
             print(f"Computing Tl {i+1} / {nsims}", flush=True)
-            kappa_input_map = mapper_cmbk._get_map_from_klm_file(input_sim)
-            kappa_rec_map = mapper_cmbk._get_map_from_klm_file(rec_sim)
+            kappa_input_map = mapper_cmbk._get_map_from_alm_file(input_sim)
+            kappa_rec_map = mapper_cmbk._get_map_from_alm_file(rec_sim)
 
             kin_gmask = nmt.NmtField(mask_x, [kappa_input_map])  # K_in,g-mask
             krec = nmt.NmtField(mask_cmbk, [kappa_rec_map])  # K_rec
@@ -887,10 +887,12 @@ class Cl(ClBase):
             cl_krec__kin_gmask_cp = nmt.compute_coupled_cell(krec, kin_gmask)
             cl_krec__kin_gmask = w.decouple_cell(cl_krec__kin_gmask_cp)
 
-            num.append(cl_kin_kmask__kin_gmask)
-            denom.append(cl_krec__kin_gmask)
-            num_cp.append(cl_kin_kmask__kin_gmask_cp)
-            denom_cp.append(cl_krec__kin_gmask_cp)
+            # Since we apply the same array to all Cell components, regardless 
+            # of the spin, we don't keep the (1, ells) shape.
+            num.append(cl_kin_kmask__kin_gmask[0])
+            denom.append(cl_krec__kin_gmask[0])
+            num_cp.append(cl_kin_kmask__kin_gmask_cp[0])
+            denom_cp.append(cl_krec__kin_gmask_cp[0])
 
         out = {'Tl': np.mean(num, axis=0) / np.mean(denom, axis=0),
                'Tl_cp': np.mean(num_cp, axis=0) / np.mean(denom_cp, axis=0),
