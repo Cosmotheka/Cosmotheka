@@ -348,7 +348,7 @@ def test_cov_ng(kind):
     assert covNG2 == pytest.approx(covNG1 * fsky / 0.1, rel=1e-4, abs=0)
 
 
-@pytest.mark.parametrize("sigma2B_type", ["mask_wl"])
+@pytest.mark.parametrize("sigma2B_type", ["fsky", "mask_wl"])
 def test_cov_ssc(sigma2B_type):
     # From CCL directly
     data = get_config(fsky=0.2)
@@ -464,11 +464,12 @@ def test_cov_ssc(sigma2B_type):
     elif sigma2B_type == "mask_wl":
         # Compute with mask_wl
         area = hp.nside2pixarea(hp.npix2nside(mask.size))
-        alm = blm = hp.map2alm(mask)
+        m12 = mask**2  # Same as m34
+        alm = blm = hp.map2alm(m12)
 
         mask_wl = hp.alm2cl(alm, blm)
         mask_wl *= 2 * np.arange(mask_wl.size) + 1
-        mask_wl /= np.sum(mask)**2 * area**2
+        mask_wl /= np.sum(m12)**2 * area**2
 
         sigma2_B = ccl.sigma2_B_from_mask(cosmo, a_arr=a_arr, mask_wl=mask_wl)
 
@@ -494,10 +495,7 @@ def test_cov_ssc(sigma2B_type):
         _clean_tmpdir(tmpdir1)
 
         # Compare with CCL prediction
-        # TODO: Cannot find why the error is larger than for the fsky method.
-        # A reldev of 1% is still good enough for the covariance (max rel error
-        # is ~0.005).
-        assert covSSC1 == pytest.approx(covSSC0, rel=1e-2, abs=0)
+        assert covSSC1 == pytest.approx(covSSC0, rel=1e-4, abs=0)
 
     # Tests (using pytest.approx for more informative logs)
     # Compare result of NG method with G+SSC-G
