@@ -1273,7 +1273,7 @@ class Cov:
 
         return fsky
 
-    def _get_thoery(self):
+    def _get_theory(self):
         if self.th is not None:
             return self.th
 
@@ -1292,7 +1292,7 @@ class Cov:
         mpA1, mpA2 = self.clA1A2.get_mappers()
         mpB1, mpB2 = self.clB1B2.get_mappers()
         trlist = self.data.data["tracers"]
-        th = self._get_thoery()
+        th = self._get_theory()
         self.ccl_trA1 = th.compute_tracer_ccl(self.trA1, trlist[self.trA1], mpA1)
         self.ccl_trA2 = th.compute_tracer_ccl(self.trA2, trlist[self.trA2], mpA2)
         self.ccl_trB1 = th.compute_tracer_ccl(self.trB1, trlist[self.trB1], mpB1)
@@ -1331,7 +1331,7 @@ class Cov:
         nclsa = np.max([1, s_a1 + s_a2])
         nclsb = np.max([1, s_b1 + s_b2])
         cov = np.zeros([ellA.size, nclsa, ellB.size, nclsb])
-        th = self._get_thoery()
+        th = self._get_theory()
         ccl_trA1, ccl_trA2, ccl_trB1, ccl_trB2 = self._get_CCL_tracers()
         fsky = self.get_fsky()
         covNG = th.get_ccl_cl_covNG(
@@ -1374,7 +1374,7 @@ class Cov:
         nclsa = np.max([1, s_a1 + s_a2])
         nclsb = np.max([1, s_b1 + s_b2])
         cov = np.zeros([ellA.size, nclsa, ellB.size, nclsb])
-        th = self._get_thoery()
+        th = self._get_theory()
         ccl_trA1, ccl_trA2, ccl_trB1, ccl_trB2 = self._get_CCL_tracers()
         # We need the biases for the "linear_bias" approx
         bA1 = self.data.get_bias(self.trA1)
