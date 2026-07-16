@@ -1,4 +1,5 @@
 name: continuous-integration
+
 on:
   push:
     branches:
@@ -7,79 +8,117 @@ on:
     branches:
       - master
 
-jobs:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
-  lint: 
+env:
+  CONDA_ENV: environment.yml
+  CACHE_NUMBER: 0
+
+jobs:
+  lint:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Run flake8
         uses: py-actions/flake8@v2
         with:
-          path: "cosmotheka"
+          path: cosmotheka
+          args: --max-line-length=88
 
   tests:
     needs: lint
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
-        os: [ ubuntu-latest ]
-        python-version: [ "3.10", "3.13" ]
-        CC: [ gcc ]
+        python-version: ["3.10", "3.13"]
 
     defaults:
       run:
-        # IMPORTANT: this is needed to make sure that the conda environment is auto activated
-        shell: bash -el {0} 
+        shell: bash -l {0}
+
+    permissions:
+      contents: read
+      checks: write
 
     steps:
-        - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-        - name: Set up mamba
-          uses: conda-incubator/setup-miniconda@v2
-          with:
-            channels: conda-forge
-            python-version: ${{ matrix.python-version }}
-            show-channel-urls: true
-            auto-update-conda: true
-            use-mamba: true
-            activate-environment: cosmotheka
-            miniforge-version: latest
+      - name: Set up conda
+        uses: conda-incubator/setup-miniconda@v4
+        with:
+          channels: conda-forge
+          conda-remove-defaults: true
+          show-channel-urls: true
+          miniforge-version: latest
+          miniforge-variant: Miniforge3
+          python-version: ${{ matrix.python-version }}
+          activate-environment: cosmotheka
 
-        - name: Install environment packages
-          if: steps.cache.outputs.cache-hit != 'true'
-          run: |
-            export MAMBA_NO_BANNER=1
-            mamba env update --file environment.yml
+      - name: Get conda base path
+        id: conda-base
+        run: echo "base=$(conda info --base)" >> "$GITHUB_OUTPUT"
 
-        - name: Install Cosmotheka
-          run: | 
-            pip install . --no-deps
+      - name: Cache conda environment
+        uses: actions/cache@v4
+        id: conda-cache
+        with:
+          path: ${{ steps.conda-base.outputs.base }}/envs/cosmotheka
+          key: conda-${{ runner.os }}-py${{ matrix.python-version }}-${{ env.CACHE_NUMBER }}-${{ hashFiles(env.CONDA_ENV) }}
 
-        - name: Python unit tests
-          run: coverage run --source=cosmotheka -m pytest -vv cosmotheka/tests && coverage lcov
+      - name: Install environment packages
+        if: steps.conda-cache.outputs.cache-hit != 'true'
+        run: |
+          export MAMBA_NO_BANNER=1
+          mamba env update --file ${{ env.CONDA_ENV }} --prune
 
-        - name: Collect coverage report
-          uses: coverallsapp/github-action@v2
-          with:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-            flag-name: run-${{ join(matrix.*, '-') }}
-            parallel: true
-            path-to-lcov: coverage.lcov
+      - name: Get pip cache dir
+        id: pip-cache
+        run: echo "dir=$(pip cache dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: pip-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('**/environment.yml', 'setup.py', 'pyproject.toml') }}
+          restore-keys: |
+            pip-${{ runner.os }}-py${{ matrix.python-version }}-
+            pip-${{ runner.os }}-
+
+      - name: Install Cosmotheka
+        run: pip install . --no-deps
+
+      - name: Run unit tests
+        run: |
+          coverage run --source=cosmotheka -m pytest -vv cosmotheka/tests
+          coverage lcov
+
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          flag-name: run-${{ matrix.python-version }}-${{ runner.os }}
+          parallel: true
+          path-to-lcov: coverage.lcov
 
   finish:
     needs: tests
-    name: Collect all coverage reports and publish to coveralls.io
     runs-on: ubuntu-latest
 
     steps:
-    - name: Collect all coverage reports and publish to coveralls.io
-      uses: coverallsapp/github-action@v2
-      with:
-        carryforward: "run-3.10-ubuntu-latest,run-3.13-ubuntu-latest"
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        parallel-finished: true
+      - name: Publish combined coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          parallel-finished: true
