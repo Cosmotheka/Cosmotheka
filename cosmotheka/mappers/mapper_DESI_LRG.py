@@ -243,6 +243,16 @@ class MapperDESILRG(MapperBase):
 
         return self.cat
 
+    def _get_nz(self):
+        fname = self.config["file_dndz"]
+        print(f"Reading dndz for zbin {self.zbin} from", fname, flush=True)
+        dndz = Table.read(
+            fname, format="ascii", header_start=0, data_start=1
+        )
+        z_mid = dndz["zmin"] + (dndz["zmax"] - dndz["zmin"]) / 2
+        nz = dndz[f"bin_{self.zbin + 1}_combined"]
+        return {"z_mid": z_mid, "nz": nz}
+
     def get_nz(self, dz=0):
         """
         Computes the redshift distribution of sources.  Then, it shifts the
@@ -255,14 +265,8 @@ class MapperDESILRG(MapperBase):
             [z, nz] (Array)
         """
         if self.dndz is None:
-            fname = self.config["file_dndz"]
-            print(f"Reading dndz for zbin {self.zbin} from", fname, flush=True)
-            dndz = Table.read(
-                fname, format="ascii", header_start=0, data_start=1
-            )
-            z_mid = dndz["zmin"] + (dndz["zmax"] - dndz["zmin"]) / 2
-            nz = dndz[f"bin_{self.zbin + 1}_combined"]
-            self.dndz = {"z_mid": z_mid, "nz": nz}
+            fn = f'{self.map_name}_dndz.npz'
+            self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz)
 
     def _get_alpha(self):

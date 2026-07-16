@@ -221,10 +221,27 @@ class MapperDESIBGS(MapperBase):
 
         return cat[mask]
 
+    def _get_nz(self):
+        spec_cat = self._load_spec_catalog()
+        if self.cat is None:
+            self.get_catalog()
+
+        boolmask = np.isin(spec_cat["TARGETID"], self.cat["TARGETID"])
+        zspec = spec_cat["Z"][boolmask]
+
+        bins = np.linspace(0, 1, 101)
+        nz, edges = np.histogram(zspec, bins=bins)
+
+        zmin, zmax = edges[:-1], edges[1:]
+        z_mid = zmin + (zmax - zmin) / 2
+
+        return {"z_mid": z_mid, "nz": nz}
+
     def get_nz(self, dz=0):
         """
-        Computes the redshift distribution of sources.  Then, it shifts the
-        distribution by "dz" (default dz=0).
+        Checks if mapper has precomputed the redshift \
+        distribution. If not, it uses "_get_nz()" to obtain it. \
+        Then, it shifts the distribution by "dz" (default dz=0).
 
         Kwargs:
             dz=0
@@ -233,22 +250,8 @@ class MapperDESIBGS(MapperBase):
             [z, nz] (Array)
         """
         if self.dndz is None:
-
-            spec_cat = self._load_spec_catalog()
-            if self.cat is None:
-                self.get_catalog()
-
-            boolmask = np.isin(spec_cat["TARGETID"], self.cat["TARGETID"])
-            zspec = spec_cat["Z"][boolmask]
-
-            bins = np.linspace(0, 1, 101)
-            nz, edges = np.histogram(zspec, bins=bins)
-
-            zmin, zmax = edges[:-1], edges[1:]
-            z_mid = zmin + (zmax - zmin) / 2
-
-            self.dndz = {"z_mid": z_mid, "nz": nz}
-
+            fn = f'{self.map_name}_dndz.npz'
+            self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz)
 
     def get_dtype(self):
