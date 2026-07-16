@@ -3,6 +3,7 @@ import numpy as np
 import healpy as hp
 import shutil
 import os
+import pytest
 
 
 def get_config():
@@ -20,19 +21,32 @@ def get_mapper():
     return xc.mappers.MapperP18CMBK(config)
 
 
+# This is testing functionality for MapperBase. Implemented here to have
+# access to m.rot, which is only defined in the child classes.
 def test_alm_cut():
-    # Tests alm filtering for CMB kappa alms on low resolution pixels.
+    # Test _get_map_from_alm_file and that it enforces lmax=3*nside-1.
     config = get_config()
     config['nside'] = 16
     m = xc.mappers.MapperP18CMBK(config)
-    klm = m._get_klm()
+    map_klm = m._get_map_from_alm_file(config['file_klm'])[0]
+
+    # Reproduce MapperBase._get_map_from_alm_file step by step.
     alm_all, lmax = hp.read_alm(config['file_klm'], return_mmax=True)
+    alm_all = alm_all.astype(np.complex128)
+    alm_all = np.nan_to_num(alm_all)
     alm_all = m.rot.rotate_alm(alm_all)
-    alm_all[0] = 0+0j
-    fl = np.ones(lmax+1)
-    fl[3*16:] = 0
-    alm_cut = hp.almxfl(alm_all, fl, inplace=True)
-    assert np.all(np.real(klm - alm_cut) == 0.)
+
+    lmax_cut = 3 * config['nside'] - 1
+    fl = np.ones(lmax + 1)
+    fl[lmax_cut + 1:] = 0
+    alm_cut = hp.almxfl(alm_all, fl, inplace=False)
+
+    map_alm_cut = hp.alm2map(alm_cut, nside=config['nside'])
+    assert map_klm == pytest.approx(map_alm_cut, rel=1e-5, abs=0)
+
+    # Ensure all multipoles above the cut are removed.
+    cl_cut = hp.alm2cl(alm_cut)
+    assert np.all(cl_cut[lmax_cut + 1:] == 0)
 
 
 def test_smoke():
