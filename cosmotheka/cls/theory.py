@@ -408,6 +408,14 @@ class Theory:
         a_s = self.get_a_arr()
         lk_s = self.get_lk_arr()
 
+        # To speed up the computation, we reduce the size of the arrays
+        # TODO: Ideally, we should have more points where the kernels are
+        # more important, and less where they are less relevant.
+        a_s = a_s[::2]
+        if a_s[-1] != 1:
+            a_s = np.append(a_s, 1.0)
+        lk_s = lk_s[::2]
+
         if kind is None:
             tkk = ccl.halos.halomod_Tk3D_cNG(
                 cosmo=cosmo,
@@ -459,7 +467,7 @@ class Theory:
                                             separable_growth=separable_growth,
                                             a_arr=a_s, lk_arr=lk_s)
         elif kind == "4h":
-            tkk = ccl.halos.halomod_Tk3D_3h(cosmo=cosmo,
+            tkk = ccl.halos.halomod_Tk3D_4h(cosmo=cosmo,
                                             hmc=hm_par['calculator'],
                                             prof=pA1, prof2=pA2,
                                             prof3=pB1, prof4=pB2,
