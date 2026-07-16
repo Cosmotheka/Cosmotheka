@@ -1270,7 +1270,6 @@ def test_mc_correction():
     cl_class = Cl(config, "Dummy__0", "Dummy__1")
     mapper_0, mapper_1 = cl_class.get_mappers()
     mask_cmbk = mapper_0.get_mask()
-    mapper_1.get_mask()
     _clean_tmpdir(tmpdir1)
 
     # Generate the sims needed to test the CMBk mc correction
