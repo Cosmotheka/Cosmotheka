@@ -611,48 +611,46 @@ class Theory:
         fsky=None,
     ):
         """
-            Return the Super Sample Covariance block covariance of two Cells
-            clA1A2
-            and clB1B2; i.e. four given tracers A1, A2 and B1, B2.
+        Return the Super Sample Covariance block covariance of two Cells
+        clA1A2 and clB1B2; i.e. four given tracers A1, A2 and B1, B2.
 
         Parameters
-            ----------
-            ccl_trA1: dict
-                Dictionary with the ccl information of tracer A1. See
-                `compute_tracer_ccl` output.
-            ccl_trA2: dict
-                Dictionary with the ccl information of tracer A2. See
-                `compute_tracer_ccl` output.
-            ccl_trB1: dict
-                Dictionary with the ccl information of tracer B1. See
-                `compute_tracer_ccl` output.
-            ccl_trB2: dict
-                Dictionary with the ccl information of tracer B2. See
-                `compute_tracer_ccl` output.
-            fsky: float
-                Fraction of the observed sky. If None, it will use the masks.
-                Otherwise, it will assume a survey area like a disc of area
-                4pi*fsky.
-            bias_trA1: float
-                Linear bias of tracer A1
-            bias_trA2: float
-                Linear bias of tracer A2
-            bias_trB1: float
-                Linear bias of tracer B1
-            bias_trB2: float
-                Linear bias of tracer B2
-            mask_wl: numpyarray
-                Weak lensing mask to compute sigma2_B. If None, it will use
-                fsky
-            fsky: float
-                Fraction of the observed sky. If None, it will use the masks.
-                Otherwise, it will assume a survey area like a disc of area
-                4pi*fsky.
+        ----------
+        ccl_trA1: dict
+            Dictionary with the ccl information of tracer A1. See
+            `compute_tracer_ccl` output.
+        ccl_trA2: dict
+            Dictionary with the ccl information of tracer A2. See
+            `compute_tracer_ccl` output.
+        ccl_trB1: dict
+            Dictionary with the ccl information of tracer B1. See
+            `compute_tracer_ccl` output.
+        ccl_trB2: dict
+            Dictionary with the ccl information of tracer B2. See
+            `compute_tracer_ccl` output.
+        fsky: float
+            Fraction of the observed sky. If None, it will use the masks.
+            Otherwise, it will assume a survey area like a disc of area
+            4pi*fsky.
+        bias_trA1: float
+            Linear bias of tracer A1
+        bias_trA2: float
+            Linear bias of tracer A2
+        bias_trB1: float
+            Linear bias of tracer B1
+        bias_trB2: float
+            Linear bias of tracer B2
+        mask_wl: numpyarray
+            Weak lensing mask to compute sigma2_B. If None, it will use fsky
+        fsky: float
+            Fraction of the observed sky. If None, it will use the masks.
+            Otherwise, it will assume a survey area like a disc of area
+            4pi*fsky.
 
-            Return
-            ------
-            covNG: numpyarray
-                non-Gaussian block covariance
+        Return
+        ------
+        covNG: numpyarray
+            non-Gaussian block covariance
         """
         cosmo = self.get_cosmo_ccl()
 
