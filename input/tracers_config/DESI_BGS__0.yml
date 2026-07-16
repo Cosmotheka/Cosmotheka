@@ -31,4 +31,4 @@ download_missing_random: false
 remove_random_after_clean: false
 
 mapper_class: 'MapperDESIBGS'
-path_rerun: /mnt/extraspace/damonge/Datasets/DESI_BGS_PZ/reruns
+path_rerun: /mnt/extraspace/damonge/Datasets/DESI_BGS_PZ/cosmotheka_reruns

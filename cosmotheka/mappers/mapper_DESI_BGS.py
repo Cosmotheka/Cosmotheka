@@ -476,9 +476,9 @@ class MapperDESIBGS(MapperBase):
         # Hack to remove the density definition from the randoms map name
         map_name = self.map_name.replace("_densdefZhou2023", "")
 
-        # TODO: consider if I want to save the sum of all maps. Problem, it
+        # TODO: consider if we want to save the sum of all maps. Problem, it
         # makes the code a bit more complex and it's difficult to know which
-        # randoms when into the map.
+        # randoms went into the map.
         for base_name in list_randoms:
             # weight_col = f"weight_pzbin{self.zbin + 1}"
             weight_col = "weight_pzbin"

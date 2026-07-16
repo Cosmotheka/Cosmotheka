@@ -24,4 +24,4 @@ download_missing_random: false
 remove_random_after_clean: false
 mapper_class: 'MapperDESILRG'
 # mask_name is set dynamically in the code.
-path_rerun: /mnt/extraspace/damonge/Datasets/DESI_LRG_PZ/reruns
+path_rerun: /mnt/extraspace/damonge/Datasets/DESI_LRG_PZ/cosmotheka_reruns
