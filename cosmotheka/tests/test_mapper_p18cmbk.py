@@ -94,3 +94,35 @@ def test_get_nmt_field():
     f = m.get_nmt_field()
     cl = nmt.compute_coupled_cell(f, f)[0]
     assert np.all(np.fabs(cl) < 1E-5)
+
+
+def test_get_sims_fnames(tmp_path):
+    rec_dir = tmp_path / 'rec_sims'
+    in_dir = tmp_path / 'input_sims'
+    rec_dir.mkdir()
+    in_dir.mkdir()
+
+    rec_ids = [2, 0, 1]
+    in_ids = [1, 0, 2]
+    rec_files = []
+    in_files = []
+
+    for i in rec_ids:
+        f = rec_dir / f'sim_klm_{i:03d}.fits'
+        f.write_bytes(b'')
+        rec_files.append(str(f))
+
+    for i in in_ids:
+        f = in_dir / f'sky_klm_{i:03d}.fits'
+        f.write_bytes(b'')
+        in_files.append(str(f))
+
+    config = get_config()
+    config['sims_rec_path'] = str(rec_dir)
+    config['sims_in_path'] = str(in_dir)
+    mapper = xc.mappers.MapperP18CMBK(config)
+
+    rec_sims, input_sims = mapper._get_sims_fnames()
+
+    assert rec_sims == sorted(rec_files)
+    assert input_sims == sorted(in_files)

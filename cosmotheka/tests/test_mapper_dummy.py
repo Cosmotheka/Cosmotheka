@@ -230,3 +230,37 @@ def test_remove_overlap():
     assert np.all(m.get_mask() == 0)
 
     os.remove(fname)
+
+
+def test_get_sims_fnames():
+    rec_dir = os.path.join(OUTDIR, 'rec_sims')
+    in_dir = os.path.join(OUTDIR, 'input_sims')
+    os.makedirs(rec_dir, exist_ok=True)
+    os.makedirs(in_dir, exist_ok=True)
+
+    rec_ids = [2, 0, 1]
+    in_ids = [1, 0, 2]
+    rec_files = []
+    in_files = []
+
+    for i in rec_ids:
+        fname = os.path.join(rec_dir, f'sim_klm_{i:03d}.fits')
+        with open(fname, 'w', encoding='utf-8'):
+            pass
+        rec_files.append(fname)
+
+    for i in in_ids:
+        fname = os.path.join(in_dir, f'sky_klm_{i:03d}.fits')
+        with open(fname, 'w', encoding='utf-8'):
+            pass
+        in_files.append(fname)
+
+    config = get_config()
+    config['sims_rec_path'] = rec_dir
+    config['sims_in_path'] = in_dir
+    mapper = xc.mappers.MapperDummy(config)
+
+    rec_sims, input_sims = mapper._get_sims_fnames()
+
+    assert rec_sims == sorted(rec_files)
+    assert input_sims == sorted(in_files)
