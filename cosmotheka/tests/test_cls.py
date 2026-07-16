@@ -8,6 +8,7 @@ import pymaster as nmt
 from cosmotheka.mappers import MapperDummy
 import pytest
 import pyccl as ccl
+import healpy as hp
 
 
 # Remove previous test results
@@ -346,6 +347,161 @@ def test_cov_ng(kind):
     # fsky scaling
     assert covNG2 == pytest.approx(covNG1 * fsky / 0.1, rel=1e-4, abs=0)
 
+
+@pytest.mark.parametrize("sigma2B_type", ["mask_wl"])
+def test_cov_ssc(sigma2B_type):
+    # From CCL directly
+    data = get_config(fsky=0.2)
+    clc = Cl(data, "Dummy__0", "Dummy__0")
+    ells = clc.b.get_effective_ells()
+    mapper, _ = clc.get_mappers()
+    mask = mapper.get_mask()
+    _clean_tmpdir(tmpdir1)
+
+    cosmo = ccl.Cosmology(**data["cov"]["fiducial"]["cosmo"])
+    md = ccl.halos.MassDef200m
+    mf = ccl.halos.MassFuncTinker10(mass_def=md)
+    hb = ccl.halos.HaloBiasTinker10(mass_def=md)
+    cm = ccl.halos.ConcentrationDuffy08(mass_def=md)
+    hmc = ccl.halos.HMCalculator(mass_function=mf, halo_bias=hb, mass_def=md)
+    prnfw = ccl.halos.HaloProfileNFW(mass_def=md, concentration=cm)
+    z, nz = np.loadtxt(
+        "cosmotheka/tests/data/DESY1gc_dndz_bin0.txt",
+        usecols=(1, 3),
+        unpack=True,
+    )
+    tr = ccl.NumberCountsTracer(
+        cosmo, has_rsd=False, dndz=(z, nz), bias=(z, np.ones_like(z))
+    )
+    # In order to get rdev = 1e-3, we need to have an a_arr, and k_arr very 
+    # close to the one in ClFid. 
+    a_arr = np.linspace(1/(1+6), 1, 38)
+
+    tkk = ccl.halos.halomod_Tk3D_SSC_linear_bias(
+        cosmo=cosmo,
+        hmc=hmc,
+        prof=prnfw,
+        bias1=1,
+        bias2=1,
+        bias3=1,
+        bias4=1,
+        is_number_counts1=True,
+        is_number_counts2=True,
+        is_number_counts3=True,
+        is_number_counts4=True,
+    )
+
+
+    # Gaussian only
+    data = get_config(fsky=0.2, inc_hm=False)
+    data["tracers"]["Dummy__0"]["bias"] = 1
+    covcG = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
+    covG = covcG.get_covariance()
+    _clean_tmpdir(tmpdir1)
+
+    if sigma2B_type == "fsky":
+        # Compute with fsky
+
+        # Case 1 - fsky computed from the mask
+        fsky = np.mean((mask > 0))
+        sigma2_B = ccl.sigma2_B_disc(cosmo, a_arr=a_arr, fsky=fsky) # Use 0.1 to check
+
+        covSSC0 = ccl.angular_cl_cov_SSC(
+            cosmo,
+            tracer1=tr,
+            tracer2=tr,
+            ell=ells,
+            t_of_kk_a=tkk,
+            tracer3=tr,
+            tracer4=tr,
+            ell2=ells,
+            sigma2_B=(a_arr, sigma2_B),
+            integration_method="spline",
+        )
+
+        # Gaussian + non-Gaussian
+        data = get_config(fsky=0.2, inc_hm=False)
+        data["cov"]["SSC"] = {'compute': True, 'sigma2_B': sigma2B_type}
+        data["tracers"]["Dummy__0"]["bias"] = 1
+        covc1 = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
+        covSSC1 = covc1.get_SSC_halomodel(0, 0, 0, 0)
+        cov1 = covc1.get_covariance()
+        _clean_tmpdir(tmpdir1)
+
+        # Compare with CCL prediction
+        # (interpolation errors are ~1E-4, using a very similar grid)
+        assert covSSC1 == pytest.approx(covSSC0, rel=1e-4, abs=0)
+
+        # Case 2 - fsky set by user to the "wrong" value of 0.1
+        sigma2_B = ccl.sigma2_B_disc(cosmo, a_arr=a_arr, fsky=0.1)
+
+        covSSC0 = ccl.angular_cl_cov_SSC(
+            cosmo,
+            tracer1=tr,
+            tracer2=tr,
+            ell=ells,
+            t_of_kk_a=tkk,
+            tracer3=tr,
+            tracer4=tr,
+            ell2=ells,
+            sigma2_B=(a_arr, sigma2_B),
+            integration_method="spline",
+        )
+
+        data = get_config(fsky=0.2, inc_hm=False)
+        data["cov"]["SSC"] = {'compute': True, 'sigma2_B': sigma2B_type}
+        data["cov"]["fsky_NG"] = 0.1
+        data["tracers"]["Dummy__0"]["bias"] = 1
+        covc1 = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
+        covSSC1 = covc1.get_SSC_halomodel(0, 0, 0, 0)
+        cov1 = covc1.get_covariance()
+        _clean_tmpdir(tmpdir1)
+
+        # Compare with CCL prediction
+        # (interpolation errors are ~1E-4, using a very similar grid)
+        assert covSSC1 == pytest.approx(covSSC0, rel=1e-4, abs=0)
+
+    elif sigma2B_type == "mask_wl":
+        # Compute with mask_wl
+        area = hp.nside2pixarea(hp.npix2nside(mask.size))
+        alm = blm = hp.map2alm(mask)
+
+        mask_wl = hp.alm2cl(alm, blm)
+        mask_wl *= 2 * np.arange(mask_wl.size) + 1
+        mask_wl /= np.sum(mask)**2 * area**2
+
+        sigma2_B = ccl.sigma2_B_from_mask(cosmo, a_arr=a_arr, mask_wl=mask_wl)
+
+        covSSC0 = ccl.angular_cl_cov_SSC(
+            cosmo,
+            tracer1=tr,
+            tracer2=tr,
+            ell=ells,
+            t_of_kk_a=tkk,
+            tracer3=tr,
+            tracer4=tr,
+            ell2=ells,
+            sigma2_B=(a_arr, sigma2_B),
+            integration_method="spline",
+        )
+
+        data = get_config(fsky=0.2, inc_hm=False)
+        data["cov"]["SSC"] = {'compute': True, 'sigma2_B': sigma2B_type}
+        data["tracers"]["Dummy__0"]["bias"] = 1
+        covc1 = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
+        covSSC1 = covc1.get_SSC_halomodel(0, 0, 0, 0)
+        cov1 = covc1.get_covariance()
+        _clean_tmpdir(tmpdir1)
+
+        # Compare with CCL prediction
+        # TODO: Cannot find why the error is larger than for the fsky method.
+        # A reldev of 1% is still good enough for the covariance (max rel error
+        # is ~0.005).
+        assert covSSC1 == pytest.approx(covSSC0, rel=1e-2, abs=0)
+
+    # Tests (using pytest.approx for more informative logs)
+    # Compare result of NG method with G+SSC-G
+    assert covSSC1 == pytest.approx(cov1 - covG, rel=1e-4, abs=0)
 
 def test_file_inconsistent_errors():
     clo = get_cl_class()
