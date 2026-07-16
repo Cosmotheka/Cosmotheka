@@ -61,37 +61,37 @@ class MapperBase(object):
             rot = None
         return rot
 
-    def _get_map_from_klm_file(self, file):
+    def _get_map_from_alm_file(self, file):
         """
-        Reads a klm file, rotates it if needed and creates a map with the shape
+        Reads a alm file, rotates it if needed and creates a map with the shape
         expected by NaMaster (ncomp, npix).
 
         Parameters:
-            file (str): path to the klm file.
+            file (str): path to the alm file.
 
         Returns:
-            map (Array): map created from the klm file, with shape 
+            map (Array): map created from the alm file, with shape 
                          (ncomp, npix).
         """
         # Read alms
-        klm, lmax = hp.read_alm(file, return_mmax=True)
+        alm, lmax = hp.read_alm(file, return_mmax=True)
         # Some elements may be nan (e.g. 1st in Planck18CMBk, 2 first in
         # ACTDR6CMBk). Fix that.
-        klm = klm.astype(np.complex128)
-        klm = np.nan_to_num(klm)
+        alm = alm.astype(np.complex128)
+        alm = np.nan_to_num(alm)
 
         # Rotate
         if self.rot is not None:
-            klm = self.rot.rotate_alm(klm)
+            alm = self.rot.rotate_alm(alm)
 
         # Filter if lmax is too large
         if lmax > 3*self.nside-1:
             fl = np.ones(lmax+1)
             fl[3*self.nside:] = 0
-            klm = hp.almxfl(klm, fl, inplace=True)
+            alm = hp.almxfl(alm, fl, inplace=True)
 
         # Create the map with the shape expected by NaMaster (ncomp, npix)
-        return np.atleast_2d(hp.alm2map(klm, nside=self.nside))
+        return np.atleast_2d(hp.alm2map(alm, nside=self.nside))
 
     def _get_signal_map(self):
         raise NotImplementedError("Do not use base class")
