@@ -504,14 +504,16 @@ class MapperDESIBGS(MapperBase):
                 w = np.array(randoms[weight_col])
                 map_ngal = np.zeros((3, npix))
                 for power in [0, 1, 2]:
-                    print(f"Computing map for {base_name} with weights to the power of {power}...", flush=True)
+                    print(f"Computing map for {base_name} with weights "
+                          f"to the power of {power}...", flush=True)
                     map_ngal[power] = get_map_from_points(
                         randoms,
                         self.nside,
                         rot=self.rot,
                         w=w**power if power > 0 else None,
                     )
-                    print(f"Finished map for {base_name} with weights to the power of {power}.", flush=True)
+                    print(f"Finished map for {base_name} with weights "
+                          f"to the power of {power}.", flush=True)
                 return map_ngal
 
             fname = "_".join(
