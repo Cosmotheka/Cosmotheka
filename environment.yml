@@ -11,7 +11,7 @@ dependencies:
   - flake8
   # User
   - cython
-  - numpy
+  - numpy<2.4  # TODO: Update to 2.4 in a future PR, when CCL supports it.
   - scipy
   - scikit-learn
   - flake8
