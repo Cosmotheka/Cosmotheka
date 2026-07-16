@@ -11,7 +11,7 @@ external_maps:
     apply: True
     path: /mnt/extraspace/damonge/Datasets/GalacticMaps/stardens_gaia.fits
     threshold: 2500
-    field: 1
+    field: 0
   - name: ebv
     apply: True
     path: /mnt/extraspace/damonge/Datasets/GalacticMaps/lambda_sfd_ebv_Equatorial.fits
