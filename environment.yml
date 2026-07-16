@@ -24,6 +24,6 @@ dependencies:
   - sacc
   - fitsio
   - healpy
-  - pip
-  - pip:
-      - pixell
+  - pixell
+  # - pip
+  # - pip:
