@@ -892,7 +892,8 @@ class Cl(ClBase):
             num_cp.append(cl_kin_kmask__kin_gmask_cp)
             denom_cp.append(cl_krec__kin_gmask_cp)
 
-        out = {'Tl': np.mean(num, axis=0), 'Tl_cp': np.mean(num_cp, axis=0),
+        out = {'Tl': np.mean(num, axis=0) / np.mean(denom, axis=0),
+               'Tl_cp': np.mean(num_cp, axis=0) / np.mean(denom_cp, axis=0),
                'ell': ell, 'num': np.array(num), 'denom': np.array(denom),
                'num_cp': np.array(num_cp), 'denom_cp': np.array(denom_cp)}
         save_rerun_data(mapper_cmbk, fname, 'NPZ', out)
