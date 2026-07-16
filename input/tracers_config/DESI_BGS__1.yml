@@ -8,15 +8,11 @@ data_catalog_pz: /mnt/extraspace/damonge/Datasets/DESI_BGS_PZ/dr9_bgs_pz.fits
 
 external_maps:
   - name: stardens
-    apply: True
     path: /mnt/extraspace/damonge/Datasets/GalacticMaps/stardens_gaia.fits
     threshold: 2500
-    field: 0
   - name: ebv
-    apply: True
     path: /mnt/extraspace/damonge/Datasets/GalacticMaps/lambda_sfd_ebv_Equatorial.fits
     threshold: 0.15
-    field: 0
 
 spec_catalog_xmatch: /mnt/extraspace/damonge/Datasets/DESI_DR1/datcomb_BGS_BRIGHT_tarspecwdup_zdone.fits
 
