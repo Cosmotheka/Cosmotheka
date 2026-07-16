@@ -44,9 +44,6 @@ class MapperDESIBGS(MapperBase):
         suffix_parts = []
 
         # Quality cuts
-        self._stardens_good_hp_idx = None
-        self._stardens_nside = None
-
         cuts = self._get_default_cuts()
 
         self.cuts = {}
@@ -131,9 +128,7 @@ class MapperDESIBGS(MapperBase):
         cuts = {
             "target_maskbits": [1, 12, 13],
             "min_nobs": 2,
-            # "max_ebv": 0.15,
             "max_sigmaz": 0.05,
-            "max_stardens": 2500,
             "remove_island": True,
         }
         return cuts
@@ -147,14 +142,12 @@ class MapperDESIBGS(MapperBase):
         # mask *= cat["lrg_mask"][:] == 0
         # print("Veto mask. Keeping ", mask.sum())
 
-        if randoms:
-            # MASKBITS cut. The veto mask for randoms seem to miss some
-            # MASKBITS cuts. This is why I put it after and only for randoms.
-            target_maskbits = self.cuts["target_maskbits"]
-            for bit in target_maskbits:
-                mask &= (cat["MASKBITS"] & 2**bit) == 0
-
-            print(f"MASKBITS. Keeping {mask.sum()} objects")
+        # MASKBITS cut. The veto mask for randoms seem to miss some
+        # MASKBITS cuts. This is why I put it after and only for randoms.
+        target_maskbits = self.cuts["target_maskbits"]
+        for bit in target_maskbits:
+            mask &= (cat["MASKBITS"] & 2**bit) == 0
+        print(f"MASKBITS. Keeping {mask.sum()} objects")
 
         # 2+ exposures
         mask &= cat["NOBS_G"][:] >= self.cuts["min_nobs"]
@@ -162,14 +155,13 @@ class MapperDESIBGS(MapperBase):
         mask &= cat["NOBS_Z"][:] >= self.cuts["min_nobs"]
         print(f"Pixel exposures. Keeping {mask.sum()} objects")
 
-        # # E(B-V) < 0.15
-        # if self.cuts["max_ebv"] is not None:
-        #     mask &= cat["EBV"][:] < self.cuts["max_ebv"]
-        #     print(f"EBV. Keeping {mask.sum()} objects")
-
-        # Apply cut on stellar density
-        mask &= self._get_stardens_mask(cat)
-        print(f"Stellar density. Keeping {mask.sum()} objects")
+        # Apply cuts from external maps
+        for syst in self.config.get("external_maps", []):
+            if syst['apply']:
+                mask &= self._get_map_threshold_mask(
+                    syst['path'], syst['threshold'], cat,
+                    field=syst.get('field', 0))
+                print(f"{syst['name']}. Keeping {mask.sum()} objects")
 
         # Remove "islands" in the NGC
         # Extra cut in quality_cuts.py (used in MWhite+2021)
@@ -189,23 +181,16 @@ class MapperDESIBGS(MapperBase):
 
         return mask
 
-    def _get_stardens_mask(self, cat):
+    def _get_map_threshold_mask(self, fname, threshold, cat, field=0):
         """
-        Returns a mask for the LRGs to keep based on the stellar density map.
+        Returns a mask for the sources to keep based on a given external map
+        and a given threshold.
         """
-        if self._stardens_good_hp_idx is None:
-            fname = self.config["stardens_path"]
-            stardens = fitsio.read(fname)  # Stellar density map
-            self._stardens_nside = hp.npix2nside(stardens.size)
-            self._stardens_good_hp_idx = stardens["HPXPIXEL"][
-                stardens["STARDENS"] < self.cuts["max_stardens"]
-            ]
-
-        lrg_hp_idx = hp.ang2pix(
-            self._stardens_nside, cat["RA"], cat["DEC"], lonlat=True
-        )
-        mask = np.isin(lrg_hp_idx, self._stardens_good_hp_idx)
-
+        mp = hp.read_map(fname, field=field)
+        goodpix = mp < threshold
+        nside_mp = hp.npix2nside(mp.size)
+        ipix = hp.ang2pix(nside_mp, cat["RA"], cat["DEC"], lonlat=True)
+        mask = goodpix[ipix]
         return mask
 
     def _load_spec_catalog(self):
@@ -485,9 +470,8 @@ class MapperDESIBGS(MapperBase):
             return self.randoms_maps
 
         list_randoms = self._get_list_randoms()
-        npix = hp.nside2npix(self.nside)
 
-        randoms_maps = np.zeros((3, npix))
+        randoms_maps = np.zeros((3, self.npix))
 
         # Hack to remove the density definition from the randoms map name
         map_name = self.map_name.replace("_densdefZhou2023", "")
@@ -502,7 +486,7 @@ class MapperDESIBGS(MapperBase):
             def f():
                 randoms = self.get_clean_randoms_with_weights(base_name)
                 w = np.array(randoms[weight_col])
-                map_ngal = np.zeros((3, npix))
+                map_ngal = np.zeros((3, self.npix))
                 for power in [0, 1, 2]:
                     print(f"Computing map for {base_name} with weights "
                           f"to the power of {power}...", flush=True)

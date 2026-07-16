@@ -3,7 +3,19 @@ sample: main
 data_catalog: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/catalogs/dr9_lrg_pzbins.fits
 weights_catalog: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/catalogs/more/dr9_lrg_pzbins-weights.fits
 file_dndz: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/redshift_dist/main_lrg_pz_dndz_iron_v0.4_dz_0.02.txt
-stardens_path: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/misc/pixweight-dr7.1-0.22.0_stardens_64_ring.fits
+
+external_maps:
+  - name: stardens
+    apply: True
+    path: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/misc/pixweight-dr7.1-0.22.0_stardens_64_ring.fits
+    threshold: 2500
+    field: 1
+  - name: ebv
+    apply: False
+    path: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/misc/pixweight-dr7.1-0.22.0_ebv_64_ring.fits
+    threshold: 0.15
+    field: 0
+
 imaging_weights_coeffs: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/catalogs/imaging_weights/main_lrg_linear_coeffs_pz.yaml
 randoms_lrgmask_path: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/catalogs/lrgmask_v1.1
 randoms_path: /mnt/extraspace/damonge/Datasets/DESI/randoms_for_lrg_xcorr_2023_v1

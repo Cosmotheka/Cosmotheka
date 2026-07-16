@@ -29,15 +29,11 @@ class MapperDESILRG(MapperBase):
         - nside: `4096`
         - imaging_weights_coeffs: \
             `./lrg_xcorr_2023_v1/catalogs/imaging_weights/main_lrg_linear_coeffs_pz.yaml`
-        - stardens_path: \
-            ./lrg_xcorr_2023_v1/misc/pixweight-dr7.1-0.22.0_stardens_64_ring.fits
         - download_missing_randoms: `False` (default `False`)
         - remove_downloaded_randoms_after_clean: `True` (default `True`)
         - mask_name: `None` (default `None`, which means the same as map_name)
         - target_maskbits: `[1, 12, 13]` (default)
         - min_nobs: `2` (default)
-        - max_ebv: `0.15` (default). Use None to apply no EBV cut.
-        - max_stardens: `2500` (default)
         - remove_island: `True` (default). If True, it removes the "island" \
               in the NGC
         - mask_threshold: `0.2` (default). This is the minimum relative value \
@@ -92,8 +88,6 @@ class MapperDESILRG(MapperBase):
             suffix_parts.append("extended")
 
         # Quality cuts
-        self._stardens_good_hp_idx = None
-        self._stardens_nside = None
         cuts = self._get_default_cuts()
 
         self.cuts = {}
@@ -132,30 +126,9 @@ class MapperDESILRG(MapperBase):
         cuts = {
             "target_maskbits": [1, 12, 13],
             "min_nobs": 2,
-            "max_ebv": 0.15,
-            "max_stardens": 2500,
             "remove_island": True,
         }
         return cuts
-
-    def _get_stardens_mask(self, cat):
-        """
-        Returns a mask for the LRGs to keep based on the stellar density map.
-        """
-        if self._stardens_good_hp_idx is None:
-            fname = self.config["stardens_path"]
-            stardens = fitsio.read(fname)  # Stellar density map
-            self._stardens_nside = hp.npix2nside(stardens.size)
-            self._stardens_good_hp_idx = stardens["HPXPIXEL"][
-                stardens["STARDENS"] < self.cuts["max_stardens"]
-            ]
-
-        lrg_hp_idx = hp.ang2pix(
-            self._stardens_nside, cat["RA"], cat["DEC"], lonlat=True
-        )
-        mask = np.isin(lrg_hp_idx, self._stardens_good_hp_idx)
-
-        return mask
 
     def _get_quality_cuts(self, cat, randoms=False):
         """
@@ -186,14 +159,13 @@ class MapperDESILRG(MapperBase):
         mask *= cat[f"{key}_Z"][:] >= self.cuts["min_nobs"]
         print("Pixel exposures. Keeping ", mask.sum())
 
-        # E(B-V) < 0.15
-        if self.cuts["max_ebv"] is not None:
-            mask *= cat["EBV"][:] < self.cuts["max_ebv"]
-            print("EBV. Keeping ", mask.sum())
-
-        # Apply cut on stellar density
-        mask *= self._get_stardens_mask(cat)
-        print("Stellar density. Keeping ", mask.sum())
+        # Apply cuts from external maps
+        for syst in self.config.get("external_maps", []):
+            if syst['apply']:
+                mask &= self._get_map_threshold_mask(
+                    syst['path'], syst['threshold'], cat,
+                    field=syst.get('field', 0))
+                print(f"{syst['name']}. Keeping {mask.sum()} objects")
 
         # Remove "islands" in the NGC
         # Extra cut in quality_cuts.py (used in MWhite+2021)
@@ -205,6 +177,18 @@ class MapperDESILRG(MapperBase):
             )
             print("Island. Keeping ", mask.sum())
 
+        return mask
+
+    def _get_map_threshold_mask(self, fname, threshold, cat, field=0):
+        """
+        Returns a mask for the sources to keep based on a given external map
+        and a given threshold.
+        """
+        mp = hp.read_map(fname, field=field)
+        goodpix = mp < threshold
+        nside_mp = hp.npix2nside(mp.size)
+        ipix = hp.ang2pix(nside_mp, cat["RA"], cat["DEC"], lonlat=True)
+        mask = goodpix[ipix]
         return mask
 
     def get_catalog(self):
