@@ -535,7 +535,7 @@ class MapperDESILRG(MapperBase):
             linear_coeffs = yaml.safe_load(f)
 
         key_weight = "weight"
-        if ("no_ebv" in weights_path) or (self.cuts["max_ebv"] is None):
+        if ("no_ebv" in weights_path):
             key_weight = "weight_noebv"
 
         weights = {}
