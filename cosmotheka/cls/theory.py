@@ -109,16 +109,6 @@ class Theory:
             self._cosmo = ccl.Cosmology(**(self.config["cosmo"]))
         return self._cosmo
 
-    # def get_k_arr(self):
-    #     """
-    #     Return the k array
-    #     """
-    #     if self.k_arr is None:
-    #         lk = self.get_lk_arr()
-    #         self.k_arr = np.exp(lk)
-
-    #     return self.k_arr
-    
     def get_lk_arr(self):
         """
         Return the log(k) array
@@ -126,7 +116,7 @@ class Theory:
         if self.lk_arr is None:
             cosmo = self.get_cosmo_ccl()
             # kmax should be read from dndz but for now hardcoded
-            lkmax = np.log(100) 
+            lkmax = np.log(100)
             lk = cosmo.get_pk_spline_lk()
             sel = lk <= lkmax
             self.lk_arr = lk[sel]
@@ -364,7 +354,7 @@ class Theory:
         pB2 = ccl_trB2["ccl_pr"]
 
         # Profiles 2pt and check if some of them are the same.
-        # I believe that initializing them does not consume time, so we 
+        # I believe that initializing them does not consume time, so we
         # avoid cherry-picking here for the different kinds.
         # 12
         if ccl_trA1["name"] == ccl_trA2["name"]:
@@ -476,7 +466,7 @@ class Theory:
         else:
             raise ValueError(f"Unknown kind of NG covariance term: {kind}. It "
                              f"has to be None, '1h', '2h', '3h' or '4h'.")
-            
+
         return tkk
 
     def get_ccl_pk(self, ccl_tr1, ccl_tr2):
@@ -592,10 +582,6 @@ class Theory:
 
         tkk = self.get_ccl_tkka(ccl_trA1, ccl_trA2, ccl_trB1, ccl_trB2, kind)
 
-        # For debugging: save tkk spline arrays
-        # a, lk1, lk2, tkk_arr = tkk.get_spline_arrays()
-        # np.savez_compressed('/mnt/users/gravityls_3/codes/Cosmotheka/output/test_NG/tk3D_cNG_DESY3wl_DESY3wl_debug.npz', a=a, lk1=lk1, lk2=lk2, tkk=tkk_arr)
-
         return ccl.angular_cl_cov_cNG(
             cosmo,
             tracer1=ccl_trA1["ccl_tr"],
@@ -625,7 +611,8 @@ class Theory:
         fsky=None,
     ):
         """
-            Return the Super Sample Covariance block covariance of two Cells clA1A2
+            Return the Super Sample Covariance block covariance of two Cells
+            clA1A2
             and clB1B2; i.e. four given tracers A1, A2 and B1, B2.
 
         Parameters
@@ -644,7 +631,8 @@ class Theory:
                 `compute_tracer_ccl` output.
             fsky: float
                 Fraction of the observed sky. If None, it will use the masks.
-                Otherwise, it will assume a survey area like a disc of area 4pi*fsky.
+                Otherwise, it will assume a survey area like a disc of area
+                4pi*fsky.
             bias_trA1: float
                 Linear bias of tracer A1
             bias_trA2: float
@@ -654,10 +642,12 @@ class Theory:
             bias_trB2: float
                 Linear bias of tracer B2
             mask_wl: numpyarray
-                Weak lensing mask to compute sigma2_B. If None, it will use fsky
+                Weak lensing mask to compute sigma2_B. If None, it will use
+                fsky
             fsky: float
                 Fraction of the observed sky. If None, it will use the masks.
-                Otherwise, it will assume a survey area like a disc of area 4pi*fsky.
+                Otherwise, it will assume a survey area like a disc of area
+                4pi*fsky.
 
             Return
             ------

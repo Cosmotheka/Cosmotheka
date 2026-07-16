@@ -460,8 +460,8 @@ class Cl(ClBase):
              - wins: bandpower window functions,
              - correction: a mapper level correction applied to the power
                spectra
-             - correction_cmbk: a correction applied to the power spectra to 
-               take into account for the fact that the CMB lensing convergence 
+             - correction_cmbk: a correction applied to the power spectra to
+               take into account for the fact that the CMB lensing convergence
                map has a mask applied to it. Only there if cmbk needed
         """
         if self._read_symmetric:
@@ -550,7 +550,7 @@ class Cl(ClBase):
             # Note that while we have subtracted the noise
             # bias from `cl_cp`, `cl_cov_cp` still includes it.
             correction = 1
-            # TODO: Consider removing this functionality. ACTk map has the 
+            # TODO: Consider removing this functionality. ACTk map has the
             # mask applied to the map. We can decide to not apply it, as we've
             # done in the ACTDR6k mapper.
             if (mean_mamb != 0) and ((mapper1.mask_power > 1) or
@@ -577,19 +577,19 @@ class Cl(ClBase):
             # TODO: Temporary solution. We can be more selective and only
             # save those parts that we need for each case.
             out = dict(ell=ell, cl=cl, cl_cp=cl_cp, nl=nl,
-                           nl_cp=nl_cp, cl_cov_cp=cl_cov_cp,
-                           cl_cov_11_cp=cl_cov_11_cp,
-                           cl_cov_12_cp=cl_cov_12_cp,
-                           cl_cov_22_cp=cl_cov_22_cp, wins=wins,
-                           correction=correction, mean_mamb=mean_mamb,
-                           crude_err=crude_err)
+                       nl_cp=nl_cp, cl_cov_cp=cl_cov_cp,
+                       cl_cov_11_cp=cl_cov_11_cp,
+                       cl_cov_12_cp=cl_cov_12_cp,
+                       cl_cov_22_cp=cl_cov_22_cp, wins=wins,
+                       correction=correction, mean_mamb=mean_mamb,
+                       crude_err=crude_err)
 
             if is_cmbk_correction_needed:
                 # In cross-correlation, we need to correct for the survey mask
                 # see Eq. I11 2309.05659
-                # NOTE: For weak lensing data, we are going to apply the same 
+                # NOTE: For weak lensing data, we are going to apply the same
                 # transfer function to all components, without accounting for
-                # spin. It is not clear if this is correct or not but given 
+                # spin. It is not clear if this is correct or not but given
                 # the low S/N (ACT-DR4 x DESY3wl had a S/N ~ 7 (2309.04412)),
                 # it will probably be irrelevant.
 
@@ -635,16 +635,18 @@ class Cl(ClBase):
         """
         Return whether the correction for the mask effect on CMB lensing
         convergence is needed, and if so, return the mappers of the tracers.
-        
+
         Args
         ------
         return_mappers: bool
-            If True, return the mappers of the tracers if the correction is needed.
+            If True, return the mappers of the tracers if the correction is
+            needed.
 
         Return
         ------
         isneeded: bool
-            Whether the correction for the mask effect on CMB lensing convergence is needed.
+            Whether the correction for the mask effect on CMB lensing
+            convergence is needed.
         mapper1: cosmotheka.mappers.XXX or None
             CMBk mapper if the correction is needed, None otherwise.
         mapper2: cosmotheka.mappers.XXX or None
@@ -656,16 +658,20 @@ class Cl(ClBase):
 
         isneeded = (iscmbk1 or iscmbk2) and not (iscmbk1 and iscmbk2)
 
-        # Check if the user has requested to neglect the correction for this 
+        # Check if the user has requested to neglect the correction for this
         # pair of tracers
         cls_info = self.data.data['cls']
-        key = f"{self.tr1}-{self.tr2}" if not self._read_symmetric else f"{self.tr2}-{self.tr1}"
+        if not self._read_symmetric:
+            key = f"{self.tr1}-{self.tr2}"
+        else:
+            key = f"{self.tr2}-{self.tr1}"
         if key in cls_info:
             isneeded *= not cls_info[key].get("neglect_mc_correction", False)
         else:
             key = self.data.get_tracers_bare_name_pair(self.tr1, self.tr2, '-')
             if key in cls_info:
-                isneeded *= not cls_info[key].get("neglect_mc_correction", False)
+                isneeded *= not cls_info[key].get("neglect_mc_correction",
+                                                  False)
 
         if isneeded and return_mappers:
             mapper1, mapper2 = self.get_mappers()
@@ -826,14 +832,14 @@ class Cl(ClBase):
 
     def get_correction_cmbk(self):
         """
-        Return the Monte Carlo correction for CMBk (Eq. I11 2309.05659). 
+        Return the Monte Carlo correction for CMBk (Eq. I11 2309.05659).
         We correct the effect of the mask of the other field.
         """
         # TODO: consider moving this function to the mapper level.
         # Get masks
         _, mapper_cmbk, mapper_x = \
             self._is_cmbk_correction_needed(return_mappers=True)
-        
+
         # Get the number of sims that are used.
         rec_sims, input_sims = mapper_cmbk._get_sims_fnames()
         nsims = len(rec_sims)
@@ -879,15 +885,17 @@ class Cl(ClBase):
 
             kin_gmask = nmt.NmtField(mask_x, [kappa_input_map])  # K_in,g-mask
             krec = nmt.NmtField(mask_cmbk, [kappa_rec_map])  # K_rec
-            kin_kmask = nmt.NmtField(mask_cmbk, [kappa_input_map]) # K_in,k-mask
+            kin_kmask = nmt.NmtField(mask_cmbk, [kappa_input_map])  # in,k-mask
 
-            cl_kin_kmask__kin_gmask_cp = nmt.compute_coupled_cell(kin_kmask, kin_gmask)
-            cl_kin_kmask__kin_gmask = w.decouple_cell(cl_kin_kmask__kin_gmask_cp)
+            cl_kin_kmask__kin_gmask_cp = nmt.compute_coupled_cell(kin_kmask,
+                                                                  kin_gmask)
+            cl_kin_kmask__kin_gmask = \
+                w.decouple_cell(cl_kin_kmask__kin_gmask_cp)
 
             cl_krec__kin_gmask_cp = nmt.compute_coupled_cell(krec, kin_gmask)
             cl_krec__kin_gmask = w.decouple_cell(cl_krec__kin_gmask_cp)
 
-            # Since we apply the same array to all Cell components, regardless 
+            # Since we apply the same array to all Cell components, regardless
             # of the spin, we don't keep the (1, ells) shape.
             num.append(cl_kin_kmask__kin_gmask[0])
             denom.append(cl_krec__kin_gmask[0])

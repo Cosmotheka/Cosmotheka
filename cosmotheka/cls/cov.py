@@ -60,7 +60,8 @@ class Cov:
         self.recompute_cov = self.data.data["recompute"]["cov"]
         self.recompute_cmcm = self.data.data["recompute"]["cmcm"]
         self.cov = None
-        self.fsky = self.data.data["cov"].get("fsky_NG", None)  # fsky for SSC and NG term
+        # fsky for SSC and NG term
+        self.fsky = self.data.data["cov"].get("fsky_NG", None)
         # Noise marginalization?
         self.nl_marg = False
         if trA1 == trA2 == trB1 == trB2:
@@ -1056,7 +1057,7 @@ class Cov:
         # If notnull is None, it means that it hasn't been computed yet.
         # If it is not None, we check if it's True and if cov_G is empty.
         # As of now, cov_G is always computes, so it shouldn't be empty.
-        if notnull is None or (notnull is True and 
+        if notnull is None or (notnull is True and
                                not np.any(cov_dict['cov_G'])):
             print("Computing required C_ells for covariance and checking if "
                   "they are non-zero...", flush=True)
@@ -1065,13 +1066,15 @@ class Cov:
             auto_auto = self.trA1 == self.trA2 == self.trB1 == self.trB2
             # Check if it must be computed from data
             aa_data = (
-                auto_auto and self.tmat[(self.trA1, self.trA2)]["clcov_from_data"]
+                auto_auto and
+                self.tmat[(self.trA1, self.trA2)]["clcov_from_data"]
             )
             # If so, get these C_ells
             itime = time.time()
             if aa_data:
                 mean_mamb = self.clA1B1.get_mean_mamb()
-                _, cla1b1, cla1b2, cla2b2 = self.clA1B1.get_ell_cls_cp_cov_auto()
+                _, cla1b1, cla1b2, cla2b2 = \
+                    self.clA1B1.get_ell_cls_cp_cov_auto()
                 cla2b2 = cla2b2 / mean_mamb
                 cla2b1 = cla1b2 / mean_mamb
                 cla1b2 = cla1b2 / mean_mamb
@@ -1082,7 +1085,8 @@ class Cov:
                 cla2b1 = self._get_cl_for_cov(self.clA2B1, self.clfid_A2B1)
                 cla2b2 = self._get_cl_for_cov(self.clA2B2, self.clfid_A2B2)
             ftime = time.time()
-            print(f"Get C_ells. It took {(ftime - itime) / 60} min", flush=True)
+            print(f"Get C_ells. It took {(ftime - itime) / 60} min",
+                  flush=True)
 
             notnull = (
                 np.any(cla1b1)
@@ -1176,7 +1180,8 @@ class Cov:
         if self.do_SSC and notnull and not np.any(cov_dict['cov_SSC']):
             print('Computing SSC...', flush=True)
             itime = time.time()
-            cov_dict['cov_SSC'] = self.get_SSC_halomodel(s_a1, s_a2, s_b1, s_b2)
+            cov_dict['cov_SSC'] = self.get_SSC_halomodel(s_a1, s_a2, s_b1,
+                                                         s_b2)
             ftime = time.time()
             print(
                 f"Computed SSC. It took {(ftime - itime) / 60} min",
@@ -1191,18 +1196,21 @@ class Cov:
             itime = time.time()
             if kinds is None:
                 print("Computing the full cNG covariance", flush=True)
-                cov_dict['cov_NG'] = self.get_covariance_ng_halomodel(s_a1, s_a2, s_b1, s_b2)
+                cov_dict['cov_NG'] = \
+                    self.get_covariance_ng_halomodel(s_a1, s_a2, s_b1, s_b2)
             else:
                 for kind in kinds:
-                    print(f"Computing the cNG covariance term: {kind}", flush=True)
+                    print(f"Computing the cNG covariance term: {kind}",
+                          flush=True)
                     itime_kind = time.time()
-                    cov_dict[f'cov_NG_{kind}'] = self.get_covariance_ng_halomodel(
-                        s_a1, s_a2, s_b1, s_b2, kind
-                    )
+                    cov_dict[f'cov_NG_{kind}'] = \
+                        self.get_covariance_ng_halomodel(s_a1, s_a2,
+                                                         s_b1, s_b2, kind)
                     cov_dict['cov_NG'] += cov_dict[f'cov_NG_{kind}']
                     ftime_kind = time.time()
                     print(
-                        f"Computed NG covariance for {kind}. It took {(ftime_kind - itime_kind) / 60} min",
+                        f"Computed NG covariance for {kind}. It took "
+                        f"{(ftime_kind - itime_kind) / 60} min",
                         flush=True,
                     )
             ftime = time.time()
@@ -1213,7 +1221,13 @@ class Cov:
             write_npz = True  # We will need to save the file again
 
         itime = time.time()
-        self.cov = cov_dict['cov_G'] + cov_dict['cov_nl_marg'] + cov_dict['cov_m_marg'] + cov_dict['cov_SSC'] + cov_dict['cov_NG']
+        self.cov = (
+            cov_dict['cov_G']
+            + cov_dict['cov_nl_marg']
+            + cov_dict['cov_m_marg']
+            + cov_dict['cov_SSC']
+            + cov_dict['cov_NG']
+        )
         cov_dict['cov'] = self.cov
         #
         ftime = time.time()
@@ -1232,7 +1246,7 @@ class Cov:
                 err2 = np.max(self.clB1B2.get_ell_cl_crude_error()[1])
                 # Use order of magnitude
                 # Squaring the errors to compare cov vs sigma^2, not sigma
-                threshold = 10 ** int(np.log10(np.max([err1, err2]) ** 2)) * 1e5
+                threshold = 10 ** int(np.log10(np.max([err1, err2]) ** 2))*1e5
             cov_dict['threshold'] = threshold
             write_npz = True  # We will need to save the file again
 
@@ -1293,10 +1307,14 @@ class Cov:
         mpB1, mpB2 = self.clB1B2.get_mappers()
         trlist = self.data.data["tracers"]
         th = self._get_theory()
-        self.ccl_trA1 = th.compute_tracer_ccl(self.trA1, trlist[self.trA1], mpA1)
-        self.ccl_trA2 = th.compute_tracer_ccl(self.trA2, trlist[self.trA2], mpA2)
-        self.ccl_trB1 = th.compute_tracer_ccl(self.trB1, trlist[self.trB1], mpB1)
-        self.ccl_trB2 = th.compute_tracer_ccl(self.trB2, trlist[self.trB2], mpB2)
+        self.ccl_trA1 = th.compute_tracer_ccl(self.trA1, trlist[self.trA1],
+                                              mpA1)
+        self.ccl_trA2 = th.compute_tracer_ccl(self.trA2, trlist[self.trA2],
+                                              mpA2)
+        self.ccl_trB1 = th.compute_tracer_ccl(self.trB1, trlist[self.trB1],
+                                              mpB1)
+        self.ccl_trB2 = th.compute_tracer_ccl(self.trB2, trlist[self.trB2],
+                                              mpB2)
 
         return self.ccl_trA1, self.ccl_trA2, self.ccl_trB1, self.ccl_trB2
 
@@ -1381,7 +1399,7 @@ class Cov:
         bA2 = self.data.get_bias(self.trA2)
         bB1 = self.data.get_bias(self.trB1)
         bB2 = self.data.get_bias(self.trB2)
-        
+
         sigma2_B_method = self.SSC_config.get("sigma2_B", "mask_wl")
 
         mask_wl = None

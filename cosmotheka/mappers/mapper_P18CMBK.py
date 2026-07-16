@@ -22,8 +22,10 @@ class MapperP18CMBK(MapperBase):
         - mask_apotype: `"C12"`
         - mask_name: `"mask_P18kappa"`
         - path_rerun: `".../Datasets/Planck_lensing/Lensing2018/xcell_runs"`
-        - sims_rec_path = '/mnt/extraspace/vonhausegger/Datasets/Planck_lensing/COM_Lensing-SimMap_4096_R3.00'
-        - sims_in_path = '/mnt/extraspace/vonhausegger/Datasets/Planck_lensing/COM_Lensing-SimMap-inputs_4096_R3.00/'
+        - sims_rec_path = '/mnt/extraspace/vonhausegger/Datasets/
+            Planck_lensing/COM_Lensing-SimMap_4096_R3.00'
+        - sims_in_path = '/mnt/extraspace/vonhausegger/Datasets/
+           Planck_lensing/COM_Lensing-SimMap-inputs_4096_R3.00/'
 
     """
     map_name = 'P18CMBK'
@@ -120,10 +122,14 @@ class MapperP18CMBK(MapperBase):
         input_sims_path = self.config['sims_in_path']
 
         # Using glob because it's handy. If the naming convention is wrong,
-        # this might silently mix rec and input sims and spoil the transfer 
+        # this might silently mix rec and input sims and spoil the transfer
         # function.
-        rec_sims = sorted(glob.glob(rec_sims_path + '/' + 'sim_klm_*.fits'))
-        input_sims = sorted(glob.glob(input_sims_path + '/' + 'sky_klm_*.fits'))
+        rec_sims = sorted(
+            glob.glob(rec_sims_path + '/' + 'sim_klm_*.fits')
+        )
+        input_sims = sorted(
+            glob.glob(input_sims_path + '/' + 'sky_klm_*.fits')
+        )
 
         nrec = len(rec_sims)
         ninput = len(input_sims)

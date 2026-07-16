@@ -70,7 +70,7 @@ class MapperBase(object):
             file (str): path to the alm file.
 
         Returns:
-            map (Array): map created from the alm file, with shape 
+            map (Array): map created from the alm file, with shape
                          (ncomp, npix).
         """
         # Read alms

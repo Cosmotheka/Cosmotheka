@@ -27,6 +27,7 @@ def _clean_tmpdir(path):
     if os.path.exists(path):
         shutil.rmtree(path, ignore_errors=True)
 
+
 def _clean_tmpdirs():
     for path in (tmpdir1, tmpdir2):
         _clean_tmpdir(path)
@@ -226,8 +227,8 @@ def test_cov_ng(kind):
     tr = ccl.NumberCountsTracer(
         cosmo, has_rsd=False, dndz=(z, nz), bias=(z, np.ones_like(z))
     )
-    # In order to get rdev = 1e-3, we need to have an a_arr, and k_arr very 
-    # close to the one in ClFid. 
+    # In order to get rdev = 1e-3, we need to have an a_arr, and k_arr very
+    # close to the one in ClFid.
     # In the code, to speed things up, we remove half of the points
 
     lk = cosmo.get_pk_spline_lk()
@@ -374,8 +375,8 @@ def test_cov_ssc(sigma2B_type):
     tr = ccl.NumberCountsTracer(
         cosmo, has_rsd=False, dndz=(z, nz), bias=(z, np.ones_like(z))
     )
-    # In order to get rdev = 1e-3, we need to have an a_arr, and k_arr very 
-    # close to the one in ClFid. 
+    # In order to get rdev = 1e-3, we need to have an a_arr, and k_arr very
+    # close to the one in ClFid.
     a_arr = np.linspace(1/(1+6), 1, 38)
 
     tkk = ccl.halos.halomod_Tk3D_SSC_linear_bias(
@@ -391,8 +392,6 @@ def test_cov_ssc(sigma2B_type):
         is_number_counts3=True,
         is_number_counts4=True,
     )
-
-
     # Gaussian only
     data = get_config(fsky=0.2, inc_hm=False)
     data["tracers"]["Dummy__0"]["bias"] = 1
@@ -405,7 +404,9 @@ def test_cov_ssc(sigma2B_type):
 
         # Case 1 - fsky computed from the mask
         fsky = np.mean((mask > 0))
-        sigma2_B = ccl.sigma2_B_disc(cosmo, a_arr=a_arr, fsky=fsky) # Use 0.1 to check
+        sigma2_B = ccl.sigma2_B_disc(
+            cosmo, a_arr=a_arr, fsky=fsky
+        )  # Use 0.1 to check
 
         covSSC0 = ccl.angular_cl_cov_SSC(
             cosmo,
@@ -501,6 +502,7 @@ def test_cov_ssc(sigma2B_type):
     # Tests (using pytest.approx for more informative logs)
     # Compare result of NG method with G+SSC-G
     assert covSSC1 == pytest.approx(cov1 - covG, rel=1e-4, abs=0)
+
 
 def test_file_inconsistent_errors():
     clo = get_cl_class()
@@ -1197,7 +1199,7 @@ def test_clfid_halomod(tr1, tr2):
     # In order to get rdev = 1e-4, we need to have an a_arr very close to
     # the one in ClFid. Sampling on z, the second highest scale factor is a~0.8
     # instead of a~0.97, so it's better to sample on a directly.
-    a_arr = np.linspace(1/(1+3), 1, 20) 
+    a_arr = np.linspace(1/(1+3), 1, 20)
 
     pk = ccl.halos.halomod_Pk2D(
         cosmo,
@@ -1246,7 +1248,7 @@ def test_clfid_halomod_M500c():
     # In order to get rdev = 1e-4, we need to have an a_arr very close to
     # the one in ClFid. Sampling on z, the second highest scale factor is a~0.8
     # instead of a~0.97, so it's better to sample on a directly.
-    a_arr = np.linspace(1/(1+6), 1, 38) 
+    a_arr = np.linspace(1/(1+6), 1, 38)
 
     pk = ccl.halos.halomod_Pk2D(
         cosmo,
@@ -1268,7 +1270,7 @@ def test_mc_correction():
     cl_class = Cl(config, "Dummy__0", "Dummy__1")
     mapper_0, mapper_1 = cl_class.get_mappers()
     mask_cmbk = mapper_0.get_mask()
-    mask_g = mapper_1.get_mask()
+    mapper_1.get_mask()
     _clean_tmpdir(tmpdir1)
 
     # Generate the sims needed to test the CMBk mc correction
@@ -1287,7 +1289,7 @@ def test_mc_correction():
         hp.write_alm(tmpdir1 + f"/sky_klm_{i:03d}.fits", s_alm)
 
         # To mimic the reconstruction, recover the alm after applying the mask
-        # Note that we should probably account for the coupling, but for the 
+        # Note that we should probably account for the coupling, but for the
         # test this seems enough.
         rec_alm = hp.map2alm(s_map * mask_cmbk, lmax=3*NSIDE-1)
         hp.write_alm(tmpdir1 + f"/sim_klm_{i:03d}.fits", rec_alm)
@@ -1302,7 +1304,7 @@ def test_mc_correction():
     Tl = clf['correction_cmbk']
     ell_eff = clf['ell']
     sel = ell_eff < 2 * NSIDE
-    ell_eff = ell_eff[sel][1:]  # Remove the first bin which is noisier due to mask
+    ell_eff = ell_eff[sel][1:]  # Remove first bin: noisier due to mask
     Tl = Tl[sel][1:]
     ones = np.ones_like(Tl)
 

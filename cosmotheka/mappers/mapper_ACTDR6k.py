@@ -1,5 +1,5 @@
 from .mapper_base import MapperBase
-from .utils import rotate_mask, rotate_map
+from .utils import rotate_mask
 from scipy.interpolate import interp1d
 import numpy as np
 import healpy as hp
@@ -11,22 +11,31 @@ class MapperACTDR6k(MapperBase):
     """
     ACT DR6 kappa mapper class.
 
-    Information about the data used in this mapper: https://lambda.gsfc.nasa.gov/product/act/actadv_dr6_lensing_maps_info.html
-    Extended products available at: https://portal.nersc.gov/project/act/dr6_lensing_v1/
+    Information about the data used in this mapper:
+    https://lambda.gsfc.nasa.gov/product/act/actadv_dr6_lensing_maps_info.html
+    Extended products available at:
+    https://portal.nersc.gov/project/act/dr6_lensing_v1/
 
     **Config**
 
         - mask_name: ACT_kappa_DR6
         - map_name: kappa_DR6
         - path_rerun: /mnt/extraspace/damonge/Datasets/ACT_DR6/xcell_runs
-        - klm_file: /mnt/extraspace/damonge/Datasets/ACT_DR6/lensing_maps/baseline/kappa_alm_data_act_dr6_lensing_v1_baseline.fits
-        - file_mask: /mnt/extraspace/damonge/Datasets/ACT_DR6/lensing_maps/baseline/mask_act_dr6_lensing_v1_healpix_nside_4096_baseline.fits
-        - file_noise: /mnt/extraspace/damonge/Datasets/ACT_DR6/lensing_maps/baseline/N_L_kk_act_dr6_lensing_v1_baseline.txt
+        - klm_file: /mnt/extraspace/damonge/Datasets/ACT_DR6/
+            lensing_maps/baseline/
+            kappa_alm_data_act_dr6_lensing_v1_baseline.fits
+        - file_mask: /mnt/extraspace/damonge/Datasets/ACT_DR6/
+            lensing_maps/baseline/
+            mask_act_dr6_lensing_v1_healpix_nside_4096_baseline.fits
+        - file_noise: /mnt/extraspace/damonge/Datasets/ACT_DR6/
+            lensing_maps/baseline/N_L_kk_act_dr6_lensing_v1_baseline.txt
         - lmax: 4000
         - mask_threshold: 0.1  # Avoid ringing
         - variant: "baseline"
-        - sims_rec_path: /mnt/extraspace/damonge/Datasets/ACT_DR6/lensing_maps/baseline/simulations
-        - sims_in_path: /mnt/extraspace/damonge/Datasets/ACT_DR6/lensing_maps/baseline/simulations
+        - sims_rec_path: /mnt/extraspace/damonge/Datasets/ACT_DR6/
+            lensing_maps/baseline/simulations
+        - sims_in_path: /mnt/extraspace/damonge/Datasets/ACT_DR6/
+            lensing_maps/baseline/simulations
     """
 
     map_name = "ACT"
@@ -105,7 +114,7 @@ class MapperACTDR6k(MapperBase):
         input_sims_path = self.config['sims_in_path']
 
         # Using glob because it's handy. If the naming convention is wrong,
-        # this might silently mix rec and input sims and spoil the transfer 
+        # this might silently mix rec and input sims and spoil the transfer
         # function.
         pattern = 'kappa_alm_sim_act_dr6_lensing_v1_baseline_*.fits'
         rec_sims = sorted(glob.glob(rec_sims_path + '/' + pattern))
