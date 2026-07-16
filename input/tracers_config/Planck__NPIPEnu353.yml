@@ -1,0 +1,14 @@
+mapper_class: 'MapperPlanckNPIPE'
+file_map: /mnt/extraspace/alaposta/planck_maps/npipe6v20_353_map.fits
+file_hm1: /mnt/extraspace/alaposta/planck_maps/npipe6v20A_353_map.fits
+file_hm2: /mnt/extraspace/alaposta/planck_maps/npipe6v20B_353_map.fits
+file_gp_mask: /mnt/extraspace/damonge/Datasets/Planck_masks/HFI_Mask_GalPlane-apo2_2048_R2.00.fits
+file_ps_mask: /mnt/extraspace/damonge/Datasets/Planck_masks/HFI_Mask_PointSrc_2048_R2.00.fits
+# beam_info: 
+#   - type: 'Gaussian'
+#     FWHM_arcmin: 4.92
+gp_mask_mode: '0.6'
+freq: 'F353'
+ps_mask_mode: ['F100', 'F143', 'F217', 'F353']
+mask_name: PlanckNPIPE
+path_rerun: '/mnt/extraspace/alaposta/planck_maps/cosmotheka_runs_40percent'
