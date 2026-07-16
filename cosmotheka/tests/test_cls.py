@@ -195,110 +195,156 @@ def test_cov_nlmarg():
     _clean_tmpdir(tmpdir2)
 
 
-# TODO: Upudate cNG cov
-# def test_cov_ng_1h():
-#     # From CCL directly
-#     data = get_config(fsky=0.2)
-#     clc = Cl(data, "Dummy__0", "Dummy__0")
-#     ells = clc.b.get_effective_ells()
-#     _clean_tmpdir(tmpdir1)
-#     cosmo = ccl.Cosmology(**data["cov"]["fiducial"]["cosmo"])
-#     md = ccl.halos.MassDef200m
-#     mf = ccl.halos.MassFuncTinker10(mass_def=md)
-#     hb = ccl.halos.HaloBiasTinker10(mass_def=md)
-#     cm = ccl.halos.ConcentrationDuffy08(mass_def=md)
-#     hmc = ccl.halos.HMCalculator(mass_function=mf, halo_bias=hb, mass_def=md)
-#     pr = ccl.halos.HaloProfileHOD(
-#         mass_def=md,
-#         concentration=cm,
-#         log10Mmin_0=12.1,
-#         log10M1_p=0.1,
-#         bg_0=1.2,
-#     )
-#     prof2pt = ccl.halos.Profile2ptHOD()
-#     z, nz = np.loadtxt(
-#         "cosmotheka/tests/data/DESY1gc_dndz_bin0.txt",
-#         usecols=(1, 3),
-#         unpack=True,
-#     )
-#     tr = ccl.NumberCountsTracer(
-#         cosmo, has_rsd=False, dndz=(z, nz), bias=(z, np.ones_like(z))
-#     )
-#     k_arr = np.geomspace(1e-4, 1e2, 256)
-#     a_arr = 1.0 / (1 + np.linspace(0, 3, 15)[::-1])
-#     tkk = ccl.halos.halomod_Tk3D_1h(
-#         cosmo,
-#         hmc,
-#         prof=pr,
-#         prof2=pr,
-#         prof12_2pt=prof2pt,
-#         prof3=pr,
-#         prof4=pr,
-#         prof34_2pt=prof2pt,
-#         a_arr=a_arr,
-#         lk_arr=np.log(k_arr),
-#     )
-#     covNG0 = ccl.angular_cl_cov_cNG(
-#         cosmo,
-#         tracer1=tr,
-#         tracer2=tr,
-#         ell=ells,
-#         t_of_kk_a=tkk,
-#         fsky=1.0,
-#         tracer3=tr,
-#         tracer4=tr,
-#         ell2=ells,
-#     )
-# 
-#     # Gaussian only
-#     data = get_config(fsky=0.2, inc_hm=True)
-#     data["tracers"]["Dummy__0"]["hod_params"] = {
-#         "log10Mmin_0": 12.1,
-#         "log10M1_p": 0.1,
-#         "bg_0": 1.2,
-#     }
-#     covcG = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
-#     covG = covcG.get_covariance()
-#     _clean_tmpdir(tmpdir1)
-# 
-#     # Gaussian + non-Gaussian
-#     data = get_config(fsky=0.2, inc_hm=True)
-#     data["cov"]["non_Gaussian"] = True
-#     data["cov"]["NG_terms"] = ["1h"]
-#     data["tracers"]["Dummy__0"]["hod_params"] = {
-#         "log10Mmin_0": 12.1,
-#         "log10M1_p": 0.1,
-#         "bg_0": 1.2,
-#     }
-#     covc1 = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
-#     mapper = MapperDummy(data["tracers"]["Dummy__0"])
-#     fsky = np.mean((mapper.get_mask() > 0))
-#     covNG1 = covc1.get_covariance_ng_halomodel(0, 0, 0, 0, fsky)
-#     cov1 = covc1.get_covariance()
-#     _clean_tmpdir(tmpdir1)
-# 
-#     # fsky on input
-#     data = get_config(fsky=0.2, inc_hm=True)
-#     data["cov"]["non_Gaussian"] = True
-#     data["cov"]["NG_terms"] = ["1h"]
-#     data["cov"]["fsky_NG"] = 0.1
-#     data["tracers"]["Dummy__0"]["hod_params"] = {
-#         "log10Mmin_0": 12.1,
-#         "log10M1_p": 0.1,
-#         "bg_0": 1.2,
-#     }
-#     covc2 = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
-#     covNG2 = covc2.get_covariance() - covG
-#     _clean_tmpdir(tmpdir1)
-# 
-#     # Tests
-#     # Compare result of NG method with G+NG-G
-#     assert np.allclose(covNG1, cov1 - covG, atol=0)
-#     # Compare with CCL prediction
-#     # (interpolation errors are ~1E-4)
-#     assert np.allclose(covNG0, covNG1 * fsky, atol=0, rtol=1e-3)
-#     # fsky scaling
-#     assert np.allclose(covNG2, covNG1 * fsky / 0.1, atol=0)
+@pytest.mark.parametrize("kind", ["1h", "2h", "3h", "4h", None])
+def test_cov_ng(kind):
+    # From CCL directly
+    data = get_config(fsky=0.2)
+    clc = Cl(data, "Dummy__0", "Dummy__0")
+    ells = clc.b.get_effective_ells()
+    _clean_tmpdir(tmpdir1)
+    cosmo = ccl.Cosmology(**data["cov"]["fiducial"]["cosmo"])
+    md = ccl.halos.MassDef200m
+    mf = ccl.halos.MassFuncTinker10(mass_def=md)
+    hb = ccl.halos.HaloBiasTinker10(mass_def=md)
+    cm = ccl.halos.ConcentrationDuffy08(mass_def=md)
+    hmc = ccl.halos.HMCalculator(mass_function=mf, halo_bias=hb, mass_def=md)
+    pr = ccl.halos.HaloProfileHOD(
+        mass_def=md,
+        concentration=cm,
+        log10Mmin_0=12.1,
+        log10M1_p=0.1,
+        bg_0=1.2,
+    )
+    prof2pt = ccl.halos.Profile2ptHOD()
+    z, nz = np.loadtxt(
+        "cosmotheka/tests/data/DESY1gc_dndz_bin0.txt",
+        usecols=(1, 3),
+        unpack=True,
+    )
+    tr = ccl.NumberCountsTracer(
+        cosmo, has_rsd=False, dndz=(z, nz), bias=(z, np.ones_like(z))
+    )
+    # In order to get rdev = 1e-3, we need to have an a_arr, and k_arr very 
+    # close to the one in ClFid. 
+    # In the code, to speed things up, we remove half of the points
+
+    lk = cosmo.get_pk_spline_lk()
+    sel = lk <= np.log(100)
+    k_arr = np.exp(lk[sel])[::2]
+
+    a_arr = np.linspace(1/(1+6), 1, 38)[::2]
+    if a_arr[-1] != 1.0:
+        a_arr = np.append(a_arr, 1.0)
+    separable_growth = True
+
+    if kind == "1h":
+        tkk = ccl.halos.halomod_Tk3D_1h(
+            cosmo,
+            hmc,
+            prof=pr,
+            prof12_2pt=prof2pt,
+            a_arr=a_arr,
+            lk_arr=np.log(k_arr),
+        )
+    elif kind == "2h":
+        tkk = ccl.halos.halomod_Tk3D_2h(
+            cosmo,
+            hmc,
+            prof=pr,
+            prof12_2pt=prof2pt,
+            a_arr=a_arr,
+            lk_arr=np.log(k_arr),
+            separable_growth=separable_growth,
+        )
+    elif kind == "3h":
+        tkk = ccl.halos.halomod_Tk3D_3h(
+            cosmo,
+            hmc,
+            prof=pr,
+            prof13_2pt=prof2pt,
+            a_arr=a_arr,
+            lk_arr=np.log(k_arr),
+            separable_growth=separable_growth,
+        )
+    elif kind == "4h":
+        tkk = ccl.halos.halomod_Tk3D_4h(
+            cosmo,
+            hmc,
+            prof=pr,
+            a_arr=a_arr,
+            lk_arr=np.log(k_arr),
+            separable_growth=separable_growth,
+        )
+    elif kind is None:
+        tkk = ccl.halos.halomod_Tk3D_cNG(
+            cosmo=cosmo,
+            hmc=hmc,
+            prof=pr,
+            prof12_2pt=prof2pt,
+            a_arr=a_arr,
+            lk_arr=np.log(k_arr),
+            separable_growth=separable_growth,
+        )
+
+    covNG0 = ccl.angular_cl_cov_cNG(
+        cosmo,
+        tracer1=tr,
+        tracer2=tr,
+        ell=ells,
+        t_of_kk_a=tkk,
+        fsky=1.0,
+        tracer3=tr,
+        tracer4=tr,
+        ell2=ells,
+    )
+
+    # Gaussian only
+    data = get_config(fsky=0.2, inc_hm=True)
+    data["tracers"]["Dummy__0"]["hod_params"] = {
+        "log10Mmin_0": 12.1,
+        "log10M1_p": 0.1,
+        "bg_0": 1.2,
+    }
+    covcG = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
+    covG = covcG.get_covariance()
+    _clean_tmpdir(tmpdir1)
+
+    # Gaussian + non-Gaussian
+    data = get_config(fsky=0.2, inc_hm=True)
+    data["cov"]["non_Gaussian"] = {'compute': True, 'NG_terms': [kind]}
+    data["tracers"]["Dummy__0"]["hod_params"] = {
+        "log10Mmin_0": 12.1,
+        "log10M1_p": 0.1,
+        "bg_0": 1.2,
+    }
+    covc1 = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
+    mapper = MapperDummy(data["tracers"]["Dummy__0"])
+    fsky = np.mean((mapper.get_mask() > 0))
+    covNG1 = covc1.get_covariance_ng_halomodel(0, 0, 0, 0, kind=kind)
+    cov1 = covc1.get_covariance()
+    _clean_tmpdir(tmpdir1)
+
+    # fsky on input
+    data = get_config(fsky=0.2, inc_hm=True)
+    data["cov"]["non_Gaussian"] = {'compute': True, 'NG_terms': [kind]}
+    data["cov"]["fsky_NG"] = 0.1
+    data["tracers"]["Dummy__0"]["hod_params"] = {
+        "log10Mmin_0": 12.1,
+        "log10M1_p": 0.1,
+        "bg_0": 1.2,
+    }
+    covc2 = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
+    covNG2 = covc2.get_covariance() - covG
+    _clean_tmpdir(tmpdir1)
+
+    # Tests (using pytest.approx for more informative logs)
+    # Compare result of NG method with G+NG-G
+    assert covNG1 == pytest.approx(cov1 - covG, rel=1e-4, abs=0)
+    # Compare with CCL prediction
+    # (interpolation errors are ~1E-4, using a very similar grid)
+    assert covNG0 == pytest.approx(covNG1 * fsky, rel=1e-3, abs=0)
+    # fsky scaling
+    assert covNG2 == pytest.approx(covNG1 * fsky / 0.1, rel=1e-4, abs=0)
 
 
 def test_file_inconsistent_errors():
