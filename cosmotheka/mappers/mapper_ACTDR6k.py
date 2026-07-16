@@ -73,7 +73,7 @@ class MapperACTDR6k(MapperBase):
         )
 
     def _get_signal_map(self):
-        return self._get_map_from_klm_file(self.klm_file)
+        return self._get_map_from_alm_file(self.klm_file)
 
     def _get_mask(self):
         mask = hp.read_map(self.file_mask)

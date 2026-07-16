@@ -45,7 +45,7 @@ class MapperP18CMBK(MapperBase):
         self.cl_fid = None
 
     def _get_signal_map(self):
-        return self._get_map_from_klm_file(self.config['file_klm'])
+        return self._get_map_from_alm_file(self.config['file_klm'])
 
     def _get_mask(self):
         msk = hp.read_map(self.config['file_mask'],
