@@ -849,9 +849,13 @@ class Cl(ClBase):
         # Check if the correction has already been computed
         mn1, mn2 = self.get_masks_names()
         fname = f"Tl_{mn1}_{mn2}_coord{mapper_x.coords}_ns{self.nside}.npz"
-        d = get_rerun_data(mapper_cmbk, fname, 'NPZ')
-        if d is not None and d['computed'] == nsims:
-            return d['Tl'], d['Tl_cp']
+        fname = os.path.join(self.outdir, fname)
+        if os.path.isfile(fname):
+            d = np.load(fname)
+            if d['computed'] == nsims:
+                return d['Tl'], d['Tl_cp']
+        else:
+            d = None
 
         # Otherwise, compute it
         mask_cmbk = mapper_cmbk.get_mask()
@@ -904,11 +908,15 @@ class Cl(ClBase):
             num_cp.append(cl_kin_kmask__kin_gmask_cp[0])
             denom_cp.append(cl_krec__kin_gmask_cp[0])
 
-        out = {'Tl': np.mean(num, axis=0) / np.mean(denom, axis=0),
-               'Tl_cp': np.mean(num_cp, axis=0) / np.mean(denom_cp, axis=0),
-               'ell': ell, 'num': np.array(num), 'denom': np.array(denom),
-               'num_cp': np.array(num_cp), 'denom_cp': np.array(denom_cp)}
-        save_rerun_data(mapper_cmbk, fname, 'NPZ', out)
+            out = {'Tl': np.mean(num, axis=0) / np.mean(denom, axis=0),
+                'Tl_cp': np.mean(num_cp, axis=0) / np.mean(denom_cp, axis=0),
+                'ell': ell, 'num': np.array(num), 'denom': np.array(denom),
+                'num_cp': np.array(num_cp), 'denom_cp': np.array(denom_cp),
+                'computed': i+1}
+
+            # We save it everytime so that we can resume the process if it is
+            # interrupted. Using a different format would be more efficient
+            tools.save_npz(fname, **out)
 
         return out['Tl'], out['Tl_cp']
 

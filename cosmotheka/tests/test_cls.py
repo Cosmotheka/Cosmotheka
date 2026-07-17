@@ -1353,14 +1353,13 @@ def test_mc_correction():
     config = get_config(dtype0="cmb_convergence", fsky=1.0, fsky2=0.1)
     config["tracers"]["Dummy__0"]["sims_rec_path"] = tmpdir1
     config["tracers"]["Dummy__0"]["sims_in_path"] = tmpdir1
-    config["path_rerun"] = tmpdir1
     config["cls"]["Dummy-Dummy"]["neglect_mc_correction"] = False
     cl_class = Cl(config, "Dummy__0", "Dummy__1")
     clf = cl_class.get_cl_file()
 
     # Check that the mc correction file was created and has the expected keys
     tl_fname = f"Tl_mask_dummy0_mask_dummy1_coordC_ns{NSIDE}.npz"
-    tl_path = os.path.join(tmpdir1, tl_fname)
+    tl_path = os.path.join(cl_class.outdir, tl_fname)
     assert os.path.isfile(tl_path)
     tl_file = np.load(tl_path)
     expected_tl_keys = {
@@ -1371,6 +1370,8 @@ def test_mc_correction():
         "denom",
         "num_cp",
         "denom_cp",
+        "computed",
+        "threshold"
     }
     assert set(tl_file.files) == expected_tl_keys
     assert tl_file['Tl'] == pytest.approx(np.mean(tl_file['num'], axis=0) /
@@ -1379,6 +1380,7 @@ def test_mc_correction():
     assert tl_file['Tl_cp'] == \
         pytest.approx(np.mean(tl_file['num_cp'], axis=0) /
                       np.mean(tl_file['denom_cp'], axis=0), rel=1e-10, abs=0)
+    assert tl_file['computed'] == nsims
 
     Tl = clf['correction_cmbk']
     ell_eff = clf['ell']
