@@ -186,7 +186,6 @@ class MapperDESIBGS(MapperBase):
         Returns a mask for the sources to keep based on a given external map
         and a given threshold.
         """
-        print(f"Loading map {fname} for thresholding, field={field}...", flush=True)
         mp = hp.read_map(fname, field=field)
         goodpix = mp < threshold
         nside_mp = hp.npix2nside(mp.size)

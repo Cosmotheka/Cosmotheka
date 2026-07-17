@@ -161,7 +161,7 @@ class MapperDESILRG(MapperBase):
 
         # Apply cuts from external maps
         for syst in self.config.get("external_maps", []):
-            if syst['apply']:
+            if syst.get('apply', True):
                 mask &= self._get_map_threshold_mask(
                     syst['path'], syst['threshold'], cat,
                     field=syst.get('field', 0))
