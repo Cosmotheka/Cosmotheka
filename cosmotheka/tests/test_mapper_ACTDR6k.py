@@ -110,3 +110,10 @@ def test_get_sims_fnames(tmp_path):
 
     assert rec_sims == sorted(rec_files)
     assert input_sims == sorted(in_files)
+
+    # Check that it raises an error if the number of sims is different
+    os.remove(rec_files[0])
+    with pytest.raises(
+        ValueError, match="Number of reconstructed and input sims"
+    ):
+        mapper._get_sims_fnames()
