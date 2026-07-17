@@ -6,7 +6,6 @@ import numpy as np
 import pymaster as nmt
 import os
 import warnings
-from ..mappers.utils import get_rerun_data, save_rerun_data
 
 
 class ClBase():
@@ -909,10 +908,10 @@ class Cl(ClBase):
             denom_cp.append(cl_krec__kin_gmask_cp[0])
 
             out = {'Tl': np.mean(num, axis=0) / np.mean(denom, axis=0),
-                'Tl_cp': np.mean(num_cp, axis=0) / np.mean(denom_cp, axis=0),
-                'ell': ell, 'num': np.array(num), 'denom': np.array(denom),
-                'num_cp': np.array(num_cp), 'denom_cp': np.array(denom_cp),
-                'computed': i+1}
+                   'Tl_cp': np.mean(num_cp, axis=0)/np.mean(denom_cp, axis=0),
+                   'ell': ell, 'num': np.array(num), 'denom': np.array(denom),
+                   'num_cp': np.array(num_cp), 'denom_cp': np.array(denom_cp),
+                   'computed': i+1}
 
             # We save it everytime so that we can resume the process if it is
             # interrupted. Using a different format would be more efficient
