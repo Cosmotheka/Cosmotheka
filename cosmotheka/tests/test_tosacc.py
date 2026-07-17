@@ -44,15 +44,15 @@ def get_config(fsky0=0.2, fsky1=0.3, dtype0='galaxy_density',
     bpw_edges = list(range(0, 3 * nside, 4))
 
     out = {'tracers': {'Dummy__0': dummy0, 'Dummy__1': dummy1},
-            'cls': {'Dummy-Dummy': {'compute': 'all'}},
-            'cov': {'fiducial': {'cosmo': cosmo, 'wl_m':
-                                 False, 'wl_ia': False}},
-            'bpw_edges': bpw_edges,
-            'sphere': {'n_iter_sht': 0, 'n_iter_mcm': 3, 'n_iter_cmcm': 3,
-                       'nside': nside, 'coords': 'C'},
-            'recompute': {'cls': False, 'cov': False, 'mcm': False, 'cmcm':
-                          False},
-            'output': tmpdir}
+           'cls': {'Dummy-Dummy': {'compute': 'all'}},
+           'cov': {'fiducial': {'cosmo': cosmo, 'wl_m':
+                                False, 'wl_ia': False}},
+           'bpw_edges': bpw_edges,
+           'sphere': {'n_iter_sht': 0, 'n_iter_mcm': 3, 'n_iter_cmcm': 3,
+                      'nside': nside, 'coords': 'C'},
+           'recompute': {'cls': False, 'cov': False, 'mcm': False, 'cmcm':
+                         False},
+           'output': tmpdir}
 
     if dtype0 == "cmb_convergence" or dtype1 == "cmb_convergence":
         out["cls"]["Dummy-Dummy"]["neglect_mc_correction"] = True

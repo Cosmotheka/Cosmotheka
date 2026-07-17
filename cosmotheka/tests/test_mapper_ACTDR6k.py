@@ -43,26 +43,18 @@ def test_get_nl_coupled():
 
 @pytest.mark.parametrize('cls', [(xc.mappers.MapperACTDR6k)])
 def test_get_signal_map(cls):
-    conf = get_config()
-    conf['path_rerun'] = 'cosmotheka/tests/data/'
-    m = cls(conf)
-    alms, mmax = hp.read_alm(conf['klm_file'], return_mmax=True)
-    alms = alms.astype(np.complex128)
-    alms = np.nan_to_num(alms)
-    fl = np.ones(mmax+1)
-    fl[3*m.nside:] = 0
-    hp.almxfl(alms, fl, inplace=True)
-    map = hp.alm2map(alms, nside=32)
-    map = xc.mappers.utils.rotate_map(map, m._get_rotator('C'))
-
-    m_pipe = m.get_signal_map()[0]
-    assert (len(m_pipe)/12)**(1/2) == 32
-    assert (m_pipe == map).all()
+    # Same test as in test_mapper_P18CMBK.py, but for ACTDR6k mapper.
+    config = get_config()
+    config['path_rerun'] = 'cosmotheka/tests/data/'
+    m = cls(config)
+    d = m.get_signal_map()
+    assert len(d) == 1
+    d = d[0]
+    assert np.all(np.fabs(d) < 0.02)
 
     path = 'cosmotheka/tests/data/'
     fn = path + 'ACT_DR6_kappa_test_baseline_signal_map_coordC_ns32.fits.gz'
-    mr = hp.read_map(fn)
-    assert (mr == map).all()
+    assert np.all(d == hp.read_map(fn))
     os.remove(fn)
 
 

@@ -28,7 +28,8 @@ def test_alm_cut():
     config = get_config()
     config['nside'] = 16
     m = xc.mappers.MapperP18CMBK(config)
-    map_klm = m._get_map_from_alm_file(config['file_klm'])[0]
+    map_klm = m._get_map_from_alm_file(config['file_klm'],
+                                       remove_monopole=False)[0]
 
     # Reproduce MapperBase._get_map_from_alm_file step by step.
     alm_all, lmax = hp.read_alm(config['file_klm'], return_mmax=True)

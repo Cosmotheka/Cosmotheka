@@ -665,8 +665,10 @@ class Cl(ClBase):
         key = f"{self.tr1}-{self.tr2}"
         key_rev = f"{self.tr2}-{self.tr1}"
 
-        key_bare = self.data.get_tracers_bare_name_pair(self.tr1, self.tr2, '-')
-        key_bare_rev = self.data.get_tracers_bare_name_pair(self.tr2, self.tr1, '-')
+        key_bare = \
+            self.data.get_tracers_bare_name_pair(self.tr1, self.tr2, '-')
+        key_bare_rev = \
+            self.data.get_tracers_bare_name_pair(self.tr2, self.tr1, '-')
 
         for k in [key, key_rev, key_bare, key_bare_rev]:
             if k in cls_info:

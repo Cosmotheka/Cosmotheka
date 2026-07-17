@@ -61,7 +61,7 @@ class MapperBase(object):
             rot = None
         return rot
 
-    def _get_map_from_alm_file(self, file):
+    def _get_map_from_alm_file(self, file, remove_monopole=True):
         """
         Reads a alm file, rotates it if needed and creates a map with the shape
         expected by NaMaster (ncomp, npix).
@@ -78,6 +78,8 @@ class MapperBase(object):
         # Some elements may be nan (e.g. 1st in Planck18CMBk, 2 first in
         # ACTDR6CMBk). Fix that.
         alm = alm.astype(np.complex128)
+        if remove_monopole:
+            alm[0] = 0.0 + 0.0j  # Set monopole to 0
         alm = np.nan_to_num(alm)
 
         # Rotate
