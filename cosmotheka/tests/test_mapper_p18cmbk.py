@@ -148,4 +148,3 @@ def test_get_sims_fnames(tmp_path):
         ValueError, match="Number of reconstructed and input sims"
     ):
         mapper._get_sims_fnames()
-
