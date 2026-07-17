@@ -140,6 +140,59 @@ def test_smoke():
     # _clean_tmpdir(tmpdir1)
 
 
+def test_cl_and_cov_file_expected_entries():
+    data = get_config()
+
+    cl_class = Cl(data, "Dummy__0", "Dummy__0")
+    cl_class.get_cl_file()
+    cov_class = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
+    cov_class.get_covariance()
+
+    cl_path = os.path.join(
+        tmpdir1, "Dummy_Dummy", "cl_Dummy__0_Dummy__0.npz"
+    )
+    cov_path = os.path.join(
+        tmpdir1, "cov", "cov_Dummy__0_Dummy__0_Dummy__0_Dummy__0.npz"
+    )
+
+    cl_file = np.load(cl_path)
+    cov_file = np.load(cov_path)
+
+    expected_cl_keys = {
+        "ell",
+        "cl",
+        "cl_cp",
+        "nl",
+        "nl_cp",
+        "cl_cov_cp",
+        "cl_cov_11_cp",
+        "cl_cov_12_cp",
+        "cl_cov_22_cp",
+        "wins",
+        "correction",
+        "mean_mamb",
+        "crude_err",
+        "threshold",
+    }
+    assert set(cl_file.files) == expected_cl_keys
+
+    expected_cov_keys = {
+        "cov",
+        "cov_G",
+        "cov_NG",
+        "cov_SSC",
+        "cov_nl_marg",
+        "cov_m_marg",
+        "cov_NG_1h",
+        "cov_NG_2h",
+        "cov_NG_3h",
+        "cov_NG_4h",
+        "threshold",
+        "notnull",
+    }
+    assert set(cov_file.files) == expected_cov_keys
+
+
 def test_cl_correction():
     data = get_config()
     cl_class = Cl(data, "Dummy__2", "Dummy__2")
@@ -1296,9 +1349,32 @@ def test_mc_correction():
     config = get_config(dtype0="cmb_convergence", fsky=1.0, fsky2=0.1)
     config["tracers"]["Dummy__0"]["sims_rec_path"] = tmpdir1
     config["tracers"]["Dummy__0"]["sims_in_path"] = tmpdir1
+    config["path_rerun"] = tmpdir1
     config["cls"]["Dummy-Dummy"]["neglect_mc_correction"] = False
     cl_class = Cl(config, "Dummy__0", "Dummy__1")
     clf = cl_class.get_cl_file()
+
+    # Check that the mc correction file was created and has the expected keys
+    tl_fname = f"Tl_mask_dummy0_mask_dummy1_coordC_ns{NSIDE}.npz"
+    tl_path = os.path.join(tmpdir1, tl_fname)
+    assert os.path.isfile(tl_path)
+    tl_file = np.load(tl_path)
+    expected_tl_keys = {
+        "Tl",
+        "Tl_cp",
+        "ell",
+        "num",
+        "denom",
+        "num_cp",
+        "denom_cp",
+    }
+    assert set(tl_file.files) == expected_tl_keys
+    assert tl_file['Tl'] == pytest.approx(np.mean(tl_file['num'], axis=0) /
+                                          np.mean(tl_file['denom'], axis=0),
+                                          rel=1e-10, abs=0)
+    assert tl_file['Tl_cp'] == \
+        pytest.approx(np.mean(tl_file['num_cp'], axis=0) /
+                      np.mean(tl_file['denom_cp'], axis=0), rel=1e-10, abs=0)
 
     Tl = clf['correction_cmbk']
     ell_eff = clf['ell']
@@ -1311,3 +1387,5 @@ def test_mc_correction():
     # I can get rel 1e-4 in Glamdring but not in the CI, so I relax the
     # tolerance to 1e-3
     assert Tl == pytest.approx(ones, rel=1e-3, abs=0)
+
+
