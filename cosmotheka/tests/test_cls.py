@@ -250,8 +250,7 @@ def test_cov_nlmarg():
     _clean_tmpdir(tmpdir2)
 
 
-# @pytest.mark.parametrize("kind", ["1h", "2h", "3h", "4h", None])
-@pytest.mark.parametrize("kind", [None])
+@pytest.mark.parametrize("kind", ["1h", "2h", "3h", "4h", None])
 def test_cov_ng(kind):
     # From CCL directly
     data = get_config(fsky=0.2)
@@ -1387,5 +1386,3 @@ def test_mc_correction():
     # I can get rel 1e-4 in Glamdring but not in the CI, so I relax the
     # tolerance to 1e-3
     assert Tl == pytest.approx(ones, rel=1e-3, abs=0)
-
-
