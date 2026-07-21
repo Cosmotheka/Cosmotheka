@@ -8,20 +8,40 @@ import pymaster as nmt
 from cosmotheka.mappers import MapperDummy
 import pytest
 import pyccl as ccl
+import healpy as hp
 
 
 # Remove previous test results
 tmpdir1 = "./cosmotheka/tests/cls/dummy1"
 tmpdir2 = "./cosmotheka/tests/cls/dummy2"
+NSIDE = 32
+
+
+def setup_module():
+    os.makedirs(tmpdir1, exist_ok=True)
+    os.makedirs(tmpdir2, exist_ok=True)
 
 
 # Cleaning the tmp dir before running and after running the tests
+def _clean_tmpdir(path):
+    if os.path.exists(path):
+        shutil.rmtree(path, ignore_errors=True)
+
+
+def _clean_tmpdirs():
+    for path in (tmpdir1, tmpdir2):
+        _clean_tmpdir(path)
+
+
+def teardown_module():
+    _clean_tmpdirs()
+
+
 @pytest.fixture(autouse=True)
 def run_clean_tmp():
-    if os.path.isdir(tmpdir1):
-        shutil.rmtree(tmpdir1)
-    if os.path.isdir(tmpdir2):
-        shutil.rmtree(tmpdir2)
+    _clean_tmpdirs()   # before each test
+    yield
+    _clean_tmpdirs()   # after each test
 
 
 def get_config(
@@ -31,7 +51,6 @@ def get_config(
     dtype1="galaxy_density",
     inc_hm=False,
 ):
-    nside = 32
     # Set only the necessary entries. Leave the others to their default value.
     cosmo = {
         # Planck 2018: Table 2 of 1807.06209
@@ -74,9 +93,9 @@ def get_config(
         "use_halo_model": inc_hm,
         "mask_power": 2,
     }
-    bpw_edges = list(range(0, 3 * nside, 4))
+    bpw_edges = list(range(0, 3 * NSIDE, 4))
 
-    return {
+    out = {
         "tracers": {
             "Dummy__0": dummy0,
             "Dummy__1": dummy1,
@@ -89,12 +108,17 @@ def get_config(
             "n_iter_sht": 0,
             "n_iter_mcm": 3,
             "n_iter_cmcm": 3,
-            "nside": nside,
+            "nside": NSIDE,
             "coords": "C",
         },
         "recompute": {"cls": True, "cov": True, "mcm": True, "cmcm": True},
         "output": tmpdir1,
     }
+
+    if dtype0 == "cmb_convergence" or dtype1 == "cmb_convergence":
+        out["cls"]["Dummy-Dummy"]["neglect_mc_correction"] = True
+
+    return out
 
 
 def get_cl_class(fsky=0.2, fiducial=False):
@@ -113,7 +137,60 @@ def get_cov_class(fsky=0.2):
 def test_smoke():
     get_cl_class()
     get_cov_class()
-    shutil.rmtree(tmpdir1)
+    # _clean_tmpdir(tmpdir1)
+
+
+def test_cl_and_cov_file_expected_entries():
+    data = get_config()
+
+    cl_class = Cl(data, "Dummy__0", "Dummy__0")
+    cl_class.get_cl_file()
+    cov_class = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
+    cov_class.get_covariance()
+
+    cl_path = os.path.join(
+        tmpdir1, "Dummy_Dummy", "cl_Dummy__0_Dummy__0.npz"
+    )
+    cov_path = os.path.join(
+        tmpdir1, "cov", "cov_Dummy__0_Dummy__0_Dummy__0_Dummy__0.npz"
+    )
+
+    cl_file = np.load(cl_path)
+    cov_file = np.load(cov_path)
+
+    expected_cl_keys = {
+        "ell",
+        "cl",
+        "cl_cp",
+        "nl",
+        "nl_cp",
+        "cl_cov_cp",
+        "cl_cov_11_cp",
+        "cl_cov_12_cp",
+        "cl_cov_22_cp",
+        "wins",
+        "correction",
+        "mean_mamb",
+        "crude_err",
+        "threshold",
+    }
+    assert set(cl_file.files) == expected_cl_keys
+
+    expected_cov_keys = {
+        "cov",
+        "cov_G",
+        "cov_NG",
+        "cov_SSC",
+        "cov_nl_marg",
+        "cov_m_marg",
+        "cov_NG_1h",
+        "cov_NG_2h",
+        "cov_NG_3h",
+        "cov_NG_4h",
+        "threshold",
+        "notnull",
+    }
+    assert set(cov_file.files) == expected_cov_keys
 
 
 def test_cl_correction():
@@ -138,11 +215,11 @@ def test_get_nmtbin():
     # 1. From global
     data = get_config()
     cl1 = Cl(data, "Dummy__0", "Dummy__0")
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     # 2. From cross-correlations
     data["cls"]["Dummy-Dummy"]["bpw_edges"] = data.pop("bpw_edges")
     cl2 = Cl(data, "Dummy__0", "Dummy__0")
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     # Check they are the same
     b1 = cl1.get_NmtBin()
     b2 = cl2.get_NmtBin()
@@ -162,7 +239,7 @@ def test_cov_nlmarg():
     oo = np.ones(num_l)
     chi2 = np.dot(oo, np.linalg.solve(cov, oo))
     assert np.fabs(chi2) < 1e-5 * num_l
-    shutil.rmtree(tmpdir2)
+    _clean_tmpdir(tmpdir2)
 
     # The prior is huge so check that it will fail if the error_threshold is
     # not set (i.e. it is based on an estimation from data)
@@ -170,23 +247,21 @@ def test_cov_nlmarg():
         del data["cov"]["error_threshold"]
         cov_class = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
         cov = cov_class.get_covariance()
-    shutil.rmtree(tmpdir2)
+    _clean_tmpdir(tmpdir2)
 
 
-def test_cov_ng_error():
-    data = get_config(fsky=0.2)
-    covc = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
-    with pytest.raises(NotImplementedError):
-        covc.get_covariance_ng_halomodel(0, 0, 0, 0, 0.2, kind="3h")
-    shutil.rmtree(tmpdir1)
-
-
-def test_cov_ng_1h():
+# TODO: Missing test for:
+#       a) 1h+2h combinations
+#       b) computation of missing terms. E.g. 1h is already in but the user
+#          requests 1h+2h later on. It only computes 2h and add it to the 1h
+#          contribution already there.
+@pytest.mark.parametrize("kind", ["1h", "2h", "3h", "4h", None])
+def test_cov_ng(kind):
     # From CCL directly
     data = get_config(fsky=0.2)
     clc = Cl(data, "Dummy__0", "Dummy__0")
     ells = clc.b.get_effective_ells()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     cosmo = ccl.Cosmology(**data["cov"]["fiducial"]["cosmo"])
     md = ccl.halos.MassDef200m
     mf = ccl.halos.MassFuncTinker10(mass_def=md)
@@ -209,20 +284,68 @@ def test_cov_ng_1h():
     tr = ccl.NumberCountsTracer(
         cosmo, has_rsd=False, dndz=(z, nz), bias=(z, np.ones_like(z))
     )
-    k_arr = np.geomspace(1e-4, 1e2, 256)
-    a_arr = 1.0 / (1 + np.linspace(0, 3, 15)[::-1])
-    tkk = ccl.halos.halomod_Tk3D_1h(
-        cosmo,
-        hmc,
-        prof=pr,
-        prof2=pr,
-        prof12_2pt=prof2pt,
-        prof3=pr,
-        prof4=pr,
-        prof34_2pt=prof2pt,
-        a_arr=a_arr,
-        lk_arr=np.log(k_arr),
-    )
+    # In order to get rdev = 1e-3, we need to have an a_arr, and k_arr very
+    # close to the one in ClFid.
+    # In the code, to speed things up, we remove half of the points
+
+    lk = cosmo.get_pk_spline_lk()
+    sel = lk <= np.log(100)
+    k_arr = np.exp(lk[sel])[::2]
+
+    a_arr = np.linspace(1/(1+6), 1, 38)[::2]
+    if a_arr[-1] != 1.0:
+        a_arr = np.append(a_arr, 1.0)
+    separable_growth = True
+
+    if kind == "1h":
+        tkk = ccl.halos.halomod_Tk3D_1h(
+            cosmo,
+            hmc,
+            prof=pr,
+            prof12_2pt=prof2pt,
+            a_arr=a_arr,
+            lk_arr=np.log(k_arr),
+        )
+    elif kind == "2h":
+        tkk = ccl.halos.halomod_Tk3D_2h(
+            cosmo,
+            hmc,
+            prof=pr,
+            prof12_2pt=prof2pt,
+            a_arr=a_arr,
+            lk_arr=np.log(k_arr),
+            separable_growth=separable_growth,
+        )
+    elif kind == "3h":
+        tkk = ccl.halos.halomod_Tk3D_3h(
+            cosmo,
+            hmc,
+            prof=pr,
+            prof13_2pt=prof2pt,
+            a_arr=a_arr,
+            lk_arr=np.log(k_arr),
+            separable_growth=separable_growth,
+        )
+    elif kind == "4h":
+        tkk = ccl.halos.halomod_Tk3D_4h(
+            cosmo,
+            hmc,
+            prof=pr,
+            a_arr=a_arr,
+            lk_arr=np.log(k_arr),
+            separable_growth=separable_growth,
+        )
+    elif kind is None:
+        tkk = ccl.halos.halomod_Tk3D_cNG(
+            cosmo=cosmo,
+            hmc=hmc,
+            prof=pr,
+            prof12_2pt=prof2pt,
+            a_arr=a_arr,
+            lk_arr=np.log(k_arr),
+            separable_growth=separable_growth,
+        )
+
     covNG0 = ccl.angular_cl_cov_cNG(
         cosmo,
         tracer1=tr,
@@ -244,12 +367,11 @@ def test_cov_ng_1h():
     }
     covcG = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
     covG = covcG.get_covariance()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # Gaussian + non-Gaussian
     data = get_config(fsky=0.2, inc_hm=True)
-    data["cov"]["non_Gaussian"] = True
-    data["cov"]["NG_terms"] = ["1h"]
+    data["cov"]["non_Gaussian"] = {'compute': True, 'NG_terms': [kind]}
     data["tracers"]["Dummy__0"]["hod_params"] = {
         "log10Mmin_0": 12.1,
         "log10M1_p": 0.1,
@@ -258,14 +380,13 @@ def test_cov_ng_1h():
     covc1 = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
     mapper = MapperDummy(data["tracers"]["Dummy__0"])
     fsky = np.mean((mapper.get_mask() > 0))
-    covNG1 = covc1.get_covariance_ng_halomodel(0, 0, 0, 0, fsky)
+    covNG1 = covc1.get_covariance_ng_halomodel(0, 0, 0, 0, kind=kind)
     cov1 = covc1.get_covariance()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # fsky on input
     data = get_config(fsky=0.2, inc_hm=True)
-    data["cov"]["non_Gaussian"] = True
-    data["cov"]["NG_terms"] = ["1h"]
+    data["cov"]["non_Gaussian"] = {'compute': True, 'NG_terms': [kind]}
     data["cov"]["fsky_NG"] = 0.1
     data["tracers"]["Dummy__0"]["hod_params"] = {
         "log10Mmin_0": 12.1,
@@ -274,16 +395,170 @@ def test_cov_ng_1h():
     }
     covc2 = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
     covNG2 = covc2.get_covariance() - covG
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
-    # Tests
+    # Tests (using pytest.approx for more informative logs)
     # Compare result of NG method with G+NG-G
-    assert np.allclose(covNG1, cov1 - covG, atol=0)
+    assert covNG1 == pytest.approx(cov1 - covG, rel=1e-4, abs=0)
     # Compare with CCL prediction
-    # (interpolation errors are ~1E-4)
-    assert np.allclose(covNG0, covNG1 * fsky, atol=0, rtol=1e-3)
+    # (interpolation errors are ~1E-4, using a very similar grid)
+    assert covNG0 == pytest.approx(covNG1 * fsky, rel=1e-3, abs=0)
     # fsky scaling
-    assert np.allclose(covNG2, covNG1 * fsky / 0.1, atol=0)
+    assert covNG2 == pytest.approx(covNG1 * fsky / 0.1, rel=1e-4, abs=0)
+
+
+@pytest.mark.parametrize("sigma2B_type", ["fsky", "mask_wl"])
+def test_cov_ssc(sigma2B_type):
+    # From CCL directly
+    data = get_config(fsky=0.2)
+    clc = Cl(data, "Dummy__0", "Dummy__0")
+    ells = clc.b.get_effective_ells()
+    mapper, _ = clc.get_mappers()
+    mask = mapper.get_mask()
+    _clean_tmpdir(tmpdir1)
+
+    cosmo = ccl.Cosmology(**data["cov"]["fiducial"]["cosmo"])
+    md = ccl.halos.MassDef200m
+    mf = ccl.halos.MassFuncTinker10(mass_def=md)
+    hb = ccl.halos.HaloBiasTinker10(mass_def=md)
+    cm = ccl.halos.ConcentrationDuffy08(mass_def=md)
+    hmc = ccl.halos.HMCalculator(mass_function=mf, halo_bias=hb, mass_def=md)
+    prnfw = ccl.halos.HaloProfileNFW(mass_def=md, concentration=cm)
+    z, nz = np.loadtxt(
+        "cosmotheka/tests/data/DESY1gc_dndz_bin0.txt",
+        usecols=(1, 3),
+        unpack=True,
+    )
+    tr = ccl.NumberCountsTracer(
+        cosmo, has_rsd=False, dndz=(z, nz), bias=(z, np.ones_like(z))
+    )
+    # In order to get rdev = 1e-3, we need to have an a_arr, and k_arr very
+    # close to the one in ClFid.
+    a_arr = np.linspace(1/(1+6), 1, 38)
+
+    tkk = ccl.halos.halomod_Tk3D_SSC_linear_bias(
+        cosmo=cosmo,
+        hmc=hmc,
+        prof=prnfw,
+        bias1=1,
+        bias2=1,
+        bias3=1,
+        bias4=1,
+        is_number_counts1=True,
+        is_number_counts2=True,
+        is_number_counts3=True,
+        is_number_counts4=True,
+    )
+    # Gaussian only
+    data = get_config(fsky=0.2, inc_hm=False)
+    data["tracers"]["Dummy__0"]["bias"] = 1
+    covcG = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
+    covG = covcG.get_covariance()
+    _clean_tmpdir(tmpdir1)
+
+    if sigma2B_type == "fsky":
+        # Compute with fsky
+
+        # Case 1 - fsky computed from the mask
+        fsky = np.mean((mask > 0))
+        sigma2_B = ccl.sigma2_B_disc(
+            cosmo, a_arr=a_arr, fsky=fsky
+        )  # Use 0.1 to check
+
+        covSSC0 = ccl.angular_cl_cov_SSC(
+            cosmo,
+            tracer1=tr,
+            tracer2=tr,
+            ell=ells,
+            t_of_kk_a=tkk,
+            tracer3=tr,
+            tracer4=tr,
+            ell2=ells,
+            sigma2_B=(a_arr, sigma2_B),
+            integration_method="spline",
+        )
+
+        # Gaussian + non-Gaussian
+        data = get_config(fsky=0.2, inc_hm=False)
+        data["cov"]["SSC"] = {'compute': True, 'sigma2_B': sigma2B_type}
+        data["tracers"]["Dummy__0"]["bias"] = 1
+        covc1 = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
+        covSSC1 = covc1.get_SSC_halomodel(0, 0, 0, 0)
+        cov1 = covc1.get_covariance()
+        _clean_tmpdir(tmpdir1)
+
+        # Compare with CCL prediction
+        # (interpolation errors are ~1E-4, using a very similar grid)
+        assert covSSC1 == pytest.approx(covSSC0, rel=1e-4, abs=0)
+
+        # Case 2 - fsky set by user to the "wrong" value of 0.1
+        sigma2_B = ccl.sigma2_B_disc(cosmo, a_arr=a_arr, fsky=0.1)
+
+        covSSC0 = ccl.angular_cl_cov_SSC(
+            cosmo,
+            tracer1=tr,
+            tracer2=tr,
+            ell=ells,
+            t_of_kk_a=tkk,
+            tracer3=tr,
+            tracer4=tr,
+            ell2=ells,
+            sigma2_B=(a_arr, sigma2_B),
+            integration_method="spline",
+        )
+
+        data = get_config(fsky=0.2, inc_hm=False)
+        data["cov"]["SSC"] = {'compute': True, 'sigma2_B': sigma2B_type}
+        data["cov"]["fsky_NG"] = 0.1
+        data["tracers"]["Dummy__0"]["bias"] = 1
+        covc1 = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
+        covSSC1 = covc1.get_SSC_halomodel(0, 0, 0, 0)
+        cov1 = covc1.get_covariance()
+        _clean_tmpdir(tmpdir1)
+
+        # Compare with CCL prediction
+        # (interpolation errors are ~1E-4, using a very similar grid)
+        assert covSSC1 == pytest.approx(covSSC0, rel=1e-4, abs=0)
+
+    elif sigma2B_type == "mask_wl":
+        # Compute with mask_wl
+        area = hp.nside2pixarea(hp.npix2nside(mask.size))
+        m12 = mask**2  # Same as m34
+        alm = blm = hp.map2alm(m12)
+
+        mask_wl = hp.alm2cl(alm, blm)
+        mask_wl *= 2 * np.arange(mask_wl.size) + 1
+        mask_wl /= np.sum(m12)**2 * area**2
+
+        sigma2_B = ccl.sigma2_B_from_mask(cosmo, a_arr=a_arr, mask_wl=mask_wl)
+
+        covSSC0 = ccl.angular_cl_cov_SSC(
+            cosmo,
+            tracer1=tr,
+            tracer2=tr,
+            ell=ells,
+            t_of_kk_a=tkk,
+            tracer3=tr,
+            tracer4=tr,
+            ell2=ells,
+            sigma2_B=(a_arr, sigma2_B),
+            integration_method="spline",
+        )
+
+        data = get_config(fsky=0.2, inc_hm=False)
+        data["cov"]["SSC"] = {'compute': True, 'sigma2_B': sigma2B_type}
+        data["tracers"]["Dummy__0"]["bias"] = 1
+        covc1 = Cov(data, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
+        covSSC1 = covc1.get_SSC_halomodel(0, 0, 0, 0)
+        cov1 = covc1.get_covariance()
+        _clean_tmpdir(tmpdir1)
+
+        # Compare with CCL prediction
+        assert covSSC1 == pytest.approx(covSSC0, rel=1e-4, abs=0)
+
+    # Tests (using pytest.approx for more informative logs)
+    # Compare result of NG method with G+SSC-G
+    assert covSSC1 == pytest.approx(cov1 - covG, rel=1e-4, abs=0)
 
 
 def test_file_inconsistent_errors():
@@ -298,7 +573,7 @@ def test_file_inconsistent_errors():
     clo2 = Cl(data, "Dummy__0", "Dummy__0")
     with pytest.raises(ValueError):
         clo2.get_ell_cl()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
 
 def test_get_ell_cl():
@@ -312,12 +587,12 @@ def test_get_ell_cl():
     cl_m1 = m1.get_cl()
     cl_m1_cp = w.couple_cell([cl_m1])
     cl_m1 = w.decouple_cell(cl_m1_cp)
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # Compute covariance
     cov_class = get_cov_class()
     cov = cov_class.get_covariance()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # Check that true Cl is within 5sigma of data Cl
     sigma = np.sqrt(np.diag(cov))
@@ -380,7 +655,7 @@ def test_custom_auto():
     data = get_config()
     clc1 = Cl(data, "Dummy__0", "Dummy__0")
     l1, cl1 = clc1.get_ell_cl_cp()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # With custom auto
     data = get_config()
@@ -388,7 +663,7 @@ def test_custom_auto():
     data["tracers"]["Dummy__0"]["custom_offset"] = np.pi * 1e-5
     clc2 = Cl(data, "Dummy__0", "Dummy__0")
     l2, cl2 = clc2.get_ell_cl_cp()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     assert np.allclose(cl1, cl2 - np.pi * 1e-5, rtol=1e-4, atol=0)
 
@@ -398,7 +673,7 @@ def test_custom_auto():
     data["tracers"]["Dummy__0"]["custom_offset"] = np.pi * 1e-5
     clc3 = Cl(data, "Dummy__0", "Dummy__0")
     l2, cl3 = clc3.get_ell_cl_cp_cov()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     assert np.allclose(cl1, cl3, rtol=1e-4, atol=0)
 
@@ -411,7 +686,7 @@ def test_get_ell_cl_cp():
 
     w = cl_class.get_workspace()
     cl2 = w.decouple_cell(cl_cp)
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     assert np.all(np.fabs(cl / cl2 - 1) < 1e-10)
 
     # Test it also in ClFid
@@ -419,7 +694,7 @@ def test_get_ell_cl_cp():
     ell, cl = cl_class.get_ell_cl()
     ell, cl_cp = cl_class.get_ell_cl_cp()
     cl_cp2 = w.couple_cell(cl)
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     assert np.all(np.fabs(cl_cp / cl_cp2 - 1) < 1e-10)
 
 
@@ -434,7 +709,7 @@ def test_get_ell_cl_binned():
     cl = cl_class.get_ell_cl()[1]
     ell_binned, cl_binned = cl_class.get_ell_cl_binned()
     cl_binned2 = w.decouple_cell(w.couple_cell(cl))
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     assert np.all(np.fabs(cl_binned / cl_binned2 - 1) < 1e-10)
     assert np.all(np.fabs(ell / ell_binned - 1) < 1e-10)
 
@@ -444,21 +719,21 @@ def test_covar_from_data():
     # Can't compute covariance unless we allow doing it from data
     with pytest.raises(NotImplementedError):
         Cov(config, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # Allow falling back to data
     config = get_config(dtype0="generic")
     config["cov"]["data_fallback"] = True
     cov_obj = Cov(config, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
     cov1 = cov_obj.get_covariance()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # Compute from data on purpose
     config = get_config(dtype0="generic")
     config["cov"]["cls_from_data"] = "all"
     cov_obj = Cov(config, "Dummy__0", "Dummy__0", "Dummy__0", "Dummy__0")
     cov2 = cov_obj.get_covariance()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     assert np.allclose(cov1, cov2, atol=1e-10, rtol=0)
 
@@ -518,7 +793,7 @@ def test_get_covariance(cldata):
     chi2 = dCl.dot(icov).dot(dCl)
     chi2_m = dCl.dot(icov_m).dot(dCl)
 
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     assert np.fabs(chi2 / chi2_m - 1) < 0.03
 
 
@@ -533,12 +808,12 @@ def test_cls_vs_namaster():
     clfile = np.load(
         os.path.join(tmpdir1, "Dummy_Dummy", "cl_Dummy__0_Dummy__0.npz")
     )
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # Compute covariance
     cov_class = get_cov_class()
     cov = cov_class.get_covariance()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # NaMaster
     config = get_config()
@@ -626,7 +901,7 @@ def test_symmetric():
     assert np.all(
         cl_class01.get_ell_nl_cp()[1] == cl_class10.get_ell_nl_cp()[1]
     )
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
 
 def test_ignore_existing_yml():
@@ -660,14 +935,14 @@ def test_ignore_existing_yml():
         ignore_existing_yml=False,
     )
     assert cov_class.data.data["cls"]["Dummy-Dummy"]["compute"] == "all"
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
 
 def test_unsupported_quantity():
     data = get_config(dtype0="generic")
     with pytest.raises(NotImplementedError):
         ClFid(data, "Dummy__0", "Dummy__1")
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
 
 def test_symmetric_fid():
@@ -682,7 +957,7 @@ def test_symmetric_fid():
     fname = os.path.join(cl_class10.outdir, "cl_Dummy__1_Dummy__0.npz")
     assert not os.path.isfile(fname)
     assert np.all(cl_class01.get_ell_cl()[1] == cl_class10.get_ell_cl()[1])
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
 
 def test_cov_nonoverlap():
@@ -691,7 +966,7 @@ def test_cov_nonoverlap():
     data["tracers"]["Dummy__1"]["dec0"] = 180.0
     covc = Cov(data, "Dummy__0", "Dummy__0", "Dummy__1", "Dummy__1")
     cov = covc.get_covariance()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     assert np.all(cov == 0)
 
 
@@ -705,11 +980,11 @@ def test_cov_mmarg():
     # Theory power spectra
     clf = ClFid(data, "Dummy__0", "Dummy__0")
     _, cl = clf.get_ell_cl()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     # Binning
     clc = Cl(data, "Dummy__0", "Dummy__0")
     wp = clc.get_bandpower_windows()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
     ncl, nbpw, _, nl = wp.shape
     wp = wp.reshape((ncl * nbpw, ncl * nl))
     cl = cl.reshape(ncl * nl)
@@ -736,7 +1011,7 @@ def test_cov_mmarg():
 
             assert np.amax(np.fabs(covmargij / covmargbij - 1)) < 1e-5
 
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
 
 @pytest.mark.parametrize(
@@ -775,7 +1050,7 @@ def test_cov_spin0(perm):
     assert not covc2.spin0
     cov2 = covc2.get_covariance()
     assert cov2.shape == (ncls1 * nbpw, ncls2 * nbpw)
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # Spin-0 covariance class
     data["cov"]["spin0"] = True
@@ -789,7 +1064,7 @@ def test_cov_spin0(perm):
     assert covc0.spin0
     cov0 = covc0.get_covariance()
     assert cov0.shape == (ncls1 * nbpw, ncls2 * nbpw)
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     if ncls1 == ncls2:
         # Check that they are the same on all bandpowers
@@ -812,7 +1087,7 @@ def test_clfid_halomod_settings():
     assert hm_par["mass_func"].name == "Tinker10"
     assert hm_par["halo_bias"].name == "Tinker10"
     assert hm_par["cM"].name == "Duffy08"
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     # Custom halo model parameters
     md = "200c"
@@ -833,7 +1108,7 @@ def test_clfid_halomod_settings():
     assert hm_par["mass_func"].name == mf
     assert hm_par["halo_bias"].name == hb
     assert hm_par["cM"].name == cM
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
 
 @pytest.mark.parametrize(
@@ -869,7 +1144,7 @@ def test_clfid_against_ccl(tr1, tr2):
     cosmo = ccl.Cosmology(**data["cov"]["fiducial"]["cosmo"])
     clf = ClFid(data, "Dummy__0", "Dummy__1")
     d = clf.get_cl_file()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     def get_ccl_tracer(tr):
         if tr == "galaxy_density":
@@ -975,10 +1250,14 @@ def test_clfid_halomod(tr1, tr2):
 
     clf = ClFid(data, "Dummy__0", "Dummy__1")
     d = clf.get_cl_file()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     k_arr = np.geomspace(1e-4, 1e2, 512)
-    a_arr = 1.0 / (1 + np.linspace(0, 3, 15)[::-1])
+    # In order to get rdev = 1e-4, we need to have an a_arr very close to
+    # the one in ClFid. Sampling on z, the second highest scale factor is a~0.8
+    # instead of a~0.97, so it's better to sample on a directly.
+    a_arr = np.linspace(1/(1+3), 1, 20)
+
     pk = ccl.halos.halomod_Pk2D(
         cosmo,
         hmc,
@@ -986,13 +1265,12 @@ def test_clfid_halomod(tr1, tr2):
         prof2=profs[tr2],
         lk_arr=np.log(k_arr),
         a_arr=a_arr,
+        smooth_transition=(lambda a: 0.7),
+        suppress_1h=(lambda a: 0.01)
     )
-    # Commented out until these features are pushed to the pip release of CCL
-    # smooth_transition=(lambda a: 0.7),
-    # supress_1h=(lambda a: 0.01))
     clb = ccl.angular_cl(cosmo, ccltr[tr1], ccltr[tr2], d["ell"], p_of_k_a=pk)
 
-    assert np.all(np.fabs(clb[2:] / d["cl"][0][2:] - 1) < 1e-4)
+    assert clb[2:] == pytest.approx(d["cl"][0][2:], rel=1e-4, abs=0)
 
 
 def test_clfid_halomod_M500c():
@@ -1021,23 +1299,97 @@ def test_clfid_halomod_M500c():
 
     clf = ClFid(data, "Dummy__0", "Dummy__1")
     d = clf.get_cl_file()
-    shutil.rmtree(tmpdir1)
+    _clean_tmpdir(tmpdir1)
 
     k_arr = np.geomspace(1e-4, 1e2, 512)
-    a_arr = 1.0 / (1 + np.linspace(0, 6.0, 30)[::-1])
+    # In order to get rdev = 1e-4, we need to have an a_arr very close to
+    # the one in ClFid. Sampling on z, the second highest scale factor is a~0.8
+    # instead of a~0.97, so it's better to sample on a directly.
+    a_arr = np.linspace(1/(1+6), 1, 38)
+
     pk = ccl.halos.halomod_Pk2D(
         cosmo,
         hmc,
         prof1,
         prof2=prof2,
-        # normprof1=False,
-        # normprof2=True,
         lk_arr=np.log(k_arr),
         a_arr=a_arr,
+        smooth_transition=(lambda a: 0.7),
+        suppress_1h=(lambda a: 0.01)
     )
-    # Commented out until these features are pushed to the pip release of CCL
-    # smooth_transition=(lambda a: 0.7),
-    # supress_1h=(lambda a: 0.01))
     clb = ccl.angular_cl(cosmo, ccltr1, ccltr2, d["ell"], p_of_k_a=pk)
 
-    assert np.all(np.fabs(clb[2:] / d["cl"][0][2:] - 1) < 1e-4)
+    assert clb[2:] == pytest.approx(d["cl"][0][2:], rel=1e-4, abs=0)
+
+
+def test_mc_correction():
+    config = get_config(dtype0="cmb_convergence", fsky=1.0, fsky2=0.1)
+    cl_class = Cl(config, "Dummy__0", "Dummy__1")
+    mapper_0, mapper_1 = cl_class.get_mappers()
+    mask_cmbk = mapper_0.get_mask()
+    _clean_tmpdir(tmpdir1)
+
+    # Generate the sims needed to test the CMBk mc correction
+    os.makedirs(tmpdir1, exist_ok=True)  # Prepare output directory
+    ell = np.arange(3*NSIDE, dtype=np.float64)
+    cl_input = np.zeros_like(ell)
+    cl_input[2:] = 1e-3 * ell[2:]**(-3)
+
+    nsims = 50
+    # Generate the random map using synfast
+    for i in range(nsims):
+        # Signal and noise drawn separately
+        s_map, s_alm = hp.synfast(cl_input, nside=NSIDE, alm=True)
+
+        # Write input alm "s_alm"
+        hp.write_alm(tmpdir1 + f"/sky_klm_{i:03d}.fits", s_alm)
+
+        # To mimic the reconstruction, recover the alm after applying the mask
+        # Note that we should probably account for the coupling, but for the
+        # test this seems enough.
+        rec_alm = hp.map2alm(s_map * mask_cmbk, lmax=3*NSIDE-1)
+        hp.write_alm(tmpdir1 + f"/sim_klm_{i:03d}.fits", rec_alm)
+
+    config = get_config(dtype0="cmb_convergence", fsky=1.0, fsky2=0.1)
+    config["tracers"]["Dummy__0"]["sims_rec_path"] = tmpdir1
+    config["tracers"]["Dummy__0"]["sims_in_path"] = tmpdir1
+    config["cls"]["Dummy-Dummy"]["neglect_mc_correction"] = False
+    cl_class = Cl(config, "Dummy__0", "Dummy__1")
+    clf = cl_class.get_cl_file()
+
+    # Check that the mc correction file was created and has the expected keys
+    tl_fname = f"Tl_mask_dummy0_mask_dummy1_coordC_ns{NSIDE}.npz"
+    tl_path = os.path.join(cl_class.outdir, tl_fname)
+    assert os.path.isfile(tl_path)
+    tl_file = np.load(tl_path)
+    expected_tl_keys = {
+        "Tl",
+        "Tl_cp",
+        "ell",
+        "num",
+        "denom",
+        "num_cp",
+        "denom_cp",
+        "computed",
+        "threshold"
+    }
+    assert set(tl_file.files) == expected_tl_keys
+    assert tl_file['Tl'] == pytest.approx(np.mean(tl_file['num'], axis=0) /
+                                          np.mean(tl_file['denom'], axis=0),
+                                          rel=1e-10, abs=0)
+    assert tl_file['Tl_cp'] == \
+        pytest.approx(np.mean(tl_file['num_cp'], axis=0) /
+                      np.mean(tl_file['denom_cp'], axis=0), rel=1e-10, abs=0)
+    assert tl_file['computed'] == nsims
+
+    Tl = clf['correction_cmbk']
+    ell_eff = clf['ell']
+    sel = ell_eff < 2 * NSIDE
+    ell_eff = ell_eff[sel][1:]  # Remove first bin: noisier due to mask
+    Tl = Tl[sel][1:]
+    ones = np.ones_like(Tl)
+
+    assert np.all(Tl != ones)
+    # I can get rel 1e-4 in Glamdring but not in the CI, so I relax the
+    # tolerance to 1e-3
+    assert Tl == pytest.approx(ones, rel=1e-3, abs=0)

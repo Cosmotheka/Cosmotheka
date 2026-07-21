@@ -61,6 +61,40 @@ class MapperBase(object):
             rot = None
         return rot
 
+    def _get_map_from_alm_file(self, file, remove_monopole=True):
+        """
+        Reads a alm file, rotates it if needed and creates a map with the shape
+        expected by NaMaster (ncomp, npix).
+
+        Parameters:
+            file (str): path to the alm file.
+
+        Returns:
+            map (Array): map created from the alm file, with shape
+                         (ncomp, npix).
+        """
+        # Read alms
+        alm, lmax = hp.read_alm(file, return_mmax=True)
+        # Some elements may be nan (e.g. 1st in Planck18CMBk, 2 first in
+        # ACTDR6CMBk). Fix that.
+        alm = alm.astype(np.complex128)
+        if remove_monopole:
+            alm[0] = 0.0 + 0.0j  # Set monopole to 0
+        alm = np.nan_to_num(alm)
+
+        # Rotate
+        if self.rot is not None:
+            alm = self.rot.rotate_alm(alm)
+
+        # Filter if lmax is too large
+        if lmax > 3*self.nside-1:
+            fl = np.ones(lmax+1)
+            fl[3*self.nside:] = 0
+            alm = hp.almxfl(alm, fl, inplace=True)
+
+        # Create the map with the shape expected by NaMaster (ncomp, npix)
+        return np.atleast_2d(hp.alm2map(alm, nside=self.nside))
+
     def _get_signal_map(self):
         raise NotImplementedError("Do not use base class")
 
@@ -152,7 +186,6 @@ class MapperBase(object):
         print(f"Rerun read cycle for {fname} of type {ftype}", flush=True)
         d = get_rerun_data(self, fname, ftype,
                            section=section)
-        print(f"Data loaded: {d is not None}", flush=True)
         if d is None:
             d = func(**func_kwargs)
             if not saved_by_func:

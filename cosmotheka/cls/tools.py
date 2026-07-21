@@ -9,11 +9,15 @@ def save_npz(fname, threshold=1e100, **kwargs):
     print(f"Saving {fname}")
     for kn, kv in kwargs.items():
         maxv = np.max(np.abs(kv))
-        if np.isnan(maxv) or (maxv > threshold):
+        if maxv in (True, False):
+            continue
+        elif maxv is None:
+            raise RuntimeError(f"Some values in {kn} are None. Stopping here")
+        elif np.isnan(maxv) or (maxv > threshold):
             raise RuntimeError(f"Some values in {kn} are nan or "
                                f">{threshold} (e.g. {maxv}). Stopping here")
 
-    np.savez_compressed(fname, **kwargs)
+    np.savez_compressed(fname, **kwargs, threshold=threshold)
 
 
 def save_wsp(wsp, fname):

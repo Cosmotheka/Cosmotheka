@@ -43,16 +43,21 @@ def get_config(fsky0=0.2, fsky1=0.3, dtype0='galaxy_density',
               'dtype': dtype1}
     bpw_edges = list(range(0, 3 * nside, 4))
 
-    return {'tracers': {'Dummy__0': dummy0, 'Dummy__1': dummy1},
-            'cls': {'Dummy-Dummy': {'compute': 'all'}},
-            'cov': {'fiducial': {'cosmo': cosmo, 'wl_m':
-                                 False, 'wl_ia': False}},
-            'bpw_edges': bpw_edges,
-            'sphere': {'n_iter_sht': 0, 'n_iter_mcm': 3, 'n_iter_cmcm': 3,
-                       'nside': nside, 'coords': 'C'},
-            'recompute': {'cls': False, 'cov': False, 'mcm': False, 'cmcm':
-                          False},
-            'output': tmpdir}
+    out = {'tracers': {'Dummy__0': dummy0, 'Dummy__1': dummy1},
+           'cls': {'Dummy-Dummy': {'compute': 'all'}},
+           'cov': {'fiducial': {'cosmo': cosmo, 'wl_m':
+                                False, 'wl_ia': False}},
+           'bpw_edges': bpw_edges,
+           'sphere': {'n_iter_sht': 0, 'n_iter_mcm': 3, 'n_iter_cmcm': 3,
+                      'nside': nside, 'coords': 'C'},
+           'recompute': {'cls': False, 'cov': False, 'mcm': False, 'cmcm':
+                         False},
+           'output': tmpdir}
+
+    if dtype0 == "cmb_convergence" or dtype1 == "cmb_convergence":
+        out["cls"]["Dummy-Dummy"]["neglect_mc_correction"] = True
+
+    return out
 
 
 def get_data(fsky0=0.2, fsky1=0.3, dtype0='galaxy_density',
@@ -226,9 +231,11 @@ def test_covariance_extra():
 
     config['cls'].update({'Dummy-Dummy': {'compute': 'all'},
                           'Dummy-DummyWL': {'compute': 'all'},
-                          'Dummy-DummyCV': {'compute': 'all'},
+                          'Dummy-DummyCV': {'compute': 'all',
+                                            'neglect_mc_correction': True},
                           'DummyWL-DummyWL': {'compute': 'auto'},
-                          'DummyWL-DummyCV': {'compute': 'all'},
+                          'DummyWL-DummyCV': {'compute': 'all',
+                                              'neglect_mc_correction': True},
                           'DummyCV-DummyCV': {'compute': 'all'}})
 
     # Add extra difficulty by adding 2 more tracers
