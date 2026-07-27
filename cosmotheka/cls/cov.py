@@ -889,7 +889,7 @@ class Cov:
                 )
 
             else:
-                cov_G = cw.gaussian_covariance(
+                cov_dict['cov_G'] = cw.gaussian_covariance(
                     cla1b1,
                     cla1b2,
                     cla2b1,
