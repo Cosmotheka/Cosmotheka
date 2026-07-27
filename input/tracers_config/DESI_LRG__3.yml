@@ -21,3 +21,4 @@ remove_random_after_clean: false
 mapper_class: 'MapperDESILRG'
 # mask_name is set dynamically in the code.
 path_rerun: /mnt/extraspace/damonge/Datasets/DESI_LRG_PZ/cosmotheka_reruns
+bias: 2.4  # Table 1 http://arxiv.org/abs/2407.04607
