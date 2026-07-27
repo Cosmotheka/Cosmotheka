@@ -34,7 +34,6 @@ from .mapper_Quaia import MapperQuaia
 from .mapper_PlanckPR4CMBK import MapperPlanckPR4CMBK
 from .mapper_DESI_LRG import MapperDESILRG, MapperDESILRGZhou2023
 from .mapper_DESI_BGS import MapperDESIBGS
-from .mapper_HSCLBG_dumb import MapperHSCLBGdumb
 from .utils import (
     get_map_from_points,
     get_DIR_Nz,
