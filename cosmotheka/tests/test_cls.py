@@ -1406,7 +1406,8 @@ def test_mc_correction_resumes_partial_file(monkeypatch):
     input_sims = ["in0", "in1"]
     mapper_cmbk._get_sims_fnames = lambda: (rec_sims, input_sims)
     mapper_cmbk.get_mask = lambda: np.array([1.0])
-    mapper_cmbk._get_map_from_alm_file = lambda path: np.array([0.0 if path.endswith("0") else 1.0])
+    mapper_cmbk._get_map_from_alm_file = \
+        lambda path: np.array([0.0 if path.endswith("0") else 1.0])
     mapper_x.get_mask = lambda: np.array([1.0])
     mapper_x.coords = "C"
 
@@ -1423,7 +1424,9 @@ def test_mc_correction_resumes_partial_file(monkeypatch):
 
     def fake_compute_coupled_cell(field1, field2):
         call_count["n"] += 1
-        value = float(field1["map"][0] + 10 * field2["map"][0] + call_count["n"])
+        value = float(
+            field1["map"][0] + 10 * field2["map"][0] + call_count["n"]
+            )
         return np.array([[value]])
 
     monkeypatch.setattr(nmt, "NmtField", fake_nmt_field)
