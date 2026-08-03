@@ -1,14 +1,92 @@
 #!/usr/bin/python
+import json
+import hashlib
 import os
 from cosmotheka.cls.data import Data
 from cosmotheka.cls.cl import Cl, ClFid
 from cosmotheka.cls.cov import Cov
 from cosmotheka.cls.to_sacc import ClSack
-from mpi4py import MPI
 
-COMM = MPI.COMM_WORLD
+try:
+    from mpi4py import MPI
+except ImportError:
+    MPI = None
+
+
+class _SingleProcessComm:
+    def Get_rank(self):
+        return 0
+
+    def Get_size(self):
+        return 1
+
+    def Barrier(self):
+        return None
+
+    def bcast(self, value, root=0):
+        return value
+
+    def Abort(self, errorcode=1):
+        raise SystemExit(errorcode)
+
+COMM = MPI.COMM_WORLD if MPI is not None else _SingleProcessComm()
 RANK = COMM.Get_rank()
 SIZE = COMM.Get_size()
+
+
+def get_stage_status_path(data):
+    return os.path.join(data.data["output"], ".run_cls_mpi_status.json")
+
+
+def get_config_signature(data):
+    payload = json.dumps(data.data, sort_keys=True, default=str, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def load_stage_status(data):
+    fname = get_stage_status_path(data)
+    if not os.path.isfile(fname):
+        return {}
+
+    try:
+        with open(fname, "r") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def save_stage_status(data, status):
+    if RANK != 0:
+        return
+
+    fname = get_stage_status_path(data)
+    tmp_fname = f"{fname}.tmp"
+    with open(tmp_fname, "w") as f:
+        json.dump(status, f, indent=2, sort_keys=True)
+        f.write("\n")
+    os.replace(tmp_fname, fname)
+
+
+def stage_is_complete(data, stage, params=None):
+    status = load_stage_status(data)
+    record = status.get(stage)
+    if not record or not record.get("completed", False):
+        return False
+
+    if record.get("config_signature") != get_config_signature(data):
+        return False
+
+    return record.get("params", {}) == (params or {})
+
+
+def mark_stage_complete(data, stage, params=None):
+    status = load_stage_status(data)
+    status[stage] = {
+        "completed": True,
+        "config_signature": get_config_signature(data),
+        "params": params or {},
+    }
+    save_stage_status(data, status)
 
 
 def check_skip(data, skip, trs):
@@ -28,6 +106,13 @@ def launch_mappers(data, skip=None, stop_at_error=False):
     Launch the computation of mappers for all tracers in data.
     This is a preliminary step to precompute the heavy parts
     """
+    stage_params = {"skip": sorted(skip) if skip else []}
+    if stage_is_complete(data, "mappers", stage_params):
+        if RANK == 0:
+            print("[Rank 0] Mapper stage already completed, skipping.", flush=True)
+        COMM.Barrier()
+        return
+
     tracers_used = data.get_tracers_used()
 
     if RANK == 0:
@@ -67,6 +152,8 @@ def launch_mappers(data, skip=None, stop_at_error=False):
         counter += 1
 
     print(f"[Rank {RANK}] Mapper pre-computation finished.", flush=True)
+    if RANK == 0:
+        mark_stage_complete(data, "mappers", stage_params)
     COMM.Barrier()
 
 
@@ -75,6 +162,13 @@ def launch_cls(data, fiducial=False, skip=None, stop_at_error=False):
     Launch the computation of Cls for all tracers in data.
     If fiducial is True, compute the fiducial Cls.
     """
+    stage_params = {"fiducial": fiducial, "skip": sorted(skip) if skip else []}
+    if stage_is_complete(data, "cls", stage_params):
+        if RANK == 0:
+            print("[Rank 0] Cl stage already completed, skipping.", flush=True)
+        COMM.Barrier()
+        return
+
     cl_tracers = data.get_cl_trs_names()
     cl_tracers_per_wsp = data.get_cl_tracers_per_wsp()
 
@@ -149,6 +243,8 @@ def launch_cls(data, fiducial=False, skip=None, stop_at_error=False):
             counter += 1
 
     print(f"[Rank {RANK}] Cl computation finished.", flush=True)
+    if RANK == 0:
+        mark_stage_complete(data, "cls", stage_params)
     COMM.Barrier()
 
 
@@ -156,6 +252,17 @@ def launch_cov(data, skip=[], stop_at_error=False, save_cw=True, override=False)
     """
     Launch the computation of Covariance blocks for all tracers in data.
     """
+    stage_params = {
+        "skip": sorted(skip) if skip else [],
+        "save_cw": save_cw,
+        "override": override,
+    }
+    if stage_is_complete(data, "cov", stage_params):
+        if RANK == 0:
+            print("[Rank 0] Covariance stage already completed, skipping.", flush=True)
+        COMM.Barrier()
+        return
+
     cov_tracers = data.get_cov_trs_names()
     cov_tracers_per_cwsp = data.get_cov_tracers_per_cwsp()
 
@@ -234,6 +341,8 @@ def launch_cov(data, skip=[], stop_at_error=False, save_cw=True, override=False)
             counter += 1
 
     print(f"[Rank {RANK}] Covariance computation finished.")
+    if RANK == 0:
+        mark_stage_complete(data, "cov", stage_params)
     COMM.Barrier()
 
 
@@ -243,10 +352,18 @@ def launch_to_sacc(data, fname, use, m_marg):
     If use is 'nl', use the noise covariance instead of the Cls.
     If use is 'fiducial', use the fiducial Cls instead of the data Cls.
     """
+    stage_params = {"use": use, "m_marg": m_marg}
+    if stage_is_complete(data, "to_sacc", stage_params):
+        if RANK == 0:
+            print("[Rank 0] Sacc stage already completed, skipping.", flush=True)
+        COMM.Barrier()
+        return
+
     if RANK == 0:
         print(f"Converting to Sacc format using {use}...", flush=True)
 
-        sacc = ClSack(data, fname, use, m_marg)
+        sacc = ClSack(data.data_path, fname, use, m_marg)
+        mark_stage_complete(data, "to_sacc", stage_params)
 
     COMM.Barrier()
 
@@ -339,8 +456,7 @@ if __name__ == "__main__":
     # Broadcast the data object from rank 0 to all ranks
     data = COMM.bcast(data, root=0)
 
-    # 0. TODO: We could loop over the mappers to make sure the heavy parts have
-    # been precomputed.
+    # 0. Loop over the mappers to make sure the heavy parts have been computed.
     launch_mappers(data, skip=args.skip, stop_at_error=args.stop_at_error)
 
     # 1. Compute Cells
@@ -385,7 +501,7 @@ if __name__ == "__main__":
 
     m_marg = args.to_sacc_m_marg == "m_marg"
     launch_to_sacc(
-        data.data_path, fname=args.to_sacc_name, use=use, m_marg=m_marg
+        data, fname=args.to_sacc_name, use=use, m_marg=m_marg
     )
 
     if RANK == 0:

@@ -876,12 +876,13 @@ class Cl(ClBase):
         # as in Sailer. It is supposed to be more numerically stable.
         for i, (rec_sim, input_sim) in enumerate(zip(rec_sims, input_sims)):
             # If step already computed, read it and append it to the list.
-            if d is not None and d['computed'] < i:
+            if d is not None and i < d['computed']:
                 print(f"Reading step {i+1} / {nsims}", flush=True)
                 num.append(d['num'][i])
                 denom.append(d['denom'][i])
                 num_cp.append(d['num_cp'][i])
                 denom_cp.append(d['denom_cp'][i])
+                continue
 
             # If not already computed, compute it.
             print(f"Computing Tl {i+1} / {nsims}", flush=True)
