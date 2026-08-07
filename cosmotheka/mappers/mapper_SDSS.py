@@ -9,8 +9,31 @@ from .mapper_base import MapperBase
 
 class MapperSDSS(MapperBase):
     """
-    Base mapper class for the SDSS data sets mappers. \
+    Base mapper class for all SDSS mappers. \
+
+    All SDSS mappers compute their signal map \
+    by computing the overdensity of galaxies \
+    with respect to a random catalog. \
+
+    delta = (n_data - alpha * n_random) / mask \
+    mask = Area_diff * n_random * alpha \
+
+    where n_data and n_random are the number \
+    counts of galaxies per pixel \
+    in the data and random catalogs. \
+    alpha is the ratio between the sums \
+    of the weights of the data and random catalog \
+    The mask is computed from the random catalog \
+    accounting for the different are of the pixels \
+    if the map and the mask havce different \
+    resolutions. \
+    The noise power spectrum is computed from the \
+    data catalog if the chosen resolution is below \
+    a 4096, otherwise, the high multipole tail of \
+    the signal power spectrum is used to estimate \
+    the noise power spectrum.
     """
+
     # The SDSS_name passed in the configuration file will be added to map_name
     map_name = 'SDSS'
 
@@ -35,8 +58,12 @@ class MapperSDSS(MapperBase):
 
     def get_catalog(self, mod='data'):
         """
-        Returns the mapper's data or \
-        random catalog.
+        Cuts and returns the mapper's data or \
+        random catalog. \
+        We only make use of the columns \
+        cols = ['RA', 'DEC', 'Z', \
+        'WEIGHT_SYSTOT',  'WEIGHT_CP ', \
+        'WEIGHT_NOZ']
 
         Kwargs:
             mode='data'
@@ -167,6 +194,17 @@ class MapperSDSS(MapperBase):
         return {'nls': nl_coupled}
 
     def get_nl_coupled(self):
+        """
+        Calculates the noise power spectrum \
+        for SDSS mappers. If the chosen resolution \
+        is below a 4096, the random catalog is used \
+        to compute the noise power spectrum. Otherwise, \
+        the high multipole tail of the signal power \
+        spectrum is used to estimate the noise power spectrum.
+
+        Returns:
+            nl_coupled (Array): coupled noise power spectrum
+        """
         if self.nl_coupled is None:
             fn = '_'.join([f'{self.map_name}_Nell',
                            f'coord{self.coords}',
@@ -183,7 +221,17 @@ class MapperSDSS(MapperBase):
                    (cat['Z'] < self.z_edges[1])]
 
     def get_dtype(self):
+        """
+        Returns the data type of the field.
+        Returns:
+                dtype (str): data type of the field
+        """
         return 'galaxy_density'
 
     def get_spin(self):
+        """
+        Returns the spin of the field.
+        Returns:
+                spin (int): spin of the field
+        """
         return 0

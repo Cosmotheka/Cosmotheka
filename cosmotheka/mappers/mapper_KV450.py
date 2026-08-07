@@ -1,4 +1,3 @@
-"""Mapper class for the KV450 weak lensing data set."""
 from .mapper_base import MapperBase
 from .utils import get_map_from_points, save_rerun_data
 from astropy.table import Table, vstack
@@ -7,25 +6,44 @@ import healpy as hp
 
 
 class MapperKV450(MapperBase):
-    """Mapper for the KV450 weak lensing data set."""
+    """
+    Mapper class for the KV450 weak lensing data set.
+
+    The analysis of the KV450 catalogs is done following \
+    the methodology described in Hildebrandt et al, 2018:\
+    https://arxiv.org/pdf/1812.06076.pdf
+
+    The catalog contains measurements of the cosmic \
+    shear (shear), the point spread function (PSF) \
+    and the stellar ellipticities (stars).
+
+    Multiplicative and additive biases are accounted for. \
+    The noise power spectrum is estimated from the \
+    per-pixel noise variance map from the galaxy \
+    ellipticities following Nicola et al, 2020:\
+    https://arxiv.org/pdf/2010.09717.pdf
+
+    Note that last letter of the the mask name stands for the \
+    chosen redshdift bin (`i = [1,2,3,4]`).
+
+    **Config**
+
+        - data_catalogs: [
+            KV450_G12_reweight_3x4x4_v2_good.cat,
+            KV450_G23_reweight_3x4x4_v2_good.cat,
+            KV450_GS_reweight_3x4x4_v2_good.cat,
+            KV450_G15_reweight_3x4x4_v2_good.cat,
+            KV450_G9_reweight_3x4x4_v2_good.cat]
+        - file_nz: Nz_DIR_z0.1t0.3.asc
+        - zbin: `"1"` / `"1"` / `"2"` / `"3"` / `"4"`
+        - nside: HEALPix map nside
+        - mask_name: e.g. mask_KV450_i
+    """
 
     map_name = 'KV450'
 
     def __init__(self, config):
-        """
-        Args:
-            config (dict): configuration dictionary with keys:
 
-                - data_catalogs: [KV450_G12_reweight_3x4x4_v2_good.cat,
-                  KV450_G23_reweight_3x4x4_v2_good.cat,
-                  KV450_GS_reweight_3x4x4_v2_good.cat,
-                  KV450_G15_reweight_3x4x4_v2_good.cat,
-                  KV450_G9_reweight_3x4x4_v2_good.cat]
-                - file_nz: Nz_DIR_z0.1t0.3.asc
-                - zbin: 0
-                - nside: HEALPix map nside
-                - mask_name: e.g. mask_KV450_0
-        """
         self._get_defaults(config)
         self.rot = self._get_rotator('C')
 
@@ -243,6 +261,14 @@ class MapperKV450(MapperBase):
         return self.w2s2
 
     def get_nl_coupled(self):
+        """
+        Calculates the noise power spectrum \
+        from the mean of squared-weights \
+        map times the pixel area.
+
+        Returns:
+            nl_coupled (Array): coupled noise power spectrum
+        """
         kind, e1f, e2f, mod = self._set_mode()
         if self.nls[mod] is None:
             self.w2s2 = self._get_w2s2()
@@ -268,7 +294,17 @@ class MapperKV450(MapperBase):
         return self._get_shifted_nz(dz)
 
     def get_dtype(self):
+        """
+        Returns the data type of the field.
+        Returns:
+                dtype (str): data type of the field
+        """
         return 'galaxy_shear'
 
     def get_spin(self):
+        """
+        Returns the spin of the field.
+        Returns:
+                spin (int): spin of the field
+        """
         return 2
