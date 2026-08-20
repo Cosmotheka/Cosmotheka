@@ -17,6 +17,7 @@ class MapperQuaia(MapperBase):
         self.z_edges = config.get('z_edges', [0, 4.5])
         self.zbin_name = 'z%.3lf_%.3lf' % (self.z_edges[0], self.z_edges[1])
         self.z_name = config.get("z_name", "redshift_quaia")
+        self.map_name += f'_{self.zbin_name}'
 
         self.cat_data = None
         self.npix = hp.nside2npix(self.nside)
