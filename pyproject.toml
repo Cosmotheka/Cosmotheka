@@ -32,7 +32,7 @@ dependencies = [
     "astropy",
     "healpy",
     "pandas",
-    "pymaster<3.0",
+    "pymaster",
     "pyccl>=3.2.0",
     "camb",
     "sacc",
