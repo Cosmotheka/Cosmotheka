@@ -82,6 +82,13 @@ def read_wsp(fname, cov, **kwargs):
             cls = nmt.NmtWorkspace
         w = cls.from_file(fname, **kwargs)
         return w
+    except OSError as e:
+        if ('FITSIO' in str(e)) and os.path.isfile(fname):
+            print(f"Error reading {fname}. Removing it and computing it again")
+            os.remove(fname)
+            return
+
+        raise e
     except RuntimeError as e:
         if ('Error reading' in str(e)) and os.path.isfile(fname):
             print(f"Error reading {fname}. Removing it and computing it again")

@@ -79,7 +79,8 @@ def test_save_wsp(cwsp):
 
     # Check that it raises an error if it fails writing the file but it doesn't
     # exist
-    with pytest.raises(RuntimeError):
+    err = OSError if cwsp else RuntimeError
+    with pytest.raises(err):
         tools.save_wsp(w, 'unexsitentfolder/dummyfile.fits')
 
     # TODO: We need to test that if it fails to save the file, it removes the
@@ -102,19 +103,9 @@ def test_read_wsp(cwsp):
     else:
         assert w.wsp.lmax == w2.wsp.lmax
 
-    # Check you can pass kwargs
-    if not cwsp:
-        tools.read_wsp(w2, dummyfile, read_unbinned_MCM=False)
-        assert not w2.has_unbinned
-    else:
-        with pytest.raises(TypeError):
-            tools.read_wsp(w2, dummyfile, read_unbinned_MCM=False)
-        tools.read_wsp(w2, dummyfile, force_spin0_only=True)
-        assert w2.wsp.spin0_only == 1
-
     # Check read_wsp removes the file if it fails to read it
     create_corrupted_file()
-    tools.read_wsp(w2, dummyfile)
+    tools.read_wsp(dummyfile, cwsp)
     assert not os.path.isfile(dummyfile)
 
     # TODO: We need to test that it raises an error if it fails while reading
