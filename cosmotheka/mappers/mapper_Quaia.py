@@ -49,7 +49,7 @@ class MapperQuaia(MapperBase):
             catalog (Array)
         """
         if self.cat_data is None:
-            fn = f'{self.map_name}_cat.fits'
+            fn = f'{self.map_name}_{self.zbin_name}_cat.fits'
             self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
                                                    self._get_catalog)
         return self.cat_data
@@ -118,7 +118,7 @@ class MapperQuaia(MapperBase):
             [z, nz] (Array)
         """
         if self.dndz is None:
-            fn = f'{self.map_name}_dndz.npz'
+            fn = f'{self.map_name}_{self.zbin_name}_dndz.npz'
             self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz)
 

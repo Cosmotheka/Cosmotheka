@@ -255,7 +255,6 @@ def test_cov_nlmarg():
 #       b) computation of missing terms. E.g. 1h is already in but the user
 #          requests 1h+2h later on. It only computes 2h and add it to the 1h
 #          contribution already there.
-@pytest.mark.skip("slow")
 @pytest.mark.parametrize("kind", ["1h", "2h", "3h", "4h", None])
 def test_cov_ng(kind):
     # From CCL directly

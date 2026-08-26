@@ -191,8 +191,7 @@ class Cov:
         cw = nmt.NmtCovarianceWorkspace.from_fields(fA1, fA2, fB1, fB2,
                                                     l_toeplitz=l_toeplitz,
                                                     l_exact=l_exact,
-                                                    dl_band=dl_band,
-                                                    all_spins=True)
+                                                    dl_band=dl_band)
         if save_cw:
             tools.save_wsp(cw, fname)
         self.recompute_cmcm = False
@@ -305,7 +304,6 @@ class Cov:
                 [cla2b2[0]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_tt_tb = cw.gaussian_covariance(
                 [cla1b1[0]],
@@ -314,7 +312,6 @@ class Cov:
                 [cla2b2[-1]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             cov[:, 0, :, 0] = c_tt_te
             cov[:, 0, :, 1] = c_tt_tb
@@ -327,7 +324,6 @@ class Cov:
                 [cla2b2[0]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_tb_tt = cw.gaussian_covariance(
                 [cla1b1[0]],
@@ -336,7 +332,6 @@ class Cov:
                 [cla2b2[-1]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             cov[:, 0, :, 0] = c_te_tt
             cov[:, 1, :, 0] = c_tb_tt
@@ -349,7 +344,6 @@ class Cov:
                 [cla2b2[0]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_tt_eb = cw.gaussian_covariance(
                 [cla1b1[0]],
@@ -358,7 +352,6 @@ class Cov:
                 [cla2b2[-1]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_tt_be = cw.gaussian_covariance(
                 [cla1b1[-1]],
@@ -367,7 +360,6 @@ class Cov:
                 [cla2b2[0]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_tt_bb = cw.gaussian_covariance(
                 [cla1b1[-1]],
@@ -376,7 +368,6 @@ class Cov:
                 [cla2b2[-1]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             cov[:, 0, :, 0] = c_tt_ee
             cov[:, 0, :, 1] = c_tt_eb
@@ -391,7 +382,6 @@ class Cov:
                 [cla2b2[0]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_eb_tt = cw.gaussian_covariance(
                 [cla1b1[0]],
@@ -400,7 +390,6 @@ class Cov:
                 [cla2b2[-1]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_be_tt = cw.gaussian_covariance(
                 [cla1b1[-1]],
@@ -409,7 +398,6 @@ class Cov:
                 [cla2b2[0]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_bb_tt = cw.gaussian_covariance(
                 [cla1b1[-1]],
@@ -418,7 +406,6 @@ class Cov:
                 [cla2b2[-1]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             cov[:, 0, :, 0] = c_ee_tt
             cov[:, 1, :, 0] = c_eb_tt
@@ -433,7 +420,6 @@ class Cov:
                 [cla2b2[0]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_te_tb = cw.gaussian_covariance(
                 [cla1b1[0]],
@@ -442,7 +428,6 @@ class Cov:
                 [cla2b2[1]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_tb_te = cw.gaussian_covariance(
                 [cla1b1[0]],
@@ -451,7 +436,6 @@ class Cov:
                 [cla2b2[2]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_tb_tb = cw.gaussian_covariance(
                 [cla1b1[0]],
@@ -460,7 +444,6 @@ class Cov:
                 [cla2b2[3]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             cov[:, 0, :, 0] = c_te_te
             cov[:, 0, :, 1] = c_te_tb
@@ -475,7 +458,6 @@ class Cov:
                 [cla2b2[0]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_te_eb = cw.gaussian_covariance(
                 [cla1b1[0]],
@@ -484,7 +466,6 @@ class Cov:
                 [cla2b2[1]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_te_be = cw.gaussian_covariance(
                 [cla1b1[-1]],
@@ -493,7 +474,6 @@ class Cov:
                 [cla2b2[0]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_te_bb = cw.gaussian_covariance(
                 [cla1b1[-1]],
@@ -502,7 +482,6 @@ class Cov:
                 [cla2b2[1]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_tb_ee = cw.gaussian_covariance(
                 [cla1b1[0]],
@@ -511,7 +490,6 @@ class Cov:
                 [cla2b2[2]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_tb_eb = cw.gaussian_covariance(
                 [cla1b1[0]],
@@ -520,7 +498,6 @@ class Cov:
                 [cla2b2[3]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_tb_be = cw.gaussian_covariance(
                 [cla1b1[-1]],
@@ -529,7 +506,6 @@ class Cov:
                 [cla2b2[2]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_tb_bb = cw.gaussian_covariance(
                 [cla1b1[-1]],
@@ -538,7 +514,6 @@ class Cov:
                 [cla2b2[3]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             cov[:, 0, :, 0] = c_te_ee
             cov[:, 0, :, 1] = c_te_eb
@@ -557,7 +532,6 @@ class Cov:
                 [cla2b2[0]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_ee_tb = cw.gaussian_covariance(
                 [cla1b1[0]],
@@ -566,7 +540,6 @@ class Cov:
                 [cla2b2[1]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_eb_te = cw.gaussian_covariance(
                 [cla1b1[0]],
@@ -575,7 +548,6 @@ class Cov:
                 [cla2b2[2]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_eb_tb = cw.gaussian_covariance(
                 [cla1b1[0]],
@@ -584,7 +556,6 @@ class Cov:
                 [cla2b2[3]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_be_te = cw.gaussian_covariance(
                 [cla1b1[-1]],
@@ -593,7 +564,6 @@ class Cov:
                 [cla2b2[0]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_be_tb = cw.gaussian_covariance(
                 [cla1b1[-1]],
@@ -602,7 +572,6 @@ class Cov:
                 [cla2b2[1]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_bb_te = cw.gaussian_covariance(
                 [cla1b1[-1]],
@@ -611,7 +580,6 @@ class Cov:
                 [cla2b2[2]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_bb_tb = cw.gaussian_covariance(
                 [cla1b1[-1]],
@@ -620,7 +588,6 @@ class Cov:
                 [cla2b2[3]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             cov[:, 0, :, 0] = c_ee_te
             cov[:, 1, :, 0] = c_eb_te
@@ -639,7 +606,6 @@ class Cov:
                 [cla2b2[0]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_ee_eb = cw.gaussian_covariance(
                 [cla1b1[0]],
@@ -648,7 +614,6 @@ class Cov:
                 [cla2b2[1]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_ee_be = cw.gaussian_covariance(
                 [cla1b1[1]],
@@ -657,7 +622,6 @@ class Cov:
                 [cla2b2[0]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_ee_bb = cw.gaussian_covariance(
                 [cla1b1[1]],
@@ -666,7 +630,6 @@ class Cov:
                 [cla2b2[1]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_eb_ee = cw.gaussian_covariance(
                 [cla1b1[0]],
@@ -675,7 +638,6 @@ class Cov:
                 [cla2b2[2]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_eb_eb = cw.gaussian_covariance(
                 [cla1b1[0]],
@@ -684,7 +646,6 @@ class Cov:
                 [cla2b2[3]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_eb_be = cw.gaussian_covariance(
                 [cla1b1[1]],
@@ -693,7 +654,6 @@ class Cov:
                 [cla2b2[2]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_eb_bb = cw.gaussian_covariance(
                 [cla1b1[1]],
@@ -702,7 +662,6 @@ class Cov:
                 [cla2b2[3]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_be_ee = cw.gaussian_covariance(
                 [cla1b1[2]],
@@ -711,7 +670,6 @@ class Cov:
                 [cla2b2[0]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_be_eb = cw.gaussian_covariance(
                 [cla1b1[2]],
@@ -720,7 +678,6 @@ class Cov:
                 [cla2b2[1]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_be_be = cw.gaussian_covariance(
                 [cla1b1[3]],
@@ -729,7 +686,6 @@ class Cov:
                 [cla2b2[0]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_be_bb = cw.gaussian_covariance(
                 [cla1b1[3]],
@@ -738,7 +694,6 @@ class Cov:
                 [cla2b2[1]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_bb_ee = cw.gaussian_covariance(
                 [cla1b1[2]],
@@ -747,7 +702,6 @@ class Cov:
                 [cla2b2[2]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_bb_eb = cw.gaussian_covariance(
                 [cla1b1[2]],
@@ -756,7 +710,6 @@ class Cov:
                 [cla2b2[3]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_bb_be = cw.gaussian_covariance(
                 [cla1b1[3]],
@@ -765,7 +718,6 @@ class Cov:
                 [cla2b2[2]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             c_bb_bb = cw.gaussian_covariance(
                 [cla1b1[3]],
@@ -774,7 +726,6 @@ class Cov:
                 [cla2b2[3]],
                 wa,
                 wb,
-                spins=[0, 0, 0, 0]
             )
             cov[:, 0, :, 0] = c_ee_ee
             cov[:, 0, :, 1] = c_ee_eb
@@ -945,7 +896,6 @@ class Cov:
                     cla2b2,
                     wa,
                     wb,
-                    spins=[s_a1, s_a2, s_b1, s_b2]
                 )
             ftime = time.time()
             print(

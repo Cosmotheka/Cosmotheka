@@ -22,7 +22,6 @@ def config(
     weights,
     dndz,
     stardens,
-    ebv,
     imaging_weights_coeffs,
     lrg_mask_path,
     randoms_path,
@@ -32,12 +31,7 @@ def config(
         "data_catalog": catalog_path,
         "weights_catalog": weights,
         "file_dndz": dndz,
-        "external_maps": [{'name': 'stardens',
-                           'path': stardens,
-                           'threshold': 2500},
-                          {'name': 'ebv',
-                           'path': ebv,
-                           'threshold': 0.15}],
+        "stardens_path": stardens,
         "imaging_weights_coeffs": imaging_weights_coeffs,
         "randoms_path": randoms_path,
         "randoms_selection": None,
@@ -74,18 +68,10 @@ def stardens(tmp_path_factory):
     # Create a dummy stardens Table
     half_on = np.append(np.ones(int(NPIX / 2)), np.zeros(int(NPIX / 2)))
     stardens = half_on * 3000  # Second half will have stardens below 2500
+
+    stardens = Table({"HPXPIXEL": np.arange(NPIX), "STARDENS": stardens})
     fn = tmp_path_factory.mktemp("data") / "stardens.fits"
-    hp.write_map(fn, stardens, overwrite=True)
-    return str(fn)
-
-
-@pytest.fixture(scope="module")
-def ebv(tmp_path_factory):
-    # Create a dummy stardens Table
-    half_on = np.append(np.ones(int(NPIX / 2)), np.zeros(int(NPIX / 2)))
-    stardens = half_on * 0.2  # Second half will have ebv below 0.15
-    fn = tmp_path_factory.mktemp("data") / "ebv.fits"
-    hp.write_map(fn, stardens, overwrite=True)
+    stardens.write(fn, overwrite=True)
     return str(fn)
 
 
@@ -343,6 +329,8 @@ def test_get_default_cuts(mapper):
     assert cuts == {
         "min_nobs": 2,
         "target_maskbits": [1, 12, 13],
+        "max_ebv": 0.15,
+        "max_stardens": 2500,
         "remove_island": True,
     }
 
@@ -352,6 +340,8 @@ def test_get_default_cuts(mapper):
     [
         ("target_maskbits", [1, 12, 14]),
         ("min_nobs", 3),
+        ("max_ebv", 0.2),
+        ("max_stardens", 3000),
         ("remove_island", False),
         ("mask_threshold", 0.3),
     ],
@@ -371,6 +361,8 @@ def test_suffix_generation_all_keys(config):
     # Set all keys to non-default values
     config["target_maskbits"] = [1, 12, 14]
     config["min_nobs"] = 3
+    config["max_ebv"] = 0.2
+    config["max_stardens"] = 3000
     config["remove_island"] = False
     config["mask_threshold"] = 0.5  # Not used in suffix_weights
 
@@ -383,6 +375,8 @@ def test_suffix_generation_all_keys(config):
         [
             "target_maskbits",
             "min_nobs",
+            "max_ebv",
+            "max_stardens",
             "remove_island",
         ]
     ):
@@ -392,15 +386,9 @@ def test_suffix_generation_all_keys(config):
     assert mapper.map_name.endswith(suffix_weights + "_maskthreshold0.5_zbin0")
 
 
-@pytest.mark.parametrize("syst", ['stardens', 'ebv'])
-def test__get_external_mask(mapper, catalog, syst):
+def test__get_stardens_mask(mapper, catalog):
     # Also tested through quality cuts and get_catalog and randoms
-    extmaps = mapper.config['external_maps']
-    for maps in extmaps:
-        if maps['name'] == 'stardens':
-            fname = maps['path']
-            threshold = maps['threshold']
-    mask = mapper._get_map_threshold_mask(fname, threshold, catalog)
+    mask = mapper._get_stardens_mask(catalog)
     assert np.sum(mask) == NPIX / 2
     assert np.all(mask[NPIX // 2 :])
     assert not np.any(mask[: NPIX // 2])
