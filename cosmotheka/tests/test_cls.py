@@ -1391,3 +1391,68 @@ def test_mc_correction():
     # I can get rel 1e-4 in Glamdring but not in the CI, so I relax the
     # tolerance to 1e-3
     assert Tl == pytest.approx(ones, rel=1e-3, abs=0)
+
+
+def test_mc_correction_resumes_partial_file(monkeypatch):
+    config = get_config(dtype0="cmb_convergence", fsky=1.0, fsky2=0.1)
+    config["cls"]["Dummy-Dummy"]["neglect_mc_correction"] = False
+    cl_class = Cl(config, "Dummy__0", "Dummy__1")
+    mapper_cmbk, mapper_x = cl_class.get_mappers()
+
+    # Keep the test tiny: only two MC steps, one of them already stored.
+    rec_sims = ["rec0", "rec1"]
+    input_sims = ["in0", "in1"]
+    mapper_cmbk._get_sims_fnames = lambda: (rec_sims, input_sims)
+    mapper_cmbk.get_mask = lambda: np.array([1.0])
+    mapper_cmbk._get_map_from_alm_file = \
+        lambda path: np.array([0.0 if path.endswith("0") else 1.0])
+    mapper_x.get_mask = lambda: np.array([1.0])
+    mapper_x.coords = "C"
+
+    class FakeWorkspace:
+        def decouple_cell(self, cl_cp):
+            return cl_cp
+
+    cl_class.get_workspace_spin0 = lambda: FakeWorkspace()
+
+    call_count = {"n": 0}
+
+    def fake_nmt_field(mask, maps, spin=None):
+        return {"mask": np.asarray(mask), "map": np.asarray(maps[0])}
+
+    def fake_compute_coupled_cell(field1, field2):
+        call_count["n"] += 1
+        value = float(
+            field1["map"][0] + 10 * field2["map"][0] + call_count["n"]
+            )
+        return np.array([[value]])
+
+    monkeypatch.setattr(nmt, "NmtField", fake_nmt_field)
+    monkeypatch.setattr(nmt, "compute_coupled_cell", fake_compute_coupled_cell)
+
+    outdir = cl_class.outdir
+    os.makedirs(outdir, exist_ok=True)
+    fname = os.path.join(outdir, "Tl_mask_dummy0_mask_dummy1_coordC_ns32.npz")
+    np.savez_compressed(
+        fname,
+        Tl=np.array([1.0]),
+        Tl_cp=np.array([2.0]),
+        ell=np.array([0.0]),
+        num=np.array([[11.0]]),
+        denom=np.array([[12.0]]),
+        num_cp=np.array([[13.0]]),
+        denom_cp=np.array([[14.0]]),
+        computed=1,
+    )
+
+    Tl, Tl_cp = cl_class.get_correction_cmbk()
+
+    # One precomputed step was reused, so only the missing step should be
+    # evaluated here, which means two coupled-cell calls total.
+    assert call_count["n"] == 2
+    assert np.all(np.isfinite(Tl))
+    assert np.all(np.isfinite(Tl_cp))
+    saved = np.load(fname)
+    assert saved["computed"] == 2
+    assert saved["num"][0] == pytest.approx(11.0)
+    assert saved["denom"][0] == pytest.approx(12.0)
