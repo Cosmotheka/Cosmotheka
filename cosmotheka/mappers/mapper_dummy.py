@@ -178,7 +178,7 @@ class MapperDummy(MapperBase):
             self.cl_coupled += self.custom_offset
         return self.cl_coupled
 
-    def get_cls_covar_coupled(self):
+    def get_cls_covar(self):
         if self.cls_cov is None:
             fld = self.get_nmt_field()
             clcov = nmt.get_iNKA_cell(fld, fld)
