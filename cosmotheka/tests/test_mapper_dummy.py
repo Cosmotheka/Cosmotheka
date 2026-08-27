@@ -172,7 +172,7 @@ def test_cls_covar():
     config['custom_auto'] = True
     config['custom_offset'] = offset
     m = xc.mappers.MapperDummy(config)
-    cl1 = m.get_cls_covar_coupled()
+    cl1 = m.get_cls_covar()
 
     mp = m.get_signal_map()
     msk = m.get_mask()

@@ -542,7 +542,7 @@ class Cl(ClBase):
                 # here that all mappers are map-based.
                 cl_cp = mapper1.get_cl_coupled()
                 cl = w.decouple_cell(cl_cp)
-                cls_cov = mapper1.get_cls_covar_coupled()
+                cls_cov = mapper1.get_cls_covar()
                 # This function should return a dictionary with the
                 # following contents:
                 #  - 'cross': the C_ell that should be used for the
