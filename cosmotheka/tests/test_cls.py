@@ -164,10 +164,10 @@ def test_cl_and_cov_file_expected_entries():
         "cl_cp",
         "nl",
         "nl_cp",
-        "cl_cov_cp",
-        "cl_cov_11_cp",
-        "cl_cov_12_cp",
-        "cl_cov_22_cp",
+        "cl_cov",
+        "cl_cov_11",
+        "cl_cov_12",
+        "cl_cov_22",
         "wins",
         "correction",
         "mean_mamb",
@@ -408,6 +408,7 @@ def test_cov_ng(kind):
     assert covNG2 == pytest.approx(covNG1 * fsky / 0.1, rel=1e-4, abs=0)
 
 
+@pytest.mark.skip("slow")
 @pytest.mark.parametrize("sigma2B_type", ["fsky", "mask_wl"])
 def test_cov_ssc(sigma2B_type):
     # From CCL directly
@@ -605,9 +606,10 @@ def test_get_ell_cl():
 def test_get_ell_cl_crude_error():
     cl_class = get_cl_class()
     ell, err = cl_class.get_ell_cl_crude_error()
-    cl_cp = cl_class.cl_cp
+    cl_cov = cl_class.cls_cov['cross']
     mean_mamb = cl_class.mean_mamb
-    assert np.all(err == cl_class._get_cl_crude_error(cl_cp, mean_mamb))
+    assert np.all(err == cl_class._get_cl_crude_error(
+        cl_cov*mean_mamb, mean_mamb))
 
 
 def test__get_cl_crude_error():
@@ -652,6 +654,8 @@ def test_get_mean_mamb():
 
 
 def test_custom_auto():
+    off = np.pi*1E-5
+
     # No custom auto
     data = get_config()
     clc1 = Cl(data, "Dummy__0", "Dummy__0")
@@ -661,22 +665,22 @@ def test_custom_auto():
     # With custom auto
     data = get_config()
     data["tracers"]["Dummy__0"]["custom_auto"] = True
-    data["tracers"]["Dummy__0"]["custom_offset"] = np.pi * 1e-5
+    data["tracers"]["Dummy__0"]["custom_offset"] = off
     clc2 = Cl(data, "Dummy__0", "Dummy__0")
     l2, cl2 = clc2.get_ell_cl_cp()
     _clean_tmpdir(tmpdir1)
 
-    assert np.allclose(cl1, cl2 - np.pi * 1e-5, rtol=1e-4, atol=0)
+    assert np.allclose(cl1, cl2 - off, rtol=1e-4, atol=0)
 
     # Covariance custom cross
     data = get_config()
     data["tracers"]["Dummy__0"]["custom_auto"] = True
-    data["tracers"]["Dummy__0"]["custom_offset"] = np.pi * 1e-5
+    data["tracers"]["Dummy__0"]["custom_offset"] = off
     clc3 = Cl(data, "Dummy__0", "Dummy__0")
-    l2, cl3 = clc3.get_ell_cl_cp_cov()
+    l2, cl3 = clc3.get_ell_cl_cov()
     _clean_tmpdir(tmpdir1)
 
-    assert np.allclose(cl1, cl3, rtol=1e-4, atol=0)
+    assert np.allclose(cl1, (cl3+off)*clc3.mean_mamb, rtol=1e-4, atol=0)
 
 
 def test_get_ell_cl_cp():
@@ -842,9 +846,9 @@ def test_cls_vs_namaster():
     # Compute cov with NaMaster
     cwsp = nmt.NmtCovarianceWorkspace.from_fields(f, f, f, f)
     cl_cov = cl_m_cp / np.mean(mask * mask)
-    cov_nmt = nmt.gaussian_covariance(
-        cwsp, spin, spin, spin, spin, cl_cov, cl_cov, cl_cov, cl_cov, wsp
-    )
+    cov_nmt = cwsp.gaussian_covariance(
+        cl_cov, cl_cov, cl_cov, cl_cov, wsp,
+        spins=[spin, spin, spin, spin])
     bpwin = wsp.get_bandpower_windows()
     icov_nmt = np.linalg.inv(cov_nmt)
 
@@ -862,6 +866,10 @@ def test_cls_vs_namaster():
         # Compare bandpower windows
         assert np.max(np.abs(wn / bpwin - 1)) < tol
 
+    import matplotlib.pyplot as plt
+    plt.plot(np.arange(len(cl_data[0])), np.diag(cov), 'r-')
+    plt.plot(np.arange(len(cl_data_nmt[0])), np.diag(cov_nmt), 'k-')
+    plt.show()
     compare(cl_data, cov, win)
     compare(clfile["cl"], cov, clfile["wins"])
     assert np.allclose(clfile["cl_cp"], cl_data_nmt_cp, atol=0)

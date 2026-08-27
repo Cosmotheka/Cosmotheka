@@ -599,16 +599,24 @@ class Cl(ClBase):
                 # More information in: https://github.com/ACTCollaboration/DR4_DR5_Notebooks/blob/master/Notebooks/Section_5_Lensing_maps.ipynb  # noqa: E501
                 if mapper1.mask_power > 1:
                     mkappa = mapper1
+                    mother = mapper2
                     fother = f2c
                 else:
                     mkappa = mapper2
+                    mother = mapper1
                     fother = f1c
                 w_k = mkappa.get_mask()
                 n_k = mkappa.mask_power
-                fkappa = nmt.NmtField(w_k**n_k, None, spin=0)
-                mean_ma2mb = get_wawb_general(fkappa, fother)
+                n_o = mother.mask_power
+                if n_o == 1:
+                    # Standard mapper, we can use the general <wawb> calculator
+                    fkappa = nmt.NmtField(w_k**n_k, None, spin=0)
+                    mean_maNmbN = get_wawb_general(fkappa, fother)
+                else:
+                    w_o = mother.get_mask()
+                    mean_maNmbN = np.mean(w_k**n_k*w_o**n_o)
 
-                correction = mean_mamb/mean_ma2mb
+                correction = mean_mamb/mean_maNmbN
                 print("correction", correction)
                 # Apply correction to all Cl's
                 cl *= correction
