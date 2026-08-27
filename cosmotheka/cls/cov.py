@@ -230,7 +230,7 @@ class Cov:
                 # in this case. It's just more convenient to do this here
                 # than having to recall the relevant NmtFields.
                 pnl = clab.get_ell_nl_cp()[1]
-                pcl = clab.get_ell_cl_cp()[1]
+                pcl = clab_fid.get_ell_cl_cp()[1]
                 cl_cov = (pnl + pcl) / mean_mamb
             else:  # Compute from data
                 # In this case we've requested to compute this

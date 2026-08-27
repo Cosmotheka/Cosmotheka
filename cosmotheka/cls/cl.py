@@ -567,7 +567,11 @@ class Cl(ClBase):
                 # the noise-less power spectrum. No need
                 # to subtract it here.
             else:
-                cl_cov = nmt.get_iNKA_cell(f1c, f2c)
+                cl_cp = nmt.compute_coupled_cell(f1, f2)
+                if mean_mamb == 0:
+                    cl_cov = np.zeros_like(cl_cp)
+                else:
+                    cl_cov = nmt.get_iNKA_cell(f1c, f2c)
                 # A standard auto-correlation auto-covariance
                 # is just ~propto 2*C_ell^2 rather than
                 # (C_ell^11 C_ell^22+C_ell^12^2), which can be
@@ -575,7 +579,7 @@ class Cl(ClBase):
                 cl_cov_11 = cl_cov
                 cl_cov_12 = cl_cov
                 cl_cov_22 = cl_cov
-                cl_cp = nmt.compute_coupled_cell(f1, f2)
+
                 if (f1 == f1c) and (f2 == f2c):
                     # With the check above, this means that both
                     # fields are map-based.

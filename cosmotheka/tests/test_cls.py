@@ -851,6 +851,7 @@ def test_cls_vs_namaster():
         spins=[spin, spin, spin, spin])
     bpwin = wsp.get_bandpower_windows()
     icov_nmt = np.linalg.inv(cov_nmt)
+    wawb = np.mean(mask**2)
 
     def compare(cl, cv, wn, tol=1e-5):
         rdev = cl / cl_data_nmt - 1
@@ -866,17 +867,13 @@ def test_cls_vs_namaster():
         # Compare bandpower windows
         assert np.max(np.abs(wn / bpwin - 1)) < tol
 
-    import matplotlib.pyplot as plt
-    plt.plot(np.arange(len(cl_data[0])), np.diag(cov), 'r-')
-    plt.plot(np.arange(len(cl_data_nmt[0])), np.diag(cov_nmt), 'k-')
-    plt.show()
     compare(cl_data, cov, win)
     compare(clfile["cl"], cov, clfile["wins"])
     assert np.allclose(clfile["cl_cp"], cl_data_nmt_cp, atol=0)
-    assert np.allclose(clfile["cl_cov_cp"], cl_data_nmt_cp, atol=0)
-    assert np.allclose(clfile["cl_cov_11_cp"], cl_data_nmt_cp, atol=0)
-    assert np.allclose(clfile["cl_cov_12_cp"], cl_data_nmt_cp, atol=0)
-    assert np.allclose(clfile["cl_cov_22_cp"], cl_data_nmt_cp, atol=0)
+    assert np.allclose(clfile["cl_cov"], cl_data_nmt_cp/wawb, atol=0)
+    assert np.allclose(clfile["cl_cov_11"], cl_data_nmt_cp/wawb, atol=0)
+    assert np.allclose(clfile["cl_cov_12"], cl_data_nmt_cp/wawb, atol=0)
+    assert np.allclose(clfile["cl_cov_22"], cl_data_nmt_cp/wawb, atol=0)
 
 
 def test_symmetric():
