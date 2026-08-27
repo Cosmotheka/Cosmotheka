@@ -101,7 +101,7 @@ class MapperACTDR6k(MapperBase):
     def get_spin(self):
         return 0
 
-    # TODO: Create a kappa mapers class to avoid repetition.
+    # TODO: Create a kappa mapper class to avoid repetition.
     def _get_sims_fnames(self):
         """
         Returns the paths of the reconstructed and input simulation maps.
