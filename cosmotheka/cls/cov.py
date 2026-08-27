@@ -223,18 +223,21 @@ class Cov:
         """
         mean_mamb = clab.get_mean_mamb()
         if not mean_mamb:
-            cl_cp = np.zeros((clab.get_n_cls(), 3 * clab.nside))
+            cl_cov = np.zeros((clab.get_n_cls(), 3 * clab.nside))
         else:
             if isinstance(clab_fid, ClFid):  # Compute from theory
-                cl_cp = clab_fid.get_ell_cl_cp()[1] + clab.get_ell_nl_cp()[1]
+                # Note that this is exactly what NaMaster's get_iNKA_cell does
+                # in this case. It's just more convenient to do this here
+                # than having to recall the relevant NmtFields.
+                pnl = clab.get_ell_nl_cp()[1]
+                pcl = clab.get_ell_cl_cp()[1]
+                cl_cov = (pnl + pcl) / mean_mamb
             else:  # Compute from data
                 # In this case we've requested to compute this
                 # C_ell from the data, so `clab_fid` is actually
                 # a `Cl` object (not a `ClFid` object).
-                cl_cp = clab_fid.get_ell_cl_cp_cov()[1]
-            cl_cp = cl_cp / mean_mamb
-
-        return cl_cp
+                cl_cov = clab_fid.get_ell_cl_cov()[1]
+        return cl_cov
 
     def _get_covariance_spin0_approx(
         self,
@@ -860,7 +863,7 @@ class Cov:
         notnull = cov_dict['notnull']
         # If notnull is None, it means that it hasn't been computed yet.
         # If it is not None, we check if it's True and if cov_G is empty.
-        # As of now, cov_G is always computes, so it shouldn't be empty.
+        # As of now, cov_G is always computed, so it shouldn't be empty.
         if notnull is None or (notnull is True and
                                not np.any(cov_dict['cov_G'])):
             print("Computing required C_ells for covariance and checking if "
@@ -876,13 +879,9 @@ class Cov:
             # If so, get these C_ells
             itime = time.time()
             if aa_data:
-                mean_mamb = self.clA1B1.get_mean_mamb()
                 _, cla1b1, cla1b2, cla2b2 = \
-                    self.clA1B1.get_ell_cls_cp_cov_auto()
-                cla2b2 = cla2b2 / mean_mamb
-                cla2b1 = cla1b2 / mean_mamb
-                cla1b2 = cla1b2 / mean_mamb
-                cla1b1 = cla1b1 / mean_mamb
+                    self.clA1B1.get_ell_cls_cov_auto()
+                cla2b1 = cla1b2
             else:
                 cla1b1 = self._get_cl_for_cov(self.clA1B1, self.clfid_A1B1)
                 cla1b2 = self._get_cl_for_cov(self.clA1B2, self.clfid_A1B2)
@@ -1067,6 +1066,12 @@ class Cov:
         return self.cov
 
     def get_fsky(self):
+        """ Gets the effective sky fraction from the product of two masks.
+        Note that this is only used to calculate he cNG and SSC covariances,
+        so an approximation for fsky given by the product of the two
+        map-based masks (which exist even for catalogue-based fields) is
+        sufficient.
+        """
         if self.fsky is not None:
             return self.fsky
 

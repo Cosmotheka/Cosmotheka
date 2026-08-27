@@ -4,8 +4,63 @@ from .theory import Theory
 from . import tools
 import numpy as np
 import pymaster as nmt
+import healpy as hp
 import os
 import warnings
+
+
+def _is_catalog(f):
+    return isinstance(f, nmt.NmtFieldCatalog)
+
+
+def get_wawb_general(fla, flb):
+    """ Computes <w_a w_b> = fsky of the product of the two masks.
+    for general fields (both catalogues and maps, regardless of
+    pixelisation). This is based on part of the code in the
+    NaMaster function `get_iNKA_cell`. Eventually this function should
+    be in NaMaster.
+
+    Parameters
+    ----------
+    fla: NmtField
+        First field
+    flb: NmtField
+        Second field
+
+    Return
+    ------
+    wawb: float
+        The product of the two masks.
+    """
+    if not fla.is_compatible(flb, strict=False):
+        raise ValueError("Fields have incompatible pixelizations")
+
+    # 1. Compute fsky as the mean of the mask product.
+
+    # If both fields are compatible at the map level, just take
+    # the product of their maps and average. Otherwise use
+    # Parseval's theorem and do it from their harmonic spectrum.
+    use_map_product = fla.is_compatible(flb)
+
+    if use_map_product:
+        wawb = np.mean(fla.get_mask()*flb.get_mask())
+    else:
+        lmax = fla.ainfo_mask.lmax
+        walm = fla.get_mask_alms()
+        wblm = flb.get_mask_alms()
+        clw = hp.alm2cl(walm, wblm, lmax=lmax)
+        ls = np.arange(lmax+1)
+        # Correct for catalogs
+        if _is_catalog(fla) and _is_catalog(flb):
+            phi_a = 1 if fla.mask is not None else fla.get_cloud_kernel(lmax)
+            phi_b = 1 if flb.mask is not None else flb.get_cloud_kernel(lmax)
+            # Subtract shot noise
+            if fla is flb:
+                clw = clw - fla.Nw
+            # Multiply by kernels
+            clw = clw * phi_a * phi_b
+        wawb = np.sum((2*ls+1)*clw)/(4*np.pi)
+    return wawb
 
 
 class ClBase():
@@ -262,15 +317,10 @@ class Cl(ClBase):
             f2 = mapper2.get_nmt_field()
         return f1, f2
 
-    def get_workspace(self, read_unbinned_MCM=True):
+    def get_workspace(self):
         """
         Return the pymaster.NmtWorkspace instance with the mode-coupling matrix
         of the correlated fields.
-
-        Parameters
-        ----------
-        read_unbinned_MCM: bool
-            If True, load the unbinned mode-coupling matrix as well
 
         Return
         ------
@@ -279,19 +329,13 @@ class Cl(ClBase):
         """
         if self._w is None:
             self._w = self._compute_workspace(
-                read_unbinned_MCM=read_unbinned_MCM,
                 use_maps=False)
         return self._w
 
-    def get_workspace_spin0(self, read_unbinned_MCM=True):
+    def get_workspace_spin0(self):
         """
         Return the pymaster.NmtWorkspace instance with the mode-coupling matrix
         of the correlated fields, assuming all fields have spin-0.
-
-        Parameters
-        ----------
-        read_unbinned_MCM: bool
-            If True, load the unbinned mode-coupling matrix as well
 
         Return
         ------
@@ -302,10 +346,9 @@ class Cl(ClBase):
             return self._w0
 
         if self.get_spins() == (0, 0):
-            self._w0 = self.get_workspace(read_unbinned_MCM=read_unbinned_MCM)
+            self._w0 = self.get_workspace()
         elif self._w0 is None:
             self._w0 = self._compute_workspace(
-                read_unbinned_MCM=read_unbinned_MCM,
                 use_maps=False, spin0=True)
         return self._w0
 
@@ -326,16 +369,13 @@ class Cl(ClBase):
             spin0 = self.data.data['cov'].get('spin0', False)
             if spin0 and (self.get_spins() != (0, 0)):
                 self._wcov = self._compute_workspace(spin0=spin0,
-                                                     read_unbinned_MCM=False,
                                                      use_maps=True)
             else:
-                self._wcov = self._compute_workspace(read_unbinned_MCM=False,
-                                                     use_maps=True)
+                self._wcov = self._compute_workspace(use_maps=True)
 
         return self._wcov
 
-    def _compute_workspace(self, spin0=False,
-                           read_unbinned_MCM=True, use_maps=False):
+    def _compute_workspace(self, spin0=False, use_maps=False):
         """
         Return the pymaster.NmtWorkspace with the mode-coupling matrix of the
         correlated fields.
@@ -345,8 +385,8 @@ class Cl(ClBase):
         spin0: bool
             If True, compute the workspace assuming th all fields have
             spin-0.
-        read_unbinned_MCM: bool
-            If True, load the unbinned mode-coupling matrix as well
+        use_maps: bool
+            If True, use the maps to compute the workspace.
 
         Return
         ------
@@ -366,8 +406,7 @@ class Cl(ClBase):
                              f'{spin_tag}_{tag}__{mask1}__{mask2}.fits')
 
         if (not self.recompute_mcm) and os.path.isfile(fname):
-            w = tools.read_wsp(fname, False,
-                               read_unbinned_MCM=read_unbinned_MCM)
+            w = tools.read_wsp(fname, False)
             if w is not None:
                 return w
 
@@ -480,9 +519,8 @@ class Cl(ClBase):
             # f1c, f2c : map-based fields (for covariance inputs)
             w = self.get_workspace()
             wins = w.get_bandpower_windows()
-            w_a = mapper1.get_mask()
-            w_b = mapper2.get_mask()
-            mean_mamb = np.mean(w_a * w_b)
+            # TODO: for full NaMaster v3 version remove f1c, f2c and use f1, f2 instead  # noqa: E501
+            mean_mamb = get_wawb_general(f1c, f2c)
 
             # Compute power spectrum
             # If auto-correlation, compute noise and,
@@ -521,66 +559,76 @@ class Cl(ClBase):
                 #       3 power spectra: C_ell^11, C_ell^12, C_ell^22.
                 #       These are given by the corresponding entries in
                 #       the dictionary.
-                cl_cov_cp = cls_cov['cross']
-                cl_cov_11_cp = cls_cov['auto_11']
-                cl_cov_12_cp = cls_cov['auto_12']
-                cl_cov_22_cp = cls_cov['auto_22']
+                cl_cov = cls_cov['cross']
+                cl_cov_11 = cls_cov['auto_11']
+                cl_cov_12 = cls_cov['auto_12']
+                cl_cov_22 = cls_cov['auto_22']
                 # mapper.get_cl_coupled is assumed to return
                 # the noise-less power spectrum. No need
                 # to subtract it here.
             else:
-                cl_cov_cp = nmt.compute_coupled_cell(f1c, f2c)
+                cl_cov = nmt.get_iNKA_cell(f1c, f2c)
                 # A standard auto-correlation auto-covariance
                 # is just ~propto 2*C_ell^2 rather than
                 # (C_ell^11 C_ell^22+C_ell^12^2), which can be
                 # achieved by equating all 3 C_ells.
-                cl_cov_11_cp = cl_cov_cp
-                cl_cov_12_cp = cl_cov_cp
-                cl_cov_22_cp = cl_cov_cp
+                cl_cov_11 = cl_cov
+                cl_cov_12 = cl_cov
+                cl_cov_22 = cl_cov
+                cl_cp = nmt.compute_coupled_cell(f1, f2)
                 if (f1 == f1c) and (f2 == f2c):
                     # With the check above, this means that both
                     # fields are map-based.
-                    cl = w.decouple_cell(cl_cov_cp)
-                    cl_cp = cl_cov_cp - nl_cp
+                    cl = w.decouple_cell(cl_cp)
+                    cl_cp -= nl_cp
                     cl -= nl
                 else:
-                    cl_cp = nmt.compute_coupled_cell(f1, f2)
                     cl = w.decouple_cell(cl_cp)
 
             # Note that while we have subtracted the noise
-            # bias from `cl_cp`, `cl_cov_cp` still includes it.
+            # bias from `cl_cp`, `cl_cov_cp` still includes it
+            # (at least in the case of map-based fields).
             correction = 1
-            # TODO: Consider removing this functionality. ACTk map has the
-            # mask applied to the map. We can decide to not apply it, as we've
-            # done in the ACTDR6k mapper.
+            # TODO: Consider removing this functionality by getting rid of
+            # the DR4 kappa mappers.
             if (mean_mamb != 0) and ((mapper1.mask_power > 1) or
                                      (mapper2.mask_power > 1)):
                 # Applies correction factor if masks have been
                 # implicitly applied to the maps
-                # See ACTk for reference
-                n_a = mapper1.mask_power
-                n_b = mapper2.mask_power
+                # See ACTk for reference.
+                # More information in: https://github.com/ACTCollaboration/DR4_DR5_Notebooks/blob/master/Notebooks/Section_5_Lensing_maps.ipynb  # noqa: E501
+                if mapper1.mask_power > 1:
+                    mkappa = mapper1
+                    fother = f2c
+                else:
+                    mkappa = mapper2
+                    fother = f1c
+                w_k = mkappa.get_mask()
+                n_k = mkappa.mask_power
+                fkappa = nmt.NmtField(w_k**n_k, None, spin=0)
+                mean_ma2mb = get_wawb_general(fkappa, fother)
 
-                correction = mean_mamb/np.mean(w_a**n_a*w_b**n_b)
+                correction = mean_mamb/mean_ma2mb
                 print("correction", correction)
                 # Apply correction to all Cl's
                 cl *= correction
                 cl_cp *= correction
-                cl_cov_cp *= correction
-                cl_cov_11_cp *= correction
-                cl_cov_12_cp *= correction
-                cl_cov_22_cp *= correction
+                cl_cov *= correction
+                cl_cov_11 *= correction
+                cl_cov_12 *= correction
+                cl_cov_22 *= correction
 
             # Crude estimation of the error
-            crude_err = self._get_cl_crude_error(cl_cov_cp, mean_mamb)
+            crude_err = self._get_cl_crude_error(cl_cov*mean_mamb,
+                                                 mean_mamb)
 
             # TODO: Temporary solution. We can be more selective and only
             # save those parts that we need for each case.
             out = dict(ell=ell, cl=cl, cl_cp=cl_cp, nl=nl,
-                       nl_cp=nl_cp, cl_cov_cp=cl_cov_cp,
-                       cl_cov_11_cp=cl_cov_11_cp,
-                       cl_cov_12_cp=cl_cov_12_cp,
-                       cl_cov_22_cp=cl_cov_22_cp, wins=wins,
+                       nl_cp=nl_cp, cl_cov=cl_cov,
+                       cl_cov_11=cl_cov_11,
+                       cl_cov_12=cl_cov_12,
+                       cl_cov_22=cl_cov_22, wins=wins,
                        correction=correction, mean_mamb=mean_mamb,
                        crude_err=crude_err)
 
@@ -619,10 +667,10 @@ class Cl(ClBase):
         self.nl = cl_file['nl']
         self.nl_cp = cl_file['nl_cp']
         self.wins = cl_file['wins']
-        self.cls_cov = {'cross': cl_file['cl_cov_cp'],
-                        'auto_11': cl_file['cl_cov_11_cp'],
-                        'auto_12': cl_file['cl_cov_12_cp'],
-                        'auto_22': cl_file['cl_cov_22_cp']}
+        self.cls_cov = {'cross': cl_file['cl_cov'],
+                        'auto_11': cl_file['cl_cov_11'],
+                        'auto_12': cl_file['cl_cov_12'],
+                        'auto_22': cl_file['cl_cov_22']}
         self.mean_mamb = cl_file['mean_mamb']
         self.crude_err = cl_file['crude_err']
 
@@ -719,7 +767,7 @@ class Cl(ClBase):
             self.get_cl_file()
         return np.arange(3 * self.nside), self.nl_cp
 
-    def get_ell_cl_cp_cov(self):
+    def get_ell_cl_cov(self):
         """
         Return the noiseless coupled cell to be used for the covariance. This
         correspond to the C_ell that should be used for the auto-correlation of
@@ -740,7 +788,7 @@ class Cl(ClBase):
             self.get_cl_file()
         return np.arange(3 * self.nside), self.cls_cov['cross']
 
-    def get_ell_cls_cp_cov_auto(self):
+    def get_ell_cls_cov_auto(self):
         """
         Return the noiseless coupled cell to be used for the covariance. This
         correspond to the C_ell that should be used when computing the

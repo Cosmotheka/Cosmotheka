@@ -140,16 +140,15 @@ class MapperPlanckBase(MapperBase):
             self.cl_coupled = nmt.compute_coupled_cell(hm1_f, hm2_f)
         return self.cl_coupled
 
-    def get_cls_covar_coupled(self):
+    def get_cls_covar(self):
         """
-        Uses the half mission maps to \
-        estimate the coupled covariance matrix of the \
-        power spectrum of the coadded map as \
-        well as the half mission maps cross- \
-        and auto-correlation.
+        Uses the half mission maps to calculate the power spectra \
+        needed to calculate power spectrum covariances involving \
+        the auto-correlation of this mapper.
 
         Returns:
-            cl_coupled (Array)
+            cls_cov (dict): Dictionary containing the necessary \
+            power spectra.
         """
         if self.cls_cov is None:
             self.signal_map = self.get_signal_map()
@@ -157,10 +156,10 @@ class MapperPlanckBase(MapperBase):
             coadd_f = self._get_nmt_field(signal=self.signal_map)
             hm1_f = self._get_nmt_field(signal=self.hm1_map)
             hm2_f = self._get_nmt_field(signal=self.hm2_map)
-            cl_cc = nmt.compute_coupled_cell(coadd_f, coadd_f)
-            cl_11 = nmt.compute_coupled_cell(hm1_f, hm1_f)
-            cl_12 = nmt.compute_coupled_cell(hm1_f, hm2_f)
-            cl_22 = nmt.compute_coupled_cell(hm2_f, hm2_f)
+            cl_cc = nmt.get_iNKA_cell(coadd_f, coadd_f)
+            cl_11 = nmt.get_iNKA_cell(hm1_f, hm1_f)
+            cl_12 = nmt.get_iNKA_cell(hm1_f, hm2_f)
+            cl_22 = nmt.get_iNKA_cell(hm2_f, hm2_f)
             self.cls_cov = {'cross': cl_cc,
                             'auto_11': cl_11,
                             'auto_12': cl_12,
