@@ -135,15 +135,11 @@ class MapperDESIBGS(MapperBase):
 
     def _get_quality_cuts(self, cat, randoms=False):
         """
+        Return the quality cuts mask to apply to the catalog.
+        randoms_clean = randoms[mask]
         """
         mask = np.ones(len(cat), dtype=bool)
 
-        # # Veto mask
-        # mask *= cat["lrg_mask"][:] == 0
-        # print("Veto mask. Keeping ", mask.sum())
-
-        # MASKBITS cut. The veto mask for randoms seem to miss some
-        # MASKBITS cuts. This is why I put it after and only for randoms.
         target_maskbits = self.cuts["target_maskbits"]
         for bit in target_maskbits:
             mask &= (cat["MASKBITS"] & 2**bit) == 0
@@ -522,7 +518,6 @@ class MapperDESIBGS(MapperBase):
         :param randoms: astropy Table with the randoms
         :return: weights per z-bin
         """
-        # Placeholder, need to check where data products are
         return {"weight_pzbin": np.ones(len(randoms))}
 
     def _get_alpha(self):
