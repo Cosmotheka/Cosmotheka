@@ -398,28 +398,30 @@ class MapperDESILRG(MapperBase):
 
         return randoms
 
+    def _get_weight_col_name(self):
+        return f"weight_pzbin{self.zbin + 1}"
+
     def get_randoms_maps(self):
         if self.randoms_maps["n"] is not None:
             return self.randoms_maps
 
         list_randoms = self._get_list_randoms()
-        npix = hp.nside2npix(self.nside)
 
-        randoms_maps = np.zeros((3, npix))
+        randoms_maps = np.zeros((3, self.npix))
 
         # Hack to remove the density definition from the randoms map name
         map_name = self.map_name.replace("_densdefZhou2023", "")
 
-        # TODO: consider if I want to save the sum of all maps. Problem, it
+        # TODO: consider if we want to save the sum of all maps. Problem, it
         # makes the code a bit more complex and it's difficult to know which
         # randoms when into the map.
         for base_name in list_randoms:
-            weight_col = f"weight_pzbin{self.zbin + 1}"
+            weight_col = self._get_weight_col_name()
 
             def f():
                 randoms = self.get_clean_randoms_with_weights(base_name)
                 w = np.array(randoms[weight_col])
-                map_ngal = np.zeros((3, npix))
+                map_ngal = np.zeros((3, self.npix))
                 for power in [0, 1, 2]:
                     map_ngal[power] = get_map_from_points(
                         randoms,
