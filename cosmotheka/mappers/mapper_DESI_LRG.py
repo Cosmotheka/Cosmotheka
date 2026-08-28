@@ -118,6 +118,8 @@ class MapperDESILRG(MapperBase):
         suffix = "_".join(suffix_parts)
 
         # Modify the map name
+        print(suffix)
+        print("AAAAA")
         self.map_name += f"_{suffix}" if suffix else ""
 
         # Mask name
@@ -559,10 +561,13 @@ class MapperDESILRG(MapperBase):
     def _load_full_randoms(self, base_name):
         random_path = self._randoms_path
         rand_file = os.path.join(random_path, f"{base_name}.fits")
-        rand_mask_name = f"{base_name}-lrgmask_v1.1.fits.gz"
-        lrgmask_file = os.path.join(
-            self.config["randoms_lrgmask_path"], rand_mask_name
-        )
+        if "randoms_lrgmask_path" in self.config:
+            rand_mask_name = f"{base_name}-lrgmask_v1.1.fits.gz"
+            lrgmask_file = os.path.join(
+                self.config["randoms_lrgmask_path"], rand_mask_name
+            )
+        else:
+            lrgmask_file = None
         downloaded = False
 
         # Check if the randoms file exists
@@ -611,13 +616,14 @@ class MapperDESILRG(MapperBase):
             flush=True,
         )
 
-        print(
-            f"[{base_name}] Loading lrgmask from {lrgmask_file}...",
-            flush=True,
-        )
+        if lrgmask_file is not None:
+            print(
+                f"[{base_name}] Loading lrgmask from {lrgmask_file}...",
+                flush=True,
+            )
 
-        lrgmask = Table(fitsio.read(lrgmask_file))
-        randoms = hstack([randoms, lrgmask])
+            lrgmask = Table(fitsio.read(lrgmask_file))
+            randoms = hstack([randoms, lrgmask])
 
         return randoms, downloaded
 
