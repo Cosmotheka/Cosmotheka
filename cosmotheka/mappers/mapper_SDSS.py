@@ -133,15 +133,10 @@ class MapperSDSS(MapperBase):
         return mask
 
     def _get_nl_coupled(self):
-        # Calculates the noise power spectrum \
-        # for SDSS mappers. If the chosen resolution \
-        # is below a 4096, the random catalog is used \
-        # to compute the noise power spectrum. Otherwise, \
-        # the high multipole tail of the signal power \
-        # spectrum is used to estimate the noise power spectrum.
+        return {'nls': nl_coupled}
 
-        if self.nside < self.nside_nl_threshold:
-            print('calculing nl from weights')
+    def get_nl_coupled(self):
+        if self.nl_coupled is None:
             cat_data = self.get_catalog(mod='data')
             cat_random = self.get_catalog(mod='random')
             w_data = self._get_w(mod='data')
@@ -159,23 +154,7 @@ class MapperSDSS(MapperBase):
             N_ell = (w2_data[goodpix].sum() +
                      alpha**2*w2_random[goodpix].sum())
             N_ell *= pixel_A**2/(4*np.pi)
-            nl_coupled = N_ell * np.ones((1, 3*self.nside))
-        else:
-            print('calculating nl from mean cl values')
-            f = self.get_nmt_field()
-            cl = nmt.compute_coupled_cell(f, f)[0]
-            N_ell = np.mean(cl[self.lmin_nl_from_data:2*self.nside])
-            nl_coupled = N_ell * np.ones((1, 3*self.nside))
-        return {'nls': nl_coupled}
-
-    def get_nl_coupled(self):
-        if self.nl_coupled is None:
-            fn = '_'.join([f'{self.map_name}_Nell',
-                           f'coord{self.coords}',
-                           f'ns{self.nside}.npz'])
-            d = self._rerun_read_cycle(fn, 'NPZ',
-                                       self._get_nl_coupled)
-            self.nl_coupled = d['nls']
+            self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
 
     def _bin_z(self, cat):

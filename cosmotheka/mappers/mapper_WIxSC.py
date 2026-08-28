@@ -2,7 +2,6 @@ from .mapper_base import MapperBase
 from .utils import get_map_from_points, get_DIR_Nz
 import fitsio
 from astropy.table import Table
-import pymaster as nmt
 import numpy as np
 import healpy as hp
 import os
@@ -292,20 +291,14 @@ class MapperWIxSC(MapperBase):
 
     def get_nl_coupled(self):
         if self.nl_coupled is None:
-            if ((self.nside < self.nside_nl_threshold) or
-                    (self.config.get('nl_analytic', True))):
-                cat_data = self.get_catalog()
-                n = get_map_from_points(cat_data, self.nside,
-                                        ra_name=self.ra_name,
-                                        dec_name=self.dec_name,
-                                        in_radians=self.in_rad)
-                N_mean = self._get_mean_n(n)
-                N_mean_srad = N_mean * self.npix / (4 * np.pi)
-                mask = self.get_mask()
-                N_ell = np.mean(mask) / N_mean_srad
-            else:
-                f = self.get_nmt_field()
-                cl = nmt.compute_coupled_cell(f, f)[0]
-                N_ell = np.mean(cl[self.lmin_nl_from_data:2*self.nside])
+            cat_data = self.get_catalog()
+            n = get_map_from_points(cat_data, self.nside,
+                                    ra_name=self.ra_name,
+                                    dec_name=self.dec_name,
+                                    in_radians=self.in_rad)
+            N_mean = self._get_mean_n(n)
+            N_mean_srad = N_mean * self.npix / (4 * np.pi)
+            mask = self.get_mask()
+            N_ell = np.mean(mask) / N_mean_srad
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled

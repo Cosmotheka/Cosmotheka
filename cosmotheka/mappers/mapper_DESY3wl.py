@@ -2,7 +2,6 @@ from .utils import get_map_from_points
 from .mapper_base import MapperBase
 import h5py
 import numpy as np
-import pymaster as nmt
 import healpy as hp
 import fitsio
 import os
@@ -145,6 +144,8 @@ class MapperDESY3wl(MapperBase):
                 ellips -= c
                 # Remove multiplicative bias
                 ellips = self._remove_multiplicative_bias(ellips)
+                # Flip e1
+                ellips[0, :] = -ellips[0, :]
             self.ellips_unbiased[mode] = ellips
 
         return self.ellips_unbiased[mode]
@@ -156,7 +157,7 @@ class MapperDESY3wl(MapperBase):
             # For some reason [:][sel] is faster than [sel]
             ra = index['catalog/metacal/unsheared']['ra'][:][sel]
             dec = index['catalog/metacal/unsheared']['dec'][:][sel]
-            self.position = {'ra': ra, 'dec': dec}
+            self.position = np.array([ra, dec])
 
         return self.position
 
@@ -272,8 +273,9 @@ class MapperDESY3wl(MapperBase):
         weights = self.get_weights()
         ellips = self.get_ellips_unbiased(mode)
         pos = self.get_positions()
-        we1, we2 = get_map_from_points(pos, self.nside,
-                                       qu=[-ellips[0], ellips[1]],
+        we1, we2 = get_map_from_points({'ra': pos[0], 'dec': pos[1]},
+                                       self.nside,
+                                       qu=ellips,
                                        w=weights,
                                        ra_name='ra',
                                        dec_name='dec',
@@ -326,7 +328,8 @@ class MapperDESY3wl(MapperBase):
         # Returns the  mask.
 
         pos = self.get_positions()
-        msk = get_map_from_points(pos, self.nside, w=self.get_weights(),
+        msk = get_map_from_points({'ra': pos[0], 'dec': pos[1]},
+                                  self.nside, w=self.get_weights(),
                                   ra_name='ra', dec_name='dec',
                                   rot=self.rot)
         return msk
@@ -343,7 +346,8 @@ class MapperDESY3wl(MapperBase):
             weights = self.get_weights()
             ellips = self.get_ellips_unbiased(mod)
             w = 0.5*np.sum(ellips**2, axis=0) * weights**2
-            mp = get_map_from_points(pos, self.nside, w=w,
+            mp = get_map_from_points({'ra': pos[0], 'dec': pos[1]},
+                                     self.nside, w=w,
                                      ra_name='ra', dec_name='dec',
                                      rot=self.rot)
             msk = self.get_mask()
@@ -362,37 +366,8 @@ class MapperDESY3wl(MapperBase):
         self.nl_coupled = self.nls[mod]
         return self.nl_coupled
 
-    def _get_nmt_catalog_field(self, mode=None, **kwargs):
-        """
-        Build a catalog-based NaMaster field for DES-Y3 WL.
-        """
-        # Spin-2 shear only
-        e1f, e2f, mod = self._set_mode(mode)
-        if mod != 'shear':
-            raise NotImplementedError(
-                "Catalog-based fields are only implemented for shear."
-            )
-
-        # Positions (RA/Dec in degrees)
-        pos = self.get_positions()
-        ra = pos['ra']
-        dec = pos['dec']
-        positions = np.array([ra, dec])
-
-        # Weights
-        weights = self.get_weights()
-
-        # Bias-corrected ellipticities
-        ellips = self.get_ellips_unbiased(mode=mod)
-        e1 = -ellips[0].copy()
-        e2 = ellips[1].copy()
-        field = np.array([e1, e2])
-
-        # Retrieve the maximum multipole
-        lmax = kwargs.get("lmax", 3*self.nside-1)
-
-        return nmt.NmtFieldCatalog(positions, weights, field,
-                                   spin=2, lmax=lmax, lonlat=True)
+    def get_signal_catalog(self, mode=None, **kwargs):
+        return self.get_ellips_unbiased(mode=mode)
 
 
 # This function was used to shorten the official catalog. It is not used to
