@@ -20,9 +20,6 @@ spec_catalog_xmatch: /mnt/extraspace/damonge/Datasets/DESI_DR1/datcomb_BGS_BRIGH
 # RANDOMS
 randoms_path: /mnt/extraspace/damonge/Datasets/DESI/randoms_for_lrg_xcorr_2023_v1
 randoms_selection: /mnt/extraspace/damonge/Datasets/DESI/randoms_for_lrg_xcorr_2023_v1/randoms_Rongpu.txt
-# randoms_selection: /mnt/extraspace/alaposta/BGS_reruns/randoms_Rongpu.txt
-randoms_lrgmask_path: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/catalogs/lrgmask_v1.1
-imaging_weights_coeffs: /mnt/extraspace/damonge/Datasets/DESI/lrg_xcorr_2023_v1/catalogs/imaging_weights/main_lrg_linear_coeffs_pz.yaml
 download_missing_random: false
 remove_random_after_clean: false
 

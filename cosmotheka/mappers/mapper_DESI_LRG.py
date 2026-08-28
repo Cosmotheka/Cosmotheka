@@ -45,16 +45,18 @@ class MapperDESILRG(MapperBase):
     spin = 0
     masked_on_input = True
 
+    def _get_zbin_label(self, config):
+        self.zbin = config["zbin"]
+        return f"zbin{self.zbin}"
+
     def __init__(self, config):
         self._get_defaults(config)
-
         # General arguments
         self.cat = None
         self.data_maps = {"n": None, "w": None, "w2": None}
         self.alpha = None
         self.nl_coupled = None
         self.rot = self._get_rotator("C")
-        self.zbin = config["zbin"]
 
         # Sample
         self._sample = config.get("sample", "main")
@@ -109,7 +111,8 @@ class MapperDESILRG(MapperBase):
             suffix_parts.append(f"maskthreshold{self.mask_threshold}")
 
         # zbin
-        suffix_parts.append(f"zbin{self.zbin}")
+        zbin_label = self._get_zbin_label(config)
+        suffix_parts.append(zbin_label)
 
         # Join the suffix parts
         suffix = "_".join(suffix_parts)
@@ -389,28 +392,30 @@ class MapperDESILRG(MapperBase):
 
         return randoms
 
+    def _get_weight_col_name(self):
+        return f"weight_pzbin{self.zbin + 1}"
+
     def get_randoms_maps(self):
         if self.randoms_maps["n"] is not None:
             return self.randoms_maps
 
         list_randoms = self._get_list_randoms()
-        npix = hp.nside2npix(self.nside)
 
-        randoms_maps = np.zeros((3, npix))
+        randoms_maps = np.zeros((3, self.npix))
 
         # Hack to remove the density definition from the randoms map name
         map_name = self.map_name.replace("_densdefZhou2023", "")
 
-        # TODO: consider if I want to save the sum of all maps. Problem, it
+        # TODO: consider if we want to save the sum of all maps. Problem, it
         # makes the code a bit more complex and it's difficult to know which
         # randoms when into the map.
         for base_name in list_randoms:
-            weight_col = f"weight_pzbin{self.zbin + 1}"
+            weight_col = self._get_weight_col_name()
 
             def f():
                 randoms = self.get_clean_randoms_with_weights(base_name)
                 w = np.array(randoms[weight_col])
-                map_ngal = np.zeros((3, npix))
+                map_ngal = np.zeros((3, self.npix))
                 for power in [0, 1, 2]:
                     map_ngal[power] = get_map_from_points(
                         randoms,
@@ -548,10 +553,13 @@ class MapperDESILRG(MapperBase):
     def _load_full_randoms(self, base_name):
         random_path = self._randoms_path
         rand_file = os.path.join(random_path, f"{base_name}.fits")
-        rand_mask_name = f"{base_name}-lrgmask_v1.1.fits.gz"
-        lrgmask_file = os.path.join(
-            self.config["randoms_lrgmask_path"], rand_mask_name
-        )
+        if "randoms_lrgmask_path" in self.config:
+            rand_mask_name = f"{base_name}-lrgmask_v1.1.fits.gz"
+            lrgmask_file = os.path.join(
+                self.config["randoms_lrgmask_path"], rand_mask_name
+            )
+        else:
+            lrgmask_file = None
         downloaded = False
 
         # Check if the randoms file exists
@@ -600,13 +608,14 @@ class MapperDESILRG(MapperBase):
             flush=True,
         )
 
-        print(
-            f"[{base_name}] Loading lrgmask from {lrgmask_file}...",
-            flush=True,
-        )
+        if lrgmask_file is not None:
+            print(
+                f"[{base_name}] Loading lrgmask from {lrgmask_file}...",
+                flush=True,
+            )
 
-        lrgmask = Table(fitsio.read(lrgmask_file))
-        randoms = hstack([randoms, lrgmask])
+            lrgmask = Table(fitsio.read(lrgmask_file))
+            randoms = hstack([randoms, lrgmask])
 
         return randoms, downloaded
 

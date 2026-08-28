@@ -69,7 +69,7 @@ def read_wsp(fname, cov, **kwargs):
     fname: str
         Path to save the workspace to
     cov: bool
-        If ``True``, you want to rea a covariance workspace.
+        If ``True``, you want to read a covariance workspace.
     kwargs:
         Arguments accepted by the (cov)workspace read_from method.
     """
