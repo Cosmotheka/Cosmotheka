@@ -325,12 +325,12 @@ def test_rerun(rerun_config):
     fn = os.path.join(
         path_rerun, "map_DESI_LRG_zbin0_randoms-1-0_n-w-w2_coordC_ns32.fits.gz"
     )
-    read_maps = hp.read_map(fn, verbose=False, field=None)
+    read_maps = hp.read_map(fn, field=None)
 
     fn = os.path.join(
         path_rerun, "map_DESI_LRG_zbin0_randoms-1-1_n-w-w2_coordC_ns32.fits.gz"
     )
-    read_maps += hp.read_map(fn, verbose=False, field=None)
+    read_maps += hp.read_map(fn, field=None)
 
     assert np.all(read_maps[0] == random_maps["n"])
     assert np.all(read_maps[1] == random_maps["w"])

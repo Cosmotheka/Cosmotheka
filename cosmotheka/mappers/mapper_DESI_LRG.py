@@ -118,8 +118,6 @@ class MapperDESILRG(MapperBase):
         suffix = "_".join(suffix_parts)
 
         # Modify the map name
-        print(suffix)
-        print("AAAAA")
         self.map_name += f"_{suffix}" if suffix else ""
 
         # Mask name
