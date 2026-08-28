@@ -45,16 +45,18 @@ class MapperDESILRG(MapperBase):
     spin = 0
     masked_on_input = True
 
+    def _get_zbin_label(self, config):
+        self.zbin = config["zbin"]
+        return f"zbin{self.zbin}"
+
     def __init__(self, config):
         self._get_defaults(config)
-
         # General arguments
         self.cat = None
         self.data_maps = {"n": None, "w": None, "w2": None}
         self.alpha = None
         self.nl_coupled = None
         self.rot = self._get_rotator("C")
-        self.zbin = config["zbin"]
 
         # Sample
         self._sample = config.get("sample", "main")
@@ -109,7 +111,8 @@ class MapperDESILRG(MapperBase):
             suffix_parts.append(f"maskthreshold{self.mask_threshold}")
 
         # zbin
-        suffix_parts.append(f"zbin{self.zbin}")
+        zbin_label = self._get_zbin_label(config)
+        suffix_parts.append(zbin_label)
 
         # Join the suffix parts
         suffix = "_".join(suffix_parts)

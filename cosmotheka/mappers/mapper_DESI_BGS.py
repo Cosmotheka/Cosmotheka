@@ -1,87 +1,32 @@
 import numpy as np
 import healpy as hp
 import fitsio
-from .mapper_base import MapperBase
+from .mapper_DESI_LRG import MapperDESILRG
 from astropy.table import Table, hstack
 import os
 from .utils import get_map_from_points
 
 
-class MapperDESIBGS(MapperBase):
+class MapperDESIBGS(MapperDESILRG):
     """
     Mapper class for the DESI BGS data set
     """
     map_name = "DESI_BGS"
-    dtype = "galaxy_density"
-    spin = 0
-    masked_on_input = True
 
-    def __init__(self, config):
-        self._get_defaults(config)
+    def _get_zbin_label(self, config):
+        self.zmin = config["pzmin"]
+        self.zmax = config["pzmax"]
+        zbin_label = f'zmin{self.zmin}_zmax{self.zmax}'
+        return zbin_label
 
-        self.cat = None
-        self.data_maps = {"n": None, "w": None, "w2": None}
-        self.alpha = None
-        self.nl_coupled = None
-        self.rot = self._get_rotator("C")
-
-        # Randoms
-        self._list_randoms = None
-        self._download_missing_randoms = config.get(
-            "download_missing_randoms", False
-        )
-        self._remove_downloaded_randoms_after_clean = config.get(
-            "remove_downloaded_randoms_after_clean", True
-        )
-        # We use maps since the randoms are too large to fit in memory
-        self.randoms_maps = {"n": None, "w": None, "w2": None}
-        self._randoms_path = config.get("randoms_path", None)
-        self._randoms_selection = config.get("randoms_selection", None)
-        # To avoid loading the same randoms multiple times
-        self._loaded_randoms = {}
-
-        # Suffix to change the map name and rerun files
-        suffix_parts = []
-
-        # Quality cuts
-        cuts = self._get_default_cuts()
-
-        self.cuts = {}
-        keys_cuts = sorted(cuts.keys())
-        for k in keys_cuts:
-            v = cuts[k]
-            self.cuts[k] = config.get(k, v)
-
-            if self.cuts[k] != v:
-                vnew = self.cuts[k]
-                k = k.replace("_", "")
-                suffix_parts.append(f"{k}{vnew}")
-        self.suffix_weights = "_".join(suffix_parts)
-
-        # Parts affecting other parts of the mapper
-        # Mask threshold
-        self.mask_threshold = config.get("mask_threshold", 0.2)
-        if self.mask_threshold != 0.2:
-            suffix_parts.append(f"maskthreshold{self.mask_threshold}")
-
-        # zbin
-        self.zmin = config.get("pzmin")
-        self.zmax = config.get("pzmax")
-        if self.zmin is not None:
-            suffix_parts.append(f"zmin{self.zmin}")
-        if self.zmax is not None:
-            suffix_parts.append(f"zmax{self.zmax}")
-
-        # Join the suffix parts
-        suffix = "_".join(suffix_parts)
-
-        # Modify the map name
-        self.map_name += f"_{suffix}" if suffix else ""
-
-        # Mask name
-        # If not given, we use the same name as the map name since the mask is
-        # basically given by the randoms
-        self.mask_name = config.get("mask_name", self.map_name)
+    def _get_default_cuts(self):
+        cuts = {
+            "target_maskbits": [1, 12, 13],
+            "min_nobs": 2,
+            "max_sigmaz": 0.05,
+            "remove_island": True,
+        }
+        return cuts
 
     def get_catalog(self):
         """
@@ -123,15 +68,6 @@ class MapperDESIBGS(MapperBase):
             self.cat = cat
 
         return self.cat
-
-    def _get_default_cuts(self):
-        cuts = {
-            "target_maskbits": [1, 12, 13],
-            "min_nobs": 2,
-            "max_sigmaz": 0.05,
-            "remove_island": True,
-        }
-        return cuts
 
     def _get_quality_cuts(self, cat, randoms=False):
         """
