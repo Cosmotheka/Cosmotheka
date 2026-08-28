@@ -22,4 +22,4 @@ class MapperACTCMB(MapperACTCompSept):
 
         - lmax: `6000`
     """
-    dtype = 'cmb_kSZ'
+    dtype = 'cmb_temperature'
