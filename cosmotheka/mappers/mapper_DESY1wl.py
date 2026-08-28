@@ -24,6 +24,8 @@ class MapperDESY1wl(MapperBase):
         - mapper_class: `'MapperDESY1wl'`
     """
     map_name = 'DESY1wl'
+    spin = 2
+    dtype = 'galaxy_shear'
 
     def __init__(self, config):
         self._get_defaults(config)
@@ -278,9 +280,3 @@ class MapperDESY1wl(MapperBase):
         self.nls[mod] = np.array([nl, 0*nl, 0*nl, nl])
         self.nl_coupled = self.nls[mod]
         return self.nl_coupled
-
-    def get_dtype(self):
-        return 'galaxy_shear'
-
-    def get_spin(self):
-        return 2

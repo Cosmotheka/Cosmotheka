@@ -239,12 +239,6 @@ class MapperDESIBGS(MapperBase):
             self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz)
 
-    def get_dtype(self):
-        return self.dtype
-
-    def get_spin(self):
-        return self.spin
-
     def _get_list_randoms(self):
         """
         Returns a list of randoms to include

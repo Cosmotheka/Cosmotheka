@@ -18,6 +18,8 @@ class MapperCatWISE(MapperBase):
         - path_rerun: `".../Datasets/CatWISE/xcell_runs"`
     """
     map_name = 'CatWISE'
+    spin = 0
+    dtype = 'galaxy_density'
 
     def __init__(self, config):
         self._get_defaults(config)
@@ -163,9 +165,3 @@ class MapperCatWISE(MapperBase):
         Not implemented yet.
         """
         raise NotImplementedError("No dNdz for CatWISE yet")
-
-    def get_dtype(self):
-        return 'galaxy_density'
-
-    def get_spin(self):
-        return 0

@@ -334,12 +334,6 @@ class MapperDESILRG(MapperBase):
             self.nl_coupled = d["nls"]
         return self.nl_coupled
 
-    def get_dtype(self):
-        return self.dtype
-
-    def get_spin(self):
-        return self.spin
-
     def __get_clean_randoms_with_weights(self, base_name):
         print("Loading randoms for", base_name, flush=True)
         randoms, downloaded = self._load_full_randoms(base_name)

@@ -28,6 +28,8 @@ class MapperDESY3wl(MapperBase):
         - mapper_class: `'MapperDESY1wl'`
     """
     map_name = 'DESY3wl'
+    spin = 2
+    dtype = 'galaxy_shear'
     # Relevant papers:
     # - Weak lensing catalog: https://arxiv.org/pdf/2011.03408.pdf
     # - Harmonic space weak lensing: https://arxiv.org/pdf/2203.07128.pdf
@@ -359,12 +361,6 @@ class MapperDESY3wl(MapperBase):
         self.nls[mod] = np.array([nl, 0*nl, 0*nl, nl])
         self.nl_coupled = self.nls[mod]
         return self.nl_coupled
-
-    def get_dtype(self):
-        return 'galaxy_shear'
-
-    def get_spin(self):
-        return 2
 
     def _get_nmt_catalog_field(self, mode=None, **kwargs):
         """

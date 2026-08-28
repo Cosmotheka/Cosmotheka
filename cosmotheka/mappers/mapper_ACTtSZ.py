@@ -23,8 +23,4 @@ class MapperACTtSZ(MapperACTCompSept):
 
         - lmax: `6000`
     """
-    def get_dtype(self):
-        return 'cmb_tSZ'
-
-    def get_spin(self):
-        return 0
+    dtype = 'cmb_tSZ'

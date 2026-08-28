@@ -10,6 +10,7 @@ class MapperACTBase(MapperBase):
     # For backwards compatibility, this mapper allows to pass a 'map_name'
     # configuration argument that will be appended to this map_name
     map_name = 'ACT'
+    spin = 0
 
     def __init__(self, config):
         self._get_ACT_defaults(config)

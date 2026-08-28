@@ -35,6 +35,7 @@ class MapperCIBLenz(MapperPlanckBase):
         - path_rerun: `'.../Datasets/CIB_Lenz_X/xcell_runs'`
     """
     map_name = 'CIBLenz'
+    dtype = 'generic'
 
     def __init__(self, config):
         self._get_Planck_defaults(config)
@@ -71,6 +72,3 @@ class MapperCIBLenz(MapperPlanckBase):
         hm2_map = hp.ud_grade(hm2_map, nside_out=self.nside)
 
         return np.array([hm1_map, hm2_map])
-
-    def get_dtype(self):
-        return 'generic'

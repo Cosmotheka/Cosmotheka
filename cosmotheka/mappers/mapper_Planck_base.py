@@ -9,6 +9,8 @@ class MapperPlanckBase(MapperBase):
     """
     Base mapper for the Planck mappers.
     """
+    spin = 0
+
     def __init__(self, config):
         self._get_Planck_defaults(config)
 
@@ -165,6 +167,3 @@ class MapperPlanckBase(MapperBase):
                             'auto_12': cl_12,
                             'auto_22': cl_22}
         return self.cls_cov
-
-    def get_spin(self):
-        return 0

@@ -10,6 +10,8 @@ class MapperKV450(MapperBase):
     """Mapper for the KV450 weak lensing data set."""
 
     map_name = 'KV450'
+    dtype = 'galaxy_shear'
+    spin = 2
 
     def __init__(self, config):
         """
@@ -266,9 +268,3 @@ class MapperKV450(MapperBase):
             z, nz = np.loadtxt(self.config['file_nz'], unpack=True)
             self.dndz = {'z_mid': z, 'nz': nz}
         return self._get_shifted_nz(dz)
-
-    def get_dtype(self):
-        return 'galaxy_shear'
-
-    def get_spin(self):
-        return 2

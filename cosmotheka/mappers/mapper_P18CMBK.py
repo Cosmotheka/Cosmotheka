@@ -29,6 +29,8 @@ class MapperP18CMBK(MapperBase):
 
     """
     map_name = 'P18CMBK'
+    dtype = 'cmb_convergence'
+    spin = 0
 
     def __init__(self, config):
         self._get_defaults(config)
@@ -103,12 +105,6 @@ class MapperP18CMBK(MapperBase):
             self.noise = np.loadtxt(self.config['file_noise'], unpack=True)
 
         return self.noise
-
-    def get_dtype(self):
-        return "cmb_convergence"
-
-    def get_spin(self):
-        return 0
 
     def _get_sims_fnames(self):
         """

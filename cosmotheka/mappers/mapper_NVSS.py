@@ -20,6 +20,8 @@ class MapperNVSS(MapperBase):
         - path_rerun: `".../Datasets/NVSS/xcell_runs"`
     """
     map_name = 'NVSS'
+    dtype = 'galaxy_density'
+    spin = 0
 
     def __init__(self, config):
         self._get_defaults(config)
@@ -161,9 +163,3 @@ class MapperNVSS(MapperBase):
             zz = 0.5*(bins[1:]+bins[:-1])
             self.dndz = {'z_mid': zz, 'nz': nz}
         return self._get_shifted_nz(dz)
-
-    def get_dtype(self):
-        return 'galaxy_density'
-
-    def get_spin(self):
-        return 0

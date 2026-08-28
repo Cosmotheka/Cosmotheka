@@ -28,6 +28,8 @@ class Mapper2MPZ(MapperBase):
               - fc_0: `1.0`
     """
     map_name = '2MPZ'
+    spin = 0
+    dtype = 'galaxy_density'
 
     def __init__(self, config):
         self._get_defaults(config)
@@ -173,9 +175,3 @@ class Mapper2MPZ(MapperBase):
             N_ell = np.mean(self.mask) / N_mean_srad
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
-
-    def get_dtype(self):
-        return 'galaxy_density'
-
-    def get_spin(self):
-        return 0

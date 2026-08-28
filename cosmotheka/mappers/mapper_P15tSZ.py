@@ -26,6 +26,7 @@ class MapperP15tSZ(MapperPlanckBase):
         - path_rerun: `path+"COM_CompMap_YSZ_R2.02/xcell_runs"`
     """
     map_name = "P15tSZ"
+    dtype = 'cmb_tSZ'
 
     def __init__(self, config):
         self._get_Planck_defaults(config)
@@ -57,6 +58,3 @@ class MapperP15tSZ(MapperPlanckBase):
         hm2_map = hp.ud_grade(hm2_map, nside_out=self.nside)
 
         return np.array([hm1_map, hm2_map])
-
-    def get_dtype(self):
-        return 'cmb_tSZ'
