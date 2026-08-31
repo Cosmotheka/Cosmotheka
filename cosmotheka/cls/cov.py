@@ -178,25 +178,21 @@ class Cov:
         fname = os.path.join(
             self.outdir, f"cw__{mask1}__{mask2}__{mask3}__{mask4}.fits"
         )
-        cw = nmt.NmtCovarianceWorkspace()
         recompute = self.data.data["recompute"]["cmcm"]
         if (not recompute) and os.path.isfile(fname):
-            tools.read_wsp(cw, fname)
-            if cw.wsp is not None:
+            cw = tools.read_wsp(fname, True)
+            if cw is not None:
+                self.cw = cw
                 return cw
 
         l_toeplitz, l_exact, dl_band = self.data.check_toeplitz("cov")
         fA1, fB1 = self.clA1B1.get_nmt_fields(use_maps=True)
         fA2, fB2 = self.clA2B2.get_nmt_fields(use_maps=True)
-        cw.compute_coupling_coefficients(
-            fA1,
-            fA2,
-            fB1,
-            fB2,
-            l_toeplitz=l_toeplitz,
-            l_exact=l_exact,
-            dl_band=dl_band,
-        )
+        cw = nmt.NmtCovarianceWorkspace.from_fields(fA1, fA2, fB1, fB2,
+                                                    l_toeplitz=l_toeplitz,
+                                                    l_exact=l_exact,
+                                                    dl_band=dl_band,
+                                                    all_spins=True)
         if save_cw:
             tools.save_wsp(cw, fname)
         self.recompute_cmcm = False
@@ -302,117 +298,85 @@ class Cov:
         cov = np.zeros([nbpw_a, nclsa, nbpw_b, nclsb])
         # 00, 02
         if (s_a1 + s_a2 == 0) and (s_b1 + s_b2 == 2):
-            c_tt_te = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_tt_te = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[0]],
                 [cla2b1[0]],
                 [cla2b2[0]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_tt_tb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_tt_tb = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[-1]],
                 [cla2b1[0]],
                 [cla2b2[-1]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
             cov[:, 0, :, 0] = c_tt_te
             cov[:, 0, :, 1] = c_tt_tb
         # 02, 00
         elif (s_a1 + s_a2 == 2) and (s_b1 + s_b2 == 0):
-            c_te_tt = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_te_tt = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[0]],
                 [cla2b1[0]],
                 [cla2b2[0]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_tb_tt = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_tb_tt = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[0]],
                 [cla2b1[-1]],
                 [cla2b2[-1]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
             cov[:, 0, :, 0] = c_te_tt
             cov[:, 1, :, 0] = c_tb_tt
         # 00, 22
         elif (s_a1 + s_a2 == 0) and (s_b1 + s_b2 == 4):
-            c_tt_ee = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_tt_ee = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[0]],
                 [cla2b1[0]],
                 [cla2b2[0]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_tt_eb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_tt_eb = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[-1]],
                 [cla2b1[0]],
                 [cla2b2[-1]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_tt_be = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_tt_be = cw.gaussian_covariance(
                 [cla1b1[-1]],
                 [cla1b2[0]],
                 [cla2b1[-1]],
                 [cla2b2[0]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_tt_bb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_tt_bb = cw.gaussian_covariance(
                 [cla1b1[-1]],
                 [cla1b2[-1]],
                 [cla2b1[-1]],
                 [cla2b2[-1]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
             cov[:, 0, :, 0] = c_tt_ee
             cov[:, 0, :, 1] = c_tt_eb
@@ -420,57 +384,41 @@ class Cov:
             cov[:, 0, :, 3] = c_tt_bb
         # 22, 00
         elif (s_a1 + s_a2 == 4) and (s_b1 + s_b2 == 0):
-            c_ee_tt = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_ee_tt = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[0]],
                 [cla2b1[0]],
                 [cla2b2[0]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_eb_tt = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_eb_tt = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[0]],
                 [cla2b1[-1]],
                 [cla2b2[-1]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_be_tt = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_be_tt = cw.gaussian_covariance(
                 [cla1b1[-1]],
                 [cla1b2[-1]],
                 [cla2b1[0]],
                 [cla2b2[0]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_bb_tt = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_bb_tt = cw.gaussian_covariance(
                 [cla1b1[-1]],
                 [cla1b2[-1]],
                 [cla2b1[-1]],
                 [cla2b2[-1]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
             cov[:, 0, :, 0] = c_ee_tt
             cov[:, 1, :, 0] = c_eb_tt
@@ -478,57 +426,41 @@ class Cov:
             cov[:, 3, :, 0] = c_bb_tt
         # 02, 02
         elif (s_a1 + s_a2 == 2) and (s_b1 + s_b2 == 2):
-            c_te_te = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_te_te = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[0]],
                 [cla2b1[0]],
                 [cla2b2[0]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_te_tb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_te_tb = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[-1]],
                 [cla2b1[0]],
                 [cla2b2[1]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_tb_te = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_tb_te = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[0]],
                 [cla2b1[-1]],
                 [cla2b2[2]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_tb_tb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_tb_tb = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[-1]],
                 [cla2b1[-1]],
                 [cla2b2[3]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
             cov[:, 0, :, 0] = c_te_te
             cov[:, 0, :, 1] = c_te_tb
@@ -536,109 +468,77 @@ class Cov:
             cov[:, 1, :, 1] = c_tb_tb
         # 02, 22
         elif (s_a1 + s_a2 == 2) and (s_b1 + s_b2 == 4):
-            c_te_ee = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_te_ee = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[0]],
                 [cla2b1[0]],
                 [cla2b2[0]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_te_eb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_te_eb = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[-1]],
                 [cla2b1[0]],
                 [cla2b2[1]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_te_be = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_te_be = cw.gaussian_covariance(
                 [cla1b1[-1]],
                 [cla1b2[0]],
                 [cla2b1[1]],
                 [cla2b2[0]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_te_bb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_te_bb = cw.gaussian_covariance(
                 [cla1b1[-1]],
                 [cla1b2[-1]],
                 [cla2b1[1]],
                 [cla2b2[1]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_tb_ee = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_tb_ee = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[0]],
                 [cla2b1[2]],
                 [cla2b2[2]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_tb_eb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_tb_eb = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[-1]],
                 [cla2b1[2]],
                 [cla2b2[3]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_tb_be = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_tb_be = cw.gaussian_covariance(
                 [cla1b1[-1]],
                 [cla1b2[0]],
                 [cla2b1[3]],
                 [cla2b2[2]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_tb_bb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_tb_bb = cw.gaussian_covariance(
                 [cla1b1[-1]],
                 [cla1b2[-1]],
                 [cla2b1[3]],
                 [cla2b2[3]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
             cov[:, 0, :, 0] = c_te_ee
             cov[:, 0, :, 1] = c_te_eb
@@ -650,109 +550,77 @@ class Cov:
             cov[:, 1, :, 3] = c_tb_bb
         # 22, 02
         elif (s_a1 + s_a2 == 4) and (s_b1 + s_b2 == 2):
-            c_ee_te = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_ee_te = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[0]],
                 [cla2b1[0]],
                 [cla2b2[0]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_ee_tb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_ee_tb = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[1]],
                 [cla2b1[0]],
                 [cla2b2[1]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_eb_te = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_eb_te = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[0]],
                 [cla2b1[-1]],
                 [cla2b2[2]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_eb_tb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_eb_tb = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[1]],
                 [cla2b1[-1]],
                 [cla2b2[3]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_be_te = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_be_te = cw.gaussian_covariance(
                 [cla1b1[-1]],
                 [cla1b2[2]],
                 [cla2b1[0]],
                 [cla2b2[0]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_be_tb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_be_tb = cw.gaussian_covariance(
                 [cla1b1[-1]],
                 [cla1b2[3]],
                 [cla2b1[0]],
                 [cla2b2[1]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_bb_te = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_bb_te = cw.gaussian_covariance(
                 [cla1b1[-1]],
                 [cla1b2[2]],
                 [cla2b1[-1]],
                 [cla2b2[2]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_bb_tb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_bb_tb = cw.gaussian_covariance(
                 [cla1b1[-1]],
                 [cla1b2[3]],
                 [cla2b1[-1]],
                 [cla2b2[3]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
             cov[:, 0, :, 0] = c_ee_te
             cov[:, 1, :, 0] = c_eb_te
@@ -764,213 +632,149 @@ class Cov:
             cov[:, 3, :, 1] = c_bb_tb
         # 22, 22
         elif (s_a1 + s_a2 == 4) and (s_b1 + s_b2 == 4):
-            c_ee_ee = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_ee_ee = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[0]],
                 [cla2b1[0]],
                 [cla2b2[0]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_ee_eb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_ee_eb = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[1]],
                 [cla2b1[0]],
                 [cla2b2[1]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_ee_be = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_ee_be = cw.gaussian_covariance(
                 [cla1b1[1]],
                 [cla1b2[0]],
                 [cla2b1[1]],
                 [cla2b2[0]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_ee_bb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_ee_bb = cw.gaussian_covariance(
                 [cla1b1[1]],
                 [cla1b2[1]],
                 [cla2b1[1]],
                 [cla2b2[1]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_eb_ee = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_eb_ee = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[0]],
                 [cla2b1[2]],
                 [cla2b2[2]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_eb_eb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_eb_eb = cw.gaussian_covariance(
                 [cla1b1[0]],
                 [cla1b2[1]],
                 [cla2b1[2]],
                 [cla2b2[3]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_eb_be = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_eb_be = cw.gaussian_covariance(
                 [cla1b1[1]],
                 [cla1b2[0]],
                 [cla2b1[3]],
                 [cla2b2[2]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_eb_bb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_eb_bb = cw.gaussian_covariance(
                 [cla1b1[1]],
                 [cla1b2[1]],
                 [cla2b1[3]],
                 [cla2b2[3]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_be_ee = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_be_ee = cw.gaussian_covariance(
                 [cla1b1[2]],
                 [cla1b2[2]],
                 [cla2b1[0]],
                 [cla2b2[0]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_be_eb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_be_eb = cw.gaussian_covariance(
                 [cla1b1[2]],
                 [cla1b2[3]],
                 [cla2b1[0]],
                 [cla2b2[1]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_be_be = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_be_be = cw.gaussian_covariance(
                 [cla1b1[3]],
                 [cla1b2[2]],
                 [cla2b1[1]],
                 [cla2b2[0]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_be_bb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_be_bb = cw.gaussian_covariance(
                 [cla1b1[3]],
                 [cla1b2[3]],
                 [cla2b1[1]],
                 [cla2b2[1]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_bb_ee = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_bb_ee = cw.gaussian_covariance(
                 [cla1b1[2]],
                 [cla1b2[2]],
                 [cla2b1[2]],
                 [cla2b2[2]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_bb_eb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_bb_eb = cw.gaussian_covariance(
                 [cla1b1[2]],
                 [cla1b2[3]],
                 [cla2b1[2]],
                 [cla2b2[3]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_bb_be = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_bb_be = cw.gaussian_covariance(
                 [cla1b1[3]],
                 [cla1b2[2]],
                 [cla2b1[3]],
                 [cla2b2[2]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
-            c_bb_bb = nmt.gaussian_covariance(
-                cw,
-                0,
-                0,
-                0,
-                0,
+            c_bb_bb = cw.gaussian_covariance(
                 [cla1b1[3]],
                 [cla1b2[3]],
                 [cla2b1[3]],
                 [cla2b2[3]],
                 wa,
                 wb,
+                spins=[0, 0, 0, 0]
             )
             cov[:, 0, :, 0] = c_ee_ee
             cov[:, 0, :, 1] = c_ee_eb
@@ -1134,18 +938,14 @@ class Cov:
                 )
 
             else:
-                cov_dict['cov_G'] = nmt.gaussian_covariance(
-                    cw,
-                    s_a1,
-                    s_a2,
-                    s_b1,
-                    s_b2,
+                cov_dict['cov_G'] = cw.gaussian_covariance(
                     cla1b1,
                     cla1b2,
                     cla2b1,
                     cla2b2,
                     wa,
                     wb,
+                    spins=[s_a1, s_a2, s_b1, s_b2]
                 )
             ftime = time.time()
             print(

@@ -16,13 +16,11 @@ def get_wsp(cwsp=False):
     mask = hp.read_map('cosmotheka/tests/data/mask1.fits')
     f = nmt.NmtField(mask, [mask], spin=0, n_iter=0)
 
-    w = nmt.NmtWorkspace()
-    w.compute_coupling_matrix(f, f, bins=b)
+    w = nmt.NmtWorkspace.from_fields(f, f, b)
 
     if not cwsp:
         return w
-    cw = nmt.NmtCovarianceWorkspace()
-    cw.compute_coupling_coefficients(f, f)
+    cw = nmt.NmtCovarianceWorkspace.from_fields(f, f, f, f)
 
     return cw
 
@@ -67,8 +65,10 @@ def test_save_wsp(cwsp):
     tools.save_wsp(w, dummyfile)
     assert os.path.isfile(dummyfile)
 
-    w2 = nmt.NmtWorkspace() if not cwsp else nmt.NmtCovarianceWorkspace()
-    w2.read_from(dummyfile)
+    if cwsp:
+        w2 = nmt.NmtCovarianceWorkspace.from_file(dummyfile)
+    else:
+        w2 = nmt.NmtWorkspace.from_file(dummyfile)
 
     if not cwsp:
         mcm = w.get_coupling_matrix() + 1e-100
@@ -79,7 +79,8 @@ def test_save_wsp(cwsp):
 
     # Check that it raises an error if it fails writing the file but it doesn't
     # exist
-    with pytest.raises(RuntimeError):
+    err = OSError if cwsp else RuntimeError
+    with pytest.raises(err):
         tools.save_wsp(w, 'unexsitentfolder/dummyfile.fits')
 
     # TODO: We need to test that if it fails to save the file, it removes the
@@ -93,8 +94,7 @@ def test_read_wsp(cwsp):
     w.write_to(dummyfile)
 
     # Check it reads the file correctly
-    w2 = nmt.NmtWorkspace() if not cwsp else nmt.NmtCovarianceWorkspace()
-    tools.read_wsp(w2, dummyfile)
+    w2 = tools.read_wsp(dummyfile, cwsp)
 
     if not cwsp:
         mcm = w.get_coupling_matrix() + 1e-100
@@ -103,19 +103,9 @@ def test_read_wsp(cwsp):
     else:
         assert w.wsp.lmax == w2.wsp.lmax
 
-    # Check you can pass kwargs
-    if not cwsp:
-        tools.read_wsp(w2, dummyfile, read_unbinned_MCM=False)
-        assert not w2.has_unbinned
-    else:
-        with pytest.raises(TypeError):
-            tools.read_wsp(w2, dummyfile, read_unbinned_MCM=False)
-        tools.read_wsp(w2, dummyfile, force_spin0_only=True)
-        assert w2.wsp.spin0_only == 1
-
     # Check read_wsp removes the file if it fails to read it
     create_corrupted_file()
-    tools.read_wsp(w2, dummyfile)
+    tools.read_wsp(dummyfile, cwsp)
     assert not os.path.isfile(dummyfile)
 
     # TODO: We need to test that it raises an error if it fails while reading

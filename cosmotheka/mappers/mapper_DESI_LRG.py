@@ -29,15 +29,11 @@ class MapperDESILRG(MapperBase):
         - nside: `4096`
         - imaging_weights_coeffs: \
             `./lrg_xcorr_2023_v1/catalogs/imaging_weights/main_lrg_linear_coeffs_pz.yaml`
-        - stardens_path: \
-            ./lrg_xcorr_2023_v1/misc/pixweight-dr7.1-0.22.0_stardens_64_ring.fits
         - download_missing_randoms: `False` (default `False`)
         - remove_downloaded_randoms_after_clean: `True` (default `True`)
         - mask_name: `None` (default `None`, which means the same as map_name)
         - target_maskbits: `[1, 12, 13]` (default)
         - min_nobs: `2` (default)
-        - max_ebv: `0.15` (default). Use None to apply no EBV cut.
-        - max_stardens: `2500` (default)
         - remove_island: `True` (default). If True, it removes the "island" \
               in the NGC
         - mask_threshold: `0.2` (default). This is the minimum relative value \
@@ -49,16 +45,18 @@ class MapperDESILRG(MapperBase):
     spin = 0
     masked_on_input = True
 
+    def _get_zbin_label(self, config):
+        self.zbin = config["zbin"]
+        return f"zbin{self.zbin}"
+
     def __init__(self, config):
         self._get_defaults(config)
-
         # General arguments
         self.cat = None
         self.data_maps = {"n": None, "w": None, "w2": None}
         self.alpha = None
         self.nl_coupled = None
         self.rot = self._get_rotator("C")
-        self.zbin = config["zbin"]
 
         # Sample
         self._sample = config.get("sample", "main")
@@ -92,8 +90,6 @@ class MapperDESILRG(MapperBase):
             suffix_parts.append("extended")
 
         # Quality cuts
-        self._stardens_good_hp_idx = None
-        self._stardens_nside = None
         cuts = self._get_default_cuts()
 
         self.cuts = {}
@@ -115,7 +111,8 @@ class MapperDESILRG(MapperBase):
             suffix_parts.append(f"maskthreshold{self.mask_threshold}")
 
         # zbin
-        suffix_parts.append(f"zbin{self.zbin}")
+        zbin_label = self._get_zbin_label(config)
+        suffix_parts.append(zbin_label)
 
         # Join the suffix parts
         suffix = "_".join(suffix_parts)
@@ -132,30 +129,9 @@ class MapperDESILRG(MapperBase):
         cuts = {
             "target_maskbits": [1, 12, 13],
             "min_nobs": 2,
-            "max_ebv": 0.15,
-            "max_stardens": 2500,
             "remove_island": True,
         }
         return cuts
-
-    def _get_stardens_mask(self, cat):
-        """
-        Returns a mask for the LRGs to keep based on the stellar density map.
-        """
-        if self._stardens_good_hp_idx is None:
-            fname = self.config["stardens_path"]
-            stardens = fitsio.read(fname)  # Stellar density map
-            self._stardens_nside = hp.npix2nside(stardens.size)
-            self._stardens_good_hp_idx = stardens["HPXPIXEL"][
-                stardens["STARDENS"] < self.cuts["max_stardens"]
-            ]
-
-        lrg_hp_idx = hp.ang2pix(
-            self._stardens_nside, cat["RA"], cat["DEC"], lonlat=True
-        )
-        mask = np.isin(lrg_hp_idx, self._stardens_good_hp_idx)
-
-        return mask
 
     def _get_quality_cuts(self, cat, randoms=False):
         """
@@ -186,14 +162,13 @@ class MapperDESILRG(MapperBase):
         mask *= cat[f"{key}_Z"][:] >= self.cuts["min_nobs"]
         print("Pixel exposures. Keeping ", mask.sum())
 
-        # E(B-V) < 0.15
-        if self.cuts["max_ebv"] is not None:
-            mask *= cat["EBV"][:] < self.cuts["max_ebv"]
-            print("EBV. Keeping ", mask.sum())
-
-        # Apply cut on stellar density
-        mask *= self._get_stardens_mask(cat)
-        print("Stellar density. Keeping ", mask.sum())
+        # Apply cuts from external maps
+        for syst in self.config.get("external_maps", []):
+            if syst.get('apply', True):
+                mask &= self._get_map_threshold_mask(
+                    syst['path'], syst['threshold'], cat,
+                    field=syst.get('field', 0))
+                print(f"{syst['name']}. Keeping {mask.sum()} objects")
 
         # Remove "islands" in the NGC
         # Extra cut in quality_cuts.py (used in MWhite+2021)
@@ -205,6 +180,18 @@ class MapperDESILRG(MapperBase):
             )
             print("Island. Keeping ", mask.sum())
 
+        return mask
+
+    def _get_map_threshold_mask(self, fname, threshold, cat, field=0):
+        """
+        Returns a mask for the sources to keep based on a given external map
+        and a given threshold.
+        """
+        mp = hp.read_map(fname, field=field)
+        goodpix = mp < threshold
+        nside_mp = hp.npix2nside(mp.size)
+        ipix = hp.ang2pix(nside_mp, cat["RA"], cat["DEC"], lonlat=True)
+        mask = goodpix[ipix]
         return mask
 
     def get_catalog(self):
@@ -243,6 +230,16 @@ class MapperDESILRG(MapperBase):
 
         return self.cat
 
+    def _get_nz(self):
+        fname = self.config["file_dndz"]
+        print(f"Reading dndz for zbin {self.zbin} from", fname, flush=True)
+        dndz = Table.read(
+            fname, format="ascii", header_start=0, data_start=1
+        )
+        z_mid = dndz["zmin"] + (dndz["zmax"] - dndz["zmin"]) / 2
+        nz = dndz[f"bin_{self.zbin + 1}_combined"]
+        return {"z_mid": z_mid, "nz": nz}
+
     def get_nz(self, dz=0):
         """
         Computes the redshift distribution of sources.  Then, it shifts the
@@ -255,14 +252,8 @@ class MapperDESILRG(MapperBase):
             [z, nz] (Array)
         """
         if self.dndz is None:
-            fname = self.config["file_dndz"]
-            print(f"Reading dndz for zbin {self.zbin} from", fname, flush=True)
-            dndz = Table.read(
-                fname, format="ascii", header_start=0, data_start=1
-            )
-            z_mid = dndz["zmin"] + (dndz["zmax"] - dndz["zmin"]) / 2
-            nz = dndz[f"bin_{self.zbin + 1}_combined"]
-            self.dndz = {"z_mid": z_mid, "nz": nz}
+            fn = f'{self.map_name}_dndz.npz'
+            self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz)
 
     def _get_alpha(self):
@@ -407,28 +398,30 @@ class MapperDESILRG(MapperBase):
 
         return randoms
 
+    def _get_weight_col_name(self):
+        return f"weight_pzbin{self.zbin + 1}"
+
     def get_randoms_maps(self):
         if self.randoms_maps["n"] is not None:
             return self.randoms_maps
 
         list_randoms = self._get_list_randoms()
-        npix = hp.nside2npix(self.nside)
 
-        randoms_maps = np.zeros((3, npix))
+        randoms_maps = np.zeros((3, self.npix))
 
         # Hack to remove the density definition from the randoms map name
         map_name = self.map_name.replace("_densdefZhou2023", "")
 
-        # TODO: consider if I want to save the sum of all maps. Problem, it
+        # TODO: consider if we want to save the sum of all maps. Problem, it
         # makes the code a bit more complex and it's difficult to know which
         # randoms when into the map.
         for base_name in list_randoms:
-            weight_col = f"weight_pzbin{self.zbin + 1}"
+            weight_col = self._get_weight_col_name()
 
             def f():
                 randoms = self.get_clean_randoms_with_weights(base_name)
                 w = np.array(randoms[weight_col])
-                map_ngal = np.zeros((3, npix))
+                map_ngal = np.zeros((3, self.npix))
                 for power in [0, 1, 2]:
                     map_ngal[power] = get_map_from_points(
                         randoms,
@@ -547,7 +540,7 @@ class MapperDESILRG(MapperBase):
             linear_coeffs = yaml.safe_load(f)
 
         key_weight = "weight"
-        if ("no_ebv" in weights_path) or (self.cuts["max_ebv"] is None):
+        if ("no_ebv" in weights_path):
             key_weight = "weight_noebv"
 
         weights = {}
@@ -566,10 +559,13 @@ class MapperDESILRG(MapperBase):
     def _load_full_randoms(self, base_name):
         random_path = self._randoms_path
         rand_file = os.path.join(random_path, f"{base_name}.fits")
-        rand_mask_name = f"{base_name}-lrgmask_v1.1.fits.gz"
-        lrgmask_file = os.path.join(
-            self.config["randoms_lrgmask_path"], rand_mask_name
-        )
+        if "randoms_lrgmask_path" in self.config:
+            rand_mask_name = f"{base_name}-lrgmask_v1.1.fits.gz"
+            lrgmask_file = os.path.join(
+                self.config["randoms_lrgmask_path"], rand_mask_name
+            )
+        else:
+            lrgmask_file = None
         downloaded = False
 
         # Check if the randoms file exists
@@ -618,13 +614,14 @@ class MapperDESILRG(MapperBase):
             flush=True,
         )
 
-        print(
-            f"[{base_name}] Loading lrgmask from {lrgmask_file}...",
-            flush=True,
-        )
+        if lrgmask_file is not None:
+            print(
+                f"[{base_name}] Loading lrgmask from {lrgmask_file}...",
+                flush=True,
+            )
 
-        lrgmask = Table(fitsio.read(lrgmask_file))
-        randoms = hstack([randoms, lrgmask])
+            lrgmask = Table(fitsio.read(lrgmask_file))
+            randoms = hstack([randoms, lrgmask])
 
         return randoms, downloaded
 

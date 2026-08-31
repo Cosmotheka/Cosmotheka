@@ -365,10 +365,10 @@ class Cl(ClBase):
         fname = os.path.join(self.outdir,
                              f'{spin_tag}_{tag}__{mask1}__{mask2}.fits')
 
-        w = nmt.NmtWorkspace()
         if (not self.recompute_mcm) and os.path.isfile(fname):
-            tools.read_wsp(w, fname, read_unbinned_MCM=read_unbinned_MCM)
-            if w.wsp is not None:
+            w = tools.read_wsp(fname, False,
+                               read_unbinned_MCM=read_unbinned_MCM)
+            if w is not None:
                 return w
 
         l_toeplitz, l_exact, dl_band = self.data.check_toeplitz('cls')
@@ -381,9 +381,10 @@ class Cl(ClBase):
         else:
             f1, f2 = self.get_nmt_fields(use_maps=use_maps)
 
-        w.compute_coupling_matrix(f1, f2, self.b,
-                                  l_toeplitz=l_toeplitz, l_exact=l_exact,
-                                  dl_band=dl_band)
+        w = nmt.NmtWorkspace.from_fields(f1, f2, self.b,
+                                         l_toeplitz=l_toeplitz,
+                                         l_exact=l_exact,
+                                         dl_band=dl_band)
         tools.save_wsp(w, fname)
         self.recompute_mcm = False
 

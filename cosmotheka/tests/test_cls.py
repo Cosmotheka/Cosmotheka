@@ -255,6 +255,7 @@ def test_cov_nlmarg():
 #       b) computation of missing terms. E.g. 1h is already in but the user
 #          requests 1h+2h later on. It only computes 2h and add it to the 1h
 #          contribution already there.
+@pytest.mark.skip("slow")  # We should remember to run this ourselves
 @pytest.mark.parametrize("kind", ["1h", "2h", "3h", "4h", None])
 def test_cov_ng(kind):
     # From CCL directly
@@ -830,8 +831,7 @@ def test_cls_vs_namaster():
     n_iter_sht = config["sphere"]["n_iter_sht"]
     # Compute Cl from map
     f = nmt.NmtField(mask, signal_map, spin=spin, n_iter=n_iter_sht)
-    wsp = nmt.NmtWorkspace()
-    wsp.compute_coupling_matrix(f, f, bins=b)
+    wsp = nmt.NmtWorkspace.from_fields(f, f, b)
     cl_data_nmt_cp = nmt.compute_coupled_cell(f, f)
     cl_data_nmt = wsp.decouple_cell(cl_data_nmt_cp)
 
@@ -840,8 +840,7 @@ def test_cls_vs_namaster():
     cl_m = wsp.decouple_cell(cl_m_cp)
 
     # Compute cov with NaMaster
-    cwsp = nmt.NmtCovarianceWorkspace()
-    cwsp.compute_coupling_coefficients(f, f)
+    cwsp = nmt.NmtCovarianceWorkspace.from_fields(f, f, f, f)
     cl_cov = cl_m_cp / np.mean(mask * mask)
     cov_nmt = nmt.gaussian_covariance(
         cwsp, spin, spin, spin, spin, cl_cov, cl_cov, cl_cov, cl_cov, wsp

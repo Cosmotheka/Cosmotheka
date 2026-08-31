@@ -1,0 +1,6 @@
+mapper_class: 'MapperQuaia'
+mask_name: 'MaskQuaia3bin1'
+data_catalog: /mnt/extraspace/damonge/Datasets/Quaia/quaia_G20.5.fits
+selection_C: /mnt/extraspace/damonge/Datasets/Quaia/selection_function_NSIDE64_G20.5_zsplit3bin1.fits
+z_edges: [1.0, 2.3]
+path_rerun: /mnt/extraspace/damonge/Datasets/Quaia/cosmotheka_reruns

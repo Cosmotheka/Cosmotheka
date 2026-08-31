@@ -17,6 +17,7 @@ class MapperQuaia(MapperBase):
         self.z_edges = config.get('z_edges', [0, 4.5])
         self.zbin_name = 'z%.3lf_%.3lf' % (self.z_edges[0], self.z_edges[1])
         self.z_name = config.get("z_name", "redshift_quaia")
+        self.map_name += f'_{self.zbin_name}'
 
         self.cat_data = None
         self.npix = hp.nside2npix(self.nside)
@@ -48,7 +49,7 @@ class MapperQuaia(MapperBase):
             catalog (Array)
         """
         if self.cat_data is None:
-            fn = f'{self.map_name}_{self.zbin_name}_cat.fits'
+            fn = f'{self.map_name}_cat.fits'
             self.cat_data = self._rerun_read_cycle(fn, 'FITSTable',
                                                    self._get_catalog)
         return self.cat_data
@@ -117,7 +118,7 @@ class MapperQuaia(MapperBase):
             [z, nz] (Array)
         """
         if self.dndz is None:
-            fn = f'{self.map_name}_{self.zbin_name}_dndz.npz'
+            fn = f'{self.map_name}_dndz.npz'
             self.dndz = self._rerun_read_cycle(fn, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz)
 
