@@ -105,13 +105,13 @@ def test_get_cl_coupled(cls, mode):
                                       (xc.mappers.MapperP18SMICA, 'SMICA'),
                                       (xc.mappers.MapperCIBLenz, 'CIBLenz'),
                                       (xc.mappers.MapperSPT, 'SPT')])
-def test_get_cls_covar_coupled(cls, mode):
+def test_get_cls_covar(cls, mode):
     conf = get_config(mode)
     conf_ref = get_config('base')
     conf['file_map'] = 'cosmotheka/tests/data/map_auto_test.fits'
     m = cls(conf)
     mask = m.get_mask()
-    cls_cov = m.get_cls_covar_coupled()
+    cls_cov = m.get_cls_covar()
     m1 = hp.read_map(conf_ref['file_hm1'])
     m2 = hp.read_map(conf_ref['file_hm2'])
     mc = hp.read_map(conf['file_map'])
@@ -119,10 +119,11 @@ def test_get_cls_covar_coupled(cls, mode):
     m1 *= ps_mask
     m2 *= ps_mask
     mc *= ps_mask
-    cls_bm = {'cross': hp.anafast(mc*mask, mc*mask, iter=0),
-              'auto_11': hp.anafast(m1*mask, m1*mask, iter=0),
-              'auto_12': hp.anafast(m1*mask, m2*mask, iter=0),
-              'auto_22': hp.anafast(m2*mask, m2*mask, iter=0)}
+    wawb = np.mean(mask**2)
+    cls_bm = {'cross': hp.anafast(mc*mask, mc*mask, iter=0)/wawb,
+              'auto_11': hp.anafast(m1*mask, m1*mask, iter=0)/wawb,
+              'auto_12': hp.anafast(m1*mask, m2*mask, iter=0)/wawb,
+              'auto_22': hp.anafast(m2*mask, m2*mask, iter=0)/wawb}
     for k in cls_bm.keys():
         cl = cls_cov[k][0]
         cl_bm = cls_bm[k]

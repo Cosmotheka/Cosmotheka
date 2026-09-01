@@ -178,13 +178,14 @@ class MapperDummy(MapperBase):
             self.cl_coupled += self.custom_offset
         return self.cl_coupled
 
-    def get_cls_covar_coupled(self):
+    def get_cls_covar(self):
         if self.cls_cov is None:
-            clc = self.get_cl_coupled()
-            self.cls_cov = {'cross': clc-self.custom_offset,
-                            'auto_11': clc,
-                            'auto_12': clc-self.custom_offset,
-                            'auto_22': clc}
+            fld = self.get_nmt_field()
+            clcov = nmt.get_iNKA_cell(fld, fld)
+            self.cls_cov = {'cross': clcov-self.custom_offset,
+                            'auto_11': clcov,
+                            'auto_12': clcov-self.custom_offset,
+                            'auto_22': clcov}
         return self.cls_cov
 
     def get_dtype(self):

@@ -13,7 +13,7 @@ class MapperPlanckBase(MapperBase):
         self._get_Planck_defaults(config)
 
     def _get_Planck_defaults(self, config):
-        # Creates instances of common elements \
+        # Creates instances of common elements
         # between the different Planck mappers.
 
         self._get_defaults(config)
@@ -46,14 +46,14 @@ class MapperPlanckBase(MapperBase):
         return signal_map
 
     def _get_mask(self):
-        # Returns the mask of the mapper. \
-        # if the mapper doesn't have a base mask \
-        # a full sky mask is created. \
-        # If the mapper is equipped with a \
-        # galactic plane mask, the galactic plane and \
-        # the base masks are multiplied. \
-        # If the mapper is equipped with a \
-        # point source mask, the point source and \
+        # Returns the mask of the mapper.
+        # if the mapper doesn't have a base mask
+        # a full sky mask is created.
+        # If the mapper is equipped with a
+        # galactic plane mask, the galactic plane and
+        # the base masks are multiplied.
+        # If the mapper is equipped with a
+        # point source mask, the point source and
         # the base masks are multiplied.
 
         msk = None
@@ -109,7 +109,7 @@ class MapperPlanckBase(MapperBase):
         return self.hm1_map, self.hm2_map
 
     def _get_diff_map(self):
-        # Substracts the two half mission maps \
+        # Substracts the two half mission maps
         # of the mapper.
 
         if self.diff_map is None:
@@ -126,8 +126,8 @@ class MapperPlanckBase(MapperBase):
 
     def get_cl_coupled(self):
         """
-        Uses the half mission maps to \
-        estimate the coupled signal power \
+        Uses the half mission maps to
+        estimate the coupled signal power
         spectrum of the mapper.
 
         Returns:
@@ -140,16 +140,15 @@ class MapperPlanckBase(MapperBase):
             self.cl_coupled = nmt.compute_coupled_cell(hm1_f, hm2_f)
         return self.cl_coupled
 
-    def get_cls_covar_coupled(self):
+    def get_cls_covar(self):
         """
-        Uses the half mission maps to \
-        estimate the coupled covariance matrix of the \
-        power spectrum of the coadded map as \
-        well as the half mission maps cross- \
-        and auto-correlation.
+        Uses the half mission maps to calculate the power spectra
+        needed to calculate power spectrum covariances involving
+        the auto-correlation of this mapper.
 
         Returns:
-            cl_coupled (Array)
+            cls_cov (dict): Dictionary containing the necessary
+            power spectra.
         """
         if self.cls_cov is None:
             self.signal_map = self.get_signal_map()
@@ -157,10 +156,10 @@ class MapperPlanckBase(MapperBase):
             coadd_f = self._get_nmt_field(signal=self.signal_map)
             hm1_f = self._get_nmt_field(signal=self.hm1_map)
             hm2_f = self._get_nmt_field(signal=self.hm2_map)
-            cl_cc = nmt.compute_coupled_cell(coadd_f, coadd_f)
-            cl_11 = nmt.compute_coupled_cell(hm1_f, hm1_f)
-            cl_12 = nmt.compute_coupled_cell(hm1_f, hm2_f)
-            cl_22 = nmt.compute_coupled_cell(hm2_f, hm2_f)
+            cl_cc = nmt.get_iNKA_cell(coadd_f, coadd_f)
+            cl_11 = nmt.get_iNKA_cell(hm1_f, hm1_f)
+            cl_12 = nmt.get_iNKA_cell(hm1_f, hm2_f)
+            cl_22 = nmt.get_iNKA_cell(hm2_f, hm2_f)
             self.cls_cov = {'cross': cl_cc,
                             'auto_11': cl_11,
                             'auto_12': cl_12,
