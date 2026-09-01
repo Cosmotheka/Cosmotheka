@@ -13,56 +13,6 @@ def _is_catalog(f):
     return isinstance(f, nmt.NmtFieldCatalog)
 
 
-def get_wawb_general(fla, flb):
-    """ Computes <w_a w_b> = fsky of the product of the two masks.
-    for general fields (both catalogues and maps, regardless of
-    pixelisation). This is based on part of the code in the
-    NaMaster function `get_iNKA_cell`. Eventually this function should
-    be in NaMaster.
-
-    Parameters
-    ----------
-    fla: NmtField
-        First field
-    flb: NmtField
-        Second field
-
-    Return
-    ------
-    wawb: float
-        The product of the two masks.
-    """
-    if not fla.is_compatible(flb, strict=False):
-        raise ValueError("Fields have incompatible pixelizations")
-
-    # 1. Compute fsky as the mean of the mask product.
-
-    # If both fields are compatible at the map level, just take
-    # the product of their maps and average. Otherwise use
-    # Parseval's theorem and do it from their harmonic spectrum.
-    use_map_product = fla.is_compatible(flb)
-
-    if use_map_product:
-        wawb = np.mean(fla.get_mask()*flb.get_mask())
-    else:
-        lmax = fla.ainfo_mask.lmax
-        walm = fla.get_mask_alms()
-        wblm = flb.get_mask_alms()
-        clw = hp.alm2cl(walm, wblm, lmax=lmax)
-        ls = np.arange(lmax+1)
-        # Correct for catalogs
-        if _is_catalog(fla) and _is_catalog(flb):
-            phi_a = 1 if fla.mask is not None else fla.get_cloud_kernel(lmax)
-            phi_b = 1 if flb.mask is not None else flb.get_cloud_kernel(lmax)
-            # Subtract shot noise
-            if fla is flb:
-                clw = clw - fla.Nw
-            # Multiply by kernels
-            clw = clw * phi_a * phi_b
-        wawb = np.sum((2*ls+1)*clw)/(4*np.pi)
-    return wawb
-
-
 class ClBase():
     """
     ClBase class. It contains the basic and common methods for data and
@@ -96,6 +46,59 @@ class ClBase():
         self.ell = None
         self.cl = None
         self.cl_cp = None
+
+    def get_wawb_general(self, fla, flb):
+        """ Computes <w_a w_b> = fsky of the product of the two masks.
+        for general fields (both catalogues and maps, regardless of
+        pixelisation). This is based on part of the code in the
+        NaMaster function `get_iNKA_cell`. Eventually this function should
+        be in NaMaster.
+
+        Parameters
+        ----------
+        fla: NmtField
+            First field
+        flb: NmtField
+            Second field
+
+        Return
+        ------
+        wawb: float
+            The product of the two masks.
+        """
+        if not fla.is_compatible(flb, strict=False):
+            raise ValueError("Fields have incompatible pixelizations")
+
+        # 1. Compute fsky as the mean of the mask product.
+
+        # If both fields are compatible at the map level, just take
+        # the product of their masks and average. Otherwise use
+        # Parseval's theorem and do it from their harmonic spectrum.
+        use_map_product = fla.is_compatible(flb)
+
+        if use_map_product:
+            wawb = np.mean(fla.get_mask()*flb.get_mask())
+        else:
+            lmax = fla.ainfo_mask.lmax
+            walm = fla.get_mask_alms()
+            wblm = flb.get_mask_alms()
+            clw = hp.alm2cl(walm, wblm, lmax=lmax)
+            ls = np.arange(lmax+1)
+            # Correct for catalogs
+            if _is_catalog(fla) and _is_catalog(flb):
+                # Obtain the cloud kernels for both masks
+                # (see Eq. 21 of 2607.14843)
+                phi_a = (1 if fla.mask is not None
+                         else fla.get_cloud_kernel(lmax))
+                phi_b = (1 if flb.mask is not None
+                         else flb.get_cloud_kernel(lmax))
+                # Subtract shot noise
+                if fla is flb:
+                    clw = clw - fla.Nw
+                # Multiply by kernels
+                clw = clw * phi_a * phi_b
+            wawb = np.sum((2*ls+1)*clw)/(4*np.pi)
+        return wawb
 
     def get_outdir(self, subdir=''):
         """
@@ -520,7 +523,7 @@ class Cl(ClBase):
             w = self.get_workspace()
             wins = w.get_bandpower_windows()
             # TODO: for full NaMaster v3 version remove f1c, f2c and use f1, f2 instead  # noqa: E501
-            mean_mamb = get_wawb_general(f1c, f2c)
+            mean_mamb = self.get_wawb_general(f1c, f2c)
 
             # Compute power spectrum
             # If auto-correlation, compute noise and,
@@ -615,7 +618,7 @@ class Cl(ClBase):
                 if n_o == 1:
                     # Standard mapper, we can use the general <wawb> calculator
                     fkappa = nmt.NmtField(w_k**n_k, None, spin=0)
-                    mean_maNmbN = get_wawb_general(fkappa, fother)
+                    mean_maNmbN = self.get_wawb_general(fkappa, fother)
                 else:
                     w_o = mother.get_mask()
                     mean_maNmbN = np.mean(w_k**n_k*w_o**n_o)
