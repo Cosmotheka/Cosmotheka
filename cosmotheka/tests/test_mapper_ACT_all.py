@@ -37,7 +37,7 @@ def test_get_spin(cls, spin):
                                      (xc.mappers.MapperACTDR6tSZ,
                                       'cmb_tSZ'),
                                      (xc.mappers.MapperACTCMB,
-                                      'cmb_kSZ')])
+                                      'cmb_temperature')])
 def test_get_dtype(cls, typ):
     m = cls(get_config())
     assert m.get_dtype() == typ
