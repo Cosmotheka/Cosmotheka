@@ -40,6 +40,8 @@ class MapperWIxSC(MapperBase):
         - fc_0: `1.0` / `1.0` / `1.0` / `1.0` / `1.0`
     """
     map_name = 'WIxSC'
+    dtype = 'galaxy_density'
+    spin = 0
 
     def __init__(self, config):
         self._get_defaults(config)
@@ -307,9 +309,3 @@ class MapperWIxSC(MapperBase):
                 N_ell = np.mean(cl[self.lmin_nl_from_data:2*self.nside])
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
-
-    def get_dtype(self):
-        return 'galaxy_density'
-
-    def get_spin(self):
-        return 0

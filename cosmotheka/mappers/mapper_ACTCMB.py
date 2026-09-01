@@ -22,8 +22,4 @@ class MapperACTCMB(MapperACTCompSept):
 
         - lmax: `6000`
     """
-    def get_dtype(self):
-        return 'cmb_kSZ'
-
-    def get_spin(self):
-        return 0
+    dtype = 'cmb_temperature'

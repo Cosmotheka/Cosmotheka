@@ -9,6 +9,8 @@ class MapperQuaia(MapperBase):
     """
     """
     map_name = 'Quaia'
+    spin = 0
+    dtype = 'galaxy_density'
 
     def __init__(self, config):
         self._get_defaults(config)
@@ -145,9 +147,3 @@ class MapperQuaia(MapperBase):
             nl = np.mean(mask) / nmean_srad
             self.nl_coupled = nl * np.ones((1, 3*self.nside))
         return self.nl_coupled
-
-    def get_dtype(self):
-        return 'galaxy_density'
-
-    def get_spin(self):
-        return 0

@@ -10,6 +10,8 @@ class MapperACTDR6tSZ(MapperACTCompSept):
     ACT DR6 Compton-y mapper class.
     Maps are convolved with a 1.6arcmin Gaussian beam.
     """
+    dtype = 'cmb_tSZ'
+
     def __init__(self, config):
         super().__init__(config)
         self.deproj_type = config.get("deproj_type", None)
@@ -90,9 +92,3 @@ class MapperACTDR6tSZ(MapperACTCompSept):
         )
         msk *= src_mask
         return msk
-
-    def get_dtype(self):
-        return 'cmb_tSZ'
-
-    def get_spin(self):
-        return 0

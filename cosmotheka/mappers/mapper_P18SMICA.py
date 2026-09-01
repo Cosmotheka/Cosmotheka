@@ -28,6 +28,7 @@ class MapperP18SMICA(MapperPlanckBase):
         - path_rerun: `'.../Datasets/Planck_SMICA/xcell_runs'`
     """
     map_name = "P18SMICA"
+    dtype = 'cmb_temperature'
 
     def __init__(self, config):
         self._get_Planck_defaults(config)
@@ -64,14 +65,3 @@ class MapperP18SMICA(MapperPlanckBase):
         hm2_map = hp.ud_grade(hm2_map, nside_out=self.nside)
 
         return np.array([hm1_map, hm2_map])
-
-    def get_dtype(self):
-        """
-        Returns the type of the mapper. \
-
-        Args:
-            None
-        Returns:
-            mapper_type (String)
-        """
-        return 'cmb_temperature'

@@ -13,11 +13,16 @@ class MapperBase(object):
     """
     # map_name is the name that will be used for rerun signal map files.
     map_name = None
-
+    spin = -1
     masked_on_input = False  # If True, the mapper's signal map is masked
+    dtype = None
 
     def __init__(self, config):
         self._get_defaults(config)
+        if self.spin < 0:
+            raise ValueError("Mapper spin must be set in child class")
+        if self.dtype is None:
+            raise ValueError("Mapper dtype must be set in child class")
 
     def _get_defaults(self, config):
         """
@@ -313,3 +318,21 @@ class MapperBase(object):
             f"{self.__class__.__name__} does not support "
             "catalog-based NmtFields."
             )
+
+    def get_spin(self):
+        """
+        Returns the spin of the mapper's signal map.
+
+        Returns:
+            spin (int): mapper's signal map spin.
+        """
+        return self.spin
+
+    def get_dtype(self):
+        """
+        Returns the data type of this mapper.
+
+        Returns:
+            dtype (str): mapper's signal map data type.
+        """
+        return self.dtype

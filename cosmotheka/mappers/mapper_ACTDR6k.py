@@ -39,6 +39,8 @@ class MapperACTDR6k(MapperBase):
     """
 
     map_name = "ACT"
+    spin = 0
+    dtype = "cmb_convergence"
 
     def __init__(self, config):
         self._get_defaults(config)
@@ -94,12 +96,6 @@ class MapperACTDR6k(MapperBase):
             nl *= np.mean(self.get_mask() ** 2)
             self.nl_coupled = np.array([nl])
         return self.nl_coupled
-
-    def get_dtype(self):
-        return "cmb_convergence"
-
-    def get_spin(self):
-        return 0
 
     # TODO: Create a kappa mapper class to avoid repetition.
     def _get_sims_fnames(self):

@@ -24,6 +24,8 @@ class MapperKiDS1000(MapperBase):
         - path_rerun: `path+'xcell_runs'`
     """
     map_name = 'KiDS1000'
+    dtype = 'galaxy_shear'
+    spin = 2
 
     def __init__(self, config):
 
@@ -273,9 +275,3 @@ class MapperKiDS1000(MapperBase):
             z, nz = np.loadtxt(self.config['file_nz'], unpack=True)[:2]
             self.dndz = {'z_mid': z, 'nz': nz}
         return self._get_shifted_nz(dz)
-
-    def get_dtype(self):
-        return 'galaxy_shear'
-
-    def get_spin(self):
-        return 2

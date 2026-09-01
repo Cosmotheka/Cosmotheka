@@ -188,12 +188,6 @@ class MapperDummy(MapperBase):
                             'auto_22': clcov}
         return self.cls_cov
 
-    def get_dtype(self):
-        return self.dtype
-
-    def get_spin(self):
-        return self.spin
-
     def _get_sims_fnames(self):
         rec_sims_path = self.config['sims_rec_path']
         input_sims_path = self.config['sims_in_path']

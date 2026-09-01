@@ -32,6 +32,8 @@ class MapperDELS(MapperBase):
         - bias: `1.13` / v1.40` / `1.35` / `1.77`
     """
     map_name = 'DELS'
+    spin = 0
+    dtype = 'galaxy_density'
 
     def __init__(self, config):
         self._get_defaults(config)
@@ -287,9 +289,3 @@ class MapperDELS(MapperBase):
             N_ell = np.mean(mask) / N_mean_srad
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
-
-    def get_dtype(self):
-        return 'galaxy_density'
-
-    def get_spin(self):
-        return 0

@@ -13,6 +13,8 @@ class MapperSDSS(MapperBase):
     """
     # The SDSS_name passed in the configuration file will be added to map_name
     map_name = 'SDSS'
+    spin = 0
+    dtype = 'galaxy_density'
 
     def __init__(self, config):
         raise NotImplementedError("Do not use base class")
@@ -181,9 +183,3 @@ class MapperSDSS(MapperBase):
         # inside the chosen redshift bin.
         return cat[(cat['Z'] >= self.z_edges[0]) &
                    (cat['Z'] < self.z_edges[1])]
-
-    def get_dtype(self):
-        return 'galaxy_density'
-
-    def get_spin(self):
-        return 0

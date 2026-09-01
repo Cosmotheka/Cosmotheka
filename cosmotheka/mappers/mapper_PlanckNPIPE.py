@@ -28,6 +28,7 @@ class MapperPlanckNPIPE(MapperPlanckBase):
         - path_rerun: `'.../Datasets/Planck_SMICA/xcell_runs'`
     """
     map_name = "PlanckNPIPE"
+    dtype = 'cmb_temperature'
 
     def __init__(self, config):
         self._get_Planck_defaults(config)
@@ -109,14 +110,3 @@ class MapperPlanckNPIPE(MapperPlanckBase):
         signal_map = self._rotate_map(signal_map)
 
         return np.array([signal_map])
-
-    def get_dtype(self):
-        """
-        Returns the type of the mapper. \
-
-        Args:
-            None
-        Returns:
-            mapper_type (String)
-        """
-        return 'cmb_temperature'

@@ -41,6 +41,8 @@ class MapperROSATXray(MapperBase):
         - mapper_class: `'MapperROSATXray'`
     """
     map_name = 'ROSATXray'
+    dtype = 'generic'
+    spin = 0
 
     def __init__(self, config):
         self._get_defaults(config)
@@ -180,9 +182,3 @@ class MapperROSATXray(MapperBase):
             N_mean = cr_mean * m2_ie / pixA
             self.nl_coupled = N_mean * np.ones([1, 3*self.nside])
         return self.nl_coupled
-
-    def get_dtype(self):
-        return 'generic'
-
-    def get_spin(self):
-        return 0

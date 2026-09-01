@@ -25,6 +25,8 @@ class MapperDESY1gc(MapperBase):
         - bias: `1.48`/`1.76`/`1.78`/`2.19`/`2.23`
     """
     map_name = 'DESY1gc'
+    spin = 0
+    dtype = 'galaxy_density'
 
     def __init__(self, config):
         self._get_defaults(config)
@@ -131,9 +133,3 @@ class MapperDESY1gc(MapperBase):
             N_ell = correction * np.mean(mask) / N_mean_srad
             self.nl_coupled = N_ell * np.ones((1, 3*self.nside))
         return self.nl_coupled
-
-    def get_dtype(self):
-        return 'galaxy_density'
-
-    def get_spin(self):
-        return 0

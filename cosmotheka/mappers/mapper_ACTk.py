@@ -23,6 +23,8 @@ class MapperACTk(MapperACTBase):
         - lmax: `6000`
         - mask_power: `2`
     """
+    dtype = 'cmb_convergence'
+
     def __init__(self, config):
         self._get_ACT_defaults(config)
         self.mask_power = config.get('mask_power', 2)
@@ -58,9 +60,3 @@ class MapperACTk(MapperACTBase):
     def get_nl_coupled(self):
         # raise NotImplementedError("No noise model for the ACT maps")
         return np.zeros([1, 3*self.nside])
-
-    def get_dtype(self):
-        return 'cmb_convergence'
-
-    def get_spin(self):
-        return 0

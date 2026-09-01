@@ -37,6 +37,8 @@ class MapperHSCDR1wl(MapperBase):
         - path_rerun: `'.../Datasets/HSC_DR1/lite/'`
     """
     map_name = 'HSCDR1wl'
+    dtype = 'galaxy_shear'
+    spin = 2
 
     def __init__(self, config):
         self._get_defaults(config)
@@ -289,9 +291,3 @@ class MapperHSCDR1wl(MapperBase):
             fname = f'{self.map_name}_nz.npz'
             self.dndz = self._rerun_read_cycle(fname, 'NPZ', self._get_nz)
         return self._get_shifted_nz(dz)
-
-    def get_dtype(self):
-        return 'galaxy_shear'
-
-    def get_spin(self):
-        return 2

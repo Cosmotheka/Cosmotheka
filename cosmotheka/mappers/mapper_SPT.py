@@ -26,6 +26,7 @@ class MapperSPT(MapperPlanckBase):
         - path_rerun: `".../Datasets/SPT/xcell_runs"`
     """
     map_name = 'SPT'
+    dtype = 'cmb_tSZ'
 
     def __init__(self, config):
         self._get_Planck_defaults(config)
@@ -54,6 +55,3 @@ class MapperSPT(MapperPlanckBase):
         hm2_map = hp.ud_grade(hm2_map, nside_out=self.nside)
 
         return np.array([hm1_map, hm2_map])
-
-    def get_dtype(self):
-        return 'cmb_tSZ'
