@@ -13,7 +13,7 @@ class MapperPlanckBase(MapperBase):
         self._get_Planck_defaults(config)
 
     def _get_Planck_defaults(self, config):
-        # Creates instances of common elements \
+        # Creates instances of common elements
         # between the different Planck mappers.
 
         self._get_defaults(config)
@@ -46,14 +46,14 @@ class MapperPlanckBase(MapperBase):
         return signal_map
 
     def _get_mask(self):
-        # Returns the mask of the mapper. \
-        # if the mapper doesn't have a base mask \
-        # a full sky mask is created. \
-        # If the mapper is equipped with a \
-        # galactic plane mask, the galactic plane and \
-        # the base masks are multiplied. \
-        # If the mapper is equipped with a \
-        # point source mask, the point source and \
+        # Returns the mask of the mapper.
+        # if the mapper doesn't have a base mask
+        # a full sky mask is created.
+        # If the mapper is equipped with a
+        # galactic plane mask, the galactic plane and
+        # the base masks are multiplied.
+        # If the mapper is equipped with a
+        # point source mask, the point source and
         # the base masks are multiplied.
 
         msk = None
@@ -109,7 +109,7 @@ class MapperPlanckBase(MapperBase):
         return self.hm1_map, self.hm2_map
 
     def _get_diff_map(self):
-        # Substracts the two half mission maps \
+        # Substracts the two half mission maps
         # of the mapper.
 
         if self.diff_map is None:
@@ -126,8 +126,8 @@ class MapperPlanckBase(MapperBase):
 
     def get_cl_coupled(self):
         """
-        Uses the half mission maps to \
-        estimate the coupled signal power \
+        Uses the half mission maps to
+        estimate the coupled signal power
         spectrum of the mapper.
 
         Returns:
@@ -142,12 +142,12 @@ class MapperPlanckBase(MapperBase):
 
     def get_cls_covar(self):
         """
-        Uses the half mission maps to calculate the power spectra \
-        needed to calculate power spectrum covariances involving \
+        Uses the half mission maps to calculate the power spectra
+        needed to calculate power spectrum covariances involving
         the auto-correlation of this mapper.
 
         Returns:
-            cls_cov (dict): Dictionary containing the necessary \
+            cls_cov (dict): Dictionary containing the necessary
             power spectra.
         """
         if self.cls_cov is None:

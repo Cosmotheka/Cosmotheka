@@ -881,7 +881,7 @@ class Cov:
             if aa_data:
                 _, cla1b1, cla1b2, cla2b2 = \
                     self.clA1B1.get_ell_cls_cov_auto()
-                cla2b1 = cla1b2
+                cla2b1 = cla1b2.copy()
             else:
                 cla1b1 = self._get_cl_for_cov(self.clA1B1, self.clfid_A1B1)
                 cla1b2 = self._get_cl_for_cov(self.clA1B2, self.clfid_A1B2)
