@@ -33,7 +33,7 @@ tracers:
   KiDS1000__4: !include input/tracers_config/KiDS1000__4.yml
   NVSS: !include input/tracers_config/NVSS.yml
   Planck__CMB18: !include input/tracers_config/Planck__CMB18.yml
-  Planck__kappa18: !include input/tracers_config/Planck__kappa18.yml
+  Planck__kappaPR4: !include input/tracers_config/Planck__kappaPR4.yml
   Planck__tSZ15: !include input/tracers_config/Planck__tSZ15.yml
   ROSAT: !include input/tracers_config/ROSAT.yml
   SDSS__CMASS: !include input/tracers_config/SDSS__CMASS.yml

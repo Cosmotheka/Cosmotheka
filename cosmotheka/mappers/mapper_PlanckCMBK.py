@@ -77,23 +77,6 @@ class MapperPlanckCMBK(MapperBase):
             self.nl_coupled = np.array([nl])
         return self.nl_coupled
 
-    def get_cl_fiducial(self):
-        """
-        Returns the signal power spectrum \
-        of the mapper.
-
-        Returns:
-            cl_fid (Array)
-        """
-        if self.cl_fid is None:
-            ell = self.get_ell()
-            noise = self._get_noise()
-            cl = noise[2] - noise[1]
-            cl = interp1d(noise[0], cl, bounds_error=False,
-                          fill_value=(cl[0], cl[-1]))(ell)
-            self.cl_fid = np.array([cl])
-        return self.cl_fid
-
     def _get_noise(self):
         # Returns the decoupled noise power spectrum of the \
         # auto-correlation of the covergence map.
@@ -104,8 +87,14 @@ class MapperPlanckCMBK(MapperBase):
         #      Nl+Cl (Array): noise + signal power spectrum] (Array)
 
         if self.noise is None:
-            # Read noise file. Column order is: ['l', 'Nl', 'Nl+Cl']
-            self.noise = np.loadtxt(self.config['file_noise'], unpack=True)
+            fname = self.config.get('file_noise', None)
+            if fname is None:
+                # PR4 doesn't come with a noise Cl file
+                ls = np.arange(3*self.nside)
+                self.noise = np.array([ls, 0*ls, 0*ls])
+            else:
+                # Read noise file. Column order is: ['l', 'Nl', 'Nl+Cl']
+                self.noise = np.loadtxt(fname, unpack=True)
 
         return self.noise
 
@@ -152,8 +141,62 @@ class MapperP18CMBK(MapperPlanckCMBK):
     sim_rec_pattern = 'sim_klm_*.fits'
     sim_in_pattern = 'sky_klm_*.fits'
 
+    def get_cl_fiducial(self):
+        """
+        Returns the signal power spectrum \
+        of the mapper.
+
+        Returns:
+            cl_fid (Array)
+        """
+        if self.cl_fid is None:
+            ell = self.get_ell()
+            noise = self._get_noise()
+            cl = noise[2] - noise[1]
+            cl = interp1d(noise[0], cl, bounds_error=False,
+                          fill_value=(cl[0], cl[-1]))(ell)
+            self.cl_fid = np.array([cl])
+        return self.cl_fid
+
+    def _get_noise(self):
+        # Returns the decoupled noise power spectrum of the \
+        # auto-correlation of the covergence map.
+
+        # Returns:
+        #     [l (Array): multipole list,
+        #      Nl (Array): noise power spectrum,
+        #      Nl+Cl (Array): noise + signal power spectrum] (Array)
+
+        if self.noise is None:
+            # Read noise file. Column order is: ['l', 'Nl', 'Nl+Cl']
+            self.noise = np.loadtxt(self.config['file_noise'], unpack=True)
+
+        return self.noise
+
 
 class MapperPR4CMBK(MapperPlanckCMBK):
     map_name = 'PR4CMBK'
     sim_rec_pattern = 'klm_sim_*_p.fits'
     sim_in_pattern = 'klm_sim_in_*.fits'
+
+    def get_cl_fiducial(self):
+        raise NotImplementedError("Fiducial signal C_ell not provided for "
+                                  "PR4 CMB lensing map.")
+
+    def _get_noise(self):
+        # Returns the decoupled noise power spectrum of the \
+        # auto-correlation of the covergence map.
+
+        # Returns:
+        #     [l (Array): multipole list,
+        #      Nl (Array): noise power spectrum] (Array)
+
+        if self.noise is None:
+            # Read noise file. Single column with Nl at integer ells
+            nl = np.loadtxt(self.config['file_noise'])
+            # Zero nan
+            nl[0] = 0
+            ls = np.arange(len(nl))
+            self.noise = (ls, nl)
+
+        return self.noise
