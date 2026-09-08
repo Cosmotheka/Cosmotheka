@@ -8,7 +8,7 @@ import pymaster as nmt
 from .utils import rotate_mask
 
 
-class MapperP18CMBK(MapperBase):
+class MapperPlanckCMBK(MapperBase):
     """
     Note that this mapper is a child of `MapperBase`, /
     not of `MapperPlanckBase`.
@@ -28,9 +28,12 @@ class MapperP18CMBK(MapperBase):
            Planck_lensing/COM_Lensing-SimMap-inputs_4096_R3.00/'
 
     """
-    map_name = 'P18CMBK'
+    map_name = 'PlanckCMBK'
     dtype = 'cmb_convergence'
     spin = 0
+
+    sim_rec_pattern = None
+    sim_in_pattern = None
 
     def __init__(self, config):
         self._get_defaults(config)
@@ -114,6 +117,9 @@ class MapperP18CMBK(MapperBase):
             rec_sims (List): list of paths to reconstructed simulation maps
             input_sims (List): list of paths to input simulation maps
         """
+        if self.sim_rec_pattern is None:
+            raise NotImplementedError("Do not use base PlanckCMBK class.")
+
         rec_sims_path = self.config['sims_rec_path']
         input_sims_path = self.config['sims_in_path']
 
@@ -121,10 +127,10 @@ class MapperP18CMBK(MapperBase):
         # this might silently mix rec and input sims and spoil the transfer
         # function.
         rec_sims = sorted(
-            glob.glob(rec_sims_path + '/' + 'sim_klm_*.fits')
+            glob.glob(rec_sims_path + '/' + self.sim_rec_pattern)
         )
         input_sims = sorted(
-            glob.glob(input_sims_path + '/' + 'sky_klm_*.fits')
+            glob.glob(input_sims_path + '/' + self.sim_in_pattern)
         )
 
         nrec = len(rec_sims)
@@ -139,3 +145,15 @@ class MapperP18CMBK(MapperBase):
                              "{ninput} input sims.")
 
         return rec_sims, input_sims
+
+
+class MapperP18CMBK(MapperPlanckCMBK):
+    map_name = 'P18CMBK'
+    sim_rec_pattern = 'sim_klm_*.fits'
+    sim_in_pattern = 'sky_klm_*.fits'
+
+
+class MapperPR4CMBK(MapperPlanckCMBK):
+    map_name = 'PR4CMBK'
+    sim_rec_pattern = 'klm_sim_*_p.fits'
+    sim_in_pattern = 'klm_sim_in_*.fits'

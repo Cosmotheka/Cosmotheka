@@ -1,0 +1,10 @@
+mapper_class: MapperPR4CMBK
+file_klm: /mnt/extraspace/damonge/Datasets/Planck_lensing/LensingPR4/PR4_klm_dat_p.fits
+file_mask: /mnt/extraspace/damonge/Datasets/Planck_lensing/LensingPR4/mask.fits
+file_noise: /mnt/extraspace/damonge/Datasets/Planck_lensing/Lensing2018/MV/nlkk.dat 
+mask_aposize: 0.2
+mask_apotype: 'C1'
+mask_name: mask_PR4kappa
+sims_rec_path: '/mnt/extraspace/damonge/Datasets/Planck_lensing/LensingPR4/sims'
+sims_in_path: '/mnt/extraspace/damonge/Datasets/Planck_lensing/LensingPR4/sims'
+path_rerun: '/mnt/extraspace/damonge/Datasets/Planck_lensing/LensingPR4/cosmotheka_runs'

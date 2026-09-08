@@ -17,7 +17,7 @@ from .mapper_BOSS import MapperBOSS
 from .mapper_KV450 import MapperKV450
 from .mapper_KiDS1000 import MapperKiDS1000
 from .mapper_SPT import MapperSPT
-from .mapper_P18CMBK import MapperP18CMBK
+from .mapper_PlanckCMBK import MapperP18CMBK, MapperPR4CMBK
 from .mapper_P15tSZ import MapperP15tSZ
 from .mapper_P18SMICA import MapperP18SMICA
 from .mapper_PlanckNPIPE import MapperPlanckNPIPE
