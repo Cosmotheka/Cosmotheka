@@ -129,9 +129,9 @@ class MapperPlanckCMBK(MapperBase):
 
         # Check that there are the same number of sims
         if len(rec_sims) != len(input_sims):
-            raise ValueError("Number of reconstructed and input sims must be "
-                             "the same. Found {nrec} reconstructed and "
-                             "{ninput} input sims.")
+            raise ValueError(f"Number of reconstructed and input sims must be "
+                             f"the same. Found {nrec} reconstructed and "
+                             f"{ninput} input sims.")
 
         return rec_sims, input_sims
 
