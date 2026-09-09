@@ -28,7 +28,6 @@ class MapperPlanckCMBK(MapperBase):
            Planck_lensing/COM_Lensing-SimMap-inputs_4096_R3.00/'
 
     """
-    map_name = 'PlanckCMBK'
     dtype = 'cmb_convergence'
     spin = 0
 
@@ -76,27 +75,6 @@ class MapperPlanckCMBK(MapperBase):
             nl *= np.mean(self.get_mask()**2.)
             self.nl_coupled = np.array([nl])
         return self.nl_coupled
-
-    def _get_noise(self):
-        # Returns the decoupled noise power spectrum of the \
-        # auto-correlation of the covergence map.
-
-        # Returns:
-        #     [l (Array): multipole list,
-        #      Nl (Array): noise power spectrum,
-        #      Nl+Cl (Array): noise + signal power spectrum] (Array)
-
-        if self.noise is None:
-            fname = self.config.get('file_noise', None)
-            if fname is None:
-                # PR4 doesn't come with a noise Cl file
-                ls = np.arange(3*self.nside)
-                self.noise = np.array([ls, 0*ls, 0*ls])
-            else:
-                # Read noise file. Column order is: ['l', 'Nl', 'Nl+Cl']
-                self.noise = np.loadtxt(fname, unpack=True)
-
-        return self.noise
 
     def _get_sims_fnames(self):
         """
