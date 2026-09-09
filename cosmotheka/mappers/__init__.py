@@ -17,7 +17,7 @@ from .mapper_BOSS import MapperBOSS
 from .mapper_KV450 import MapperKV450
 from .mapper_KiDS1000 import MapperKiDS1000
 from .mapper_SPT import MapperSPT
-from .mapper_P18CMBK import MapperP18CMBK
+from .mapper_PlanckCMBK import MapperP18CMBK, MapperPR4CMBK
 from .mapper_P15tSZ import MapperP15tSZ
 from .mapper_P18SMICA import MapperP18SMICA
 from .mapper_PlanckNPIPE import MapperPlanckNPIPE
@@ -31,7 +31,6 @@ from .mapper_CatWISE import MapperCatWISE
 from .mapper_ROSAT import MapperROSATXray
 from .mapper_dummy import MapperDummy
 from .mapper_Quaia import MapperQuaia
-from .mapper_PlanckPR4CMBK import MapperPlanckPR4CMBK
 from .mapper_DESI_LRG import MapperDESILRG, MapperDESILRGZhou2023
 from .mapper_DESI_BGS import MapperDESIBGS
 from .utils import (
