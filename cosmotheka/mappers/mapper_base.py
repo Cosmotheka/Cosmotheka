@@ -37,7 +37,7 @@ class MapperBase(object):
         self.nside = config['nside']
         self.npix = hp.nside2npix(self.nside)
         self.nmt_field = None
-        self.nmt_cat_field = None
+        self.nmt_field_cov = None
         self.beam = None
         self.custom_auto = False
         # Option introduced to modify the Mode Coupling Matrix
@@ -272,52 +272,130 @@ class MapperBase(object):
                 raise NotImplementedError("Unknown beam type.")
         return self.beam
 
-    def _get_nmt_field(self, signal=None, **kwargs):
+    def _get_nmt_field_maps(self, *, for_cov=False, spin0=False,
+                            signal=None, **kwargs):
+        mask = self.get_mask(**kwargs)
+        beam_eff = self.get_beam()
+        if for_cov:
+            spin = 0 if spin0 else self.spin
+            return nmt.NmtField(mask, None, spin=spin, beam=beam_eff)
+
         if signal is None:
             signal = self.get_signal_map(**kwargs)
-        mask = self.get_mask(**kwargs)
         cont = self.get_contaminants(**kwargs)
-        beam_eff = self.get_beam()
 
         n_iter = kwargs.get('n_iter', 0)
-        return nmt.NmtField(mask, signal, beam=beam_eff,
+        return nmt.NmtField(mask, signal, beam=beam_eff, spin=self.spin,
                             templates=cont, n_iter=n_iter,
                             masked_on_input=self.masked_on_input)
 
-    def get_nmt_field(self, for_cov=False, **kwargs):
+    def _get_nmt_catalog_field_sampled(self, *, spin0=False, **kwargs):
+        pos = self.get_positions(**kwargs)
+        weights = self.get_weights(**kwargs)
+        field = self.get_signal_catalog(**kwargs)
+        lmax = kwargs.get("lmax", 3*self.nside-1)
+        if spin0:
+            # Note that we wil use only one component of the field
+            # to calculate the field's effective shot noise
+            # in the covariance calculation if assuming spin=0.
+            return nmt.NmtFieldCatalog(pos, weights, field[0][None, :],
+                                       lmax=lmax, spin=0, lonlat=True,
+                                       retain_catalog=True)
+        return nmt.NmtFieldCatalog(pos, weights, field,
+                                   lmax=lmax, spin=self.spin,
+                                   lonlat=True, retain_catalog=True)
+
+    def _get_nmt_catalog_field_momentum(self, *, spin0=False,
+                                        is_clustering=False, **kwargs):
+        pos = self.get_positions(**kwargs)
+        weights = self.get_weights(**kwargs)
+        if not is_clustering:
+            field = self.get_signal_catalog(**kwargs)
+        if self.use_random_cat:
+            pos_ran = self.get_random_positions(**kwargs)
+            weights_ran = self.get_random_weights(**kwargs)
+            mask = None
+        else:
+            pos_ran = None
+            weights_ran = None
+            mask = self.get_mask(**kwargs)
+        lmax = kwargs.get("lmax", 3*self.nside-1)
+
+        if spin0:
+            # Note that we wil use only one component of the field
+            # to calculate the field's effective shot noise
+            # in the covariance calculation if assuming spin=0.
+            # Note also that we cannot end up here with a clustering
+            # field. In that case we just reuse the field used for
+            # power spectrum estimation, which is calculated
+            # below outside this if statement.
+            return nmt.NmtFieldCatalogMomentum(pos, weights, field[0][None, :],
+                                               pos_ran, weights_ran, lmax=lmax,
+                                               spin=0, mask=mask, lonlat=True,
+                                               retain_catalog=True)
+        if is_clustering:
+            return nmt.NmtFieldCatalogClustering(
+                pos, weights, pos_ran, weights_ran,
+                lmax=lmax, mask=mask, lonlat=True,
+                retain_catalog=True)
+        else:
+            return nmt.NmtFieldCatalogMomentum(
+                pos, weights, field, pos_ran, weights_ran, lmax=lmax,
+                spin=self.spin, mask=mask, lonlat=True, retain_catalog=True)
+
+    def _get_nmt_field(self, *, for_cov=False, spin0=False,
+                       signal=None, **kwargs):
+        if self.catalog_enabled:
+            if self.catalog_kind == 'sampled':
+                return self._get_nmt_catalog_field_sampled(
+                    spin0=spin0, **kwargs)
+            elif self.catalog_kind == 'momentum':
+                return self._get_nmt_catalog_field_momentum(
+                    spin0=spin0, **kwargs)
+            elif self.catalog_kind == 'clustering':
+                return self._get_nmt_catalog_field_momentum(
+                    is_clustering=True, **kwargs)
+            else:
+                raise ValueError(f"Unknown catalog_kind: {self.catalog_kind}")
+        else:
+            return self._get_nmt_field_maps(for_cov=for_cov, spin0=spin0,
+                                            signal=signal, **kwargs)
+
+    def get_nmt_field(self, *, for_cov=False, spin0=False, **kwargs):
         """
         Returns an instance of Namaster field given a mapper's \
         signal map, mask and beam.
 
         Parameters:
-            for_cov: if True, always use map-based fields. \
+            for_cov: if True, the fields will only contain the information \
+                needed to estimate covariance coupling coefficients.
+            spin0: if True, the spin=0 versions of the fields will be
+                returned.
+            signal: the signal map to use. If None, the default signal map
+                will be used.
 
         Returns:
             nmt_field (:class:`NaMaster.NmtField`): a Namaster \
             field instance. \
         """
-        # Covariance always uses map-based fields
         if for_cov:
+            if (not spin0) or (spin0 and (self.spin == 0)):
+                # In this case we might as well just compute
+                # the standard field and use it for both
+                # covariance and power spectrum estimation.
+                if self.nmt_field is None:
+                    self.nmt_field = self._get_nmt_field(**kwargs)
+                    self.nmt_field_cov = self.nmt_field
+            else:
+                if self.nmt_field_cov is None:
+                    self.nmt_field_cov = self._get_nmt_field(for_cov=True,
+                                                             spin0=spin0,
+                                                             **kwargs)
+            return self.nmt_field_cov
+        else:
             if self.nmt_field is None:
-                self.nmt_field = self._get_nmt_field(signal=None, **kwargs)
+                self.nmt_field = self._get_nmt_field(**kwargs)
             return self.nmt_field
-
-        # Option to use catalog-based fields for Cl estimation
-        if self.catalog_enabled:
-            if self.nmt_cat_field is None:
-                self.nmt_cat_field = self._get_nmt_catalog_field(**kwargs)
-            return self.nmt_cat_field
-
-        # Fall back to map-based fields
-        if self.nmt_field is None:
-            self.nmt_field = self._get_nmt_field(signal=None, **kwargs)
-        return self.nmt_field
-
-    def _get_nmt_catalog_field(self, **kwargs):
-        raise NotImplementedError(
-            f"{self.__class__.__name__} does not support "
-            "catalog-based NmtFields."
-            )
 
     def get_spin(self):
         """
