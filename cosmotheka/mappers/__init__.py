@@ -12,6 +12,7 @@ from .mapper_Planck_base import MapperPlanckBase
 from .mapper_DESY1gc import MapperDESY1gc
 from .mapper_DESY1wl import MapperDESY1wl
 from .mapper_DESY3wl import MapperDESY3wl
+from .mapper_DECADEwl import MapperDECADEwl
 from .mapper_eBOSS import MappereBOSS
 from .mapper_BOSS import MapperBOSS
 from .mapper_KV450 import MapperKV450
