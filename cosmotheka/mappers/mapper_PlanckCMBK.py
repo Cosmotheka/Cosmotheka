@@ -8,7 +8,7 @@ import pymaster as nmt
 from .utils import rotate_mask
 
 
-class MapperP18CMBK(MapperBase):
+class MapperPlanckCMBK(MapperBase):
     """
     Note that this mapper is a child of `MapperBase`, /
     not of `MapperPlanckBase`.
@@ -28,9 +28,11 @@ class MapperP18CMBK(MapperBase):
            Planck_lensing/COM_Lensing-SimMap-inputs_4096_R3.00/'
 
     """
-    map_name = 'P18CMBK'
     dtype = 'cmb_convergence'
     spin = 0
+
+    sim_rec_pattern = None
+    sim_in_pattern = None
 
     def __init__(self, config):
         self._get_defaults(config)
@@ -74,6 +76,49 @@ class MapperP18CMBK(MapperBase):
             self.nl_coupled = np.array([nl])
         return self.nl_coupled
 
+    def _get_sims_fnames(self):
+        """
+        Returns the paths of the reconstructed and input simulation maps.
+
+        Returns:
+            rec_sims (List): list of paths to reconstructed simulation maps
+            input_sims (List): list of paths to input simulation maps
+        """
+        if self.sim_rec_pattern is None:
+            raise NotImplementedError("Do not use base PlanckCMBK class.")
+
+        rec_sims_path = self.config['sims_rec_path']
+        input_sims_path = self.config['sims_in_path']
+
+        # Using glob because it's handy. If the naming convention is wrong,
+        # this might silently mix rec and input sims and spoil the transfer
+        # function.
+        rec_sims = sorted(
+            glob.glob(rec_sims_path + '/' + self.sim_rec_pattern)
+        )
+        input_sims = sorted(
+            glob.glob(input_sims_path + '/' + self.sim_in_pattern)
+        )
+
+        nrec = len(rec_sims)
+        ninput = len(input_sims)
+
+        print(f"Found {nrec} reconstructed sims and {ninput} input sims")
+
+        # Check that there are the same number of sims
+        if len(rec_sims) != len(input_sims):
+            raise ValueError(f"Number of reconstructed and input sims must be "
+                             f"the same. Found {nrec} reconstructed and "
+                             f"{ninput} input sims.")
+
+        return rec_sims, input_sims
+
+
+class MapperP18CMBK(MapperPlanckCMBK):
+    map_name = 'P18CMBK'
+    sim_rec_pattern = 'sim_klm_*.fits'
+    sim_in_pattern = 'sky_klm_*.fits'
+
     def get_cl_fiducial(self):
         """
         Returns the signal power spectrum \
@@ -106,36 +151,30 @@ class MapperP18CMBK(MapperBase):
 
         return self.noise
 
-    def _get_sims_fnames(self):
-        """
-        Returns the paths of the reconstructed and input simulation maps.
 
-        Returns:
-            rec_sims (List): list of paths to reconstructed simulation maps
-            input_sims (List): list of paths to input simulation maps
-        """
-        rec_sims_path = self.config['sims_rec_path']
-        input_sims_path = self.config['sims_in_path']
+class MapperPR4CMBK(MapperPlanckCMBK):
+    map_name = 'PR4CMBK'
+    sim_rec_pattern = 'klm_sim_*_p.fits'
+    sim_in_pattern = 'klm_sim_in_*.fits'
 
-        # Using glob because it's handy. If the naming convention is wrong,
-        # this might silently mix rec and input sims and spoil the transfer
-        # function.
-        rec_sims = sorted(
-            glob.glob(rec_sims_path + '/' + 'sim_klm_*.fits')
-        )
-        input_sims = sorted(
-            glob.glob(input_sims_path + '/' + 'sky_klm_*.fits')
-        )
+    def get_cl_fiducial(self):
+        raise NotImplementedError("Fiducial signal C_ell not provided for "
+                                  "PR4 CMB lensing map.")
 
-        nrec = len(rec_sims)
-        ninput = len(input_sims)
+    def _get_noise(self):
+        # Returns the decoupled noise power spectrum of the \
+        # auto-correlation of the covergence map.
 
-        print(f"Found {nrec} reconstructed sims and {ninput} input sims")
+        # Returns:
+        #     [l (Array): multipole list,
+        #      Nl (Array): noise power spectrum] (Array)
 
-        # Check that there are the same number of sims
-        if len(rec_sims) != len(input_sims):
-            raise ValueError("Number of reconstructed and input sims must be "
-                             "the same. Found {nrec} reconstructed and "
-                             "{ninput} input sims.")
+        if self.noise is None:
+            # Read noise file. Single column with Nl at integer ells
+            nl = np.loadtxt(self.config['file_noise'])
+            # Zero nan
+            nl[0] = 0
+            ls = np.arange(len(nl))
+            self.noise = (ls, nl)
 
-        return rec_sims, input_sims
+        return self.noise
