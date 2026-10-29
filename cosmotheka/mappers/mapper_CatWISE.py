@@ -30,7 +30,6 @@ class MapperCatWISE(MapperBase):
         self.nmap_data = {'corr': None, 'uncorr': None}
         self.ecliptic_corr = None
 
-        self.npix = hp.nside2npix(self.nside)
         # Angular mask
         self.delta_map = None
         self.nl_coupled = None

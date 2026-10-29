@@ -147,3 +147,11 @@ def test_get_dtype():
 def test_get_spin():
     m = get_mapper()
     assert m.get_spin() == 2
+
+
+def test_get_nmt_catalog_field():
+    for mode, w_stars in [('shear', False), ('PSF', False),
+                          ('stars', True)]:
+        m = get_mapper(mode=mode, w_stars=w_stars)
+        f = m._get_nmt_catalog_field()
+        assert isinstance(f, xc.mappers.mapper_KiDS1000.nmt.NmtFieldCatalog)

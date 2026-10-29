@@ -42,13 +42,16 @@ class MapperDESY3wl(MapperBase):
     #  - If we are going to combine it with KiDS, we have to remove the
     #  overlapping area!
     #  -
+    nzbins = 4
 
     def __init__(self, config):
         self._get_defaults(config)
         self.config = config
         self.rot = self._get_rotator('C')
         self.mode = config.get('mode', 'shear')
-        self.zbin = config['zbin']
+        self.zbin = int(config['zbin'])
+        if (self.zbin < 0) or (self.zbin >= self.nzbins):
+            raise ValueError(f"zbin must be between 0 and {self.nzbins-1}")
         self.map_name += f"_bin{self.zbin}"
         self.npix = hp.nside2npix(self.nside)
         # dn/dz

@@ -34,7 +34,6 @@ class MapperDESY1wl(MapperBase):
         self.mode = config.get('mode', 'shear')
         self.zbin = config['zbin']
         self.map_name += f"_bin{self.zbin}"
-        self.npix = hp.nside2npix(self.nside)
         # dn/dz
         # load cat
         self.cat_data = None

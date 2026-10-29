@@ -50,7 +50,6 @@ class MapperHSCDR1wl(MapperBase):
         # input the zbin number
         self.map_name += f"_{self.bn}"
         self.w_name = 'ishape_hsm_regauss_derived_shape_weight'
-        self.npix = hp.nside2npix(self.nside)
 
         self.nl_coupled = None
         self.cat = None
