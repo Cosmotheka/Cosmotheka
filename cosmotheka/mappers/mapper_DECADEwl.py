@@ -119,6 +119,13 @@ class MapperDECADEwl(MapperBase):
 
             sel = read('MCAL_SEL_NOSHEAR')
             goods = [sel == ib+1 for ib in bins]
+            # Note: the DECADE catalog comes with a number of flags:
+            # FLAGS_FOOTPRINT, FLAGS_FOREGROUND, MCAL_FLAGS.
+            # I've checked that selecting by tomographic bin (as
+            # above) guarantees that all of these other flags
+            # also pass (i.e. they have the right value for a
+            # cosmology shear analysis).
+
             w = read('MCAL_W_NOSHEAR')
             e = np.array([read('MCAL_G_1_NOSHEAR'),
                           read('MCAL_G_2_NOSHEAR')])
@@ -162,7 +169,7 @@ class MapperDECADEwl(MapperBase):
             # mean of the two diagonal elements.
             R = np.mean(Rg[ib] + Rs[ib])
             print(f"{self.region} bin {ib}: Additive bias: {c}, "
-                  f"Rg: {Rg[ib]}, Rs: {Rs[ib]}, R: {R}")
+                  f"Rg: {Rg[ib]}, Rs: {Rs[ib]}, R: {R}", flush=True)
             ee = (ee - c[:, None]) / R
 
             cat = np.zeros(np.sum(good),
@@ -210,7 +217,6 @@ class MapperDECADEwl(MapperBase):
     def _get_ellip_maps(self, mode=None):
         # Returns the ellipticity maps of the chosen catalog ('shear' or 'PSF')
         e1f, e2f, mod = self._set_mode(mode)
-        print('Computing bin{} signal map'.format(self.zbin))
         data = self.get_catalog()
         we1, we2 = get_map_from_points(data, self.nside,
                                        w=data['weight'],
@@ -303,11 +309,9 @@ class MapperDECADEwl(MapperBase):
             [z, nz] (Array)
         """
         if self.dndz is None:
-            # z_grid.npy contains (z_low, z_mid, z_high) for each z bin.
+            # z_grid.npy contains the bin edges and mid point of each z bin.
             # *_n_of_z.npy contains the n(z) of the 4 tomographic bins.
-            z = np.load(self.config['file_zgrid'])
-            if z.ndim == 2:
-                z = z[:, 1]
+            z = np.load(self.config['file_zgrid'])['z_MID']
             nz = np.load(self.config['file_nz'])[self.zbin]
             self.dndz = {'z_mid': z, 'nz': nz}
         return self._get_shifted_nz(dz)
