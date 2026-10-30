@@ -135,6 +135,7 @@ class MapperCHIMEFRB(MapperBase):
             cat['RA'] = ra
             cat['DEC'] = dec
             cat['DM'] = dm
+            # TODO: should we consider some form of inverse-variance weighting?
             cat['weight'] = 1.0
             self.cat_data = cat
         return self.cat_data
