@@ -49,7 +49,6 @@ class MapperWIxSC(MapperBase):
         self.ra_name, self.dec_name, self.in_rad = self._get_coords()
 
         self.cat_data = None
-        self.npix = hp.nside2npix(self.nside)
         self.zbin = self.config['bin_name']
         self.map_name += f"_bin{self.zbin}"
 

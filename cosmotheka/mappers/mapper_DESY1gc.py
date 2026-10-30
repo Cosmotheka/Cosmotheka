@@ -38,7 +38,6 @@ class MapperDESY1gc(MapperBase):
                      [0.60, 0.75],
                      [0.75, 0.90]]
         self.cat_data = None
-        self.npix = hp.nside2npix(self.nside)
         self.zbin = config['zbin']
         self.map_name += f"_bin{self.zbin}"
         self.z_edges = bin_edges[self.zbin]

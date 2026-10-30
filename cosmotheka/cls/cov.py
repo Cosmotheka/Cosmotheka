@@ -858,6 +858,11 @@ class Cov:
                 self.cov = cov_dict['cov']
                 return self.cov
             cov_dict.update(dict(covf))
+            # This is necessary because this variable is saved
+            # as an array in npz files, so after reading it,
+            # even if it is True, `notnull is True` will evaluate
+            # to False.
+            cov_dict['notnull'] = bool(cov_dict['notnull'])
             write_npz = False  # We will not overwrite the file unless needed
 
         notnull = cov_dict['notnull']
@@ -891,12 +896,8 @@ class Cov:
             print(f"Get C_ells. It took {(ftime - itime) / 60} min",
                   flush=True)
 
-            notnull = (
-                np.any(cla1b1)
-                or np.any(cla1b2)
-                or np.any(cla2b1)
-                or np.any(cla2b2)
-            )
+            notnull = ((np.any(cla1b1) and np.any(cla2b2)) or
+                       (np.any(cla1b2) and np.any(cla2b1)))
             cov_dict['notnull'] = notnull
             write_npz = True  # We will need to save the file again
 

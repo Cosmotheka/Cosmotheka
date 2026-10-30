@@ -22,7 +22,6 @@ class MapperQuaia(MapperBase):
         self.map_name += f'_{self.zbin_name}'
 
         self.cat_data = None
-        self.npix = hp.nside2npix(self.nside)
 
         self.nl_coupled = None
         self.mskflag = None
