@@ -35,6 +35,7 @@ from .mapper_dummy import MapperDummy
 from .mapper_Quaia import MapperQuaia
 from .mapper_DESI_LRG import MapperDESILRG, MapperDESILRGZhou2023
 from .mapper_DESI_BGS import MapperDESIBGS
+from .mapper_CHIMEFRB import MapperCHIMEFRB
 from .utils import (
     get_map_from_points,
     get_DIR_Nz,
