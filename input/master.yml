@@ -6,9 +6,18 @@ tracers:
   ACTD56__kappa: !include input/tracers_config/ACTD56__kappa.yml
   ACTD56__tSZ: !include input/tracers_config/ACTD56__tSZ.yml
   CatWISE: !include input/tracers_config/CatWISE.yml
+  CHIMEFRB: !include input/tracers_config/CHIMEFRB.yml
   CIBLenz__353: !include input/tracers_config/CIBLenz__353.yml
   CIBLenz__545: !include input/tracers_config/CIBLenz__545.yml
   CIBLenz__857: !include input/tracers_config/CIBLenz__857.yml
+  DECADEwl_NGC__0: !include input/tracers_config/DECADEwl_NGC__0.yml
+  DECADEwl_NGC__1: !include input/tracers_config/DECADEwl_NGC__1.yml
+  DECADEwl_NGC__2: !include input/tracers_config/DECADEwl_NGC__2.yml
+  DECADEwl_NGC__3: !include input/tracers_config/DECADEwl_NGC__3.yml
+  DECADEwl_SGC__0: !include input/tracers_config/DECADEwl_SGC__0.yml
+  DECADEwl_SGC__1: !include input/tracers_config/DECADEwl_SGC__1.yml
+  DECADEwl_SGC__2: !include input/tracers_config/DECADEwl_SGC__2.yml
+  DECADEwl_SGC__3: !include input/tracers_config/DECADEwl_SGC__3.yml
   DELS__0: !include input/tracers_config/DELS__0.yml
   DELS__1: !include input/tracers_config/DELS__1.yml
   DELS__2: !include input/tracers_config/DELS__2.yml
@@ -31,6 +40,12 @@ tracers:
   KiDS1000__2: !include input/tracers_config/KiDS1000__2.yml
   KiDS1000__3: !include input/tracers_config/KiDS1000__3.yml
   KiDS1000__4: !include input/tracers_config/KiDS1000__4.yml
+  KiDSLegacy__0: !include input/tracers_config/KiDSLegacy__0.yml
+  KiDSLegacy__1: !include input/tracers_config/KiDSLegacy__1.yml
+  KiDSLegacy__2: !include input/tracers_config/KiDSLegacy__2.yml
+  KiDSLegacy__3: !include input/tracers_config/KiDSLegacy__3.yml
+  KiDSLegacy__4: !include input/tracers_config/KiDSLegacy__4.yml
+  KiDSLegacy__5: !include input/tracers_config/KiDSLegacy__5.yml
   NVSS: !include input/tracers_config/NVSS.yml
   Planck__CMB18: !include input/tracers_config/Planck__CMB18.yml
   Planck__kappaPR4: !include input/tracers_config/Planck__kappaPR4.yml

@@ -1,0 +1,10 @@
+data_catalog: '/mnt/extraspace/damonge/Datasets/CHIME/chimefrbcat2.fits'
+galactic_model: 'ne2001'
+repeaters: 'average'
+remove_sidelobe: True
+remove_excluded: True
+path_rerun: '/mnt/extraspace/damonge/Datasets/CHIME/xcell_reruns/'
+mask_name: 'mask_CHIMEFRB'
+mapper_class: 'MapperCHIMEFRB'
+beam_info:
+  - type: 'PixWin'
