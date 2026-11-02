@@ -72,7 +72,22 @@ class MapperCHIMEFRB(MapperBase):
         self.dm_range = config.get('dm_range', None)
         self.gb_min = config.get('gb_min', None)
         self.mask_external = config.get('external_mask', None)
-        self.map_name += f"_MW{self.galactic_model}_rep{self.repeaters}"
+        # The signal map and mask depend on the sample selection, so
+        # all cuts are included in their file names.
+        sel_name = f"MW{self.galactic_model}_rep{self.repeaters}"
+        if not self.remove_sidelobe:
+            sel_name += "_withsidelobe"
+        if not self.remove_excluded:
+            sel_name += "_withexcluded"
+        if self.dm_range is not None:
+            sel_name += f"_DM{self.dm_range[0]:g}-{self.dm_range[1]:g}"
+        if self.gb_min is not None:
+            sel_name += f"_gbmin{self.gb_min:g}"
+        self.map_name += f"_{sel_name}"
+        if self.mask_name is None:
+            self.mask_name = self.map_name
+        else:
+            self.mask_name += f"_{sel_name}"
 
         self.cat_data = None
         self.dm_mean = None

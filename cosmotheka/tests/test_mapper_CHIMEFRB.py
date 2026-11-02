@@ -110,8 +110,38 @@ def mapper(config):
 
 def test_smoke(mapper):
     assert mapper.map_name == 'CHIMEFRB_MWne2001_repaverage'
+    assert mapper.mask_name == 'mask_MWne2001_repaverage'
     assert mapper.get_spin() == 0
     assert mapper.get_dtype() == 'generic'
+
+
+def test_file_names(config):
+    config.update({'galactic_model': None, 'repeaters': 'all',
+                   'remove_sidelobe': False, 'remove_excluded': False,
+                   'dm_range': [0.0, 750.0], 'gb_min': 10})
+    m = xc.mappers.MapperCHIMEFRB(config)
+    sel = 'MWNone_repall_withsidelobe_withexcluded_DM0-750_gbmin10'
+    assert m.map_name == 'CHIMEFRB_' + sel
+    assert m.mask_name == 'mask_' + sel
+    # Default mask name
+    config.pop('mask_name')
+    m = xc.mappers.MapperCHIMEFRB(config)
+    assert m.mask_name == m.map_name
+
+
+def test_rerun_files(config):
+    # Maps for different cuts must be saved to different files
+    config['path_rerun'] = OUTDIR + 'rerun/'
+    sums = []
+    for dm_range in [None, [102, 106]]:
+        config['dm_range'] = dm_range
+        m = xc.mappers.MapperCHIMEFRB(config)
+        sums.append([np.sum(m.get_mask()),
+                     np.sum(np.fabs(m.get_signal_map()))])
+    _, dm = get_expected()
+    assert sums[0][0] == len(dm)
+    assert sums[1][0] == np.sum((dm >= 102) & (dm < 106))
+    assert sums[0][1] != sums[1][1]
 
 
 @pytest.mark.parametrize("key", ['repeaters', 'galactic_model'])
