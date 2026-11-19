@@ -65,6 +65,8 @@ More info about the sacc files in https://github.com/LSSTDESC/sacc
 Tutorials on how to configure and use all the different mappers  to compute angular power spectra and their covariance matrix can be found [here](https://github.com/xC-ell/Cosmoteka_tutorials).
 
 # Publications
+- [19] - A. La Posta, et al, "Joint tomographic measurement of thermal Sunyaev Zeldovich and the cosmic infrared background", arXiv: 2603.04269, 2026
+- [18] - A. Rubiola et al., "Low-redshift constraints on structure growth from CMB lensing tomography", arXiv: 2510.09563, 2025
 - [17] - G. Piccirilli et al., "Robust cosmic shear with small-scale nulling", arXiv: 2502.17339, 2025
 - [16] - A. La Posta et al., "X+y: insights on gas thermodynamics from the combination of X-ray and thermal Sunyaev-Zel'dovich data cross-correlated with cosmic shear", arXiv: 2412.12081, 2024
 - [15] - A. Mootoovaloo et al., "emuflow: Normalising Flows for Joint Cosmological Analysis", arXiv: 2409.01407, 2024
