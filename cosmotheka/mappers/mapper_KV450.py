@@ -43,7 +43,6 @@ class MapperKV450(MapperBase):
                                     [0.5, 0.7],
                                     [0.7, 0.9],
                                     [0.9, 1.2]])
-        self.npix = hp.nside2npix(self.nside)
         self.zbin = int(config['zbin'])
         self.map_name += f"_bin{self.zbin}"
         self.z_edges = self.zbin_edges[self.zbin]

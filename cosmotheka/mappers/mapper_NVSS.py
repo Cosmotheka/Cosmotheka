@@ -31,7 +31,6 @@ class MapperNVSS(MapperBase):
         self.dec_name = 'DEJ2000'
         self.cat_data = None
 
-        self.npix = hp.nside2npix(self.nside)
         # Angular mask
         self.nl_coupled = None
         self.cat_redshift = None

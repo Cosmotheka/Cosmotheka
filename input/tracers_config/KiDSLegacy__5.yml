@@ -1,0 +1,11 @@
+mapper_class: MapperKiDSLegacy
+data_catalog: /mnt/extraspace/damonge/Datasets/KiDSLegacy/KiDS_Legacy_NS_unblind_final.fits
+file_nz: /mnt/extraspace/damonge/Datasets/KiDSLegacy/KiDS_Legacy_cosmic_shear_data_release/data/KiDS_Legacy_bandpowers.fits
+mode: "shear"
+zbin: 5
+mask_name: "mask_KiDSLegacy__5"
+path_rerun: '/mnt/extraspace/damonge/Datasets/KiDSLegacy/xcell_reruns/'
+beam_info:
+  - type: 'PixWin'
+m: 0
+sigma_m: 0.009

@@ -2,6 +2,7 @@ from .mapper_base import MapperBase
 from .utils import get_map_from_points, save_rerun_data
 from astropy.table import Table
 import numpy as np
+import pymaster as nmt
 import healpy as hp
 
 
@@ -26,6 +27,12 @@ class MapperKiDS1000(MapperBase):
     map_name = 'KiDS1000'
     dtype = 'galaxy_shear'
     spin = 2
+    zbin_edges = np.array([[0.1, 0.3],
+                           [0.3, 0.5],
+                           [0.5, 0.7],
+                           [0.7, 0.9],
+                           [0.9, 1.2]])
+    m = (-0.009, -0.011, -0.015, 0.002, 0.007)
 
     def __init__(self, config):
 
@@ -33,18 +40,14 @@ class MapperKiDS1000(MapperBase):
         self.rot = self._get_rotator('C')
 
         self.mode = config.get('mode', 'shear')
-        self.zbin_edges = np.array([[0.1, 0.3],
-                                    [0.3, 0.5],
-                                    [0.5, 0.7],
-                                    [0.7, 0.9],
-                                    [0.9, 1.2]])
-        self.npix = hp.nside2npix(self.nside)
+        self.nzbins = len(self.zbin_edges)
         self.zbin = int(config['zbin'])
+        if (self.zbin < 0) or (self.zbin >= self.nzbins):
+            raise ValueError(f"zbin must be between 0 and {self.nzbins-1}")
         self.map_name += f"_bin{self.zbin}"
         self.z_edges = self.zbin_edges[self.zbin]
         # Multiplicative bias
         # Values from Table 1 of 2007.01845
-        self.m = (-0.009, -0.011, -0.015, 0.002, 0.007)
 
         self.cat_data = None
         self.w2s2 = None
@@ -275,3 +278,18 @@ class MapperKiDS1000(MapperBase):
             z, nz = np.loadtxt(self.config['file_nz'], unpack=True)[:2]
             self.dndz = {'z_mid': z, 'nz': nz}
         return self._get_shifted_nz(dz)
+
+    def _get_nmt_catalog_field(self, **kwargs):
+        """
+        Build a catalog-based NaMaster field for KiDS-1000.
+        """
+        kind, e1f, e2f, mod = self._set_mode()
+        data = self._get_gals_or_stars(kind)
+        positions = np.array([data['ALPHA_J2000'], data['DELTA_J2000']])
+        field = np.array([-data[e1f], data[e2f]])
+
+        # Retrieve the maximum multipole
+        lmax = kwargs.get("lmax", 3*self.nside-1)
+
+        return nmt.NmtFieldCatalog(positions, data['weight'], field,
+                                   spin=2, lmax=lmax, lonlat=True)

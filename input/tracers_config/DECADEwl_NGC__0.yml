@@ -1,0 +1,13 @@
+zbin: 0
+region: 'NGC'
+mode: shear
+data_catalog: '/mnt/extraspace/damonge/Datasets/DECADE/shear_catalog_sparse.hdf5'
+file_nz: '/mnt/extraspace/damonge/Datasets/DECADE/n_of_z/NGC_n_of_z.npy'
+file_zgrid: '/mnt/extraspace/damonge/Datasets/DECADE/n_of_z/z_grid.npy'
+path_rerun: '/mnt/extraspace/damonge/Datasets/DECADE/xcell_reruns/'
+mask_name: 'mask_DECADEwl_NGC0'
+mapper_class: 'MapperDECADEwl'
+beam_info:
+  - type: 'PixWin'
+m: -0.0092
+sigma_m: 0.00296

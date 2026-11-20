@@ -42,7 +42,6 @@ class MapperDELS(MapperBase):
         self.num_z_bins = config.get('num_z_bins', 500)
 
         self.cat_data = None
-        self.npix = hp.nside2npix(self.nside)
 
         bin_edges = [[0.00, 0.30],
                      [0.30, 0.45],
