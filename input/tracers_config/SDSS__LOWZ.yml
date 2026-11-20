@@ -1,8 +1,6 @@
 SDSS_name: 'LOWZ'
 num_z_bins: 50
 nside_mask: 512
-nside_nl_threshold: 4096
-lmin_nl_from_data: 2000
 data_catalogs:
   - '/mnt/extraspace/damonge/Datasets/BOSS/galaxy_DR12v5_LOWZ_North.fits.gz'
   - '/mnt/extraspace/damonge/Datasets/BOSS/galaxy_DR12v5_LOWZ_South.fits.gz'
